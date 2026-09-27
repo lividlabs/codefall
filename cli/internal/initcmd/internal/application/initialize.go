@@ -60,9 +60,13 @@ type ExtensionSource interface {
 
 // Request is what presentation hands the use case: every answer a survey or a set of flags could
 // collect, already parsed. Absence is an Option, so "no project number" and "project number zero"
-// cannot be confused (ADR-GO-03). Tracker may be empty when settings already exist and Force is
-// false, because then nothing is built from it — so a step that comes to depend on which tracker the
-// project uses must read it out of the settings file that is already there, not out of this field.
+// cannot be confused (ADR-GO-03). Tracker may be empty when settings already exist, because then
+// nothing is built from it — so a step that comes to depend on which tracker the project uses must
+// read it out of the settings file that is already there, not out of this field.
+//
+// Both commands hand over the same contract: init builds it from a survey or from flags, upgrade
+// from what the settings and the manifest already record. The steps do not know which command is
+// running them, and have no reason to.
 type Request struct {
 	Dir        string
 	Tracker    string
@@ -88,10 +92,9 @@ type Request struct {
 	// that names none is refused by preflight rather than quietly installing nothing.
 	Harnesses []string
 	// NoOp is true when everything the run would write matches what is already installed: same
-	// version recorded in the manifest, nothing the survey would need to ask. The use case is not
-	// asked at all. A Force run resets it.
-	NoOp  bool
-	Force bool
+	// version recorded in the manifest, nothing left to declare or rewrite. The use case is not
+	// asked at all.
+	NoOp bool
 }
 
 // Observer watches a run step by step, so a terminal can show what is happening while it happens.
@@ -106,7 +109,10 @@ type Observer interface {
 
 // Initialize sets a project up for codefall: it writes .codefall/settings.json, installs the harness
 // extension, initialises Beads, registers codefall's hooks with the harness, writes the sections of
-// AGENTS.md that say how the project uses it, and makes the tree its test cases live in.
+// AGENTS.md that say how the project uses it, and makes the tree its test cases live in. It is the
+// one use case behind two commands: `codefall init` runs it once, on a project with no manifest, and
+// `codefall upgrade` runs it again for the harnesses the settings record, replacing what it owns and
+// touching nothing else.
 type Initialize struct {
 	files  FileSystem
 	runner CommandRunner

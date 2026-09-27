@@ -35,8 +35,8 @@ type CreateUseCase interface {
 var errCancelled = errors.New("create cancelled")
 
 // skippedInitFlags are init's flags that mean nothing in a directory create has just made: it is the
-// repository root, it has no settings to rewrite, and it has no installed version to upgrade.
-var skippedInitFlags = []string{"location", "force", "yes"}
+// repository root, so there is no location to choose.
+var skippedInitFlags = []string{"location"}
 
 // NewCreateCommand builds `codefall create`. initCommand is init's own command, built by the
 // composition root; create runs it in the new directory and takes its flags as its own, so a

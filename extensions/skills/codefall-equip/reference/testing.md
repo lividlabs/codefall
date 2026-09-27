@@ -30,7 +30,8 @@ Read the `test` block out of `.codefall/settings.json`:
 }
 ```
 
-- **No block, or no settings file.** Stop. `codefall init` asks for the testing root and makes the
+- **No block, or no settings file.** Stop. `codefall init` asks for the testing root, `codefall
+  upgrade` declares it on a project set up before the block existed, and either makes the
   tree under it; this skill declares neither, and nothing else here can be done without a root.
 - **A block whose `dir` names a directory that is not there.** Stop and say `codefall init` makes
   the tree; `codefall doctor` fails `test-dir-exists` on the same state.

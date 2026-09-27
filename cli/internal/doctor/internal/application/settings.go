@@ -133,7 +133,7 @@ func (d *Diagnose) ignored(dir string, results []domain.Result) []domain.Result 
 // entryIgnored is one of those checks: the file names the entry, or it says which file is missing
 // which line.
 func (d *Diagnose) entryIgnored(dir string, check domain.Check, file, entry string) domain.Result {
-	remedy := mo.Some("add " + entry + " to " + file + ", or run codefall init again")
+	remedy := mo.Some("add " + entry + " to " + file + ", or run codefall upgrade")
 
 	data, err := d.files.ReadFile(filepath.Join(dir, file))
 

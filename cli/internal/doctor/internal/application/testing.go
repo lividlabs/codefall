@@ -38,7 +38,7 @@ func (d *Diagnose) testing(_ context.Context, dir string, results []domain.Resul
 		// What the block decides is where the cases go, and init is what asks — so the two checks
 		// below have nothing to ask about until it has, and are absent from the report.
 		return append(results, domain.TestDeclared.Warn(
-			"no testing root is declared in settings.json", mo.Some(initRemedy)))
+			"no testing root is declared in settings.json", mo.Some(upgradeRemedy)))
 	}
 
 	results = append(results, domain.TestDeclared.PassWithDetail(declared.Dir+"/"))
@@ -58,8 +58,8 @@ func (d *Diagnose) testing(_ context.Context, dir string, results []domain.Resul
 // testDirExists is check 18: the directory the settings declare is there.
 //
 // It fails rather than warns. The project declared it, and every verb that writes a case or runs one
-// looks for it, so a declaration pointing at nothing is one nothing can act on. The remedy is init,
-// which makes the tree from the root the settings already name.
+// looks for it, so a declaration pointing at nothing is one nothing can act on. The remedy is
+// upgrade, which makes the tree from the root the settings already name.
 func (d *Diagnose) testDirExists(dir, root string, results []domain.Result) []domain.Result {
 	there, err := d.files.DirExists(filepath.Join(dir, filepath.FromSlash(root)))
 	if err != nil {
@@ -69,7 +69,7 @@ func (d *Diagnose) testDirExists(dir, root string, results []domain.Result) []do
 
 	if !there {
 		return append(results, domain.TestDirExists.Fail(
-			root+"/ is declared in settings.json and is not there", mo.Some(initRemedy)))
+			root+"/ is declared in settings.json and is not there", mo.Some(upgradeRemedy)))
 	}
 
 	return append(results, domain.TestDirExists.Pass())

@@ -89,7 +89,7 @@ Read the lines; the Beads lines are none of this verb's business.
 
 | Line | What it says | What happens |
 | --- | --- | --- |
-| `test=undeclared` | settings carry no `test` block | Say `codefall init` declares the testing root, and stop |
+| `test=undeclared` | settings carry no `test` block | Say `codefall upgrade` declares the testing root, and stop |
 | `test=unequipped` | no runner is declared | A case target stops and names `/codefall-equip`; a suite target carries on |
 | `test=unknown` | there is a `test` block, and preflight had no jq to read it | Read the block from `.codefall/settings.json` and act on what it says; `runners` absent or empty is `unequipped` |
 | `refresh=stale`, or `behind` above `0` | the checkout or the environment is behind | Say so, offer `/codefall-refresh`, and wait |

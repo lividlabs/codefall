@@ -15,12 +15,14 @@ import (
 	"github.com/lividlabs/codefall-cli/cli/internal/shared/settings"
 )
 
-// initRemedy is what to do about a harness the project chose and codefall was never run for.
-const initRemedy = "codefall init"
+// upgradeRemedy is what to do about a harness the project chose and codefall was never run for.
+// Upgrade is the command that changes an installed project; a project with no manifest is sent on
+// to init by upgrade itself (ADR-010).
+const upgradeRemedy = "codefall upgrade"
 
 // renameRemedy is what to do about a harness recorded under the spelling it had before it was named
-// for its binary: init rewrites both files on its next run.
-const renameRemedy = "run codefall init again, which rewrites them"
+// for its binary: upgrade rewrites both files.
+const renameRemedy = "run codefall upgrade, which rewrites them"
 
 // settingsName is the settings file as a person reads it in a report.
 const settingsName = ".codefall/settings.json"
@@ -164,15 +166,15 @@ func (d *Diagnose) installed(
 
 	if len(missing) > 0 {
 		return append(results, domain.HarnessesInstalled.Fail(
-			"codefall is not installed for "+strings.Join(missing, ", "), mo.Some(initRemedy)))
+			"codefall is not installed for "+strings.Join(missing, ", "), mo.Some(upgradeRemedy)))
 	}
 
 	return append(results, domain.HarnessesInstalled.PassWithDetail(strings.Join(chosen, ", ")))
 }
 
 // firstMissing reports whether any of the recorded files has gone from the project. A half-written
-// install is not an install: the run that wrote the record wrote all of them, and `codefall init` is
-// the remedy either way. A file system that refuses a stat returns the path it refused, so the
+// install is not an install: the run that wrote the record wrote all of them, and `codefall upgrade`
+// is the remedy either way. A file system that refuses a stat returns the path it refused, so the
 // report can name it.
 func (d *Diagnose) firstMissing(dir string, files []string) (bool, string, error) {
 	for _, file := range files {

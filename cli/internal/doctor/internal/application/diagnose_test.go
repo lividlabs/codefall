@@ -38,13 +38,13 @@ var (
 	schemaRemedy = "create .codefall/settings.json; schema: " + settings.SchemaID
 	fixRemedy    = "fix the fields above; schema: " + settings.SchemaID
 	ignoreRemedy = "add " + settings.IgnoreEntry + " to " + settings.IgnoreName +
-		", or run codefall init again"
+		", or run codefall upgrade"
 	testsIgnoreRemedy = "add " + settings.IgnoreEntryTests + " to " + settings.IgnoreName +
-		", or run codefall init again"
+		", or run codefall upgrade"
 	stampRemedy = "add " + settings.RefreshStamp + " to " + settings.GitIgnoreName +
-		", or run codefall init again"
+		", or run codefall upgrade"
 	mergeRemedy = "add " + settings.InteractionsAttribute + " to " + settings.GitAttributesName +
-		", or run codefall init again"
+		", or run codefall upgrade"
 	leftoverRemedy = "remove the files " + manifest.Name +
 		" lists for codex; codefall never deletes what it wrote"
 )
@@ -553,7 +553,7 @@ func TestDiagnoseRun(t *testing.T) {
 			want:       outcomes(map[string]domain.Status{domain.HarnessesInstalled.ID: domain.StatusFail}),
 			target:     domain.HarnessesInstalled.ID,
 			wantDetail: "codefall is not installed for claude",
-			wantRemedy: mo.Some("codefall init"),
+			wantRemedy: mo.Some("codefall upgrade"),
 		},
 		{
 			// A harness codefall was never run for has no entry at all, which is the same answer as a
@@ -565,7 +565,7 @@ func TestDiagnoseRun(t *testing.T) {
 			want:       outcomes(map[string]domain.Status{domain.HarnessesInstalled.ID: domain.StatusFail}),
 			target:     domain.HarnessesInstalled.ID,
 			wantDetail: "codefall is not installed for codex",
-			wantRemedy: mo.Some("codefall init"),
+			wantRemedy: mo.Some("codefall upgrade"),
 		},
 		{
 			name: "both harnesses are installed",
@@ -615,7 +615,7 @@ func TestDiagnoseRun(t *testing.T) {
 				domain.HarnessesLeftOver.ID),
 			target:     domain.HarnessesInstalled.ID,
 			wantDetail: "codefall is not installed for claude",
-			wantRemedy: mo.Some("codefall init"),
+			wantRemedy: mo.Some("codefall upgrade"),
 		},
 		{
 			// A project set up before its harnesses were named for their binaries records the old
@@ -846,7 +846,7 @@ func TestDiagnoseRun(t *testing.T) {
 				afterTestUndeclared...),
 			target:     domain.TestDeclared.ID,
 			wantDetail: "no testing root is declared in settings.json",
-			wantRemedy: mo.Some(initRemedy),
+			wantRemedy: mo.Some(upgradeRemedy),
 		},
 		{
 			// A block Validate would reject is no declaration at all, and doctor's settings check has
@@ -903,7 +903,7 @@ func TestDiagnoseRun(t *testing.T) {
 			want:       outcomes(map[string]domain.Status{domain.TestDirExists.ID: domain.StatusFail}),
 			target:     domain.TestDirExists.ID,
 			wantDetail: "testing/ is declared in settings.json and is not there",
-			wantRemedy: mo.Some(initRemedy),
+			wantRemedy: mo.Some(upgradeRemedy),
 		},
 		{
 			name: "the declared testing directory cannot be stat'd",

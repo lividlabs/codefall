@@ -1,7 +1,3 @@
-// Package presentation builds initcmd's command. It is thin: it collects answers — from flags, from a
-// survey, or from gh — hands them to the use case as a contract, and prints what each step did. The
-// palette, the writer, and the spinner are the shared UI module's; what belongs here is which tone a
-// step's outcome is drawn in.
 package presentation
 
 import (
@@ -13,46 +9,15 @@ import (
 	"strings"
 
 	"charm.land/huh/v2"
-	"charm.land/lipgloss/v2"
-	"github.com/charmbracelet/x/term"
 	"github.com/samber/mo"
 	"github.com/spf13/cobra"
 
 	"github.com/lividlabs/codefall-cli/cli/internal/initcmd/internal/application"
-	"github.com/lividlabs/codefall-cli/cli/internal/initcmd/internal/domain"
 	"github.com/lividlabs/codefall-cli/cli/internal/shared/buildinfo"
 	"github.com/lividlabs/codefall-cli/cli/internal/shared/harness"
 	"github.com/lividlabs/codefall-cli/cli/internal/shared/settings"
 	"github.com/lividlabs/codefall-cli/cli/internal/shared/ui"
 )
-
-// InitializeUseCase is what the command needs from the application layer, declared by its consumer.
-// The two questions beside Run are what the command asks before it prompts: whether prompting is
-// worth doing at all, and what to offer as the answer to the one question a tool can answer itself.
-type InitializeUseCase interface {
-	Run(ctx context.Context, request application.Request, observer application.Observer) (domain.Report, error)
-	SettingsExist(dir string) (bool, error)
-	SuggestIssuesRepo(ctx context.Context, dir string) mo.Option[string]
-	// RepositoryRoot reports the root of the git work tree dir sits below, or None when dir is the
-	// root or not in a work tree. It is what decides whether there is a location to ask about.
-	RepositoryRoot(ctx context.Context, dir string) mo.Option[string]
-	// Installed reads what finished runs recorded in .codefall/manifest.json: the version each
-	// harness was installed at, or None when there is no manifest or it records no usable version.
-	// The gate compares it one harness at a time against the binary's own version.
-	Installed(dir string) (mo.Option[application.Installation], error)
-	// ChosenHarnesses reads the harnesses .codefall/settings.json records, or None when there are no
-	// settings or they record none. A rerun installs for what the project already chose rather than
-	// asking again.
-	ChosenHarnesses(dir string) (mo.Option[[]string], error)
-	// DeclaredTestDir reads the testing root .codefall/settings.json records, or None when there are
-	// no settings or they declare none. A rerun works with the root the project already declared and
-	// never moves it (ADR-007).
-	DeclaredTestDir(dir string) (mo.Option[string], error)
-	// FormerHarnessNames reads the old harness spellings .codefall/settings.json and
-	// .codefall/manifest.json still carry. A rerun that finds one has a rewrite to make, so it is
-	// never a no-op.
-	FormerHarnessNames(dir string) ([]string, error)
-}
 
 // The trackers the survey shows but does not accept. Huh has no disabled option, so they are offered
 // with the state in their label and refused by the field's own validation — which is more use to a
@@ -62,40 +27,22 @@ const (
 	trackerLinear = "linear"
 )
 
-// Where a run from below the repository root installs. The root is where a project usually keeps
-// its harness configuration; the directory the command runs in is for a team that wants codefall in
-// its part of a larger repository without setting it up for everyone else's.
-const (
-	locationHere = "here"
-	locationRoot = "root"
-)
-
-// nextStep is the line that closes a successful run. Init writes what doctor checks, so doctor is
-// what to run next.
-const nextStep = "Next: codefall doctor"
-
-// errCancelled is what both places a run can be interrupted report. Huh says the user aborted the
-// form and Bubble Tea says the program was interrupted, but Ctrl-C during a question and Ctrl-C
-// during the spinner are one event to the person who pressed it. It is returned as it is rather
-// than wrapped, so Fang renders that sentence and not a prefix in front of it.
-var errCancelled = errors.New("init cancelled")
-
-// NewInitCommand builds `codefall init`.
+// NewInitCommand builds `codefall init`, the run that happens once: it makes a directory ready for
+// codefall, and a project that already has .codefall/manifest.json is `codefall upgrade`'s.
 func NewInitCommand(initialize InitializeUseCase) *cobra.Command {
 	flags := &initFlags{}
 
 	cmd := &cobra.Command{
-		Use:     "init",
-		Aliases: []string{"upgrade"},
-		Short:   "Set this directory up for codefall",
+		Use:   "init",
+		Short: "Set this directory up for codefall",
 		Long: "Creates .codefall/settings.json from your answers, including which coding harnesses the " +
 			"project uses. Every question is also a flag, so a scripted run passes them and is never " +
 			"prompted. The codefall extension is installed for each harness chosen: Claude Code gets it " +
 			"at project scope into .claude/settings.json, and a harness that reads the .agents/skills " +
 			"convention gets the extension's tree under .agents/. It also asks where the project's " +
-			"test cases live and creates that tree. A rerun installs for the harnesses the settings " +
-			"already record and keeps the testing root they declare, so --harness and --test-dir are " +
-			"only needed the first time, or to add a harness. " +
+			"test cases live and creates that tree. " +
+			"Init runs once: a project that already has .codefall/manifest.json is brought current by " +
+			"codefall upgrade, which init names and refuses to repeat. " +
 			"Run below the root of a git repository, init asks whether to install there or at the " +
 			"root; --location answers without asking.",
 		Args: cobra.NoArgs,
@@ -109,8 +56,8 @@ func NewInitCommand(initialize InitializeUseCase) *cobra.Command {
 	return cmd
 }
 
-// initFlags is every value the survey asks for, plus the two that change what a run does. Each
-// prompted value is a flag, which is what keeps the command usable from a script (ADR-002).
+// initFlags is every value the survey asks for, plus where to install. Each prompted value is a flag,
+// which is what keeps the command usable from a script (ADR-002).
 type initFlags struct {
 	tracker        string
 	issuesRepo     string
@@ -119,8 +66,6 @@ type initFlags struct {
 	harnesses      []string
 	testDir        string
 	location       string
-	force          bool
-	yes            bool
 }
 
 func (f *initFlags) register(cmd *cobra.Command) {
@@ -134,23 +79,13 @@ func (f *initFlags) register(cmd *cobra.Command) {
 		"number of the GitHub Project those issues are organised into (optional)")
 	cmd.Flags().BoolVar(&f.reviewPostToPR, "review-post-to-pr", false,
 		"let codefall-review post its findings to a pull request (optional)")
-	// No default: codefall cannot know which harnesses a project means to use, and a default would
-	// choose one on the user's behalf. A rerun takes them from the settings instead.
-	cmd.Flags().StringSliceVar(&f.harnesses, "harness", nil,
-		"coding harness to set up — repeat the flag, or separate names with commas, for several ("+
-			strings.Join(harness.All(), ", ")+")")
-	// No default: a project that has not declared a testing root is asked, and a rerun reads back the
-	// one it declared. A default here would answer for the project on a run that could still ask.
+	registerHarnessFlag(cmd, &f.harnesses, "coding harness to set up")
+	// No default: a project that has not declared a testing root is asked. A default here would
+	// answer for the project on a run that could still ask.
 	cmd.Flags().StringVar(&f.testDir, "test-dir", "",
 		"directory the project's test cases live in, relative to this one (default "+
-			settings.DefaultTestDir+"; only asked the first time)")
-	cmd.Flags().StringVar(&f.location, "location", "",
-		"where to install when run below the repository root ("+locationHere+" for this directory, "+
-			locationRoot+" for the root)")
-	cmd.Flags().BoolVar(&f.force, "force", false,
-		"rewrite .codefall/settings.json if it is already there")
-	cmd.Flags().BoolVarP(&f.yes, "yes", "y", false,
-		"answer yes to the upgrade check without prompting")
+			settings.DefaultTestDir+")")
+	registerLocationFlag(cmd, &f.location)
 }
 
 // runInit is the command's body: collect the answers, run the steps, say what happened.
@@ -159,11 +94,11 @@ func runInit(cmd *cobra.Command, initialize InitializeUseCase, flags *initFlags)
 	// receives it as a value.
 	dir, err := os.Getwd()
 	if err != nil {
-		return fmt.Errorf("init: %w", err)
+		return initKind.wrap(err)
 	}
 
-	// A bad flag or an unanswerable question is the user's own message; it is returned as it is so
-	// Fang renders that sentence and not a prefix in front of it.
+	// A bad flag, an unanswerable question, or a project that is already set up is the user's own
+	// message; it is returned as it is so Fang renders that sentence and not a prefix in front of it.
 	request, err := buildRequest(cmd, initialize, flags, dir)
 	if err != nil {
 		return err
@@ -172,17 +107,8 @@ func runInit(cmd *cobra.Command, initialize InitializeUseCase, flags *initFlags)
 	// One colour-profile writer for the whole run.
 	out := ui.NewWriter(cmd.OutOrStdout())
 
-	if request.NoOp {
-		return ui.WriteLine(out, ui.Style(ui.ToneFaint).Render(
-			"already up to date with "+request.CLIVersion))
-	}
-
-	if _, err := runInitialize(cmd.Context(), initialize, request, out); err != nil {
-		if errors.Is(err, errCancelled) {
-			return err
-		}
-
-		return fmt.Errorf("init: %w", err)
+	if _, err := runInitialize(cmd.Context(), initKind, initialize, request, out); err != nil {
+		return initKind.wrap(err)
 	}
 
 	return ui.WriteLine(out, ui.Style(ui.ToneFaint).Render(nextStep))
@@ -198,14 +124,13 @@ func buildRequest(
 	}
 
 	// Where the run installs comes before everything else, because every other question — whether
-	// settings exist, what version is installed — is a question about that directory.
-	dir, err = chooseLocation(cmd.Context(), initialize, flags.location, dir)
+	// there is a manifest, whether settings exist — is a question about that directory.
+	dir, err = chooseLocation(cmd.Context(), initKind, initialize, flags.location, dir)
 	if err != nil {
 		return application.Request{}, err
 	}
 
-	request := application.Request{Dir: dir, Harnesses: chosen, Force: flags.force,
-		CLIVersion: buildinfo.Version()}
+	request := application.Request{Dir: dir, Harnesses: chosen, CLIVersion: buildinfo.Version()}
 
 	if flags.tracker != "" {
 		tracker, err := settings.ParseTracker(flags.tracker)
@@ -251,80 +176,53 @@ func buildRequest(
 		request.IssuesProject = mo.Some(flags.issuesProject)
 	}
 
-	// Settings that are already there and are not being rewritten are not worth surveying for: the
-	// extension-copy is the same answer on a no-Fiorc run. Where a run is a no-op only because the
-	// version matches, that's what the comparison reports.
+	// A manifest is a finished run's record, and init runs once. Everything a second run would do
+	// is upgrade's, which reads the manifest this command would otherwise have to guess around.
+	recorded, err := initialize.ManifestExists(dir)
+	if err != nil {
+		return application.Request{}, initKind.wrap(err)
+	}
+
+	if recorded {
+		return application.Request{}, errors.New(
+			"codefall is already set up here; run codefall upgrade to bring the install current")
+	}
+
+	// Settings with no manifest behind them are a project set up before the manifest existed, and
+	// this is its one run of init: nothing is asked, because the answers are already on record, and
+	// the run finishes by writing the manifest that sends every later run to upgrade.
 	settled, err := initialize.SettingsExist(dir)
 	if err != nil {
-		return application.Request{}, fmt.Errorf("init: %w", err)
+		return application.Request{}, initKind.wrap(err)
 	}
-
-	// The harnesses a settled project chose are recorded in its settings, so a rerun installs for
-	// those rather than asking again — and the gate below cannot compare what it has not been told.
-	if settled && len(request.Harnesses) == 0 {
-		recorded, err := initialize.ChosenHarnesses(dir)
-		if err != nil {
-			return application.Request{}, fmt.Errorf("init: %w", err)
-		}
-
-		names, ok := recorded.Get()
-		if !ok && !request.Force {
-			return application.Request{}, errors.New("the settings here record no harnesses; " +
-				"pass --harness, or --force to answer the questions again")
-		}
-
-		request.Harnesses = names
-	}
-
-	// The testing root is read back the same way, and for the same reason: a project that has
-	// declared one is not asked about it again, and this run never moves it (ADR-007).
-	declaredTest := mo.None[string]()
 
 	if settled {
-		declaredTest, err = initialize.DeclaredTestDir(dir)
-		if err != nil {
-			return application.Request{}, fmt.Errorf("init: %w", err)
+		if len(request.Harnesses) == 0 {
+			recorded, err := initialize.ChosenHarnesses(dir)
+			if err != nil {
+				return application.Request{}, initKind.wrap(err)
+			}
+
+			names, ok := recorded.Get()
+			if !ok {
+				return application.Request{}, errors.New(
+					"the settings here record no harnesses; pass --harness")
+			}
+
+			request.Harnesses = names
 		}
 
+		// The testing root is read back the same way, and for the same reason: a project that has
+		// declared one is not asked about it again, and this run never moves it (ADR-007).
 		if request.TestDir == "" {
-			request.TestDir = declaredTest.OrEmpty()
-		}
-	}
-
-	if settled && !request.Force {
-		previous, err := initialize.Installed(dir)
-		if err != nil {
-			return application.Request{}, fmt.Errorf("init: %w", err)
-		}
-
-		formers, err := initialize.FormerHarnessNames(dir)
-		if err != nil {
-			return application.Request{}, fmt.Errorf("init: %w", err)
-		}
-
-		if recorded, ok := previous.Get(); ok {
-			// A run for a harness the project has never been set up for is work to do, however
-			// current the version that installed the others is — and so is a project that has never
-			// declared a testing root, because the tree is what this run would make and doctor's
-			// remedy for an undeclared root is this command. A harness still recorded under an old
-			// spelling is work for the same reason: doctor's remedy for it is this command too.
-			if declaredTest.IsPresent() && len(formers) == 0 &&
-				installedEverything(recorded, request.Harnesses, request.CLIVersion) {
-				request.NoOp = true
-				return request, nil
+			declared, err := initialize.DeclaredTestDir(dir)
+			if err != nil {
+				return application.Request{}, initKind.wrap(err)
 			}
 
-			// The question is about moving a version, so it is asked only when a version moves. A
-			// harness with no record at all is work rather than an upgrade, and is not asked about.
-			if versionMoves(recorded, request.Harnesses, request.CLIVersion) && !flags.yes {
-				if err := confirmUpgrade(cmd.Context(), request.CLIVersion); err != nil {
-					return application.Request{}, err
-				}
-			}
+			request.TestDir = declared.OrEmpty()
 		}
-	}
-
-	if !settled || request.Force {
+	} else {
 		request, err = collect(cmd.Context(), initialize, request)
 		if err != nil {
 			return application.Request{}, err
@@ -338,81 +236,6 @@ func buildRequest(
 	}
 
 	return request, nil
-}
-
-// installedEverything reports whether every harness this run is for is already installed at this
-// binary's version, which is what makes a rerun a no-op. A run for no harness has nothing installed
-// rather than everything.
-func installedEverything(
-	recorded application.Installation, harnesses []string, version string,
-) bool {
-	for _, name := range harnesses {
-		if recorded.Versions[name] != version {
-			return false
-		}
-	}
-
-	return len(harnesses) > 0
-}
-
-// versionMoves reports whether any harness this run is for is installed at a different version,
-// which is the one thing the upgrade confirmation is about.
-func versionMoves(recorded application.Installation, harnesses []string, version string) bool {
-	for _, name := range harnesses {
-		if installed, recorded := recorded.Versions[name]; recorded && installed != version {
-			return true
-		}
-	}
-
-	return false
-}
-
-// chooseLocation settles which directory the run installs into. Only a run below the repository root
-// has a choice to make; at the root, and outside a repository, the working directory is the answer
-// and --location is not needed. Below the root, the flag answers, then a person, and a script with
-// neither is told which flag it is missing (ADR-002).
-func chooseLocation(
-	ctx context.Context, initialize InitializeUseCase, location, dir string,
-) (string, error) {
-	if location != "" && location != locationHere && location != locationRoot {
-		return "", fmt.Errorf("the --location flag must be %s or %s, not %q",
-			locationHere, locationRoot, location)
-	}
-
-	root, below := initialize.RepositoryRoot(ctx, dir).Get()
-	if !below {
-		return dir, nil
-	}
-
-	if location == "" {
-		if !stdinIsTerminal() {
-			return "", fmt.Errorf("missing --location (stdin is not a terminal; %s is below the "+
-				"repository root at %s)", dir, root)
-		}
-
-		location = locationHere
-		if err := runForm(ctx, []*huh.Group{huh.NewGroup(locationField(&location, dir, root))}); err != nil {
-			return "", err
-		}
-	}
-
-	if location == locationRoot {
-		return root, nil
-	}
-
-	return dir, nil
-}
-
-// locationField is the first question a run below the root asks. The working directory is the first
-// option and the starting value: someone who ran init there most likely meant it.
-func locationField(location *string, dir, root string) huh.Field {
-	return huh.NewSelect[string]().
-		Title("Install codefall here or at the repository root?").
-		Options(
-			huh.NewOption("Here: "+dir, locationHere),
-			huh.NewOption("Repository root: "+root, locationRoot),
-		).
-		Value(location)
 }
 
 // rejectGitHubFlags refuses the GitHub flags on a tracker that does not use them, in the terms the
@@ -467,23 +290,6 @@ func needsAnswers(request application.Request) bool {
 		request.Tracker == "" ||
 		request.TestDir == "" ||
 		(request.Tracker == settings.TrackerGitHub && request.IssuesRepo.IsAbsent())
-}
-
-// parseHarnesses validates every name the flag was given and refuses the first one codefall cannot
-// set up, in the order they were given so the message names the one the person typed.
-func parseHarnesses(names []string) ([]string, error) {
-	chosen := make([]string, 0, len(names))
-
-	for _, name := range names {
-		parsed, err := harness.Parse(strings.TrimSpace(name))
-		if err != nil {
-			return nil, err
-		}
-
-		chosen = append(chosen, parsed)
-	}
-
-	return chosen, nil
 }
 
 // mightUseGitHub reports whether a repository could still be wanted — either because the tracker is
@@ -587,7 +393,7 @@ func survey(
 		groups = append(groups, huh.NewGroup(testDirField(&testDir)))
 	}
 
-	if err := runForm(ctx, groups); err != nil {
+	if err := runForm(ctx, initKind, groups); err != nil {
 		return application.Request{}, err
 	}
 
@@ -672,53 +478,6 @@ func gitHubFields(request application.Request, repo, project *string) []huh.Fiel
 
 	return fields
 }
-
-// runForm runs the survey. A form is a terminal program, so a cancelled command cancels it
-// (ADR-002) and ACCESSIBLE chooses the screen-reader mode, as Huh's own examples do.
-//
-// There is always at least one group: survey is reached only when an answer is missing, and each
-// answer that could be missing adds a group of its own.
-func runForm(ctx context.Context, groups []*huh.Group) error {
-	err := huh.NewForm(groups...).
-		WithAccessible(os.Getenv("ACCESSIBLE") != "").
-		RunWithContext(ctx)
-
-	switch {
-	case err == nil:
-		return nil
-	case errors.Is(err, huh.ErrUserAborted):
-		return errCancelled
-	default:
-		return fmt.Errorf("init: %w", err)
-	}
-}
-
-// confirmUpgrade is the one prompt a re-run asks before it files its own changes: upgrade to the
-// binary's tag. The user's "no" is not a cancellation of the run — it is a decline to move a version.
-func confirmUpgrade(ctx context.Context, version string) error {
-	var goForIt bool
-
-	err := huh.NewForm(huh.NewGroup(
-		huh.NewConfirm().
-			Title("Upgrade the installed extension to " + version + "?").
-			Value(&goForIt),
-	)).WithAccessible(os.Getenv("ACCESSIBLE") != "").RunWithContext(ctx)
-
-	switch {
-	case err == nil:
-		if !goForIt {
-			return errCancelled
-		}
-
-		return nil
-	case errors.Is(err, huh.ErrUserAborted):
-		return errCancelled
-	default:
-		return fmt.Errorf("init: %w", err)
-	}
-}
-
-// runForm runs the after-upgrade survey, if one is needed.
 
 // answered folds the survey's strings back into the contract. Everything here has already been
 // validated by the field that collected it.
@@ -825,50 +584,4 @@ func validateProject(value string) error {
 	}
 
 	return nil
-}
-
-// stdinIsTerminal reports whether there is someone to answer a question. It is a variable so the
-// tests can take the path a script takes; nothing else reassigns it.
-var stdinIsTerminal = func() bool {
-	return term.IsTerminal(os.Stdin.Fd())
-}
-
-// The mark each outcome prints. A skipped step is a dash rather than the shared warning glyph:
-// nothing is wrong, the work was simply already done.
-var outcomeMarks = map[domain.Outcome]string{
-	domain.OutcomeDone:    "✓",
-	domain.OutcomeSkipped: "-",
-}
-
-// stepLine is one finished step: its mark, then the sentence the step wrote about itself.
-func stepLine(result domain.StepResult) string {
-	return outcomeStyle(result.Outcome).Render(glyph(result.Outcome)) + " " + result.Detail
-}
-
-func glyph(outcome domain.Outcome) string {
-	if mark, ok := outcomeMarks[outcome]; ok {
-		return mark
-	}
-
-	return "?"
-}
-
-// outcomeStyle is the one place an outcome becomes a style. An unknown outcome is left unstyled.
-func outcomeStyle(outcome domain.Outcome) lipgloss.Style {
-	return ui.Style(tone(outcome))
-}
-
-// tone is initcmd's whole share of the palette: the same teal doctor gives a passing check for a
-// step that was done, and the same amber it gives a warning for one that was not, so the two
-// commands read as one tool. Only the mark is coloured — the rest of a line is a path or a reason,
-// where colour would be decoration rather than information.
-func tone(outcome domain.Outcome) ui.Tone {
-	switch outcome {
-	case domain.OutcomeDone:
-		return ui.TonePrimary
-	case domain.OutcomeSkipped:
-		return ui.ToneWarn
-	default:
-		return ui.ToneNone
-	}
 }

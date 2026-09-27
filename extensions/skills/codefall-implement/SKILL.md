@@ -259,7 +259,7 @@ bead whose acceptance criteria name a test case needs an equipped harness:
 | --- | --- |
 | `equipped` | those beads proceed |
 | `unequipped` | say so, name `/codefall-equip`, and do not start them |
-| `undeclared` | say so, name `codefall init`, and do not start them |
+| `undeclared` | say so, name `codefall upgrade`, and do not start them |
 | `unknown` | read the `test` block from `.codefall/settings.json` and judge it the same way; no runner there is `unequipped` |
 
 Beads verified by unit tests alone proceed either way. **Never set the harness up** — that is

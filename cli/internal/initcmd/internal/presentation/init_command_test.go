@@ -11,6 +11,7 @@ import (
 	"testing"
 
 	"github.com/samber/mo"
+	"github.com/spf13/cobra"
 
 	"github.com/lividlabs/codefall-cli/cli/internal/initcmd/internal/application"
 	"github.com/lividlabs/codefall-cli/cli/internal/initcmd/internal/domain"
@@ -25,6 +26,7 @@ type fakeInitialize struct {
 	err        error
 	exists     bool
 	existsErr  error
+	manifest   bool
 	suggestion mo.Option[string]
 	root       mo.Option[string]
 	installed  mo.Option[application.Installation]
@@ -52,6 +54,12 @@ func (f *fakeInitialize) Run(
 
 func (f *fakeInitialize) SettingsExist(string) (bool, error) {
 	return f.exists, f.existsErr
+}
+
+// ManifestExists on the fake reports no finished run unless a test says otherwise: init's tests
+// are about a project with nothing recorded, and upgrade's set it.
+func (f *fakeInitialize) ManifestExists(string) (bool, error) {
+	return f.manifest, f.existsErr
 }
 
 // Installed on the fake reports nothing applied before unless a test says otherwise — to the gate
@@ -109,6 +117,19 @@ func newFakeInitialize() *fakeInitialize {
 // ANSI into the buffer: colorprofile honours both regardless of whether the writer is a terminal.
 func run(t *testing.T, initialize InitializeUseCase, args ...string) (string, error) {
 	t.Helper()
+
+	return runCommand(t, NewInitCommand(initialize), args...)
+}
+
+// runUpgradeCommand is run for `codefall upgrade`.
+func runUpgradeCommand(t *testing.T, initialize InitializeUseCase, args ...string) (string, error) {
+	t.Helper()
+
+	return runCommand(t, NewUpgradeCommand(initialize), args...)
+}
+
+func runCommand(t *testing.T, cmd *cobra.Command, args ...string) (string, error) {
+	t.Helper()
 	t.Setenv("CLICOLOR_FORCE", "0")
 	t.Setenv("TTY_FORCE", "0")
 
@@ -116,7 +137,6 @@ func run(t *testing.T, initialize InitializeUseCase, args ...string) (string, er
 
 	var out bytes.Buffer
 
-	cmd := NewInitCommand(initialize)
 	cmd.SetArgs(args)
 	cmd.SetOut(&out)
 	cmd.SetErr(&out)
@@ -148,7 +168,6 @@ func TestInitCommandPassesTheFlagsToTheUseCase(t *testing.T) {
 		"--issues-project", "3",
 		"--harness", "claude",
 		"--test-dir", "e2e",
-		"--force",
 	); err != nil {
 		t.Fatalf("Execute: %v", err)
 	}
@@ -166,7 +185,6 @@ func TestInitCommandPassesTheFlagsToTheUseCase(t *testing.T) {
 		Harnesses:     []string{harness.Claude},
 		TestDir:       "e2e",
 		CLIVersion:    buildinfo.Version(),
-		Force:         true,
 	}
 
 	if !reflect.DeepEqual(initialize.got, want) {
@@ -193,10 +211,6 @@ func TestInitCommandLeavesTheOptionalValuesAbsent(t *testing.T) {
 
 	if initialize.got.IssuesRepo.IsPresent() || initialize.got.IssuesProject.IsPresent() {
 		t.Errorf("request = %+v, want the GitHub values absent", initialize.got)
-	}
-
-	if initialize.got.Force {
-		t.Error("Force = true, want false without the flag")
 	}
 
 	// Beads needs no repository, so gh is not asked about one.
@@ -337,14 +351,15 @@ func TestInitCommandUsesTheRepositoryGHSuggests(t *testing.T) {
 	}
 }
 
-// Settings that are already there and are not being rewritten are not worth asking about: the step
-// will skip them whatever the answers are, so the command does not fail on a missing flag either.
+// Settings with no manifest behind them are a project set up before the manifest existed, and this is
+// its one run of init: nothing is asked, because the answers are already on record, and the command
+// does not fail on a missing flag either.
 func TestInitCommandAsksNothingWhenSettingsAlreadyExist(t *testing.T) {
 	initialize := newFakeInitialize()
 	initialize.exists = true
 	initialize.harnesses = mo.Some([]string{harness.Claude})
 	initialize.report = domain.NewReport(
-		domain.SettingsStep.Skipped(".codefall/settings.json already exists (use --force to rewrite it)"))
+		domain.SettingsStep.Skipped(".codefall/settings.json already exists"))
 
 	out, err := run(t, initialize)
 	if err != nil {
@@ -359,23 +374,27 @@ func TestInitCommandAsksNothingWhenSettingsAlreadyExist(t *testing.T) {
 		t.Error("asked gh for a repository, want nothing asked when the settings are already there")
 	}
 
-	want := "- .codefall/settings.json already exists (use --force to rewrite it)\n" + nextStep + "\n"
+	want := "- .codefall/settings.json already exists\n" + nextStep + "\n"
 	if out != want {
 		t.Errorf("output =\n%q\nwant\n%q", out, want)
 	}
 }
 
-// --force is what turns the questions back on, because the file it would skip is going to be
-// rewritten.
-func TestInitCommandStillAsksWhenForcingOverExistingSettings(t *testing.T) {
+// A manifest is a finished run's record, and init runs once: the second run is upgrade's, and init
+// says so rather than doing upgrade's work under the wrong name.
+func TestInitCommandRefusesAProjectThatIsAlreadySetUp(t *testing.T) {
 	initialize := newFakeInitialize()
 	initialize.exists = true
+	initialize.manifest = true
+	initialize.harnesses = mo.Some([]string{harness.Claude})
 
-	// The harnesses are asked for first, so that is the flag a forced run with no answers is told
-	// about — the same question order the survey puts them in.
-	out, err := run(t, initialize, "--force")
-	if err == nil || err.Error() != "missing --harness (stdin is not a terminal)" {
-		t.Fatalf("Execute error = %v, want the missing flag\n%s", err, out)
+	_, err := run(t, initialize)
+	if err == nil || !strings.Contains(err.Error(), "run codefall upgrade") {
+		t.Fatalf("Execute error = %v, want it to name codefall upgrade", err)
+	}
+
+	if initialize.ran {
+		t.Error("the use case ran, want the command to stop before it")
 	}
 }
 
@@ -635,67 +654,6 @@ func TestInitCommandAtTheRepositoryRootNeedsNoLocation(t *testing.T) {
 	}
 }
 
-// The manifest records the version each harness was installed at, and the gate compares them one
-// harness at a time: a project set up for one harness has had nothing done for the next one, whatever
-// version installed it. Comparing the version alone reported "already up to date" and left the second
-// harness with no skills, no hooks, and no way in short of --force.
-func TestInitCommandIsANoOpOnlyForTheHarnessItInstalled(t *testing.T) {
-	for _, tc := range []struct {
-		name      string
-		installed application.Installation
-		args      []string
-		wantRun   bool
-	}{
-		{
-			name:      "the same harness at the same version",
-			installed: application.Installation{Versions: map[string]string{harness.Claude: buildinfo.Version()}},
-			wantRun:   false,
-		},
-		{
-			name:      "another harness at the same version",
-			installed: application.Installation{Versions: map[string]string{harness.Claude: buildinfo.Version()}},
-			args:      []string{"--harness", harness.Agy},
-			wantRun:   true,
-		},
-		{
-			// A record naming several harnesses is read per harness, so the one this run is for is
-			// what decides — not whichever install happened to finish last.
-			name: "one of several recorded harnesses, at the same version",
-			installed: application.Installation{Versions: map[string]string{
-				harness.Claude: buildinfo.Version(), harness.Codex: buildinfo.Version()}},
-			args:    []string{"--harness", harness.Codex},
-			wantRun: false,
-		},
-		{
-			name:      "the same harness at an older version",
-			installed: application.Installation{Versions: map[string]string{harness.Claude: "v0.1.0"}},
-			args:      []string{"--yes"},
-			wantRun:   true,
-		},
-	} {
-		t.Run(tc.name, func(t *testing.T) {
-			initialize := newFakeInitialize()
-			initialize.exists = true
-			initialize.harnesses = mo.Some([]string{harness.Claude})
-			initialize.testDir = mo.Some(settings.DefaultTestDir)
-			initialize.installed = mo.Some(tc.installed)
-
-			out, err := run(t, initialize, tc.args...)
-			if err != nil {
-				t.Fatalf("Execute: %v\n%s", err, out)
-			}
-
-			if initialize.ran != tc.wantRun {
-				t.Errorf("ran = %v, want %v\n%s", initialize.ran, tc.wantRun, out)
-			}
-
-			if !tc.wantRun && !strings.Contains(out, "already up to date") {
-				t.Errorf("output = %q, want it to report the install is current", out)
-			}
-		})
-	}
-}
-
 // Several harnesses arrive either way a repeatable flag can be written, so a scripted run is not
 // forced into one shape of the same answer.
 func TestInitCommandTakesSeveralHarnesses(t *testing.T) {
@@ -728,22 +686,6 @@ func TestInitCommandTakesSeveralHarnesses(t *testing.T) {
 	}
 }
 
-// A rerun installs for what the project already chose, because its settings record them. The flag is
-// needed the first time, and afterwards only to add a harness.
-func TestInitCommandTakesTheHarnessesFromTheSettingsOnARerun(t *testing.T) {
-	initialize := newFakeInitialize()
-	initialize.exists = true
-	initialize.harnesses = mo.Some([]string{harness.Codex, harness.Muse})
-
-	if _, err := run(t, initialize); err != nil {
-		t.Fatalf("Execute: %v", err)
-	}
-
-	if want := []string{harness.Codex, harness.Muse}; !slices.Equal(initialize.got.Harnesses, want) {
-		t.Errorf("Harnesses = %q, want %q", initialize.got.Harnesses, want)
-	}
-}
-
 // Settings that record no harnesses are a file written before the field existed. There is nothing to
 // install for and nothing to read it from, so the run says which flag would answer it rather than
 // choosing a harness on the project's behalf.
@@ -758,84 +700,6 @@ func TestInitCommandRefusesSettingsThatRecordNoHarnesses(t *testing.T) {
 
 	if initialize.ran {
 		t.Error("the use case ran, want the command to stop before it")
-	}
-}
-
-// A rerun works with the testing root the project declared, so the flag is needed the first time and
-// never again — and the run has no way to move a root a project's cases already sit at.
-func TestInitCommandTakesTheTestingRootFromTheSettingsOnARerun(t *testing.T) {
-	initialize := newFakeInitialize()
-	initialize.exists = true
-	initialize.harnesses = mo.Some([]string{harness.Claude})
-	initialize.testDir = mo.Some("packages/web/e2e")
-
-	if _, err := run(t, initialize); err != nil {
-		t.Fatalf("Execute: %v", err)
-	}
-
-	if initialize.got.TestDir != "packages/web/e2e" {
-		t.Errorf("TestDir = %q, want the root the settings declare", initialize.got.TestDir)
-	}
-}
-
-// A project settled before the block existed declares none, and the run still has the tree to make:
-// nothing is asked, because a rerun surveys for nothing, and the use case takes the format's default.
-func TestInitCommandLeavesTheTestingRootToTheUseCaseOnARerunThatDeclaresNone(t *testing.T) {
-	initialize := newFakeInitialize()
-	initialize.exists = true
-	initialize.harnesses = mo.Some([]string{harness.Claude})
-
-	if _, err := run(t, initialize); err != nil {
-		t.Fatalf("Execute: %v", err)
-	}
-
-	if !initialize.ran {
-		t.Fatal("the use case did not run, want a rerun to make the tree")
-	}
-
-	if initialize.got.TestDir != "" {
-		t.Errorf("TestDir = %q, want it left empty for the use case's default", initialize.got.TestDir)
-	}
-}
-
-// An install that is current in every other way is still work when the project has never declared a
-// testing root: doctor's remedy for that is this command, so this command has to do something.
-func TestInitCommandIsNotANoOpWhileTheTestingRootIsUndeclared(t *testing.T) {
-	initialize := newFakeInitialize()
-	initialize.exists = true
-	initialize.harnesses = mo.Some([]string{harness.Claude})
-	initialize.installed = mo.Some(application.Installation{
-		Versions: map[string]string{harness.Claude: buildinfo.Version()}})
-
-	out, err := run(t, initialize)
-	if err != nil {
-		t.Fatalf("Execute: %v\n%s", err, out)
-	}
-
-	if !initialize.ran {
-		t.Errorf("ran = false, want the run to declare the root\n%s", out)
-	}
-}
-
-// An install that is current in every other way is still work when its files record a harness under
-// the spelling it had before it was named for its binary: doctor's remedy for that is this command,
-// and the run is what rewrites it.
-func TestInitCommandIsNotANoOpWhileAFormerHarnessNameIsRecorded(t *testing.T) {
-	initialize := newFakeInitialize()
-	initialize.exists = true
-	initialize.harnesses = mo.Some([]string{harness.Claude})
-	initialize.testDir = mo.Some(settings.DefaultTestDir)
-	initialize.installed = mo.Some(application.Installation{
-		Versions: map[string]string{harness.Claude: buildinfo.Version()}})
-	initialize.formers = []string{"claude-code"}
-
-	out, err := run(t, initialize)
-	if err != nil {
-		t.Fatalf("Execute: %v\n%s", err, out)
-	}
-
-	if !initialize.ran {
-		t.Errorf("ran = false, want the run to rewrite the old name\n%s", out)
 	}
 }
 

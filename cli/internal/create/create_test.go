@@ -21,7 +21,7 @@ func TestRegisterProvidesEverythingCommandNeeds(t *testing.T) {
 	initcmd.Register(injector)
 
 	initCommand := initcmd.Command(injector)
-	for _, name := range []string{"location", "force", "yes"} {
+	for _, name := range []string{"location"} {
 		if initCommand.Flags().Lookup(name) == nil {
 			t.Errorf("init has no --%s, so create's list of flags to leave out is stale", name)
 		}
