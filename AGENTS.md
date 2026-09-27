@@ -22,8 +22,10 @@ request per task, `review` → `.codefall/reviews/`, `test` → `.codefall/tests
 `scaffold` starts a project, `graft` brings its documents current, and `equip` and `refresh` keep
 the local environment level with the checkout. Bead state travels over the git remote as
 `refs/dolt/data`: a verb runs `bd dolt push` after every bead write, and `refresh` runs `bd sync`.
-Every verb but `refresh` is invoked deliberately, and each applies only what the user takes; a
-human performs every merge to `main`, and a hook denies the alternative.
+`envision`, `specify`, `mock-up`, `scaffold`, `graft`, and `equip` are invoked deliberately by a
+user; `design`, `implement`, `test`, `review`, and `refresh` may also be run by an agent. Every
+verb applies only what the user takes; a human performs every merge to `main`, and a hook denies
+the alternative.
 [`docs/workflow.md`](docs/workflow.md) holds the full chain, what each verb reads and writes, and
 who is authoritative for what.
 

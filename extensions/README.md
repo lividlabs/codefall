@@ -19,8 +19,11 @@ This directory is the extension. Everything above it is packaging.
 | [`codefall-equip`](skills/codefall-equip/SKILL.md) | Equip a project with the two things the other verbs need it to have: the local-environment scripts `codefall-refresh` runs — `start` and `update`, declared under `local` — and the test harness `codefall-test` runs cases through — a spec runner per surface, its configuration pointed at the testing root, declared in `test.runners` and with its commands recorded in the testing root's `AGENTS.md`. Finds what the project already has or drafts it from what the repository shows. One track per run; scaffold and implement follow the local one as the procedure. |
 | [`codefall-refresh`](skills/codefall-refresh/SKILL.md) | Bring the checkout, the beads, and the local environment current: fetch, fast-forward the default branch when that is safe, sync the Beads database with its Dolt remote, run the declared `start` and `update`, record the commit the environment now matches, and turn a failure into a sentence that says what to do. Safe to run at any time. |
 
-Skills are explicitly invoked and carry `disable-model-invocation: true`, so none fire on their own,
-except `codefall-refresh`, which an agent may run when the environment is stale.
+`codefall-envision`, `codefall-specify`, `codefall-mock-up`, `codefall-scaffold`, `codefall-graft`,
+and `codefall-equip` are explicitly invoked and carry `disable-model-invocation: true`, so none of
+them fire on their own. `codefall-design`, `codefall-implement`, `codefall-test`, `codefall-review`,
+and `codefall-refresh` carry no such line, so an agent may run these too, and a session can carry a
+design through implementation, review, and test without a person typing each verb.
 The extension also ships hooks per harness, defined under [`hooks/`](hooks/): a `PreToolUse` guard
 that denies merges and pushes to the default branch everywhere, plus, for the harnesses that have
 the event (Claude Code, Codex, and OpenCode), a `SessionStart` prime on what Beads knows and a

@@ -2,7 +2,6 @@
 name: codefall-design
 description: Decide how a feature gets built and put the work into the graph — read the docs and the code, judge whether the change warrants a design document at all, write one scaled to the work at docs/designs/, record hard-to-reverse choices as ADRs, decide which tasks are verified through the wired product and draft their test case and its criteria into the bead, and create the task graph in Beads from the document's staged task plan.
 argument-hint: "[the spec, the vision, or what you want built]"
-disable-model-invocation: true
 allowed-tools:
   - Read
   - Glob

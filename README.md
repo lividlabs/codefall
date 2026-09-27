@@ -235,11 +235,14 @@ offered, never merged: that holds for every verb that writes a document, and onl
 A feature too large for one cohesive spec becomes sibling specs rather than a parent and children.
 The vision above them is what groups them, which is why a vision's `Related` line holds a list.
 
-Skills are **explicitly invoked** — `/scaffold`, `/specify`, and so on. Each carries
-`disable-model-invocation: true`, so none of them fire on their own; scaffolding a project or filing
-an issue is a deliberate act, not something inferred from a passing remark. `codefall-refresh` is
-the one exception: it writes nothing but a git-ignored stamp, so an agent may run it on its own
-when the environment is stale.
+`codefall-envision`, `codefall-specify`, `codefall-mock-up`, `codefall-scaffold`,
+`codefall-graft`, and `codefall-equip` are **explicitly invoked** — `/scaffold`, `/specify`, and so
+on. Each carries `disable-model-invocation: true`, so none of them fire on their own; scaffolding a
+project or filing an issue is a deliberate act, not something inferred from a passing remark.
+`codefall-design`, `codefall-implement`, `codefall-test`, `codefall-review`, and `codefall-refresh`
+carry no such line, so an agent may run them too: a session can carry a design through
+implementation, review, and test without a person typing each verb. Each still reports, offers, and
+applies only what the user takes, and a human still performs every merge.
 
 A question of fact you cannot answer in the interview, how the existing system behaves in a case the
 audit did not settle, is put to the project's consult agents once and comes back as a proposal you

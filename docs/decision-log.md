@@ -1385,6 +1385,21 @@ Decided at scaffold, 2026-08-16.
   authority; and consulting on the stack for an empty directory, where nothing but the user's
   preference can answer.
 
+- **Design, implement, test, and review become model-invocable, 2026-09-27.** These four join
+  `codefall-refresh` in dropping `disable-model-invocation: true`, so an agent may run them too, not
+  only a user typing the slash command. The chain from `design` through `test` is what an agent
+  would run end to end, carrying one piece of work from a design document to open, reviewed, tested
+  pull requests without a person typing each verb in turn. `envision`, `specify`, `mock-up`,
+  `scaffold`, `graft`, and `equip` stay deliberate: they turn an idea into a document or start a
+  project, and a preference only the user holds sits behind most of their questions. What makes the
+  four safe to hand to an agent is that the gates that matter are inside the verbs and untouched by
+  this change — `implement`'s go gate still waits before claiming work, `review` and `test` still
+  triage findings with the user rather than deciding for them, and the merge to `main` is still a
+  human's alone, held by the guard hook. `skill-health.sh`'s `MODEL_INVOCABLE` list gains the four
+  names, `docs/workflow.md`, `README.md`, `extensions/README.md`, the root `AGENTS.md`,
+  `extensions/skills/AGENTS.md`, and the Codefall section every project's `AGENTS.md` carries are
+  restated to match.
+
 ## Open
 
 - **UI composition.** Half settled by **Shared modules, 2026-08-27** above: the theme, the styles,
