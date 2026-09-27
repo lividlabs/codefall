@@ -20,8 +20,8 @@ request, and let each close unblock the next task until the frontier is empty.
 
 Implementing is not merging. A run ends at open pull requests and a reported merge order — **a human
 performs every merge to `main`, and this skill never does**, in any mode, under any instruction
-short of the user editing this file. Merges into an epic branch are the one exception: the epic
-branch exists to fan work back in, and the human gate sits at its aggregate PR.
+short of the user editing this file. Merges into an epic branch are the one exception; the human
+gate sits at its aggregate PR.
 
 Paths that start with `reference/` or `../` are relative to this skill's directory, not the user's
 project. A path through `../../../.codefall/` is the one that leaves the skills directory: it names
@@ -223,9 +223,12 @@ than re-running anything:
 A stacked chain resumes from its highest link with an open PR; everything below is merged or
 awaiting merge, and everything above follows the normal sequence.
 
-## Project customizations
+## Project customizations and persona
 
-Follow `../../../.codefall/shared/customizations.md` for this verb.
+Follow `../../../.codefall/shared/customizations.md` for this verb. Read the `persona=` line of the
+preflight report, or `persona` in `.codefall/user.json` when this verb runs no preflight; when it is
+not `engineer`, follow that persona's section in `../../../.codefall/shared/personas.md` for this
+run, and say so.
 
 ## Process
 
@@ -350,8 +353,7 @@ Do not merge, and do not wait for merges; the next session's `bd gate check` fin
 ## Rules
 
 - **A human performs every merge to `main`; this skill performs none, in any mode.**
-- **Every `bd` write is the root's, in the primary checkout.** Workers never run `bd`; their prompt
-  carries what they need and their result JSON carries what they found.
+- **Every `bd` write is the root's, in the primary checkout.** Workers never run `bd`.
 - **Closed means done — criteria verified, checks green, PR open.** Merged is the gates' to say.
 - **Publish the claim before the work.** `bd dolt push` follows every claim and every close.
 - **The graph is the sequencer.** `bd ready` decides what runs next; never start a blocked bead.
@@ -364,13 +366,11 @@ Do not merge, and do not wait for merges; the next session's `bd gate check` fin
   never does.
 - **No permission prompts mid-run.** The go gate holds the condition.
 - **Tests are part of done.** Planned or discovered, written now, never deferred to `test`.
-- **A test case the criteria name is written first, from those criteria**, before the code and
-  before its spec. Never from the sibling spec, the code, or a pull request's text. The case counts
-  toward done; running it is `codefall-test`'s.
-- **A test harness is never set up inside a task's pull request.** A bead that needs one and finds
-  the project unequipped is not started, and `/codefall-equip` is named.
-- **The local scripts are part of done.** A change that would leave a teammate's refresh stale
-  changes `start` and `update` in the same PR, per `codefall-equip`'s local track.
+- **A test case the criteria name is written first, from those criteria alone**, before the code
+  and its spec. The case counts toward done; running it is `codefall-test`'s.
+- **A test harness is never set up inside a task's pull request.** An unequipped bead is not
+  started; `/codefall-equip` is named.
+- **The local scripts are part of done**, changed in the same PR per `codefall-equip`'s local track.
 - **Implement never writes bead metadata and never redesigns the graph.**
 - **`Active` is a fact, recorded once.**
 - **Worktrees are cleaned up by offer, never by default.**

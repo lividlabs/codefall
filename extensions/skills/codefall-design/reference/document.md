@@ -8,6 +8,7 @@ drafting (step 7).
 - The header
 - Required sections
 - Conditional sections
+- Decisions needed
 - Technical Context
 - Hard Constraints
 - Task Plan
@@ -63,6 +64,33 @@ Include a section only when its trigger fires. Nothing is written to fill a head
 | **Technical Context** | A new dependency, or infrastructure is touched |
 | **Alternatives Considered** | A real choice was made. This is also the ADR trigger |
 | **Hard Constraints** | There are invariants worth asserting directly |
+| **Decisions needed** | A technical choice the run could not settle with the person, because the persona parks such choices or the person said they cannot decide it |
+
+## Decisions needed
+
+The section a design carries when a technical choice was put to the person and not settled: under
+the `product-manager` persona, every such choice; under any persona, one the person says they
+cannot decide. The run never settles it in their place, and never reads silence as a choice. It
+researches first, so what is parked is a judgment call and not a gap in reading.
+
+One entry per decision:
+
+```markdown
+## Decisions needed
+
+### 1. Signed payload or session lookup for the stage context
+- **Affects:** SPEC-004-REQ-02, REQ-03
+- **Options:** a signed payload — no store, every consumer verifies; a session lookup — one store,
+  one place to expire, a network hop on every read
+- **Needs an ADR:** yes — other components will build on it
+- **Consulted:** architect (codex) preferred the signed payload; the reasoning is under Overview
+```
+
+**A design with a non-empty Decisions needed section is `Draft`, never `Ready`, and creates no
+beads.** The next-action line of the run's report hands the document to an engineer's run of
+`codefall-design`, whose Promote mode settles each entry with the person, moves the outcome into
+the section it belongs to, removes the entry, and only then creates the graph. The section is
+deleted when it is empty, like every conditional section.
 
 ## Technical Context
 

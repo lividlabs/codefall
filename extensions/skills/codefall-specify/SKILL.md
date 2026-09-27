@@ -148,9 +148,12 @@ profile** — one directory per tracker.
 - **The spec is written even when the mirror fails.** The document is the deliverable. Give the user
   the exact command to fix the tracker and say the mirror is pending. Do not discard the spec.
 
-## Project customizations
+## Project customizations and persona
 
-Follow `../../../.codefall/shared/customizations.md` for this verb.
+Follow `../../../.codefall/shared/customizations.md` for this verb. Read the `persona=` line of the
+preflight report, or `persona` in `.codefall/user.json` when this verb runs no preflight; when it is
+not `engineer`, follow that persona's section in `../../../.codefall/shared/personas.md` for this
+run, and say so.
 
 ## Process
 
@@ -395,21 +398,20 @@ own initiative. Each lands per `../../../.codefall/shared/landing.md`.
 ## Rules
 
 - **Nothing is written without the user confirming the document first.**
-- **The document is canonical.** Tracker issues are generated from it and regenerated on later runs.
-- **The specification says what, never how.** No file paths, no libraries, no services, no schema. A
-  domain noun may be named and defined; its fields, types, and relations may not.
-- **Acceptance criteria are EARS, and nothing else is.** Pick the pattern that fits rather than
-  writing everything as `WHEN … THEN`.
+- **The document is canonical**; tracker issues are regenerated from it.
+- **The specification says what, never how.** No file paths, libraries, services, or schema; a
+  domain noun may be named, its fields may not.
+- **Acceptance criteria are EARS, and nothing else is.**
 - **"so that" is mandatory** in every user story.
-- **Criteria are observable in a running system**, and the instrumentation to make them so is part of
-  the requirement — surfaced out loud, never absorbed silently.
+- **Criteria are observable in a running system**; the instrumentation that makes them so is part
+  of the requirement, said out loud.
 - **Criteria exist for coverage, not symmetry.**
-- **Numbering is append-only at every level.** Retired numbers are never reused.
-- **Status describes the document, never the work.** Work state belongs to the tracker.
-- **Silent omission is never a deletion.** A removal is always its own criterion.
-- **Mockups are keyed by surface**, never filed under a spec.
+- **Numbering is append-only at every level**; retired numbers are never reused.
+- **Status describes the document, never the work.**
+- **Silent omission is never a deletion**; a removal is its own criterion.
+- **Mockups are keyed by surface**, not by spec.
 - **Push back once, then defer** — on vagueness, on design concerns, on cohesion.
-- **Unresolved is recorded, not dropped**, as open questions in the document.
+- **Unresolved is recorded** as open questions, never dropped.
 - **A consult answers a question of fact, never a preference**, and the user confirms it first.
 - **A vision found wrong is amended here** when it is `Draft` or `Ready`; an `Active` one is not.
 - **Never overwrite a file that has drifted.** Show the difference and ask.

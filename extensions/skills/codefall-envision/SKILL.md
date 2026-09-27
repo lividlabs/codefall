@@ -153,9 +153,12 @@ written when the directory is created, added on a later run if it is missing.
 **Never overwrite a file that has drifted.** When one exists and differs from the template, show the
 difference and ask. Replace it only on a yes; on a no, leave it and say nothing further about it.
 
-## Project customizations
+## Project customizations and persona
 
-Follow `../../../.codefall/shared/customizations.md` for this verb.
+Follow `../../../.codefall/shared/customizations.md` for this verb. Read the `persona=` line of the
+preflight report, or `persona` in `.codefall/user.json` when this verb runs no preflight; when it is
+not `engineer`, follow that persona's section in `../../../.codefall/shared/personas.md` for this
+run, and say so.
 
 ## Process
 

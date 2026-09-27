@@ -204,9 +204,12 @@ them is no longer in the conversation.
 failure state drawn gets exactly that, and the README says which is which. **Never redraw an imported
 asset** — make the missing state alongside it.
 
-## Project customizations
+## Project customizations and persona
 
-Follow `../../../.codefall/shared/customizations.md` for this verb.
+Follow `../../../.codefall/shared/customizations.md` for this verb. Read the `persona=` line of the
+preflight report, or `persona` in `.codefall/user.json` when this verb runs no preflight; when it is
+not `engineer`, follow that persona's section in `../../../.codefall/shared/personas.md` for this
+run, and say so.
 
 ## Process
 

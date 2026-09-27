@@ -57,9 +57,6 @@ Read each when its step says to; none is loaded up front.
 | Which tasks need a test case, and its criteria | Writing the case file, and running it | `codefall-implement`, `codefall-test` |
 | Hard-to-reverse choices, recorded as ADRs | Estimates and assignment | the team |
 
-**A design does not restate the specification.** What a consumer observes is `codefall-specify`'s;
-cite it and move on.
-
 **The project's stance is already decided** — layering, component boundaries, and how they are
 enforced — in `docs/adrs/` and the scoped `AGENTS.md` files. Design within it. A design that needs
 the stance changed says so once, then either follows the ADR or writes a superseding one.
@@ -140,18 +137,18 @@ Three states, one word plus a date.
 `codefall-design` maintains `docs/designs/AGENTS.md` from `templates/designs/AGENTS.md`: written when
 the directory is created, added on a later run if it is missing.
 
-**Never overwrite a file that has drifted.** One that exists and differs from the template: show the
-difference and ask. Replace only on a yes; on a no, leave it and say nothing further about it.
+One that exists and differs from the template: show the difference and ask.
 
 ## Beads
 
-Beads holds the tasks and the graph; the document holds the approach. One epic, `<prefix>-DESIGN-NNN`,
-and one task bead per row, `<prefix>-DESIGN-NNN-Tn`. Tier 0 has no epic: one or two self-sufficient
-beads. More in `reference/beads.md`.
+One epic, `<prefix>-DESIGN-NNN`, and one task bead per row, `<prefix>-DESIGN-NNN-Tn`; tier 0 has no
+epic. `reference/beads.md` has the rest.
 
-## Project customizations
+## Project customizations and persona
 
-Follow `../../../.codefall/shared/customizations.md` for this verb.
+Follow `../../../.codefall/shared/customizations.md` for this verb. Read the `persona=` line of the
+preflight report; when it is not `engineer`, follow that persona's section in
+`../../../.codefall/shared/personas.md` for this run, and say so.
 
 ## Process
 
@@ -210,7 +207,7 @@ framed the work. A vision's **Environment & constraints** section is written for
 - **The existing designs** — `docs/designs/`, not `archive/`. If one already covers this, say so
   and link it; the user may want to revise that one.
 - **The code** — the components this touches, their facades, and what already exists that this can
-  use. Read the artifacts, not their names.
+  use.
 - **The graph** — `bd dolt pull`, then `bd list` and `bd search` for existing work. A task
   this design would create that is already a bead is a dependency edge, not a new task.
 - **Revision requests**, on an existing design — `bd list -l design-revision --spec <its path>`,
@@ -247,9 +244,11 @@ Read `reference/document.md`. Settle, in this order, and only what applies:
 **"Like $LIBRARY does it."** Offer once to look it up; on yes, summarize only what changes a decision
 here, and confirm the summary before it reaches the document.
 
-**Raise a concern once, then defer.** Name it, say why, and let them decide. Cap at two rounds. A
-technical point still unsettled after research is consulted on once, per `reference/consulting.md`;
-what stays unsettled goes into the document as a stated risk.
+**Raise a concern once, then defer or park.** Name it, say why, and let them decide; cap at two
+rounds. A technical point still unsettled after research is consulted on once, per
+`reference/consulting.md`. What stays unsettled goes into the document as a stated risk, or, when
+the persona is `product-manager` or the person says they cannot decide it, into **Decisions needed**
+per `reference/document.md`: never decided by the run, never taken from silence.
 
 **Do not bikeshed** over naming or two equivalent shapes.
 
@@ -266,22 +265,18 @@ or does not? A task nobody can tell is done is too big or too vague.
 before it can start? A task with no answer is a root. A cycle is an error in the cut — fix the cut,
 not the edges.
 
-**A task that introduces a tool carries the script change as a criterion.** When a task's
-predicted files include a compose file, a migrations directory, a lockfile, a codegen config, or an
-`.env.example`, one of its acceptance criteria says the project's declared `start` and `update`
-scripts were changed for it, following `codefall-equip`. The environment a teammate refreshes into
-is part of what the task delivers. A project with no `local` block gets the criterion "equip the
-project" on the first such task instead.
+**A task that introduces a tool carries the script change as a criterion.** A compose file, a
+migrations directory, a lockfile, a codegen config, or an `.env.example` among its predicted files
+means one criterion says the declared `start` and `update` scripts were changed for it, per
+`codefall-equip`; a project with no `local` block gets "equip the project" on the first such task.
 
-**A task verified through the wired product carries a test case.** Its acceptance criteria name the
-case (`<area>/<slug>`), its modalities, and every criterion the case will hold — each cited in full
-(`SPEC-003-REQ-01-AC-01`) or marked `derived` with the requirement it elaborates
-(`SPEC-003-REQ-01`) and one line saying what it adds. `agentic` only where verifying an outcome
-needs judgement; `spec` otherwise; neither where unit tests verify the task, and a driver being
-available is no reason to add one. A gap the criteria expose in the spec is an appended criterion,
-offered at step 7 per [Upstream documents](#upstream-documents); `derived` is what the criterion
-stays when the user declines. The form is in `reference/beads.md` and the case-file format
-`codefall-implement` writes to is `../codefall-test/reference/case-file.md`.
+**A task verified through the wired product carries a test case.** Its criteria name the case
+(`<area>/<slug>`), its modalities, and every criterion the case will hold, each cited in full or
+marked `derived`, per `reference/beads.md`. `agentic` only where verifying an outcome needs
+judgement; `spec` otherwise; neither where unit tests verify the task. A gap the criteria expose in
+the spec is an appended criterion, offered at step 7 per [Upstream documents](#upstream-documents);
+`derived` is what it stays when the user declines. The case-file format is
+`../codefall-test/reference/case-file.md`.
 
 Write the staging table.
 
@@ -298,7 +293,8 @@ asks for it.
 
 Show the ADR too, if there is one; it ships `Accepted`.
 
-Then set the status: `Ready`, unless they said they are stopping and coming back, which is `Draft`.
+Then set the status: `Ready`, unless they are stopping and coming back, or **Decisions needed** is
+non-empty; both are `Draft`. A `Draft` carrying decisions creates no beads: skip steps 9 and 10.
 
 **At tier 0, this is the confirmation instead**: the beads you would create, their titles, their
 bodies, and their edges. The user approves the graph, not a document.
@@ -348,16 +344,19 @@ Report:
 - every upstream amendment written, and any the user declined;
 - every consult: the point, who answered, what it changed;
 - the ready set — which tasks `codefall-implement` can start on today;
-- anything left unresolved, and any concern the user overruled;
+- anything left unresolved, the decisions parked and how many, and any concern the user overruled;
 - the branch and the pull request;
 - **last, what the user does next**: merge the pull request, then `/codefall-implement DESIGN-NNN`,
-  or `/codefall-implement <bead>` at tier 0.
+  or `/codefall-implement <bead>` at tier 0; with decisions parked, have an engineer run
+  `/codefall-design DESIGN-NNN` to settle them.
 
 ## Other modes
 
 Invoking this skill on an existing design does one of four things. Ask which if it is not obvious.
 
 - **Promote** `Draft` to `Ready`, or **reopen** `Ready` to `Draft` when no beads exist yet.
+  Settling every item under **Decisions needed** empties the section first; steps 9 and 10 then
+  create the graph.
 - **Revise** a design and reconcile its graph, per `reference/revising.md`, which also settles
   every open `design-revision` bead. A design the code has moved past is revised, not labelled.
 - **Archive** a design: set `Status: Archived`, add `**Replaced by:**` if something took its place,
@@ -375,6 +374,7 @@ your own initiative.
   the beads.
 - **Scale the artifact to the work.** Tier 0 is a real outcome, not a failure to write a document.
 - **Never fill a heading.** An empty conditional section is deleted.
+- **A design carrying Decisions needed is `Draft`** and has no beads until they are settled.
 - **Design within the project's ADRs.** Changing the stance is a superseding ADR, said out loud; a
   ratified ADR is never rewritten.
 - **Identifiers are append-only** — design numbers, and local task IDs within a design.
@@ -394,7 +394,6 @@ your own initiative.
   replaced when the work done would no longer count.
 - **Never record a hop you can derive.** A design carries its spec, or its vision when there is no
   spec — not both.
-- **Research goes inline**, attached to the decision it informed. No sibling research files.
 - **Push back once, then defer** — on the tier, on the approach, on the cut. A consult informs,
   never decides.
 - **Never overwrite a file that has drifted.** Show the difference and ask.
