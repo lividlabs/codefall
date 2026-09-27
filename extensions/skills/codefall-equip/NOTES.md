@@ -17,7 +17,7 @@ project owns.
 rather than asking a question the repository could have answered. Here that is "search first, then
 ask with evidence".
 
-**`codefall-graft`'s report-then-take** — a candidate is shown with what is wrong with it before
+**`codefall-upgrade`'s report-then-take** — a candidate is shown with what is wrong with it before
 anything is declared, and the user takes it or not.
 
 **`codefall-implement`'s definition of done** — a change that makes the scripts stale changes the
@@ -52,9 +52,9 @@ to answer it: a teammate running refresh because the section in `AGENTS.md` said
 set of signals, not a stack, and a Go API with a Prisma-managed database is two rows, not a profile
 nobody wrote.
 
-**Routing the script through `codefall-graft`.** Graft moves documents against templates the
+**Routing the script through `codefall-upgrade`.** Upgrade moves documents against templates the
 extension ships, with provenance. The scripts have no template behind them once drafted — they are
-the project's — and this skill is already the verb that revises them, so graft would be a second
+the project's — and this skill is already the verb that revises them, so upgrade would be a second
 owner.
 
 ## Why the rules are shaped this way

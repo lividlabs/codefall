@@ -23,7 +23,7 @@ which are flattery with a heading.
 to switch providers inside the host. No harness offers a per-subagent provider switch, and a
 session-wide base URL override changes the host model too, so a subprocess is the only way.
 
-**`codefall-graft`** — the report as a deliverable, and stopping after it.
+**`codefall-upgrade`** — the report as a deliverable, and stopping after it.
 
 ## Rejected
 

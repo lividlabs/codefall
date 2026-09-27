@@ -8,15 +8,16 @@ import "maps"
 // gone from the tree this binary ships (ADR-010).
 //
 // Maintenance rule: a pull request that renames a skill adds a row here and a row to the "Skill
-// renames" table in skills/codefall-graft/lineage.md, in the same pull request. The two records say
-// the same thing to two readers: this one to the binary, that one to the graft skill and to a
+// renames" table in skills/codefall-upgrade/lineage.md, in the same pull request. The two records
+// say the same thing to two readers: this one to the binary, that one to the upgrade skill and to a
 // person. Without the row here, upgrade reports the old directory as no longer shipped, which is
 // true and unhelpful.
 var skillRenames = map[string]string{
 	"conceptualize":          "codefall-envision",
 	"codefall-conceptualize": "codefall-envision",
+	"codefall-graft":         "codefall-upgrade",
 	"design":                 "codefall-design",
-	"graft":                  "codefall-graft",
+	"graft":                  "codefall-upgrade",
 	"implement":              "codefall-implement",
 	"mock-up":                "codefall-mock-up",
 	"scaffold":               "codefall-scaffold",
