@@ -88,7 +88,7 @@
         },
         "harness": {
           "type": "string",
-          "description": "subagent, session, or the external CLI that ran: claude, codex, muse, opencode, agy, gemini."
+          "description": "subagent, session, or the external CLI that ran: claude, codex, muse, opencode, agy."
         },
         "model": {
           "type": "string"

@@ -1,7 +1,7 @@
 {
   "pluginVersion": "0.3.0",
   "scaffoldedAt": "2026-08-16",
-  "lastGraft": {
+  "lastUpgrade": {
     "pluginVersion": "0.4.0",
     "date": "2026-08-19"
   },

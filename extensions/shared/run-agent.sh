@@ -19,7 +19,7 @@
 #
 #   --settings   the project's settings file (default .codefall/settings.json)
 #   agent        a name from the settings file's `agents` list, or the raw form
-#                <harness>[:<model>] — codex, claude, opencode, gemini, muse, agy
+#                <harness>[:<model>] — codex, claude, opencode, muse, agy
 #   prompt-file  the prompt, already written
 #   schema-file  the JSON schema the answer follows, when the harness can take one
 #   out-file     where the harness's final message is written
@@ -37,9 +37,9 @@
 #
 # The prompt carries the schema for every harness. Codex and Claude Code also
 # take it as a flag, which constrains their output instead of requesting it; the
-# other four rely on the prompt alone — OpenCode and Gemini because they have no
-# such flag, Muse because its flag rejects this schema (see run_muse), agy because
-# its flag has not been tried against this schema (see run_agy).
+# other three rely on the prompt alone — OpenCode because it has no such flag,
+# Muse because its flag rejects this schema (see run_muse), agy because its flag
+# has not been tried against this schema (see run_agy).
 #
 # Environment
 #   CODEFALL_REVIEW_TIMEOUT   seconds before the run is killed (default 900)
@@ -57,7 +57,7 @@
 set -uo pipefail
 
 readonly USAGE="usage: run-agent.sh [--settings <path>] <agent> <prompt> <schema> <out>"
-readonly HARNESSES="codex claude opencode gemini muse agy"
+readonly HARNESSES="codex claude opencode muse agy"
 
 fail() {
   local code=$1
@@ -233,17 +233,6 @@ run_opencode() {
     --agent plan \
     --file "$prompt" \
     "Answer as the attached prompt says. Reply with the JSON it asks for and nothing else." >"$out"
-}
-
-# Gemini appends -p to whatever arrived on stdin, so the prompt file is the
-# input and -p is the instruction that closes it. No schema flag here either.
-run_gemini() {
-  gemini \
-    "${model_flag[@]+"${model_flag[@]}"}" \
-    --approval-mode plan \
-    --output-format text \
-    -p "Answer as the text above says. Reply with the JSON it asks for and nothing else." \
-    <"$prompt" >"$out"
 }
 
 # Muse's headless mode is `exec`. Its read-only mode is three flags rather than

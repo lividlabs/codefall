@@ -33,12 +33,11 @@ via=claude           via=claude:claude-opus-5
 via=muse             via=muse:muse-spark-1.3-contributor
 via=opencode         via=opencode:anthropic/claude-sonnet-5
 via=agy              via=agy:<model>
-via=gemini           via=gemini:gemini-3-pro
 ```
 
 A configured name wins when the two forms collide. The five harness names are the ones a project may
-configure; `gemini` runs by the raw form only. The model strings are examples and will age —
-whatever the harness accepts is passed through untouched.
+configure. The model strings are examples and will age — whatever the harness accepts is passed
+through untouched.
 
 ## Lens groups
 
@@ -85,7 +84,7 @@ means. The prompt file is `../reviewer-prompt.md` rendered with every lens in sc
 Claude Code also take the schema as a flag — `--output-schema` and `--json-schema` — which makes
 their output conform by construction. Muse has such a flag and the script does not pass it: its
 validator rejects the schema's `if`/`then` clause, so Muse reads the schema from the prompt like
-OpenCode, Gemini, and agy. The exit code decides the walk, per `running-agents.md`: `0` answered;
+OpenCode and agy. The exit code decides the walk, per `running-agents.md`: `0` answered;
 `70` the entry is `current`, run the subagents; `64` and `69` not runnable here, skip it; `73`,
 `75`, and `76` ran and failed, advance with the failure folded into the next prompt.
 
