@@ -123,6 +123,14 @@ walks it for its reviewer, and `implement` and `design` walk it for a consult wh
 settle a question on its own; a `review` or `consult` block may carry its own order.
 [ADR-009](docs/adrs/ADR-009-agents.md) records the shape.
 
+`.codefall/user.json` sits beside `settings.json` and describes the person at the keyboard rather
+than the project, so it is yours and is never checked in: `init` adds it to `.gitignore`. Its one
+field today is `persona`, `engineer` or `product-manager`, and a missing file or a missing field
+means `engineer`. A `codefall config persona` command will set it, and editing the file by hand
+works too: `{"version": 1, "persona": "product-manager"}`. `doctor` reports the persona and fails a
+file it cannot read. The schema is
+[`cli/schemas/user.schema.json`](cli/schemas/user.schema.json).
+
 Init also writes into the project's own files. The Beads database it initializes gets
 `audit.enabled: false` written into `.beads/config.yaml`, so bd's interaction log stays off until the
 project turns it on. `AGENTS.md` gains four marked sections — Codefall, Beads, Local environment,
@@ -134,7 +142,8 @@ authoritative for what, with the detail in `.codefall/shared/workflow.md`, a cop
 The testing root it asked about is created with a `test-cases/` directory and skeleton `AGENTS.md` and
 `README.md` files, which are yours from the moment they exist: each is written only when it is
 missing, and a rerun never rewrites one. `.ignore` gains the two directories codefall commits and
-nobody greps, `.gitignore` gains the refresh stamp and the testing root's `.artifacts/`, and
+nobody greps, `.gitignore` gains the refresh stamp, `.codefall/user.json`, and the testing root's
+`.artifacts/`, and
 `.gitattributes` gains a union merge for bd's append-only interaction log, so two branches that both
 appended to it merge without a conflict.
 [ADR-007](docs/adrs/ADR-007-test-cases.md) records what the tree is for.

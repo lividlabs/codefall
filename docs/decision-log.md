@@ -1478,6 +1478,25 @@ Decided at scaffold, 2026-08-16.
   place on its next write to `scaffold.json`, and says so in its report; nothing fails on the old key.
   This repository's own `scaffold.json` was renamed by hand, the same edit the skill makes.
 
+- **A per-user `.codefall/user.json`, carrying the persona, 2026-09-27.** The skills are to change
+  how they talk to the person running them depending on whether that person is an engineer or a
+  product manager, and that is a fact about the person, not the project. `settings.json` is checked
+  in and read the same way by everyone who clones the project, so a persona there would be one
+  person's choice imposed on the rest. The new file sits beside it, is git-ignored — `init` and
+  `upgrade` add the line under its own comment, and `doctor` warns when it is missing.
+  `persona` is its first field because it is
+  the first setting anyone has asked for that varies by person; it is optional, and absent means
+  `engineer`, which is who every skill was written for before the field existed. The format is a
+  pure shared module of its own, `internal/shared/userfile`, rather than a second document type in
+  `settings`, so that module stays the checked-in project file. `preflight.sh` emits
+  `persona=engineer` or `persona=product-manager`, falling back to `engineer` on a file it cannot
+  read, and `doctor` fails a file that is not valid so the fallback is never silent. Two later
+  changes build on it: the skills read the line, with the ADR for the persona design, and a
+  `codefall config persona` command writes the file. Seen and not taken: a `persona` field in
+  `settings.json`, for the reason above. The same change moves doctor's two agent checks into an
+  Agents category of their own, because the Harnesses heading listed the installed harnesses and
+  the configured agents in one parenthetical that read as a single list.
+
 ## Open
 
 - **UI composition.** Half settled by **Shared modules, 2026-08-27** above: the theme, the styles,

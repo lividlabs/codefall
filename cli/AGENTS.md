@@ -6,7 +6,7 @@ relative to `cli/` unless it says otherwise.
 
 A Go command-line tool. One surface, one app, one module.
 
-**State: three components and seven shared modules.** `internal/doctor/` (`codefall doctor`) is the
+**State: three components and nine shared modules.** `internal/doctor/` (`codefall doctor`) is the
 first component and the reference for the rules below; `internal/initcmd/` (`codefall init` and
 `codefall upgrade`, one use case behind two commands, exported through `Commands`) is the second, and
 follows it; `internal/create/` (`codefall create`) is the third, and runs init's command in the
@@ -15,9 +15,10 @@ writer, and the spinner runner; `internal/shared/process/` holds the command run
 system; `internal/shared/buildinfo/` holds the version the binary reports, for `--version` and for
 the manifest init writes. `internal/shared/harness/` holds the harnesses codefall can set up and where each one reads
 skills, `internal/shared/manifest/` the `.codefall/manifest.json` format,
-`internal/shared/settings/` the `.codefall/settings.json` format, and `internal/shared/text/` the
-string helpers both components need — all four **pure** (ADR-003), so the inner layers may import
-them. `cmd/codefall/main.go` is the composition root and builds the
+`internal/shared/settings/` the `.codefall/settings.json` format, `internal/shared/userfile/` the
+per-user `.codefall/user.json` format, `internal/shared/version/` the release comparison, and
+`internal/shared/text/` the string helpers both components need — all six **pure** (ADR-003), so the
+inner layers may import them. `cmd/codefall/main.go` is the composition root and builds the
 injector.
 
 ## Applicable ADRs
@@ -176,7 +177,9 @@ The why lives in the ADRs. This file is the operative rules only — never resta
   `domain-layer` allow entry: a deliberate `harness` import from `internal/initcmd/internal/domain/`
   compiled and was not reported. Both proofs were made again for `internal/shared/manifest/` on
   2026-09-16; nothing in a `domain/` package imports that module, so its allow entry has no other
-  proof.
+  proof. Both were made again for `internal/shared/userfile/` on 2026-09-27, against a
+  `charm.land/lipgloss/v2` import in the module and a `userfile` import from
+  `internal/doctor/internal/domain/`.
 - **`depguard` matches `_test.go` too.** Inner-layer tests are internal test packages (`package
   domain`, `package application`), so a `domain` test cannot import `os`. The schema test that holds
   `schemas/settings.schema.json` equal to the settings constants lives in `internal/shared/settings`,
