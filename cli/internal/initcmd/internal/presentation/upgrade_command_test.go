@@ -147,23 +147,22 @@ func TestUpgradeCommandReadsAFormerHarnessNameAsTheCurrentOne(t *testing.T) {
 // harness at a time: a project set up for one harness has had nothing done for the next one, whatever
 // version installed it. Comparing the version alone reported "already up to date" and left the second
 // harness with no skills, no hooks, and no way in.
-func TestUpgradeCommandIsANoOpOnlyForTheHarnessItInstalled(t *testing.T) {
+func TestUpgradeCommandIsCurrentOnlyForTheHarnessItInstalled(t *testing.T) {
 	for _, tc := range []struct {
-		name      string
-		installed application.Installation
-		args      []string
-		wantRun   bool
+		name        string
+		installed   application.Installation
+		args        []string
+		wantCurrent bool
 	}{
 		{
-			name:      "the same harness at the same version",
-			installed: application.Installation{Versions: map[string]string{harness.Claude: buildinfo.Version()}},
-			wantRun:   false,
+			name:        "the same harness at the same version",
+			installed:   application.Installation{Versions: map[string]string{harness.Claude: buildinfo.Version()}},
+			wantCurrent: true,
 		},
 		{
 			name:      "another harness at the same version",
 			installed: application.Installation{Versions: map[string]string{harness.Claude: buildinfo.Version()}},
 			args:      []string{"--harness", harness.Agy},
-			wantRun:   true,
 		},
 		{
 			// The flag names a harness the settings do not, so the run has that to record, however
@@ -171,14 +170,12 @@ func TestUpgradeCommandIsANoOpOnlyForTheHarnessItInstalled(t *testing.T) {
 			name: "a recorded harness the settings do not name",
 			installed: application.Installation{Versions: map[string]string{
 				harness.Claude: buildinfo.Version(), harness.Codex: buildinfo.Version()}},
-			args:    []string{"--harness", harness.Codex},
-			wantRun: true,
+			args: []string{"--harness", harness.Codex},
 		},
 		{
 			name:      "the same harness at an older version",
 			installed: application.Installation{Versions: map[string]string{harness.Claude: "v0.1.0"}},
 			args:      []string{"--yes"},
-			wantRun:   true,
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
@@ -194,14 +191,69 @@ func TestUpgradeCommandIsANoOpOnlyForTheHarnessItInstalled(t *testing.T) {
 				t.Fatalf("Execute: %v\n%s", err, out)
 			}
 
-			if initialize.ran != tc.wantRun {
-				t.Errorf("ran = %v, want %v\n%s", initialize.ran, tc.wantRun, out)
+			// Every case runs the use case; what differs is whether it is told the install is current
+			// and so copies nothing.
+			if !initialize.ran {
+				t.Fatalf("ran = false, want every upgrade to run\n%s", out)
 			}
 
-			if !tc.wantRun && !strings.Contains(out, "already up to date") {
-				t.Errorf("output = %q, want it to report the install is current", out)
+			if initialize.got.Current != tc.wantCurrent {
+				t.Errorf("Current = %v, want %v\n%s", initialize.got.Current, tc.wantCurrent, out)
 			}
 		})
+	}
+}
+
+// A current install runs the repair steps, and a step that put something back is printed and closes
+// with what to run next. The steps that found nothing to do are not printed: the one line that
+// matters would be lost among them.
+func TestUpgradeCommandReportsWhatARunOverACurrentInstallRepaired(t *testing.T) {
+	initialize := newFakeInitialize()
+	initialize.exists = true
+	initialize.manifest = true
+	initialize.harnesses = mo.Some([]string{harness.Claude})
+	initialize.testDir = mo.Some(settings.DefaultTestDir)
+	initialize.installed = mo.Some(application.Installation{
+		Versions: map[string]string{harness.Claude: buildinfo.Version()}})
+	initialize.report = domain.NewReport(
+		domain.SettingsStep.Skipped(".codefall/settings.json already exists"),
+		domain.HookStep.Skipped("codefall's hooks are already in .claude/settings.json"),
+		domain.IgnoreStep.Done("added .codefall/user.json to .gitignore"),
+	)
+
+	out, err := runUpgradeCommand(t, initialize)
+	if err != nil {
+		t.Fatalf("Execute: %v\n%s", err, out)
+	}
+
+	want := "✓ added .codefall/user.json to .gitignore\n" + nextStep + "\n"
+	if out != want {
+		t.Errorf("output =\n%q\nwant\n%q", out, want)
+	}
+}
+
+// A current install whose repair steps all found their work done is up to date, and that is the
+// whole of what the run says.
+func TestUpgradeCommandSaysACurrentInstallWithNothingMissingIsUpToDate(t *testing.T) {
+	initialize := newFakeInitialize()
+	initialize.exists = true
+	initialize.manifest = true
+	initialize.harnesses = mo.Some([]string{harness.Claude})
+	initialize.testDir = mo.Some(settings.DefaultTestDir)
+	initialize.installed = mo.Some(application.Installation{
+		Versions: map[string]string{harness.Claude: buildinfo.Version()}})
+	initialize.report = domain.NewReport(
+		domain.SettingsStep.Skipped(".codefall/settings.json already exists"),
+		domain.IgnoreStep.Skipped(".gitignore already names .codefall/user.json"),
+	)
+
+	out, err := runUpgradeCommand(t, initialize)
+	if err != nil {
+		t.Fatalf("Execute: %v\n%s", err, out)
+	}
+
+	if want := "already up to date with " + buildinfo.Version() + "\n"; out != want {
+		t.Errorf("output =\n%q\nwant\n%q", out, want)
 	}
 }
 
@@ -291,9 +343,9 @@ func TestUpgradeCommandSaysWhenTheBreakingChangesCouldNotBeDetermined(t *testing
 	}
 }
 
-// A run that has nothing to do prints nothing about breaking changes either: there is no version
+// A run over a current install prints nothing about breaking changes: there is no version
 // moving for them to be about.
-func TestUpgradeCommandPrintsNoBreakingChangesOnANoOp(t *testing.T) {
+func TestUpgradeCommandPrintsNoBreakingChangesOnACurrentInstall(t *testing.T) {
 	initialize := newFakeInitialize()
 	initialize.exists = true
 	initialize.manifest = true
@@ -308,7 +360,7 @@ func TestUpgradeCommandPrintsNoBreakingChangesOnANoOp(t *testing.T) {
 	}
 
 	if strings.Contains(out, "never printed") || strings.Contains(out, "could not be determined") {
-		t.Errorf("output = %q, want nothing about breaking changes on a no-op", out)
+		t.Errorf("output = %q, want nothing about breaking changes on a current install", out)
 	}
 }
 
@@ -371,7 +423,7 @@ func TestUpgradeCommandLeavesTheTestingRootToTheUseCaseOnARerunThatDeclaresNone(
 
 // An install that is current in every other way is still work when the project has never declared a
 // testing root: doctor's remedy for that is this command, so this command has to do something.
-func TestUpgradeCommandIsNotANoOpWhileTheTestingRootIsUndeclared(t *testing.T) {
+func TestUpgradeCommandIsAFullRunWhileTheTestingRootIsUndeclared(t *testing.T) {
 	initialize := newFakeInitialize()
 	initialize.exists = true
 	initialize.manifest = true
@@ -384,15 +436,16 @@ func TestUpgradeCommandIsNotANoOpWhileTheTestingRootIsUndeclared(t *testing.T) {
 		t.Fatalf("Execute: %v\n%s", err, out)
 	}
 
-	if !initialize.ran {
-		t.Errorf("ran = false, want the run to declare the root\n%s", out)
+	if !initialize.ran || initialize.got.Current {
+		t.Errorf("ran = %v, Current = %v, want a full run to declare the root\n%s",
+			initialize.ran, initialize.got.Current, out)
 	}
 }
 
 // An install that is current in every other way is still work when its files record a harness under
 // the spelling it had before it was named for its binary: doctor's remedy for that is this command,
 // and the run is what rewrites it.
-func TestUpgradeCommandIsNotANoOpWhileAFormerHarnessNameIsRecorded(t *testing.T) {
+func TestUpgradeCommandIsAFullRunWhileAFormerHarnessNameIsRecorded(t *testing.T) {
 	initialize := newFakeInitialize()
 	initialize.exists = true
 	initialize.manifest = true
@@ -407,7 +460,8 @@ func TestUpgradeCommandIsNotANoOpWhileAFormerHarnessNameIsRecorded(t *testing.T)
 		t.Fatalf("Execute: %v\n%s", err, out)
 	}
 
-	if !initialize.ran {
-		t.Errorf("ran = false, want the run to rewrite the old name\n%s", out)
+	if !initialize.ran || initialize.got.Current {
+		t.Errorf("ran = %v, Current = %v, want a full run to rewrite the old name\n%s",
+			initialize.ran, initialize.got.Current, out)
 	}
 }
