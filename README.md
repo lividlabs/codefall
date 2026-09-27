@@ -177,7 +177,7 @@ TODO: rename the skill names to the actual
 | --- | --- | --- |
 | [`envision`](extensions/skills/codefall-envision/SKILL.md) | Get an idea onto paper before anyone specifies or scaffolds it: a numbered vision document under `docs/visions/` that carries the problem, the rough shape of an answer, and what nobody has decided yet. | in progress |
 | [`scaffold`](extensions/skills/codefall-scaffold/SKILL.md) | Start a new project on the Clean + package-by-component stance: ratified ADRs, scoped `AGENTS.md`, optionally project files and boundary lint. | in progress |
-| [`graft`](extensions/skills/codefall-graft/SKILL.md) | Bring a scaffolded project's docs up to date with the current templates: report what changed since its version, with per-file provenance, and apply only what the user takes. Also handles first-time adoption of the stance. | in progress |
+| [`upgrade`](extensions/skills/codefall-upgrade/SKILL.md) | Bring a project's install and docs current: offer `codefall upgrade` when the manifest is behind the binary, then report what changed in the templates since the project's version, with per-file provenance, and apply only what the user takes. Also handles first-time adoption of the stance. | in progress |
 | [`specify`](extensions/skills/codefall-specify/SKILL.md) | Turn a feature idea into a specification another session can implement: a spec document under `docs/specs/` holding requirements with EARS acceptance criteria, mirrored to the issue tracker. | in progress |
 | [`mock-up`](extensions/skills/codefall-mock-up/SKILL.md) | Get the visual surface of a feature into the repository under `docs/mockups/`: import what a design tool exported, or make the mockup here, matching the app's own design system so it looks like it belongs. | in progress |
 | [`design`](extensions/skills/codefall-design/SKILL.md) | Decide how a feature gets built and put the work into the graph: a design document under `docs/designs/` scaled to the size of the change, ADRs for the choices that are hard to reverse, and the tasks in Beads with their dependency edges, each carrying the acceptance criteria it is verified against and the test case where one is called for. | in progress |
@@ -267,7 +267,7 @@ A feature too large for one cohesive spec becomes sibling specs rather than a pa
 The vision above them is what groups them, which is why a vision's `Related` line holds a list.
 
 `codefall-envision`, `codefall-specify`, `codefall-mock-up`, `codefall-scaffold`,
-`codefall-graft`, and `codefall-equip` are **explicitly invoked** — `/scaffold`, `/specify`, and so
+`codefall-upgrade`, and `codefall-equip` are **explicitly invoked** — `/scaffold`, `/specify`, and so
 on. Each carries `disable-model-invocation: true`, so none of them fire on their own; scaffolding a
 project or filing an issue is a deliberate act, not something inferred from a passing remark.
 `codefall-design`, `codefall-implement`, `codefall-test`, `codefall-review`, and `codefall-refresh`

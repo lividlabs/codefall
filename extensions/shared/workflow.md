@@ -18,7 +18,7 @@ is where it is edited; `codefall init` installs the copy and replaces it on a re
 
 ## The chain
 
-`envision`, `specify`, `mock-up`, `scaffold`, `graft`, and `equip` are invoked deliberately by a
+`envision`, `specify`, `mock-up`, `scaffold`, `upgrade`, and `equip` are invoked deliberately by a
 user (`disable-model-invocation: true`). `design`, `implement`, `test`, `review`, and `refresh`
 carry no such line, so an agent may run these too, and a session can carry a design through
 implementation, review, and test without a person typing each verb. Whichever way a verb starts, it
@@ -66,9 +66,12 @@ Four verbs sit beside the chain rather than in it:
   `bd sync` the beads with their Dolt remote, run `start`, run `update` when the commit moved,
   record the commit in a git-ignored stamp. It never rebases a feature branch, stashes a dirty
   tree, or settles a conflict the sync halts on.
-- **`graft`** brings a scaffolded project's documents up to the current templates, reporting each
-  difference with its provenance and applying only what the user takes. It also handles first-time
-  adoption of the stance on an existing repo.
+- **`upgrade`** brings the install and the documents current, in that order. When the manifest
+  records an older version than the binary's, it offers `codefall upgrade`, runs it only on a yes,
+  and puts the command's breaking changes and its question to the user. Then it brings a scaffolded
+  project's documents up to the current templates, reporting each difference with its provenance
+  and applying only what the user takes. It also handles first-time adoption of the stance on an
+  existing repo.
 - **`codefall upgrade`** prints the breaking changes recorded between the installed version and the
   binary's and asks to continue, then reinstalls the skills, shared files, and hooks for the harnesses
   the settings record, replaces its own marked sections and registrations, rewrites a harness name
@@ -102,7 +105,7 @@ dependency, a migration, or generated code changes `start` or `update` in the sa
 - **Everything short of the merge is the verb's.** A verb that writes to the repository branches
   before its first file, commits what it wrote by path, and offers the push and the pull request;
   a document never sits uncommitted on `main`. `implement` does this per task; the document verbs,
-  `scaffold`, `equip`, and `graft` follow the shared `landing.md` beside this file's installed copy.
+  `scaffold`, `equip`, and `upgrade` follow the shared `landing.md` beside this file's installed copy.
 - **The context that finds a problem never fixes it.** `review` runs in the first agent of the
   project's configured order that this machine can run, a subagent of the current harness with
   nothing configured, and `via=` overrides that for one run. Wherever it runs, that context reviews

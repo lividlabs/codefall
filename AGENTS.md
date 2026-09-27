@@ -19,10 +19,11 @@ pull requests, and each leaves something the next one reads: `envision` → `doc
 `specify` → `docs/specs/` mirrored to the tracker, `mock-up` → `docs/mockups/`, `design` →
 `docs/designs/` and beads with dependency edges, `implement` → a worktree, a test case, and a pull
 request per task, `review` → `.codefall/reviews/`, `test` → `.codefall/tests/`. Beside the chain,
-`scaffold` starts a project, `graft` brings its documents current, and `equip` and `refresh` keep
-the local environment level with the checkout. Bead state travels over the git remote as
-`refs/dolt/data`: a verb runs `bd dolt push` after every bead write, and `refresh` runs `bd sync`.
-`envision`, `specify`, `mock-up`, `scaffold`, `graft`, and `equip` are invoked deliberately by a
+`scaffold` starts a project, `upgrade` brings its install and documents current, and `equip` and
+`refresh` keep the local environment level with the checkout. Bead state travels over the git
+remote as `refs/dolt/data`: a verb runs `bd dolt push` after every bead write, and `refresh` runs
+`bd sync`.
+`envision`, `specify`, `mock-up`, `scaffold`, `upgrade`, and `equip` are invoked deliberately by a
 user; `design`, `implement`, `test`, `review`, and `refresh` may also be run by an agent. Every
 verb applies only what the user takes; a human performs every merge to `main`, and a hook denies
 the alternative.
