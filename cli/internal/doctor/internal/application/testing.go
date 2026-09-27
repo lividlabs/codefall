@@ -17,7 +17,7 @@ import (
 // rule for everything equip sets up.
 const equipTestRemedy = "run /codefall-equip to set the project's test harness up"
 
-// testing runs checks 13 to 15: the project says where its test cases live, a runner is declared to
+// testing runs checks 16 to 18: the project says where its test cases live, a runner is declared to
 // run them, and the directory it declared is there (ADR-007).
 //
 // It reads the same settings the settings group validated, so whatever skipped those checks skips
@@ -55,7 +55,7 @@ func (d *Diagnose) testing(_ context.Context, dir string, results []domain.Resul
 	return d.testDirExists(dir, declared.Dir, results)
 }
 
-// testDirExists is check 14: the directory the settings declare is there.
+// testDirExists is check 18: the directory the settings declare is there.
 //
 // It fails rather than warns. The project declared it, and every verb that writes a case or runs one
 // looks for it, so a declaration pointing at nothing is one nothing can act on. The remedy is init,

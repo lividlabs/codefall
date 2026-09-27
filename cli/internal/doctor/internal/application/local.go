@@ -22,7 +22,7 @@ const equipRemedy = "run /codefall-equip to declare the project's start and upda
 // program that follows rather than naming the program.
 var assignment = regexp.MustCompile(`^[A-Za-z_][A-Za-z0-9_]*=`)
 
-// local runs checks 11 and 12: the project's local start and update commands are declared, and the
+// local runs checks 14 and 15: the project's local start and update commands are declared, and the
 // program each one runs can be found (ADR-005).
 //
 // It reads the same settings the settings group validated, so whatever skipped those checks skips
@@ -51,7 +51,7 @@ func (d *Diagnose) local(_ context.Context, dir string, results []domain.Result)
 	return d.runnable(dir, commands, results)
 }
 
-// runnable is check 11: each declared command names a program that exists. A command that names a
+// runnable is check 15: each declared command names a program that exists. A command that names a
 // path is looked for in the project; one that names a bare program is looked for on PATH. This is
 // as far as doctor can go without running anything, which it never does.
 //

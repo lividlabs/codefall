@@ -18,6 +18,32 @@
         "enum": ["agy", "claude", "codex", "muse", "opencode"]
       }
     },
+    "agents": {
+      "description": "The agents a verb reaches for when it needs another reader, in order (ADR-009): a reviewer, or a second opinion on a decision a run cannot settle. Each is named for a person to type after via=, runs on a harness named for its binary or on current, the harness running the session, and may name a model, passed to that harness untouched. Absent means one agent, subagent on current, which codefall init writes explicitly.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "harness"],
+        "properties": {
+          "name": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+          "harness": { "type": "string", "enum": ["agy", "claude", "codex", "current", "muse", "opencode"] },
+          "model": { "type": "string" }
+        },
+        "additionalProperties": true
+      }
+    },
+    "agentsByHarness": {
+      "description": "The order a session walks when it is running in the named harness, as names from agents. A harness with no entry, or a session that cannot say which harness it is in, walks the top-level order.",
+      "type": "object",
+      "properties": {
+        "agy": { "type": "array", "items": { "type": "string" } },
+        "claude": { "type": "array", "items": { "type": "string" } },
+        "codex": { "type": "array", "items": { "type": "string" } },
+        "muse": { "type": "array", "items": { "type": "string" } },
+        "opencode": { "type": "array", "items": { "type": "string" } }
+      },
+      "additionalProperties": false
+    },
     "beads": { "type": "object", "properties": {}, "additionalProperties": true },
     "github": {
       "type": "object",
@@ -32,7 +58,12 @@
       "type": "object",
       "required": ["postToPullRequest"],
       "properties": {
-        "postToPullRequest": { "type": "boolean" }
+        "postToPullRequest": { "type": "boolean" },
+        "agents": {
+          "description": "The order review walks, as names from agents, when it differs from the top-level order.",
+          "type": "array",
+          "items": { "type": "string" }
+        }
       },
       "additionalProperties": true
     },

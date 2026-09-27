@@ -90,6 +90,14 @@ A skill names a shared file `../../../.codefall/shared/<file>`, which is the sam
 skills directory. Nothing installed is a symlink, and no maintainer document from this repository is
 installed into your project. [ADR-006](docs/adrs/ADR-006-install-layout.md) records why.
 
+`settings.json` also carries an `agents` list: the readers a verb reaches for when it needs one other
+than the session, such as a reviewer, in the order to try them. Each entry has a name, the harness
+that runs it, named for its binary or `current` for whichever harness the session is in, and
+optionally a model. A run skips an agent this machine cannot start and moves to the next, so one
+checked-in list serves every machine, and `doctor` reports which entries yours can run. `init` writes
+one entry, `subagent` on `current`, which is what every verb does today; the verbs adopt the list in
+turn, `review` first. [ADR-009](docs/adrs/ADR-009-agents.md) records the shape.
+
 Init also writes into the project's own files. The Beads database it initializes gets
 `audit.enabled: false` written into `.beads/config.yaml`, so bd's interaction log stays off until the
 project turns it on. `AGENTS.md` gains four marked sections — Codefall, Beads, Local environment,

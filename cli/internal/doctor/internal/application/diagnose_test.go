@@ -94,6 +94,39 @@ const undeclaredSettings = `{
   "test": { "dir": "testing", "runners": ["playwright"] }
 }`
 
+// withAgents is the fixture's settings with an agents list and, when they are not empty, a review
+// order and a per-harness override, each written as JSON.
+func withAgents(agents, reviewOrder, byHarness string) string {
+	document := `{
+  "$schema": "` + settings.SchemaID + `",
+  "version": 1,
+  "tracker": "github",
+  "harnesses": ["claude"],
+  "agents": ` + agents + `,`
+
+	if byHarness != "" {
+		document += "\n  \"agentsByHarness\": " + byHarness + ","
+	}
+
+	review := `{ "postToPullRequest": false`
+	if reviewOrder != "" {
+		review += `, "agents": ` + reviewOrder
+	}
+
+	return document + `
+  "github": { "issuesRepo": "lividlabs/codefall-cli", "issuesProject": 3 },
+  "review": ` + review + ` },
+  "local": { "start": "scripts/local.sh start", "update": "scripts/local.sh update" },
+  "test": { "dir": "testing", "runners": ["playwright"] }
+}`
+}
+
+// twoAgents is a project that reaches for Codex first and its own subagent after.
+const twoAgents = `[
+    { "name": "architect", "harness": "codex", "model": "gpt-5-codex" },
+    { "name": "subagent", "harness": "current" }
+  ]`
+
 // withLocal is the fixture's settings with a different local block.
 func withLocal(start, update string) string {
 	return `{
@@ -254,6 +287,8 @@ var allPass = []outcome{
 	{domain.HarnessNames.ID, domain.StatusPass},
 	{domain.HarnessesInstalled.ID, domain.StatusPass},
 	{domain.HarnessesLeftOver.ID, domain.StatusPass},
+	{domain.AgentsRunnable.ID, domain.StatusPass},
+	{domain.AgentsCurrent.ID, domain.StatusPass},
 	{domain.LocalDeclared.ID, domain.StatusPass},
 	{domain.LocalRunnable.ID, domain.StatusPass},
 	{domain.TestDeclared.ID, domain.StatusPass},
@@ -295,6 +330,7 @@ var (
 		domain.ReviewsIgnored.ID, domain.TestsIgnored.ID, domain.StampIgnored.ID,
 		domain.InteractionsMerged.ID,
 		domain.HarnessNames.ID, domain.HarnessesInstalled.ID, domain.HarnessesLeftOver.ID,
+		domain.AgentsRunnable.ID, domain.AgentsCurrent.ID,
 		domain.LocalDeclared.ID, domain.LocalRunnable.ID,
 		domain.TestDeclared.ID, domain.TestEquipped.ID, domain.TestDirExists.ID,
 	}
@@ -303,6 +339,7 @@ var (
 		domain.ReviewsIgnored.ID, domain.TestsIgnored.ID, domain.StampIgnored.ID,
 		domain.InteractionsMerged.ID,
 		domain.HarnessNames.ID, domain.HarnessesInstalled.ID, domain.HarnessesLeftOver.ID,
+		domain.AgentsRunnable.ID, domain.AgentsCurrent.ID,
 		domain.LocalDeclared.ID, domain.LocalRunnable.ID,
 		domain.TestDeclared.ID, domain.TestEquipped.ID, domain.TestDirExists.ID,
 	}
@@ -311,6 +348,7 @@ var (
 		domain.ReviewsIgnored.ID, domain.TestsIgnored.ID, domain.StampIgnored.ID,
 		domain.InteractionsMerged.ID,
 		domain.HarnessNames.ID, domain.HarnessesInstalled.ID, domain.HarnessesLeftOver.ID,
+		domain.AgentsRunnable.ID, domain.AgentsCurrent.ID,
 		domain.LocalDeclared.ID, domain.LocalRunnable.ID,
 		domain.TestDeclared.ID, domain.TestEquipped.ID, domain.TestDirExists.ID,
 	}
@@ -318,6 +356,7 @@ var (
 		domain.ReviewsIgnored.ID, domain.TestsIgnored.ID, domain.StampIgnored.ID,
 		domain.InteractionsMerged.ID,
 		domain.HarnessNames.ID, domain.HarnessesInstalled.ID, domain.HarnessesLeftOver.ID,
+		domain.AgentsRunnable.ID, domain.AgentsCurrent.ID,
 		domain.LocalDeclared.ID, domain.LocalRunnable.ID,
 		domain.TestDeclared.ID, domain.TestEquipped.ID, domain.TestDirExists.ID,
 	}
@@ -619,6 +658,86 @@ func TestDiagnoseRun(t *testing.T) {
 			target:     domain.HarnessNames.ID,
 			wantDetail: ".codefall/settings.json names antigravity (now agy) and claude-code (now claude)",
 			wantRemedy: mo.Some(renameRemedy),
+		},
+		{
+			// Settings written before the list existed name no agents, which means the default: this
+			// harness's own subagent, which is always runnable and is itself the current entry.
+			name:       "no agents are declared, so the default applies",
+			mutate:     func(*fakeFileSystem, *fakeCommandRunner) {},
+			want:       allPass,
+			target:     domain.AgentsRunnable.ID,
+			wantDetail: "subagent (current)",
+		},
+		{
+			name: "every agent runs on a harness this machine has",
+			mutate: func(f *fakeFileSystem, r *fakeCommandRunner) {
+				f.files[settingsPath] = []byte(withAgents(twoAgents, "", ""))
+				r.paths["codex"] = "/opt/homebrew/bin/codex"
+			},
+			want:       allPass,
+			target:     domain.AgentsRunnable.ID,
+			wantDetail: "architect (codex, gpt-5-codex), subagent (current)",
+		},
+		{
+			// A run skips what it cannot start and moves on, so this is information and a warning,
+			// not a failure.
+			name: "an agent runs on a harness that is not on PATH",
+			mutate: func(f *fakeFileSystem, _ *fakeCommandRunner) {
+				f.files[settingsPath] = []byte(withAgents(twoAgents, "", ""))
+			},
+			want:       outcomes(map[string]domain.Status{domain.AgentsRunnable.ID: domain.StatusWarn}),
+			target:     domain.AgentsRunnable.ID,
+			wantDetail: "architect runs on codex, which is not on PATH",
+			wantRemedy: mo.Some(agentsRemedy),
+		},
+		{
+			// Every order is checked: the list itself, review's own, and each harness's. Here the
+			// list has current but neither of the narrower orders does.
+			name: "the review and per-harness orders name no agent on current",
+			mutate: func(f *fakeFileSystem, r *fakeCommandRunner) {
+				f.files[settingsPath] = []byte(withAgents(twoAgents, `["architect"]`, `{ "claude": ["architect"] }`))
+				r.paths["codex"] = "/opt/homebrew/bin/codex"
+			},
+			want:       outcomes(map[string]domain.Status{domain.AgentsCurrent.ID: domain.StatusWarn}),
+			target:     domain.AgentsCurrent.ID,
+			wantDetail: "review.agents, agentsByHarness.claude names no agent on current",
+			wantRemedy: mo.Some(currentRemedy),
+		},
+		{
+			name: "the top-level order itself has no agent on current",
+			mutate: func(f *fakeFileSystem, r *fakeCommandRunner) {
+				f.files[settingsPath] = []byte(withAgents(`[{ "name": "architect", "harness": "codex" }]`, "", ""))
+				r.paths["codex"] = "/opt/homebrew/bin/codex"
+			},
+			want:       outcomes(map[string]domain.Status{domain.AgentsCurrent.ID: domain.StatusWarn}),
+			target:     domain.AgentsCurrent.ID,
+			wantDetail: "agents names no agent on current",
+			wantRemedy: mo.Some(currentRemedy),
+		},
+		{
+			// What the list may hold is the format's to say, so a bad entry is the settings-complete
+			// check's finding and the two agent checks are absent, like everything after it.
+			name: "an agent names a harness codefall cannot start",
+			mutate: func(f *fakeFileSystem, _ *fakeCommandRunner) {
+				f.files[settingsPath] = []byte(withAgents(`[{ "name": "helper", "harness": "cursor" }]`, "", ""))
+			},
+			want: outcomes(map[string]domain.Status{domain.SettingsComplete.ID: domain.StatusFail},
+				afterSettingsDone...),
+			target: domain.SettingsComplete.ID,
+			wantDetail: `settings.json is incomplete: agents: [0].harness: unknown value "cursor" ` +
+				`(expected "agy", "claude", "codex", "current", "muse", "opencode")`,
+			wantRemedy: mo.Some(fixRemedy),
+		},
+		{
+			name: "review's order names an agent the list does not define",
+			mutate: func(f *fakeFileSystem, _ *fakeCommandRunner) {
+				f.files[settingsPath] = []byte(withAgents(twoAgents, `["reviewer"]`, ""))
+			},
+			want: outcomes(map[string]domain.Status{domain.SettingsComplete.ID: domain.StatusFail},
+				afterSettingsDone...),
+			target:     domain.SettingsComplete.ID,
+			wantDetail: `settings.json is incomplete: review.agents: names "reviewer", which agents does not define`,
+			wantRemedy: mo.Some(fixRemedy),
 		},
 		{
 			// Every project set up before the local block existed looks like this. Nothing else

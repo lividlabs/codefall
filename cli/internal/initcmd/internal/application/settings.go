@@ -217,9 +217,19 @@ type settingsDocument struct {
 	Version   int                       `json:"version"`
 	Tracker   string                    `json:"tracker"`
 	Harnesses []string                  `json:"harnesses"`
+	Agents    []agentDocument           `json:"agents"`
 	Beads     mo.Option[beadsDocument]  `json:"beads,omitzero"`
 	GitHub    mo.Option[gitHubDocument] `json:"github,omitzero"`
 	Review    reviewDocument            `json:"review"`
+}
+
+// agentDocument is one entry of the agents list. A new project gets the format's default written
+// out rather than left absent, for the reason the review block is always written: a file that
+// states the setting shows there is something to change (ADR-009). init asks nothing about it.
+type agentDocument struct {
+	Name    string            `json:"name"`
+	Harness string            `json:"harness"`
+	Model   mo.Option[string] `json:"model,omitzero"`
 }
 
 // reviewDocument is the review block. It is always written, including when the answer is the
@@ -257,6 +267,7 @@ func encodeSettings(chosen domain.Settings) ([]byte, error) {
 		Version:   settings.Version,
 		Tracker:   chosen.Tracker,
 		Harnesses: chosen.Harnesses,
+		Agents:    defaultAgents(),
 		Review:    reviewDocument{PostToPullRequest: chosen.Review.PostToPullRequest},
 	}
 
@@ -283,4 +294,16 @@ func encodeSettings(chosen domain.Settings) ([]byte, error) {
 	}
 
 	return append(data, '\n'), nil
+}
+
+// defaultAgents is the format's default list in the file's shape.
+func defaultAgents() []agentDocument {
+	agents := settings.DefaultAgents()
+	documents := make([]agentDocument, 0, len(agents))
+
+	for _, agent := range agents {
+		documents = append(documents, agentDocument{Name: agent.Name, Harness: agent.Harness, Model: agent.Model})
+	}
+
+	return documents
 }

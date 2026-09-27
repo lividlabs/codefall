@@ -1310,6 +1310,24 @@ Decided at scaffold, 2026-08-16.
   not taken: listing the old spellings in the schema's enum, which would document them as current;
   and a table from harness name to binary in each script, which is the mapping this removes.
 
+- **Agents are an ordered list in project settings, 2026-09-26.** `review` picked its reviewer per
+  invocation, by whoever remembered `via=`, and the consult the skills are about to gain needs the
+  same choice made once. `.codefall/settings.json` gains a top-level `agents` array — each entry a
+  name, a harness named for its binary or `current` for the harness running the session, and an
+  optional model — whose order is the default every use walks; `review.agents` and later
+  `consult.agents` carry an ordered subset when a use wants a different order, and `agentsByHarness`
+  carries one per harness a session may be running in, because a second opinion from the model
+  already in use is worth less. A run skips an entry this machine cannot start, advances on a
+  mechanical failure or an explicit "cannot settle", tries each entry once, and names every one it
+  tried. `via=` becomes a one-run override. The agent states its own harness, checked against the
+  skills directory it was loaded from. Absent means `subagent` on `current`, which `init` writes
+  explicitly; `doctor` reports which agents this machine can start and warns about an order with
+  no `current`. ADR-009 records it. Seen and not taken: a map keyed by name, which cannot say what
+  to try next; a per-user substitution file for a missing harness, when a run can look on PATH
+  itself; detecting the harness by environment variable or process walk, in preflight or anywhere,
+  when every harness tells its agent what it is; and `harnessAgents` or a nesting under
+  `harnesses` for the override, where `harnesses` already means what the project is set up for.
+
 ## Open
 
 - **UI composition.** Half settled by **Shared modules, 2026-08-27** above: the theme, the styles,

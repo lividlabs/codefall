@@ -164,12 +164,15 @@ type fieldSpec struct {
 //
 // The review, local, and test blocks are optional at the top level and complete when they are there:
 // a project set up before a block existed is still valid settings, and one that carries it carries
-// every field.
+// every field. The agents list and its per-harness override are optional too, and absent means the
+// default (ADR-009).
 var topLevelFields = []fieldSpec{
 	{"$schema", false, isString},
 	{"version", true, isVersion},
 	{"tracker", true, isTracker},
 	{FieldHarnesses, true, isHarnesses},
+	{FieldAgents, false, isAgents},
+	{FieldAgentsByHarness, false, isObject},
 	{BlockReview, false, isObject},
 	{BlockLocal, false, isObject},
 	{BlockTest, false, isObject},
@@ -178,8 +181,12 @@ var topLevelFields = []fieldSpec{
 // reviewFields is the shape of the review block, which codefall-review reads and nothing else
 // writes. Posting findings to a pull request is visible to everyone on it, so the field exists to
 // make that a decision the project made rather than a default it inherited.
+//
+// The block may also carry its own order of agents, an ordered subset of the top-level list, when
+// review should walk a different order from every other use (ADR-009).
 var reviewFields = []fieldSpec{
 	{"postToPullRequest", true, isBool},
+	{FieldReviewAgents, false, isNameList},
 }
 
 // localFields is the shape of the local block. Both commands are required once the block is there:
@@ -472,6 +479,9 @@ func Validate(doc Document) []string {
 			problems = append(problems, validateBlock(doc, block.name, block.fields)...)
 		}
 	}
+
+	// The orders name agents the top-level list defines, which no field's own check can see.
+	problems = append(problems, agentReferences(doc, rejected)...)
 
 	// A missing or unknown tracker selects no block, so there is nothing further to say.
 	if _, known := trackerFields[selected]; !known {

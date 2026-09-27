@@ -315,6 +315,12 @@ func TestRunEncodesGitHubSettings(t *testing.T) {
   "harnesses": [
     "claude"
   ],
+  "agents": [
+    {
+      "name": "subagent",
+      "harness": "current"
+    }
+  ],
   "github": {
     "issuesRepo": "owner/name",
     "issuesProject": 3
@@ -353,6 +359,12 @@ func TestRunEncodesTheOptionalFieldsTheWayTheSchemaExpects(t *testing.T) {
   "harnesses": [
     "claude"
   ],
+  "agents": [
+    {
+      "name": "subagent",
+      "harness": "current"
+    }
+  ],
   "github": {
     "issuesRepo": "owner/name"
   },
@@ -371,6 +383,12 @@ func TestRunEncodesTheOptionalFieldsTheWayTheSchemaExpects(t *testing.T) {
 			want: `  "tracker": "beads",
   "harnesses": [
     "claude"
+  ],
+  "agents": [
+    {
+      "name": "subagent",
+      "harness": "current"
+    }
   ],
   "beads": {},
   "review": {

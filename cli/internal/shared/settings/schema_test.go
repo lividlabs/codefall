@@ -2,6 +2,7 @@ package settings
 
 import (
 	"encoding/json"
+	"maps"
 	"os"
 	"path/filepath"
 	"slices"
@@ -113,6 +114,60 @@ func TestSchemaMatchesTheFieldTables(t *testing.T) {
 	// list: settings written before it existed are still valid settings.
 	if slices.Contains(schemaList(t, schema, "required"), BlockReview) {
 		t.Errorf("required contains %q, want the review block to stay optional", BlockReview)
+	}
+
+	reviewProperties := schemaObject(t, review, "properties")
+
+	if got := schemaText(t, schemaObject(t, schemaObject(t, reviewProperties, FieldReviewAgents), "items"), "type"); got != "string" {
+		t.Errorf("properties.%s.properties.%s.items.type = %q, want string", BlockReview, FieldReviewAgents, got)
+	}
+
+	// The agents list: a name that is a slug, a harness that is one codefall can start or current,
+	// and nothing required of the document as a whole, because absent means the default (ADR-009).
+	agents := schemaObject(t, properties, FieldAgents)
+	agentItems := schemaObject(t, agents, "items")
+
+	if got, want := schemaList(t, agentItems, "required"), []string{FieldAgentName, FieldAgentHarness}; !slices.Equal(got, want) {
+		t.Errorf("properties.%s.items.required = %q, want %q", FieldAgents, got, want)
+	}
+
+	agentProperties := schemaObject(t, agentItems, "properties")
+
+	if got := schemaText(t, schemaObject(t, agentProperties, FieldAgentName), "pattern"); got != AgentNamePattern {
+		t.Errorf("properties.%s.items.properties.%s.pattern = %q, want %q", FieldAgents, FieldAgentName, got, AgentNamePattern)
+	}
+
+	if got, want := schemaList(t, schemaObject(t, agentProperties, FieldAgentHarness), "enum"), AgentHarnesses(); !slices.Equal(got, want) {
+		t.Errorf("properties.%s.items.properties.%s.enum = %q, want %q", FieldAgents, FieldAgentHarness, got, want)
+	}
+
+	if got := schemaText(t, schemaObject(t, agentProperties, FieldAgentModel), "type"); got != "string" {
+		t.Errorf("properties.%s.items.properties.%s.type = %q, want string", FieldAgents, FieldAgentModel, got)
+	}
+
+	for _, field := range []string{FieldAgents, FieldAgentsByHarness} {
+		if slices.Contains(schemaList(t, schema, "required"), field) {
+			t.Errorf("required contains %q, want it to stay optional", field)
+		}
+	}
+
+	// The override is keyed by exactly the harnesses codefall can set up: current is not a key,
+	// because it is what the key resolves.
+	byHarness := schemaObject(t, properties, FieldAgentsByHarness)
+	byHarnessProperties := schemaObject(t, byHarness, "properties")
+
+	if got, want := slices.Sorted(maps.Keys(byHarnessProperties)), harness.All(); !slices.Equal(got, want) {
+		t.Errorf("properties.%s.properties keys = %q, want %q", FieldAgentsByHarness, got, want)
+	}
+
+	if extra, ok := byHarness["additionalProperties"].(bool); !ok || extra {
+		t.Errorf("properties.%s.additionalProperties = %v, want false", FieldAgentsByHarness, byHarness["additionalProperties"])
+	}
+
+	for _, name := range harness.All() {
+		if got := schemaText(t, schemaObject(t, schemaObject(t, byHarnessProperties, name), "items"), "type"); got != "string" {
+			t.Errorf("properties.%s.properties.%s.items.type = %q, want string", FieldAgentsByHarness, name, got)
+		}
 	}
 
 	local := schemaObject(t, properties, BlockLocal)

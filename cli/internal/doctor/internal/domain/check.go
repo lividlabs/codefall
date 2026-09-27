@@ -31,7 +31,7 @@ func (s Status) String() string {
 }
 
 // Category is the part of a project's setup a check belongs to. The report groups by category, so a
-// healthy project is six lines rather than twenty-one.
+// healthy project is six lines rather than twenty-three.
 type Category struct {
 	ID    string
 	Title string
@@ -86,7 +86,7 @@ func (c Check) Fail(detail string, remedy mo.Option[string]) Result {
 	return Result{Check: c, Status: StatusFail, Detail: mo.Some(detail), Remedy: remedy}
 }
 
-// The twenty-one checks doctor runs, in the order it runs them.
+// The twenty-three checks doctor runs, in the order it runs them.
 var (
 	CodefallDir      = Check{ID: "codefall-dir", Title: ".codefall/ exists", Category: CategorySettings}
 	SettingsFile     = Check{ID: "settings-file", Title: ".codefall/settings.json exists", Category: CategorySettings}
@@ -113,6 +113,14 @@ var (
 	// settings no longer name.
 	HarnessesLeftOver = Check{ID: "harnesses-leftover",
 		Title: "no install is left over from a dropped harness", Category: CategoryHarnesses}
+	// AgentsRunnable is whether every agent the settings define runs on a harness this machine can
+	// start (ADR-009). A run skips one it cannot, so this warns.
+	AgentsRunnable = Check{ID: "agents-runnable",
+		Title: "every agent runs on a harness this machine can start", Category: CategoryHarnesses}
+	// AgentsCurrent is whether every order of agents names one on current, the harness running the
+	// session, so a run always has a reader it can start.
+	AgentsCurrent = Check{ID: "agents-current",
+		Title: "every agent order names one on the current harness", Category: CategoryHarnesses}
 	// LocalDeclared is whether the settings name the project's start and update commands (ADR-005).
 	LocalDeclared = Check{ID: "local-declared",
 		Title: "the local start and update commands are declared", Category: CategoryLocal}
