@@ -35,3 +35,15 @@ func (f *OSFileSystem) MkdirAll(path string) error {
 func (f *OSFileSystem) WriteFile(path string, data []byte) error {
 	return f.files.WriteFile(path, data)
 }
+
+// Remove deletes one file or one empty directory. A path that is not there is success, which is what
+// the cleanup step wants: it asked for the path to be gone.
+func (f *OSFileSystem) Remove(path string) error {
+	return f.files.Remove(path)
+}
+
+// DirIsEmpty reports whether path is a directory holding nothing, which is what decides whether an
+// emptied parent goes with the file the cleanup step removed from it.
+func (f *OSFileSystem) DirIsEmpty(path string) (bool, error) {
+	return f.files.DirIsEmpty(path)
+}

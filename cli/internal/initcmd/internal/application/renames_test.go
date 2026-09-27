@@ -175,7 +175,7 @@ func TestFormerHarnessNamesReadsBothFiles(t *testing.T) {
 				files.files[manifestFull] = []byte(tc.manifest)
 			}
 
-			got, err := NewInitialize(files, toolsInstalled(), newFakeExtensionSource()).FormerHarnessNames(workingDir)
+			got, err := NewInitialize(files, toolsInstalled(), newFakeExtensionSource(), noChanges()).FormerHarnessNames(workingDir)
 			if err != nil {
 				t.Fatalf("FormerHarnessNames: %v", err)
 			}
@@ -195,7 +195,7 @@ func TestARerunReadsFormerHarnessNamesAsTheCurrentOnes(t *testing.T) {
 	files.files[settingsFull] = []byte(formerSettings)
 	files.files[manifestFull] = []byte(formerManifest)
 
-	initialize := NewInitialize(files, toolsInstalled(), newFakeExtensionSource())
+	initialize := NewInitialize(files, toolsInstalled(), newFakeExtensionSource(), noChanges())
 
 	chosen, err := initialize.ChosenHarnesses(workingDir)
 	if err != nil {

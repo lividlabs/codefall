@@ -75,7 +75,7 @@ func run(t *testing.T, markdown map[string][]byte) (*fakeFileSystem, domain.Step
 		files.files[path] = body
 	}
 
-	report, err := NewInitialize(files, toolsInstalled(), newFakeExtensionSource()).Run(t.Context(), beadsRequest(), nil)
+	report, err := NewInitialize(files, toolsInstalled(), newFakeExtensionSource(), noChanges()).Run(t.Context(), beadsRequest(), nil)
 	if err != nil {
 		t.Fatalf("Run: %v", err)
 	}
@@ -306,7 +306,7 @@ func TestAgentsStepWritesClaudeMdOnlyForClaudeCode(t *testing.T) {
 	request := beadsRequest()
 	request.Harnesses = []string{"aider"}
 
-	result, err := NewInitialize(files, toolsInstalled(), newFakeExtensionSource()).agents(t.Context(), request)
+	result, err := NewInitialize(files, toolsInstalled(), newFakeExtensionSource(), noChanges()).agents(t.Context(), request)
 	if err != nil {
 		t.Fatalf("agents: %v", err)
 	}
@@ -350,7 +350,7 @@ func TestAgentsStepRefusesAnUnclosedSection(t *testing.T) {
 			files := settled("{}")
 			files.files[agentsFull] = []byte(tc.before)
 
-			_, err := NewInitialize(files, toolsInstalled(), newFakeExtensionSource()).agents(t.Context(), beadsRequest())
+			_, err := NewInitialize(files, toolsInstalled(), newFakeExtensionSource(), noChanges()).agents(t.Context(), beadsRequest())
 			if err == nil || !strings.Contains(err.Error(), "AGENTS.md has "+tc.begin+" with no "+tc.end+" after it") {
 				t.Errorf("agents error = %v, want it to name the file and the missing marker", err)
 			}
@@ -396,7 +396,7 @@ func TestAgentsStepReportsAFileItCannotUse(t *testing.T) {
 			files := settled("{}")
 			tc.setup(files)
 
-			_, err := NewInitialize(files, toolsInstalled(), newFakeExtensionSource()).agents(t.Context(), beadsRequest())
+			_, err := NewInitialize(files, toolsInstalled(), newFakeExtensionSource(), noChanges()).agents(t.Context(), beadsRequest())
 			if err == nil || !strings.Contains(err.Error(), tc.want) {
 				t.Errorf("agents error = %v, want it to mention %q", err, tc.want)
 			}
@@ -412,7 +412,7 @@ func TestAgentsStepNamesTheDeclaredTestingRoot(t *testing.T) {
 	request := beadsRequest()
 	request.TestDir = "packages/web/e2e"
 
-	if _, err := NewInitialize(files, toolsInstalled(), newFakeExtensionSource()).agents(t.Context(), request); err != nil {
+	if _, err := NewInitialize(files, toolsInstalled(), newFakeExtensionSource(), noChanges()).agents(t.Context(), request); err != nil {
 		t.Fatalf("agents: %v", err)
 	}
 
@@ -474,7 +474,7 @@ func TestAgentsStepRefusesASectionTheTreeShipsWrong(t *testing.T) {
 				source.data["agents/sections/beads.md"] = tc.body
 			}
 
-			_, err := NewInitialize(files, toolsInstalled(), source).agents(t.Context(), beadsRequest())
+			_, err := NewInitialize(files, toolsInstalled(), source, noChanges()).agents(t.Context(), beadsRequest())
 			if err == nil || !strings.Contains(err.Error(), tc.want) {
 				t.Errorf("agents error = %v, want it to say %q", err, tc.want)
 			}
@@ -491,7 +491,7 @@ func TestAgentsStepRefusesASectionTheTreeShipsWrong(t *testing.T) {
 func TestAgentsStepRunsAfterBeads(t *testing.T) {
 	observer := &recordingObserver{}
 
-	if _, err := NewInitialize(settled("{}"), toolsInstalled(), newFakeExtensionSource()).Run(
+	if _, err := NewInitialize(settled("{}"), toolsInstalled(), newFakeExtensionSource(), noChanges()).Run(
 		t.Context(), beadsRequest(), observer,
 	); err != nil {
 		t.Fatalf("Run: %v", err)

@@ -46,7 +46,7 @@ var (
 	mergeRemedy = "add " + settings.InteractionsAttribute + " to " + settings.GitAttributesName +
 		", or run codefall upgrade"
 	leftoverRemedy = "remove the files " + manifest.Name +
-		" lists for codex; codefall never deletes what it wrote"
+		" lists for codex; upgrade removes stale files only for the harnesses the settings name"
 )
 
 // installedManifest is what a finished run leaves on record: one entry for the harness the settings
@@ -605,8 +605,8 @@ func TestDiagnoseRun(t *testing.T) {
 		{
 			// No record means no install that could be left over, so the left-over check is absent.
 			// It also means no install the other check can confirm: the record is the evidence, and a
-			// project with none has nothing that says a run ever finished. Init writes the manifest it
-			// could not read the next time it runs, which is why the remedy is the same one.
+			// project with none has nothing that says a run ever finished. A project with no manifest
+			// is init's — upgrade refuses it — so the remedy names init (ADR-010).
 			name: "there is no manifest to hold the settings against",
 			mutate: func(f *fakeFileSystem, _ *fakeCommandRunner) {
 				delete(f.files, manifestPath)
@@ -615,7 +615,21 @@ func TestDiagnoseRun(t *testing.T) {
 				domain.HarnessesLeftOver.ID),
 			target:     domain.HarnessesInstalled.ID,
 			wantDetail: "codefall is not installed for claude",
-			wantRemedy: mo.Some("codefall upgrade"),
+			wantRemedy: mo.Some("codefall init"),
+		},
+		{
+			// The same choice for every remedy that names a command: with no manifest, init.
+			name: "the testing root is not declared and there is no manifest",
+			mutate: func(f *fakeFileSystem, _ *fakeCommandRunner) {
+				f.files[settingsPath] = []byte(withTest(""))
+				delete(f.files, manifestPath)
+			},
+			want: outcomes(map[string]domain.Status{
+				domain.TestDeclared.ID: domain.StatusWarn, domain.HarnessesInstalled.ID: domain.StatusFail},
+				append([]string{domain.HarnessesLeftOver.ID}, afterTestUndeclared...)...),
+			target:     domain.TestDeclared.ID,
+			wantDetail: "no testing root is declared in settings.json",
+			wantRemedy: mo.Some("codefall init"),
 		},
 		{
 			// A project set up before its harnesses were named for their binaries records the old
@@ -846,7 +860,7 @@ func TestDiagnoseRun(t *testing.T) {
 				afterTestUndeclared...),
 			target:     domain.TestDeclared.ID,
 			wantDetail: "no testing root is declared in settings.json",
-			wantRemedy: mo.Some(upgradeRemedy),
+			wantRemedy: mo.Some("codefall upgrade"),
 		},
 		{
 			// A block Validate would reject is no declaration at all, and doctor's settings check has
@@ -903,7 +917,7 @@ func TestDiagnoseRun(t *testing.T) {
 			want:       outcomes(map[string]domain.Status{domain.TestDirExists.ID: domain.StatusFail}),
 			target:     domain.TestDirExists.ID,
 			wantDetail: "testing/ is declared in settings.json and is not there",
-			wantRemedy: mo.Some(upgradeRemedy),
+			wantRemedy: mo.Some("codefall upgrade"),
 		},
 		{
 			name: "the declared testing directory cannot be stat'd",

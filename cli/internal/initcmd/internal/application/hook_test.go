@@ -63,12 +63,15 @@ func quoted(command string) string {
 func hookResult(t *testing.T, report domain.Report) domain.StepResult {
 	t.Helper()
 
-	results := report.Results()
-	if len(results) != 7 {
-		t.Fatalf("Results() = %+v, want a result for each of the seven steps", results)
+	for _, result := range report.Results() {
+		if result.Step.ID == domain.HookStep.ID {
+			return result
+		}
 	}
 
-	return results[3]
+	t.Fatalf("Results() = %+v, want a hook step", report.Results())
+
+	return domain.StepResult{}
 }
 
 // The three JSON harnesses merge their definitions; OpenCode copies its plugin. A harness in the
@@ -86,7 +89,7 @@ func TestHookRegistersWhatTheTableSays(t *testing.T) {
 		t.Run(tc.harness, func(t *testing.T) {
 			files := settled("")
 
-			report, err := NewInitialize(files, toolsInstalled(), newFakeExtensionSource()).Run(t.Context(), beadsRequestHarness(tc.harness), nil)
+			report, err := NewInitialize(files, toolsInstalled(), newFakeExtensionSource(), noChanges()).Run(t.Context(), beadsRequestHarness(tc.harness), nil)
 			if err != nil {
 				t.Fatalf("Run: %v", err)
 			}
@@ -157,7 +160,7 @@ func TestHookMergeKeepsWhatTheFileAlreadySays(t *testing.T) {
 
 	files := settled(before)
 
-	report, err := NewInitialize(files, toolsInstalled(), newFakeExtensionSource()).Run(t.Context(), beadsRequest(), nil)
+	report, err := NewInitialize(files, toolsInstalled(), newFakeExtensionSource(), noChanges()).Run(t.Context(), beadsRequest(), nil)
 	if err != nil {
 		t.Fatalf("Run: %v", err)
 	}
@@ -213,7 +216,7 @@ func TestHookMergeSkipsWhatIsAlreadyThere(t *testing.T) {
 
 	files := settled(before)
 
-	report, err := NewInitialize(files, toolsInstalled(), newFakeExtensionSource()).Run(t.Context(), beadsRequest(), nil)
+	report, err := NewInitialize(files, toolsInstalled(), newFakeExtensionSource(), noChanges()).Run(t.Context(), beadsRequest(), nil)
 
 	if err != nil {
 		t.Fatalf("Run: %v", err)
@@ -246,7 +249,7 @@ func TestHookMergeAddsTheSameCommandUnderADifferentMatcher(t *testing.T) {
 	files := settled(`{"hooks": {"PreToolUse": [` +
 		`{"matcher": "Edit", "hooks": [{"type": "command", "command": "guard"}]}]}}`)
 
-	report, err := NewInitialize(files, toolsInstalled(), sourceOf(definitions)).Run(t.Context(), beadsRequest(), nil)
+	report, err := NewInitialize(files, toolsInstalled(), sourceOf(definitions), noChanges()).Run(t.Context(), beadsRequest(), nil)
 	if err != nil {
 		t.Fatalf("Run: %v", err)
 	}
@@ -272,7 +275,7 @@ func TestHookMergeAddsTheSameCommandUnderADifferentMatcher(t *testing.T) {
 func TestHookMergeTreatsANulledSectionAsAbsent(t *testing.T) {
 	files := settled(`{"hooks": null}`)
 
-	report, err := NewInitialize(files, toolsInstalled(), newFakeExtensionSource()).Run(t.Context(), beadsRequest(), nil)
+	report, err := NewInitialize(files, toolsInstalled(), newFakeExtensionSource(), noChanges()).Run(t.Context(), beadsRequest(), nil)
 	if err != nil {
 		t.Fatalf("Run: %v", err)
 	}
@@ -296,7 +299,7 @@ func TestHookMergeKeepsTheProjectsAntigravityFlags(t *testing.T) {
 		`{"codefall-merge-guard": {"enabled": false}}`)
 
 	request := beadsRequestHarness(harness.Agy)
-	report, err := NewInitialize(files, toolsInstalled(), newFakeExtensionSource()).Run(t.Context(), request, nil)
+	report, err := NewInitialize(files, toolsInstalled(), newFakeExtensionSource(), noChanges()).Run(t.Context(), request, nil)
 	if err != nil {
 		t.Fatalf("Run: %v", err)
 	}
@@ -319,11 +322,11 @@ func TestHookCopySkipsAnInstallationItAlreadyHas(t *testing.T) {
 	files := settled("")
 	request := beadsRequestHarness(harness.OpenCode)
 
-	if _, err := NewInitialize(files, toolsInstalled(), newFakeExtensionSource()).Run(t.Context(), request, nil); err != nil {
+	if _, err := NewInitialize(files, toolsInstalled(), newFakeExtensionSource(), noChanges()).Run(t.Context(), request, nil); err != nil {
 		t.Fatalf("first run: %v", err)
 	}
 
-	report, err := NewInitialize(files, toolsInstalled(), newFakeExtensionSource()).Run(t.Context(), request, nil)
+	report, err := NewInitialize(files, toolsInstalled(), newFakeExtensionSource(), noChanges()).Run(t.Context(), request, nil)
 	if err != nil {
 		t.Fatalf("second run: %v", err)
 	}
@@ -345,7 +348,7 @@ func TestHookCopyReportsAFileItCannotRead(t *testing.T) {
 	path := filepath.Join(workingDir, ".opencode/plugins/codefall.js")
 	files.errs[path] = errors.New("permission denied")
 
-	_, err := NewInitialize(files, toolsInstalled(), newFakeExtensionSource()).hook(t.Context(), beadsRequestHarness(harness.OpenCode))
+	_, err := NewInitialize(files, toolsInstalled(), newFakeExtensionSource(), noChanges()).hook(t.Context(), beadsRequestHarness(harness.OpenCode))
 	if err == nil || !strings.Contains(err.Error(), "read .opencode/plugins/codefall.js") {
 		t.Errorf("hook error = %v, want it to say the file could not be read", err)
 	}
@@ -411,7 +414,7 @@ func TestHookMergeReportsAFileItCannotWorkWith(t *testing.T) {
 
 			before := maps.Clone(files.files)
 
-			_, err := NewInitialize(files, toolsInstalled(), newFakeExtensionSource()).hook(t.Context(), beadsRequestHarness(tc.harness))
+			_, err := NewInitialize(files, toolsInstalled(), newFakeExtensionSource(), noChanges()).hook(t.Context(), beadsRequestHarness(tc.harness))
 			if err == nil || !strings.Contains(err.Error(), tc.want) {
 				t.Errorf("hook error = %v, want it to mention %q", err, tc.want)
 			}
@@ -430,7 +433,7 @@ func TestHookMergeReportsAFileItCannotRead(t *testing.T) {
 	files := settled("{}")
 	files.errs[claudeFull] = errors.New("permission denied")
 
-	_, err := NewInitialize(files, toolsInstalled(), newFakeExtensionSource()).hook(t.Context(), beadsRequest())
+	_, err := NewInitialize(files, toolsInstalled(), newFakeExtensionSource(), noChanges()).hook(t.Context(), beadsRequest())
 	if err == nil || !strings.Contains(err.Error(), "read .claude/settings.json") {
 		t.Errorf("hook error = %v, want it to name .claude/settings.json the way the report does", err)
 	}
@@ -444,7 +447,7 @@ func TestHookMergeDoesNotEscapeWhatTheFileAlreadySays(t *testing.T) {
 
 	files := settled(`{"permissions": {"allow": ["` + rule + `"]}}`)
 
-	if _, err := NewInitialize(files, toolsInstalled(), newFakeExtensionSource()).Run(t.Context(), beadsRequest(), nil); err != nil {
+	if _, err := NewInitialize(files, toolsInstalled(), newFakeExtensionSource(), noChanges()).Run(t.Context(), beadsRequest(), nil); err != nil {
 		t.Fatalf("Run: %v", err)
 	}
 
@@ -463,7 +466,7 @@ func TestHookMergeDoesNotEscapeWhatTheFileAlreadySays(t *testing.T) {
 func TestHookSkipsAHarnessWithNoDefinition(t *testing.T) {
 	request := beadsRequestHarness(harness.Muse)
 
-	report, err := NewInitialize(settled(""), toolsInstalled(), newFakeExtensionSource()).Run(t.Context(), request, nil)
+	report, err := NewInitialize(settled(""), toolsInstalled(), newFakeExtensionSource(), noChanges()).Run(t.Context(), request, nil)
 	if err != nil {
 		t.Fatalf("Run: %v", err)
 	}
@@ -484,7 +487,7 @@ func TestHookRefusesAHarnessItDoesNotKnow(t *testing.T) {
 	request := beadsRequestHarness("aider")
 
 	// The extension step refuses this harness first, so the hook step is asked on its own.
-	_, err := NewInitialize(settled(""), toolsInstalled(), newFakeExtensionSource()).hook(t.Context(), request)
+	_, err := NewInitialize(settled(""), toolsInstalled(), newFakeExtensionSource(), noChanges()).hook(t.Context(), request)
 	if err == nil || !strings.Contains(err.Error(), `harness "aider" has no extension mechanism`) {
 		t.Errorf("hook error = %v, want it to say the harness has no extension mechanism", err)
 	}
@@ -550,7 +553,7 @@ func TestHookMergeReplacesItsOwnEntryWhenTheCommandChanges(t *testing.T) {
   "PreToolUse": [{"matcher": "Bash", "hooks": [{"type": "command", "command": "\"$(git rev-parse --show-toplevel)/.claude/hooks/shared/codefall-block-merge-to-main.sh\""}]}]
 }}`)
 
-	report, err := NewInitialize(files, toolsInstalled(), sourceOf(claudeDefinition(t, guard))).
+	report, err := NewInitialize(files, toolsInstalled(), sourceOf(claudeDefinition(t, guard)), noChanges()).
 		Run(t.Context(), beadsRequest(), nil)
 	if err != nil {
 		t.Fatalf("Run: %v", err)
@@ -585,7 +588,7 @@ func TestHookMergeAppendsOnlyTheCommandsThatAreNew(t *testing.T) {
   "PreToolUse": [{"matcher": "Bash", "hooks": [{"type": "command", "command": "guard"}]}]
 }}`)
 
-	report, err := NewInitialize(files, toolsInstalled(), sourceOf(definitions)).Run(t.Context(), beadsRequest(), nil)
+	report, err := NewInitialize(files, toolsInstalled(), sourceOf(definitions), noChanges()).Run(t.Context(), beadsRequest(), nil)
 	if err != nil {
 		t.Fatalf("Run: %v", err)
 	}
@@ -620,7 +623,7 @@ func TestHookMergeLeavesANarrowedMatcherAlone(t *testing.T) {
 
 	files := settled(before)
 
-	report, err := NewInitialize(files, toolsInstalled(), newFakeExtensionSource()).Run(t.Context(), beadsRequest(), nil)
+	report, err := NewInitialize(files, toolsInstalled(), newFakeExtensionSource(), noChanges()).Run(t.Context(), beadsRequest(), nil)
 	if err != nil {
 		t.Fatalf("Run: %v", err)
 	}
@@ -646,7 +649,7 @@ func TestHookMergeAddsTheNoticeBesideAPrimeItAlreadyRuns(t *testing.T) {
 
 	files := settled(before)
 
-	report, err := NewInitialize(files, toolsInstalled(), newFakeExtensionSource()).Run(t.Context(), beadsRequest(), nil)
+	report, err := NewInitialize(files, toolsInstalled(), newFakeExtensionSource(), noChanges()).Run(t.Context(), beadsRequest(), nil)
 	if err != nil {
 		t.Fatalf("Run: %v", err)
 	}
@@ -681,7 +684,7 @@ func TestHookMergeReplacesTheNoticeWhenItsCommandChanges(t *testing.T) {
   ]
 }}`)
 
-	report, err := NewInitialize(files, toolsInstalled(), newFakeExtensionSource()).Run(t.Context(), beadsRequest(), nil)
+	report, err := NewInitialize(files, toolsInstalled(), newFakeExtensionSource(), noChanges()).Run(t.Context(), beadsRequest(), nil)
 	if err != nil {
 		t.Fatalf("Run: %v", err)
 	}
@@ -710,7 +713,7 @@ func TestHookMergeReportsAValueWhereTheDefinitionHasAScalar(t *testing.T) {
 
 	files := settled(`{"description": {"written": "by hand"}}`)
 
-	_, err := NewInitialize(files, toolsInstalled(), sourceOf(definitions)).Run(t.Context(), beadsRequest(), nil)
+	_, err := NewInitialize(files, toolsInstalled(), sourceOf(definitions), noChanges()).Run(t.Context(), beadsRequest(), nil)
 	if err == nil || !strings.Contains(err.Error(), ".claude/settings.json: description is not a scalar") {
 		t.Fatalf("Run error = %v, want the file reported rather than left as it is", err)
 	}

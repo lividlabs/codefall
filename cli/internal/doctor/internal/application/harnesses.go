@@ -15,13 +15,10 @@ import (
 	"github.com/lividlabs/codefall-cli/cli/internal/shared/settings"
 )
 
-// upgradeRemedy is what to do about a harness the project chose and codefall was never run for.
-// Upgrade is the command that changes an installed project; a project with no manifest is sent on
-// to init by upgrade itself (ADR-010).
-const upgradeRemedy = "codefall upgrade"
-
 // renameRemedy is what to do about a harness recorded under the spelling it had before it was named
-// for its binary: upgrade rewrites both files.
+// for its binary: upgrade rewrites both files. A project with a manifest is the only kind that can
+// carry the spelling there, and a project whose settings alone carry it is upgrade's too once a run
+// has recorded itself, so the command is named outright.
 const renameRemedy = "run codefall upgrade, which rewrites them"
 
 // settingsName is the settings file as a person reads it in a report.
@@ -139,7 +136,8 @@ func renames(formers []string) string {
 // It fails rather than warns. A harness the project chose and codefall never installed for has no
 // skills there, so every codefall verb is missing in a harness somebody is using. A manifest that
 // cannot be read records no install and reports every chosen harness, which is the same answer and
-// the same remedy: init rewrites the file it could not read.
+// the same remedy: the run rewrites the file it could not read. The remedy names init when no
+// manifest is there and upgrade when one is, because each refuses the other's project (ADR-010).
 func (d *Diagnose) installed(
 	dir string, recorded manifest.Document, chosen []string, results []domain.Result,
 ) []domain.Result {
@@ -166,7 +164,7 @@ func (d *Diagnose) installed(
 
 	if len(missing) > 0 {
 		return append(results, domain.HarnessesInstalled.Fail(
-			"codefall is not installed for "+strings.Join(missing, ", "), mo.Some(upgradeRemedy)))
+			"codefall is not installed for "+strings.Join(missing, ", "), mo.Some(d.setupCommand(dir))))
 	}
 
 	return append(results, domain.HarnessesInstalled.PassWithDetail(strings.Join(chosen, ", ")))
@@ -204,7 +202,8 @@ func (d *Diagnose) firstMissing(dir string, files []string) (bool, string, error
 // The remedy points at the manifest rather than naming a directory to delete. The manifest is what
 // says which files codefall wrote for that harness, and harnesses share directories — four of the
 // five read .agents/ — so the directory a dropped harness read may still be another's. Which of those
-// files are safe to remove is the reader's judgement, not doctor's.
+// files are safe to remove is the reader's judgement, not doctor's: upgrade removes stale files only
+// for the harnesses it installs for, which are the ones the settings name (ADR-010).
 func (d *Diagnose) leftOver(
 	recorded manifest.Document, read bool, chosen []string, results []domain.Result,
 ) []domain.Result {
@@ -229,8 +228,8 @@ func (d *Diagnose) leftOver(
 	return append(results, domain.HarnessesLeftOver.Warn(
 		fmt.Sprintf("codefall is still installed for %s, which the settings no longer name",
 			strings.Join(dropped, ", ")),
-		mo.Some(fmt.Sprintf("remove the files %s lists for %s; codefall never deletes what it wrote",
-			manifest.Name, strings.Join(dropped, ", ")))))
+		mo.Some(fmt.Sprintf("remove the files %s lists for %s; upgrade removes stale files only for "+
+			"the harnesses the settings name", manifest.Name, strings.Join(dropped, ", ")))))
 }
 
 // recordedManifest is what a finished run left on record. Anything the reader cannot make sense of is

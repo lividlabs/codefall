@@ -57,6 +57,10 @@ type InitializeUseCase interface {
 	// .codefall/manifest.json still carry. An upgrade that finds one has a rewrite to make, so it is
 	// never a no-op.
 	FormerHarnessNames(dir string) ([]string, error)
+	// BreakingChanges reads the breaking changes recorded between the version the manifest records
+	// and binary, earliest first, or None when the range cannot be determined. Upgrade prints them
+	// before it changes anything (ADR-010).
+	BreakingChanges(dir, binary string) (mo.Option[[]application.BreakingRelease], error)
 }
 
 // commandKind is what a shared helper needs to know about the command running it: the word its

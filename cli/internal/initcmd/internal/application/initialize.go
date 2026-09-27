@@ -24,6 +24,11 @@ type FileSystem interface {
 	MkdirAll(path string) error
 	// WriteFile writes data to path, replacing whatever was there.
 	WriteFile(path string, data []byte) error
+	// Remove deletes one file or one empty directory. A path that is not there is success.
+	Remove(path string) error
+	// DirIsEmpty reports whether path is a directory holding nothing. A path that is not there, or
+	// that is a file, is not an empty directory and not an error either.
+	DirIsEmpty(path string) (bool, error)
 }
 
 // CommandRunner locates and runs the external tools codefall depends on (one gateway role). It is
@@ -56,6 +61,26 @@ type ExtensionSource interface {
 	Fetch(ctx context.Context, destDir string, sources, exclude []string) ([]string, error)
 	// Read returns one file from the tree.
 	Read(path string) ([]byte, error)
+	// RenamedSkill returns the name a skill directory has now when former is a name it used to have,
+	// or None when former is no skill the tree has ever renamed. It is what lets an upgrade report a
+	// removed directory as a rename rather than a deletion.
+	RenamedSkill(former string) mo.Option[string]
+}
+
+// ChangeLog is the record of what each release changed (one gateway role): the repository's
+// CHANGELOG.md, embedded in the binary, read for the one section a project upgrading has to hear
+// about before anything moves.
+type ChangeLog interface {
+	// BreakingChanges returns every release that recorded breaking changes, with the notes each
+	// recorded, in the order the changelog lists them.
+	BreakingChanges() ([]BreakingRelease, error)
+}
+
+// BreakingRelease is one release's breaking changes: its version as the changelog spells it, and one
+// note per change, as release-please wrote them from the commits' BREAKING CHANGE footers.
+type BreakingRelease struct {
+	Version string
+	Notes   []string
 }
 
 // Request is what presentation hands the use case: every answer a survey or a set of flags could
@@ -114,14 +139,15 @@ type Observer interface {
 // `codefall upgrade` runs it again for the harnesses the settings record, replacing what it owns and
 // touching nothing else.
 type Initialize struct {
-	files  FileSystem
-	runner CommandRunner
-	source ExtensionSource
+	files   FileSystem
+	runner  CommandRunner
+	source  ExtensionSource
+	changes ChangeLog
 }
 
 // NewInitialize builds the use case over its gateways.
-func NewInitialize(files FileSystem, runner CommandRunner, source ExtensionSource) *Initialize {
-	return &Initialize{files: files, runner: runner, source: source}
+func NewInitialize(files FileSystem, runner CommandRunner, source ExtensionSource, changes ChangeLog) *Initialize {
+	return &Initialize{files: files, runner: runner, source: source, changes: changes}
 }
 
 // step is one unit of work in a run. It returns what it did, or an error that stops the run: a step
@@ -151,6 +177,14 @@ func (i *Initialize) Run(ctx context.Context, request Request, observer Observer
 	// this run rather than a field of the use case, which every run of the process shares.
 	written := installed{}
 
+	// What the previous finished run recorded, read before any step can rewrite the file: the
+	// cleanup step compares it with what this run writes, and a run with no record — the first run —
+	// has nothing to compare and no cleanup step.
+	previous, upgrading, err := i.recordedManifest(request.Dir)
+	if err != nil {
+		return domain.Report{}, err
+	}
+
 	steps := []step{
 		{Step: domain.SettingsStep, run: i.settings},
 		{Step: domain.ExtensionStep, run: func(ctx context.Context, request Request) (domain.StepResult, error) {
@@ -159,12 +193,21 @@ func (i *Initialize) Run(ctx context.Context, request Request, observer Observer
 
 			return result, err
 		}},
-		{Step: domain.BeadsStep, run: i.beads},
-		{Step: domain.HookStep, run: i.hook},
-		{Step: domain.AgentsStep, run: i.agents},
-		{Step: domain.TestingStep, run: i.testing},
-		{Step: domain.IgnoreStep, run: i.ignore},
 	}
+
+	if upgrading {
+		steps = append(steps, step{Step: domain.CleanupStep, run: func(_ context.Context, request Request) (domain.StepResult, error) {
+			return i.cleanup(request, previous, written)
+		}})
+	}
+
+	steps = append(steps,
+		step{Step: domain.BeadsStep, run: i.beads},
+		step{Step: domain.HookStep, run: i.hook},
+		step{Step: domain.AgentsStep, run: i.agents},
+		step{Step: domain.TestingStep, run: i.testing},
+		step{Step: domain.IgnoreStep, run: i.ignore},
+	)
 
 	results := make([]domain.StepResult, 0, len(steps))
 

@@ -36,7 +36,7 @@ func settled(claudeSettings string) *fakeFileSystem {
 func TestExtensionStepCopiesIntoTheHarnessSkillsDirectory(t *testing.T) {
 	fetcher := newFakeExtensionSource()
 
-	report, err := NewInitialize(settled(""), toolsInstalled(), fetcher).Run(t.Context(), extensionRequest(), nil)
+	report, err := NewInitialize(settled(""), toolsInstalled(), fetcher, noChanges()).Run(t.Context(), extensionRequest(), nil)
 	if err != nil {
 		t.Fatalf("Run: %v", err)
 	}
@@ -87,7 +87,7 @@ func TestExtensionStepCopiesIntoTheHarnessSkillsDirectory(t *testing.T) {
 func TestExtensionStepInstallsNoMaintainerDocument(t *testing.T) {
 	fetcher := newFakeExtensionSource()
 
-	if _, err := NewInitialize(settled(""), toolsInstalled(), fetcher).Run(
+	if _, err := NewInitialize(settled(""), toolsInstalled(), fetcher, noChanges()).Run(
 		t.Context(), extensionRequest(), nil,
 	); err != nil {
 		t.Fatalf("Run: %v", err)
@@ -110,7 +110,7 @@ func TestExtensionStepStopsTheRunWhenTheCopyFails(t *testing.T) {
 	fetcher := newFakeExtensionSource()
 	fetcher.err = errors.New("disk full")
 
-	_, err := NewInitialize(settled(""), toolsInstalled(), fetcher).Run(t.Context(), extensionRequest(), nil)
+	_, err := NewInitialize(settled(""), toolsInstalled(), fetcher, noChanges()).Run(t.Context(), extensionRequest(), nil)
 	if err == nil ||
 		!strings.HasPrefix(err.Error(), domain.ExtensionStep.ID+": ") ||
 		!strings.Contains(err.Error(), "install the embedded extension: disk full") {
@@ -126,7 +126,7 @@ func TestExtensionStepStopsTheRunWhenTheSharedCopyFails(t *testing.T) {
 	fetcher.err = errors.New("disk full")
 	fetcher.failOn = "shared"
 
-	_, err := NewInitialize(settled(""), toolsInstalled(), fetcher).Run(t.Context(), extensionRequest(), nil)
+	_, err := NewInitialize(settled(""), toolsInstalled(), fetcher, noChanges()).Run(t.Context(), extensionRequest(), nil)
 	if err == nil ||
 		!strings.HasPrefix(err.Error(), domain.ExtensionStep.ID+": ") ||
 		!strings.Contains(err.Error(), "install codefall's shared files: disk full") {
@@ -140,7 +140,7 @@ func TestExtensionStepRefusesAHarnessItDoesNotKnow(t *testing.T) {
 	request := extensionRequest()
 	request.Harnesses = []string{"aider"}
 
-	_, err := NewInitialize(settled(""), toolsInstalled(), newFakeExtensionSource()).Run(t.Context(), request, nil)
+	_, err := NewInitialize(settled(""), toolsInstalled(), newFakeExtensionSource(), noChanges()).Run(t.Context(), request, nil)
 	if err == nil || !strings.Contains(err.Error(), `harness "aider" has no extension mechanism`) {
 		t.Errorf("Run error = %v, want it to say the harness has no extension mechanism", err)
 	}

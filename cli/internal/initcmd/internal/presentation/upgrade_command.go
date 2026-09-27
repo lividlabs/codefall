@@ -3,7 +3,10 @@ package presentation
 import (
 	"context"
 	"errors"
+	"fmt"
+	"io"
 	"os"
+	"slices"
 
 	"charm.land/huh/v2"
 	"github.com/spf13/cobra"
@@ -25,9 +28,11 @@ func NewUpgradeCommand(initialize InitializeUseCase) *cobra.Command {
 		Long: "Reinstalls the codefall extension, its shared files, and its hooks for the harnesses " +
 			".codefall/settings.json records, replaces the sections codefall wrote into AGENTS.md, " +
 			"rewrites a harness name the settings or the manifest still spell the old way, and records " +
-			"the run in .codefall/manifest.json. It changes nothing it did not write. A project already " +
+			"the run in .codefall/manifest.json, removing what the previous install wrote that this " +
+			"one does not ship. Before it changes anything it prints the breaking changes recorded " +
+			"between the installed version and this one and asks to continue. A project already " +
 			"installed at this binary's version is reported as up to date and left alone. " +
-			"--harness adds a harness the project did not choose at init. " +
+			"--harness adds a harness the project did not choose at init and records it in the settings. " +
 			"Upgrade needs a manifest: a project that has none is codefall init's. " +
 			"Run below the root of a git repository, upgrade asks whether the install is there or at " +
 			"the root; --location answers without asking.",
@@ -51,10 +56,11 @@ type upgradeFlags struct {
 }
 
 func (f *upgradeFlags) register(cmd *cobra.Command) {
-	registerHarnessFlag(cmd, &f.harnesses, "coding harness to add to the ones the settings record")
+	registerHarnessFlag(cmd, &f.harnesses,
+		"coding harness to add to the ones the settings record, and install for alongside them")
 	registerLocationFlag(cmd, &f.location)
 	cmd.Flags().BoolVarP(&f.yes, "yes", "y", false,
-		"upgrade to this binary's version without asking")
+		"upgrade to this binary's version without asking, breaking changes included")
 }
 
 // runUpgrade is the command's body: read what the project has, decide whether there is anything to
@@ -67,15 +73,16 @@ func runUpgrade(cmd *cobra.Command, initialize InitializeUseCase, flags *upgrade
 		return upgradeKind.wrap(err)
 	}
 
+	// One colour-profile writer for the whole run, opened before the request is built because the
+	// breaking changes are printed while it is.
+	out := ui.NewWriter(cmd.OutOrStdout())
+
 	// A bad flag or a project that was never set up is the user's own message; it is returned as it
 	// is so Fang renders that sentence and not a prefix in front of it.
-	request, err := buildUpgradeRequest(cmd, initialize, flags, dir)
+	request, err := buildUpgradeRequest(cmd, initialize, flags, dir, out)
 	if err != nil {
 		return err
 	}
-
-	// One colour-profile writer for the whole run.
-	out := ui.NewWriter(cmd.OutOrStdout())
 
 	if request.NoOp {
 		return ui.WriteLine(out, ui.Style(ui.ToneFaint).Render(
@@ -93,9 +100,9 @@ func runUpgrade(cmd *cobra.Command, initialize InitializeUseCase, flags *upgrade
 // is surveyed: the answers were given at init, and the one question this command asks is whether to
 // move the installed version.
 func buildUpgradeRequest(
-	cmd *cobra.Command, initialize InitializeUseCase, flags *upgradeFlags, dir string,
+	cmd *cobra.Command, initialize InitializeUseCase, flags *upgradeFlags, dir string, out io.Writer,
 ) (application.Request, error) {
-	chosen, err := parseHarnesses(flags.harnesses)
+	added, err := parseHarnesses(flags.harnesses)
 	if err != nil {
 		return application.Request{}, err
 	}
@@ -107,7 +114,7 @@ func buildUpgradeRequest(
 		return application.Request{}, err
 	}
 
-	request := application.Request{Dir: dir, Harnesses: chosen, CLIVersion: buildinfo.Version()}
+	request := application.Request{Dir: dir, CLIVersion: buildinfo.Version()}
 
 	// No manifest means no finished run to bring current. That project is init's, and init is what
 	// writes the manifest this command needs.
@@ -122,20 +129,25 @@ func buildUpgradeRequest(
 	}
 
 	// The harnesses the project chose are recorded in its settings, so the run installs for those
-	// rather than asking again — and the gate below cannot compare what it has not been told.
-	if len(request.Harnesses) == 0 {
-		names, err := initialize.ChosenHarnesses(dir)
-		if err != nil {
-			return application.Request{}, upgradeKind.wrap(err)
-		}
-
-		chosen, ok := names.Get()
-		if !ok {
-			return application.Request{}, errors.New("the settings here record no harnesses; pass --harness")
-		}
-
-		request.Harnesses = chosen
+	// rather than asking again, plus whatever --harness adds — and the gate below cannot compare
+	// what it has not been told.
+	names, err := initialize.ChosenHarnesses(dir)
+	if err != nil {
+		return application.Request{}, upgradeKind.wrap(err)
 	}
+
+	chosenBySettings := names.OrEmpty()
+
+	request.Harnesses = append(slices.Clone(chosenBySettings), added...)
+	if len(request.Harnesses) == 0 {
+		return application.Request{}, errors.New("the settings here record no harnesses; pass --harness")
+	}
+
+	// A harness the flag names that the settings do not is work whatever the versions say: the run
+	// records it, and installs for it.
+	unrecorded := slices.ContainsFunc(added, func(name string) bool {
+		return !slices.Contains(chosenBySettings, name)
+	})
 
 	// The testing root is read back the same way, and for the same reason: a project that has
 	// declared one is not asked about it again, and this run never moves it (ADR-007). A project
@@ -169,22 +181,63 @@ func buildUpgradeRequest(
 	// root, because the tree is what this run would make and doctor's remedy for an undeclared root
 	// is this command. A harness still recorded under an old spelling is work for the same reason:
 	// doctor's remedy for it is this command too.
-	if declaredTest.IsPresent() && len(formers) == 0 &&
+	if declaredTest.IsPresent() && len(formers) == 0 && !unrecorded &&
 		installedEverything(installation, request.Harnesses, request.CLIVersion) {
 		request.NoOp = true
 
 		return request, nil
 	}
 
+	// What the person has to hear before anything moves: the breaking changes between the version
+	// on record and this one. Printed here, before the question, so the answer is given knowing them.
+	breaking, err := reportBreakingChanges(initialize, dir, request.CLIVersion, out)
+	if err != nil {
+		return application.Request{}, upgradeKind.wrap(err)
+	}
+
 	// The question is about moving a version, so it is asked only when a version moves. A harness
 	// with no record at all is work rather than an upgrade, and is not asked about.
 	if versionMoves(installation, request.Harnesses, request.CLIVersion) && !flags.yes {
-		if err := confirmUpgrade(cmd.Context(), request.CLIVersion); err != nil {
+		if err := confirmUpgrade(cmd.Context(), request.CLIVersion, breaking); err != nil {
 			return application.Request{}, err
 		}
 	}
 
 	return request, nil
+}
+
+// reportBreakingChanges prints the breaking changes recorded between the installed version and the
+// binary's, grouped by release, and returns how many there were. A range that could not be
+// determined is said once, in place of a list, so silence never reads as "none" (ADR-010).
+func reportBreakingChanges(initialize InitializeUseCase, dir, binary string, out io.Writer) (int, error) {
+	releases, err := initialize.BreakingChanges(dir, binary)
+	if err != nil {
+		return 0, err
+	}
+
+	between, ok := releases.Get()
+	if !ok {
+		return 0, ui.WriteLine(out, ui.Style(ui.ToneFaint).Render(
+			"the breaking changes between the installed version and "+binary+" could not be determined"))
+	}
+
+	count := 0
+
+	for _, release := range between {
+		if err := ui.WriteLine(out, ui.Style(ui.ToneWarn).Render("Breaking changes in "+release.Version)); err != nil {
+			return 0, err
+		}
+
+		for _, note := range release.Notes {
+			count++
+
+			if err := ui.WriteLine(out, "  • "+note); err != nil {
+				return 0, err
+			}
+		}
+	}
+
+	return count, nil
 }
 
 // installedEverything reports whether every harness this run is for is already installed at this
@@ -215,13 +268,20 @@ func versionMoves(recorded application.Installation, harnesses []string, version
 }
 
 // confirmUpgrade is the one prompt this command asks before it files its own changes: upgrade to the
-// binary's tag. The user's "no" is not a cancellation of the run — it is a decline to move a version.
-func confirmUpgrade(ctx context.Context, version string) error {
+// binary's tag, with the breaking changes just printed in view. The user's "no" is not a cancellation
+// of the run — it is a decline to move a version.
+func confirmUpgrade(ctx context.Context, version string, breaking int) error {
 	var goForIt bool
+
+	title := "Upgrade the installed extension to " + version + "?"
+	if breaking > 0 {
+		title = fmt.Sprintf("%d breaking change%s listed above. Upgrade the installed extension to %s?",
+			breaking, plural(breaking), version)
+	}
 
 	err := huh.NewForm(huh.NewGroup(
 		huh.NewConfirm().
-			Title("Upgrade the installed extension to " + version + "?").
+			Title(title).
 			Value(&goForIt),
 	)).WithAccessible(os.Getenv("ACCESSIBLE") != "").RunWithContext(ctx)
 
@@ -237,4 +297,13 @@ func confirmUpgrade(ctx context.Context, version string) error {
 	default:
 		return upgradeKind.wrap(err)
 	}
+}
+
+// plural is the ending a count takes: "1 breaking change", "2 breaking changes".
+func plural(count int) string {
+	if count == 1 {
+		return " is"
+	}
+
+	return "s are"
 }

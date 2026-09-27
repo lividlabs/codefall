@@ -21,7 +21,7 @@ var (
 func testingResult(t *testing.T, files *fakeFileSystem, request Request) domain.StepResult {
 	t.Helper()
 
-	report, err := NewInitialize(files, toolsInstalled(), newFakeExtensionSource()).Run(
+	report, err := NewInitialize(files, toolsInstalled(), newFakeExtensionSource(), noChanges()).Run(
 		t.Context(), request, nil,
 	)
 	if err != nil {
@@ -227,7 +227,7 @@ func TestTestingStepRefusesARootOutsideTheProject(t *testing.T) {
 	request := beadsRequest()
 	request.TestDir = "../testing"
 
-	_, err := NewInitialize(settled("{}"), toolsInstalled(), newFakeExtensionSource()).testing(
+	_, err := NewInitialize(settled("{}"), toolsInstalled(), newFakeExtensionSource(), noChanges()).testing(
 		t.Context(), request)
 	if err == nil || !strings.Contains(err.Error(), "relative path inside the project") {
 		t.Errorf("testing error = %v, want it to refuse the root", err)
@@ -242,7 +242,7 @@ func TestTestingStepRefusesASkeletonTheTreeDoesNotHold(t *testing.T) {
 	source := newFakeExtensionSource()
 	delete(source.data, "agents/testing/README.md")
 
-	_, err := NewInitialize(files, toolsInstalled(), source).Run(t.Context(), beadsRequest(), nil)
+	_, err := NewInitialize(files, toolsInstalled(), source, noChanges()).Run(t.Context(), beadsRequest(), nil)
 	if err == nil || !strings.Contains(err.Error(), "read agents/testing/README.md") {
 		t.Errorf("Run error = %v, want it to name the skeleton the tree does not hold", err)
 	}
@@ -299,7 +299,7 @@ func TestTestingStepReportsWhatItCannotUse(t *testing.T) {
 			files := settled("{}")
 			tc.setup(files)
 
-			_, err := NewInitialize(files, toolsInstalled(), newFakeExtensionSource()).testing(
+			_, err := NewInitialize(files, toolsInstalled(), newFakeExtensionSource(), noChanges()).testing(
 				t.Context(), beadsRequest())
 			if err == nil || !strings.Contains(err.Error(), tc.want) {
 				t.Errorf("testing error = %v, want it to mention %q", err, tc.want)

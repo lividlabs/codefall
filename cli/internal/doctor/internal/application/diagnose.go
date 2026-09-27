@@ -6,10 +6,12 @@ package application
 import (
 	"context"
 	"fmt"
+	"path/filepath"
 
 	"github.com/samber/mo"
 
 	"github.com/lividlabs/codefall-cli/cli/internal/doctor/internal/domain"
+	"github.com/lividlabs/codefall-cli/cli/internal/shared/manifest"
 )
 
 // FileSystem is the doctor's view of the working directory (one gateway role).
@@ -50,6 +52,19 @@ type Diagnose struct {
 // NewDiagnose builds the use case over its two gateways.
 func NewDiagnose(files FileSystem, runner CommandRunner) *Diagnose {
 	return &Diagnose{files: files, runner: runner}
+}
+
+// setupCommand is the command that puts right what codefall installs: `codefall upgrade` for a
+// project a finished run has recorded in .codefall/manifest.json, and `codefall init` for one no run
+// has, because upgrade refuses the second and init refuses the first (ADR-010). A manifest that
+// cannot be stat'd is read as present, which names upgrade; upgrade then says what is wrong with it.
+func (d *Diagnose) setupCommand(dir string) string {
+	there, err := d.files.Exists(filepath.Join(dir, manifest.Name))
+	if err == nil && !there {
+		return "codefall init"
+	}
+
+	return "codefall upgrade"
 }
 
 // Run executes every check that is worth running and returns the report. A check whose prerequisite

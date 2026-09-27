@@ -36,7 +36,7 @@ func TestRepositoryRoot(t *testing.T) {
 				delete(runner.paths, "git")
 			}
 
-			got := NewInitialize(newFakeFileSystem(), runner, newFakeExtensionSource()).
+			got := NewInitialize(newFakeFileSystem(), runner, newFakeExtensionSource(), noChanges()).
 				RepositoryRoot(t.Context(), workingDir)
 			if got != tc.want {
 				t.Errorf("RepositoryRoot = %v, want %v", got, tc.want)
@@ -84,7 +84,7 @@ func TestHookWritesTheSubdirectoryIntoCommandsThatNameTheRoot(t *testing.T) {
 			source := newFakeExtensionSource()
 			source.data["hooks/claude/hooks.json"] = rootedClaudeDefinition
 
-			if _, err := NewInitialize(files, runner, source).Run(t.Context(), beadsRequest(), nil); err != nil {
+			if _, err := NewInitialize(files, runner, source, noChanges()).Run(t.Context(), beadsRequest(), nil); err != nil {
 				t.Fatalf("Run: %v", err)
 			}
 
@@ -117,7 +117,7 @@ func TestRunRefusesASubdirectoryItCannotQuote(t *testing.T) {
 	runner.runs[gitPrefix] = CommandResult{Stdout: "apps/$(rm -rf ~)/\n"}
 	observer := &recordingObserver{}
 
-	_, err := NewInitialize(files, runner, newFakeExtensionSource()).Run(t.Context(), beadsRequest(), observer)
+	_, err := NewInitialize(files, runner, newFakeExtensionSource(), noChanges()).Run(t.Context(), beadsRequest(), observer)
 	if err == nil || !strings.Contains(err.Error(), "cannot quote") {
 		t.Fatalf("Run error = %v, want the subdirectory refused", err)
 	}

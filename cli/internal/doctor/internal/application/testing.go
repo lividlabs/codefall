@@ -38,7 +38,7 @@ func (d *Diagnose) testing(_ context.Context, dir string, results []domain.Resul
 		// What the block decides is where the cases go, and init is what asks — so the two checks
 		// below have nothing to ask about until it has, and are absent from the report.
 		return append(results, domain.TestDeclared.Warn(
-			"no testing root is declared in settings.json", mo.Some(upgradeRemedy)))
+			"no testing root is declared in settings.json", mo.Some(d.setupCommand(dir))))
 	}
 
 	results = append(results, domain.TestDeclared.PassWithDetail(declared.Dir+"/"))
@@ -69,7 +69,7 @@ func (d *Diagnose) testDirExists(dir, root string, results []domain.Result) []do
 
 	if !there {
 		return append(results, domain.TestDirExists.Fail(
-			root+"/ is declared in settings.json and is not there", mo.Some(upgradeRemedy)))
+			root+"/ is declared in settings.json and is not there", mo.Some(d.setupCommand(dir))))
 	}
 
 	return append(results, domain.TestDirExists.Pass())

@@ -22,17 +22,19 @@ import (
 )
 
 type fakeInitialize struct {
-	report     domain.Report
-	err        error
-	exists     bool
-	existsErr  error
-	manifest   bool
-	suggestion mo.Option[string]
-	root       mo.Option[string]
-	installed  mo.Option[application.Installation]
-	harnesses  mo.Option[[]string]
-	testDir    mo.Option[string]
-	formers    []string
+	report      domain.Report
+	err         error
+	exists      bool
+	existsErr   error
+	manifest    bool
+	suggestion  mo.Option[string]
+	root        mo.Option[string]
+	installed   mo.Option[application.Installation]
+	harnesses   mo.Option[[]string]
+	testDir     mo.Option[string]
+	formers     []string
+	breaking    mo.Option[[]application.BreakingRelease]
+	breakingErr error
 
 	got       application.Request
 	ran       bool
@@ -87,6 +89,12 @@ func (f *fakeInitialize) FormerHarnessNames(string) ([]string, error) {
 	return f.formers, nil
 }
 
+// BreakingChanges on the fake answers what a test seeded: None, the default, is a range that could
+// not be determined.
+func (f *fakeInitialize) BreakingChanges(string, string) (mo.Option[[]application.BreakingRelease], error) {
+	return f.breaking, f.breakingErr
+}
+
 func (f *fakeInitialize) SuggestIssuesRepo(context.Context, string) mo.Option[string] {
 	f.suggested = true
 
@@ -105,6 +113,7 @@ func newFakeInitialize() *fakeInitialize {
 		installed:  mo.None[application.Installation](),
 		harnesses:  mo.None[[]string](),
 		testDir:    mo.None[string](),
+		breaking:   mo.None[[]application.BreakingRelease](),
 	}
 }
 

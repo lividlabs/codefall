@@ -166,13 +166,13 @@ func TestUpgradeCommandIsANoOpOnlyForTheHarnessItInstalled(t *testing.T) {
 			wantRun:   true,
 		},
 		{
-			// A record naming several harnesses is read per harness, so the one this run is for is
-			// what decides — not whichever install happened to finish last.
-			name: "one of several recorded harnesses, at the same version",
+			// The flag names a harness the settings do not, so the run has that to record, however
+			// current the install for it is.
+			name: "a recorded harness the settings do not name",
 			installed: application.Installation{Versions: map[string]string{
 				harness.Claude: buildinfo.Version(), harness.Codex: buildinfo.Version()}},
 			args:    []string{"--harness", harness.Codex},
-			wantRun: false,
+			wantRun: true,
 		},
 		{
 			name:      "the same harness at an older version",
@@ -206,7 +206,8 @@ func TestUpgradeCommandIsANoOpOnlyForTheHarnessItInstalled(t *testing.T) {
 }
 
 // A rerun installs for what the project already chose, because its settings record them. The flag is
-// needed the first time, and afterwards only to add a harness.
+// needed the first time, and afterwards only to add a harness — alongside the recorded ones, never in
+// their place.
 func TestUpgradeCommandTakesTheHarnessesFromTheSettingsOnARerun(t *testing.T) {
 	initialize := newFakeInitialize()
 	initialize.exists = true
@@ -219,6 +220,95 @@ func TestUpgradeCommandTakesTheHarnessesFromTheSettingsOnARerun(t *testing.T) {
 
 	if want := []string{harness.Codex, harness.Muse}; !slices.Equal(initialize.got.Harnesses, want) {
 		t.Errorf("Harnesses = %q, want %q", initialize.got.Harnesses, want)
+	}
+
+	if _, err := runUpgradeCommand(t, initialize, "--harness", harness.Claude); err != nil {
+		t.Fatalf("Execute with --harness: %v", err)
+	}
+
+	if want := []string{harness.Codex, harness.Muse, harness.Claude}; !slices.Equal(initialize.got.Harnesses, want) {
+		t.Errorf("Harnesses = %q, want the flag's harness added to the settings', %q", initialize.got.Harnesses, want)
+	}
+}
+
+// The breaking changes between the recorded version and the binary's are printed before anything
+// runs, grouped by release, and --yes carries on past them. A range that could not be determined is
+// said in one line, so silence never reads as none.
+func TestUpgradeCommandPrintsTheBreakingChangesBeforeItRuns(t *testing.T) {
+	initialize := newFakeInitialize()
+	initialize.exists = true
+	initialize.manifest = true
+	initialize.harnesses = mo.Some([]string{harness.Claude})
+	initialize.testDir = mo.Some(settings.DefaultTestDir)
+	initialize.installed = mo.Some(application.Installation{Versions: map[string]string{harness.Claude: "0.16.0"}})
+	initialize.breaking = mo.Some([]application.BreakingRelease{
+		{Version: "0.17.0", Notes: []string{"**skills:** conceptualize is now envision", "**skills:** the Beads section changed"}},
+		{Version: "0.19.0", Notes: []string{"**cli:** harnesses are named for their binaries"}},
+	})
+	initialize.report = domain.NewReport(domain.SettingsStep.Skipped(".codefall/settings.json already exists"))
+
+	out, err := runUpgradeCommand(t, initialize, "--yes")
+	if err != nil {
+		t.Fatalf("Execute: %v\n%s", err, out)
+	}
+
+	want := "Breaking changes in 0.17.0\n" +
+		"  • **skills:** conceptualize is now envision\n" +
+		"  • **skills:** the Beads section changed\n" +
+		"Breaking changes in 0.19.0\n" +
+		"  • **cli:** harnesses are named for their binaries\n" +
+		"- .codefall/settings.json already exists\n" +
+		nextStep + "\n"
+	if out != want {
+		t.Errorf("output =\n%q\nwant\n%q", out, want)
+	}
+
+	if !initialize.ran {
+		t.Error("ran = false, want --yes to carry on past the breaking changes")
+	}
+}
+
+func TestUpgradeCommandSaysWhenTheBreakingChangesCouldNotBeDetermined(t *testing.T) {
+	initialize := newFakeInitialize()
+	initialize.exists = true
+	initialize.manifest = true
+	initialize.harnesses = mo.Some([]string{harness.Claude})
+	initialize.testDir = mo.Some(settings.DefaultTestDir)
+	initialize.installed = mo.Some(application.Installation{Versions: map[string]string{harness.Claude: "0.1.0-dev"}})
+	initialize.report = domain.NewReport()
+
+	out, err := runUpgradeCommand(t, initialize, "--yes")
+	if err != nil {
+		t.Fatalf("Execute: %v\n%s", err, out)
+	}
+
+	if !strings.Contains(out, "could not be determined") {
+		t.Errorf("output = %q, want it to say the range could not be determined", out)
+	}
+
+	if strings.Contains(out, "Breaking changes in") {
+		t.Errorf("output = %q, want no release listed", out)
+	}
+}
+
+// A run that has nothing to do prints nothing about breaking changes either: there is no version
+// moving for them to be about.
+func TestUpgradeCommandPrintsNoBreakingChangesOnANoOp(t *testing.T) {
+	initialize := newFakeInitialize()
+	initialize.exists = true
+	initialize.manifest = true
+	initialize.harnesses = mo.Some([]string{harness.Claude})
+	initialize.testDir = mo.Some(settings.DefaultTestDir)
+	initialize.installed = mo.Some(application.Installation{Versions: map[string]string{harness.Claude: buildinfo.Version()}})
+	initialize.breaking = mo.Some([]application.BreakingRelease{{Version: "9.9.9", Notes: []string{"never printed"}}})
+
+	out, err := runUpgradeCommand(t, initialize)
+	if err != nil {
+		t.Fatalf("Execute: %v\n%s", err, out)
+	}
+
+	if strings.Contains(out, "never printed") || strings.Contains(out, "could not be determined") {
+		t.Errorf("output = %q, want nothing about breaking changes on a no-op", out)
 	}
 }
 

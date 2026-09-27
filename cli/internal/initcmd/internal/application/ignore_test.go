@@ -31,7 +31,7 @@ func gitIgnored(files *fakeFileSystem) *fakeFileSystem {
 func ignoreResult(t *testing.T, files *fakeFileSystem) domain.StepResult {
 	t.Helper()
 
-	report, err := NewInitialize(files, toolsInstalled(), newFakeExtensionSource()).Run(
+	report, err := NewInitialize(files, toolsInstalled(), newFakeExtensionSource(), noChanges()).Run(
 		t.Context(), beadsRequest(), nil,
 	)
 	if err != nil {
@@ -108,7 +108,7 @@ func TestIgnoreStepNamesTheDeclaredTestingRoot(t *testing.T) {
 	request := beadsRequest()
 	request.TestDir = "packages/web/e2e"
 
-	if _, err := NewInitialize(files, toolsInstalled(), newFakeExtensionSource()).Run(
+	if _, err := NewInitialize(files, toolsInstalled(), newFakeExtensionSource(), noChanges()).Run(
 		t.Context(), request, nil,
 	); err != nil {
 		t.Fatalf("Run: %v", err)

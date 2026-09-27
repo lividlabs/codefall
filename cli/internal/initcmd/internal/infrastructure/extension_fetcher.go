@@ -9,19 +9,34 @@ import (
 
 	"sort"
 
+	"github.com/samber/mo"
+
 	"github.com/lividlabs/codefall-cli/cli/internal/shared/process"
 )
 
-// EmbeddedExtensionFetcher serves the extension tree out of the embedded extensions FS.
+// EmbeddedExtensionFetcher serves the extension tree out of the embedded extensions FS, and answers
+// for the skill names the tree used to use.
 type EmbeddedExtensionFetcher struct {
-	src   fs.FS
-	files *process.FileSystem
+	src     fs.FS
+	renames map[string]string
+	files   *process.FileSystem
 }
 
-// NewEmbeddedExtensionFetcher builds the gateway over the tree the binary was compiled with. The
-// source fs is injected so tests can drive an in-memory tree instead of the real one.
-func NewEmbeddedExtensionFetcher(src fs.FS) *EmbeddedExtensionFetcher {
-	return &EmbeddedExtensionFetcher{src: src, files: process.NewFileSystem()}
+// NewEmbeddedExtensionFetcher builds the gateway over the tree the binary was compiled with and the
+// table of former skill directory names kept beside it. Both are injected so tests can drive an
+// in-memory tree and a table of their own instead of the real ones.
+func NewEmbeddedExtensionFetcher(src fs.FS, renames map[string]string) *EmbeddedExtensionFetcher {
+	return &EmbeddedExtensionFetcher{src: src, renames: renames, files: process.NewFileSystem()}
+}
+
+// RenamedSkill returns the name a skill directory has now when former is a name it used to have.
+func (f *EmbeddedExtensionFetcher) RenamedSkill(former string) mo.Option[string] {
+	current, known := f.renames[former]
+	if !known {
+		return mo.None[string]()
+	}
+
+	return mo.Some(current)
 }
 
 // Fetch mirrors the named subtrees of the embedded tree onto destDir, except the excluded paths, and
