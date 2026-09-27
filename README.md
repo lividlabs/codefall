@@ -96,7 +96,9 @@ that runs it, named for its binary or `current` for whichever harness the sessio
 optionally a model. A run skips an agent this machine cannot start and moves to the next, so one
 checked-in list serves every machine, and `doctor` reports which entries yours can run. `init` writes
 one entry, `subagent` on `current`, which is what every verb did before the list existed. `review`
-walks it today; consult follows. [ADR-009](docs/adrs/ADR-009-agents.md) records the shape.
+walks it for its reviewer, and `implement` and `design` walk it for a consult when a run cannot
+settle a question on its own; a `review` or `consult` block may carry its own order.
+[ADR-009](docs/adrs/ADR-009-agents.md) records the shape.
 
 Init also writes into the project's own files. The Beads database it initializes gets
 `audit.enabled: false` written into `.beads/config.yaml`, so bd's interaction log stays off until the
@@ -344,6 +346,15 @@ rejected alternative that cost real analysis — become an ADR in the project's 
 Most designs need none. A ratified ADR is never rewritten: a revision lands as a new, superseding
 one.
 
+**A technical point the run cannot settle is put to the project's consult agents, once.** After the
+concern has been raised and the code and the ADRs read, `design` renders the question, the files,
+and the options it sees into a consult and walks the `consult` order from `settings.json`, a
+subagent of the current harness when nothing is configured. A confident answer on a reversible
+choice comes back to you as the run's recommendation, naming who was consulted; anything else, and
+any hard-to-reverse choice, comes to you as analysis beside the concern, and what stays unsettled
+goes into the document as a stated risk. A consult never writes, never settles an ADR, and is never
+asked about a preference you have stated.
+
 The design's `Status` is `Draft`, `Ready`, or `Archived` and describes the document only. Whether the
 work is queued, underway, or done is Beads' to say, the same division `specify` makes with its
 tracker.
@@ -356,10 +367,15 @@ unblocks the next tasks, waves of background workers build them in isolated work
 continues until the frontier is empty.
 
 **One approval starts it.** The go gate shows the landing strategy with its reason, a branch diagram,
-the waves and the models proposed per task, what will be claimed in Beads, and — when a vision sits
-behind the work — that go flips it to `Active`. After go, only a failure stops the run, and a failed
-worker gets one automatic retry at higher effort before anything reaches you. That absence of
-mid-run gates is what makes an overnight run possible.
+the waves and the models proposed per task, what will be claimed in Beads, the consult order a
+failure will be put to, and — when a vision sits behind the work — that go flips it to `Active`.
+After go, only a failure stops the run. A failed worker is consulted on first — the root puts the
+failure, the bead, and the courses it can see to the project's `consult` order, a subagent of the
+current harness when nothing is configured — and then gets one automatic retry at higher effort
+with the answer folded in beside the failure reason. A second failure is consulted on again and
+then reaches you, with the analysis in front of you. That absence of mid-run gates is what makes an
+overnight run possible, and the consult is what keeps a run from stopping on something a second
+reading would have settled.
 
 **How work lands is read from the graph's shape.** Independent chains stack toward `main` in
 parallel when their predicted file scopes are disjoint; overlap or fan-in serializes them into one

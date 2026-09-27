@@ -67,6 +67,18 @@
       },
       "additionalProperties": true
     },
+    "consult": {
+      "description": "What a verb reaches for when a run cannot settle a question on its own (ADR-009): a second opinion that proposes and never decides.",
+      "type": "object",
+      "properties": {
+        "agents": {
+          "description": "The order a consult walks, as names from agents, when it differs from the top-level order.",
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      },
+      "additionalProperties": true
+    },
     "local": {
       "description": "The project's local-environment commands, each a shell command run from the project root (ADR-005).",
       "type": "object",

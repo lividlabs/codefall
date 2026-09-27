@@ -3,6 +3,15 @@
 One background agent per bead, each in its own worktree. Read at step 6, before rendering the first
 prompt.
 
+## Contents
+
+- Launching
+- Chains
+- Results
+- Failure handling
+- Consulting
+- Worktrees survive the run
+
 ## Launching
 
 `Agent` with `isolation: 'worktree'`, prompted from `../worker-prompt.md`, rendered by substituting
@@ -61,11 +70,44 @@ amended in its branch; the root reads it at the wave boundary per *Amendments* i
 
 ## Failure handling
 
-A worker returning `{"status": "failure"}` gets **one automatic retry**: a fresh worker at higher
-effort or a stronger model, with the failure reason folded into its prompt. A second failure stops
-the chain and escalates — fix it by hand, skip the bead (unclaim it, note why), or abort the run.
-Nothing retries more than once on its own. A worker that is alive but stalled is resumed with a
-message, not replaced.
+A worker returning `{"status": "failure"}` gets **one consult, then one automatic retry**. The root
+consults per *Consulting* below on the failure reason and the bead, and launches a fresh worker at
+higher effort or a stronger model with the failure reason and the consult's answer folded into its
+prompt. A second failure gets one more consult, and then stops the chain and escalates — fix it by
+hand, skip the bead (unclaim it, note why), or abort the run — with the consult's analysis in front
+of the human. Nothing retries more than once on its own, and nothing is consulted twice on the same
+failure. A worker that is alive but stalled is resumed with a message, not replaced.
+
+## Consulting
+
+The root consults; a worker never does. Every call to another agent is the root's, in the primary
+checkout, as every `bd` write is. The procedure is *Consulting* in
+`../../../../.codefall/shared/running-agents.md`; this is what implement puts into it.
+
+**The question**, rendered into `../../../../.codefall/shared/consult-prompt.md`: `QUESTION` is why
+the worker failed, in its own words from `reason`, and what the bead asked for; `FILES` are the
+bead's Design ref section and the files the worker's branch touched, or the design's predicted files
+when nothing was pushed; `CONTEXT` is the bead body and acceptance criteria; `OPTIONS` are the
+courses the root can see — a different approach the design allows, a missing precondition to name,
+a task that is cut wrong and belongs back with `codefall-design`; `PRIOR` is the failure of an
+earlier agent in the order, or empty. `SCHEMA` is `../../../../.codefall/shared/consult.schema.json`.
+
+**The order** is `consult.agents`, resolved and walked as `running-agents.md` says, with
+`../../../../.codefall/shared/run-agent.sh`. With nothing configured it is one entry on `current`,
+and the root runs the consult as a subagent: a fresh context reading the same files, which is why
+the default run consults too. The go gate names the resolved order.
+
+**What the answer does.** Before the retry: an answer that names a course the bead allows is folded
+into the retry prompt beside the failure reason, as a suggestion the fresh worker weighs and not an
+instruction — the worker still reads the design and the code first. `cannotSettle`, or no agent
+answering, means the retry runs on the failure reason alone, as before. At the second failure: the
+answer, or the fact that none came, goes into the escalation so the human reads the analysis beside
+the failure. A consult never changes the graph, never edits a bead, and never overrides a design;
+an answer that says the task is cut wrong is reported as exactly that, for `codefall-design`.
+
+**The record.** The `bd comment` that records what ran on the bead names the agent consulted and
+its answer in one line; the close-out report lists every consult, by bead, with who answered and
+who was skipped or failed.
 
 ## Worktrees survive the run
 

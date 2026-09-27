@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/lividlabs/codefall-cli/main/extensions/shared/consult.schema.json",
+  "title": "Codefall consult answer",
+  "description": "One agent's answer to one question a run could not settle on its own (ADR-009). The agent proposes; the session that asked decides. An answer with cannotSettle true, or confidence low, advances the walk to the next agent in the order.",
+  "type": "object",
+  "required": ["answer", "confidence", "reasoning", "cannotSettle"],
+  "additionalProperties": false,
+  "properties": {
+    "answer": {
+      "type": "string",
+      "description": "The option taken or the course proposed, in one or two sentences. Empty when cannotSettle is true."
+    },
+    "confidence": {
+      "type": "string",
+      "enum": ["high", "medium", "low"],
+      "description": "high: the files settle it. medium: a judgment the agent would defend. low: a guess; the session treats it as no answer."
+    },
+    "reasoning": {
+      "type": "string",
+      "description": "Why, citing files and lines where they decided it, and what each option seen would cost."
+    },
+    "cannotSettle": {
+      "type": "boolean",
+      "description": "True when the question needs something the agent does not have: a person's preference, a fact outside the repository, or a choice that is hard to reverse and belongs to a human."
+    },
+    "reversible": {
+      "type": "boolean",
+      "description": "Whether the proposed answer could be undone later without other work being redone. Absent when cannotSettle is true."
+    }
+  }
+}

@@ -40,6 +40,10 @@ Read each when its step says to; none is loaded up front.
   file, the edge direction, and how to verify the graph. Read before step 9.
 - `reference/revising.md` — reconciling the graph when a design changes after its beads exist, and
   settling the revision beads filed against it. Read for the Revise mode.
+- `reference/consulting.md` — putting an unsettled technical point to the configured agents, and
+  what their answer may do. Read at step 5 when one stays unsettled. Names
+  `../../../.codefall/shared/running-agents.md`, `../../../.codefall/shared/run-agent.sh`,
+  `../../../.codefall/shared/consult-prompt.md`, `../../../.codefall/shared/consult.schema.json`.
 - `templates/designs/AGENTS.md` — the operative rules this skill installs at `docs/designs/AGENTS.md`.
 
 ## Scope — how, not what and not whether
@@ -83,10 +87,9 @@ Three tiers. The work picks the tier; the user can overrule it.
 | **2 — full document** | The same, plus any conditional section whose trigger fires | Required three plus what triggered |
 
 - **Simple bug fixes land at tier 0.** One bead, with the reproduction and the cause.
-- **Tier 1 and tier 2 are not decided separately.** Write the required three, then walk the
-  conditional triggers; whichever fire, fire.
-- **An ADR is not gated on the tier.** A one-component fix can produce an ADR and no document.
-- **Say the tier out loud, with the reason, before writing anything** — step 4 has the shape.
+- **Tier 1 and 2 are not decided separately**: write the required three, then walk the triggers.
+- **An ADR is not gated on the tier.**
+- **Say the tier out loud before writing** — step 4.
 
 ## The document
 
@@ -214,16 +217,15 @@ framed the work. A vision's **Environment & constraints** section is written for
 - **Revision requests**, on an existing design — `bd list -l design-revision --spec <its path>`,
   filed by `codefall-implement` or `codefall-review`.
 
-Report what you found before designing — open revision requests first; use them to decide between
-Revise and Add tasks. If the work already exists, say so and stop.
+Report what you found before designing — open revision requests first. If the work already exists,
+say so and stop.
 
 ### 4. Decide the tier, and whether there is an ADR
 
 Both judgements, stated together, before any writing:
 
-> This crosses the context store and the scaffold command, and comes to four tasks, so I would write
-> a design document. The choice between a signed payload and a session lookup is hard to reverse and
-> other components will build on it, so that is an ADR as well.
+> Four tasks across the context store and the scaffold command: a design document. The signed
+> payload versus session lookup choice is hard to reverse: an ADR as well.
 
 Walk the [tier table](#scale-the-artifact-to-the-work) and the [ADR trigger](#adrs) explicitly. They
 are independent.
@@ -246,11 +248,11 @@ Read `reference/document.md`. Settle, in this order, and only what applies:
 **"Like $LIBRARY does it."** Offer once to look it up; on yes, summarize only what changes a decision
 here, and confirm the summary before it reaches the document.
 
-**Raise a concern once, then defer.** Name it, say why, and let them decide. Cap at two rounds;
-unresolved, it goes into the document as a stated risk.
+**Raise a concern once, then defer.** Name it, say why, and let them decide. Cap at two rounds. A
+technical point still unsettled after research is consulted on once, per `reference/consulting.md`;
+what stays unsettled goes into the document as a stated risk.
 
-**Do not bikeshed.** Naming, and which of two equivalent shapes is better, do not change what gets
-built; do not ask.
+**Do not bikeshed** over naming or two equivalent shapes.
 
 ### 6. Stage the tasks
 
@@ -311,7 +313,7 @@ Write `docs/designs/DESIGN-NNN-slug.md` with the Task Plan **staged**, the ADR i
 `docs/designs/AGENTS.md` if it was missing, and the amendments the user took: a spec's mirrored, a
 vision's committed beside the design.
 
-Write the document before creating the beads, so a failed creation leaves a resumable run.
+Write the document before the beads, so a failed creation is resumable.
 
 ### 9. Create the graph
 
@@ -345,6 +347,7 @@ Report:
 - any ADR written, and what it decided;
 - every bead created, with its local ID, its title, and any test case its criteria name;
 - every upstream amendment written, and any the user declined;
+- every consult: the point, who answered, what it changed;
 - the ready set — which tasks `codefall-implement` can start on today;
 - anything left unresolved, and any concern the user overruled;
 - the branch and the pull request;
@@ -372,17 +375,16 @@ your own initiative.
 - **Nothing is written without the user confirming it first** — the document, the ADR, and at tier 0
   the beads.
 - **Scale the artifact to the work.** Tier 0 is a real outcome, not a failure to write a document.
-- **Never fill a heading.** An empty conditional section is deleted, heading and all.
+- **Never fill a heading.** An empty conditional section is deleted.
 - **Design within the project's ADRs.** Changing the stance is a superseding ADR, said out loud; a
   ratified ADR is never rewritten.
 - **Identifiers are append-only** — design numbers, and local task IDs within a design.
-- **Beads is authoritative for work state once the tasks exist.** The Task Plan keeps the tasks,
-  edges, and refs it decided, and never grows a status column.
-- **Every task bead carries acceptance criteria** — checkable, citing spec requirement IDs where
-  they trace, and naming the test case where the task is verified through the wired product.
+- **Beads is authoritative for work state once the tasks exist.** The Task Plan never grows a
+  status column.
+- **Every task bead carries acceptance criteria**, checkable, citing spec IDs and the test case
+  where one applies.
 - **A task that introduces infrastructure, a dependency, a migration, or generated code names the
-  local-script change in its criteria.** The scripts stay current at the point of introduction,
-  never as a follow-up.
+  local-script change in its criteria.**
 - **Verify the graph before marking the table created.** `bd ready` and `bd dep cycles`, against
   its roots.
 - **Every bead write is pushed**: step 9, and every revision.
@@ -394,5 +396,6 @@ your own initiative.
 - **Never record a hop you can derive.** A design carries its spec, or its vision when there is no
   spec — not both.
 - **Research goes inline**, attached to the decision it informed. No sibling research files.
-- **Push back once, then defer** — on the tier, on the approach, on the cut.
+- **Push back once, then defer** — on the tier, on the approach, on the cut. A consult informs,
+  never decides.
 - **Never overwrite a file that has drifted.** Show the difference and ask.

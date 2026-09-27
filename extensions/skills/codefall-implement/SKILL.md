@@ -37,7 +37,9 @@ Read each when its step says to; none is loaded up front.
 - `reference/beads.md` — every `bd` command a run issues: session start, claim and close, the
   landed bead and its gates, discovered work, session end. Read at step 5.
 - `reference/workers.md` — launching a worker, the worktree seeding rule, chain sequencing, the
-  result JSON, and failure handling. Read at step 6.
+  result JSON, failure handling, and consulting. Read at step 6. Names
+  `../../../.codefall/shared/running-agents.md`, `../../../.codefall/shared/run-agent.sh`,
+  `../../../.codefall/shared/consult-prompt.md`, `../../../.codefall/shared/consult.schema.json`.
 - `reference/mirror.md` — how the spec's tracker issue walks the work's state. Read at step 6 and
   step 8.
 - `worker-prompt.md` — the prompt rendered for each worker.
@@ -83,7 +85,7 @@ The argument fixes the scope; the skill never infers it.
 A design whose Task Plan still says `Staged. Not yet in Beads` has no graph to walk. Refuse and
 point at `/design`.
 
-**Tier 0 is not a separate mode.** A bare bug bead is single-bead scope with a shorter reading list.
+**Tier 0 is not a separate mode.**
 
 ## What gets read
 
@@ -99,10 +101,10 @@ Per bead, in order, before any plan is formed:
    Never rewritten; a conflict between a task and an ADR goes back to `codefall-design` as a
    superseding-ADR conversation, never a quiet exception.
 5. **The project's `AGENTS.md`**, root and scoped — workflow rules, verify commands, conventions.
-6. **Mockups** under `docs/mockups/` when referenced. A working mockup is still a drawing: it
-   proves an interaction and gets rebuilt in the app's stack. Never copy its markup.
+6. **Mockups** under `docs/mockups/` when referenced: a drawing to rebuild in the app's stack, never
+   markup to copy.
 
-A tier-0 bead has no document behind it; the list collapses to bead + `AGENTS.md` + ADRs.
+A tier-0 bead has no document; the list collapses to bead + `AGENTS.md` + ADRs.
 
 ## Landing strategies
 
@@ -114,8 +116,8 @@ Three ways work reaches `main`; `reference/landing.md` has the rules and the dia
 | **Single stack** | Overlapping file scopes, uncertainty, or fan-in without a need for parallelism. Always correct |
 | **Epic branch** | Fan-in across chains, or work that must not land on `main` in increments — *and* parallelism matters |
 
-Depth never forces the epic branch. Hotspot files count as overlap until shown otherwise. When
-parallel stacks cannot be shown safe, serialize.
+Hotspot files count as overlap until shown otherwise. When parallel stacks cannot be shown safe,
+serialize.
 
 ## The go gate
 
@@ -126,12 +128,12 @@ One approval, before any work starts. Everything the run will do, in one block:
 - the waves, and how many workers run concurrently in each — **there is no default cap**; the wave
   is sized by the graph and the file scopes, and the user trims it here if it is too wide;
 - the model proposed per bead, and one session-level effort recommendation as the exact command —
-  "recommend `/effort high` before go." When one bead wants far more than the rest, propose it as
-  its own batch;
+  "recommend `/effort high` before go";
 - what will be claimed in beads, and — when a vision sits behind the work — that go flips it to
   `Active`;
 - that workers amend a design's or spec's text where the code disagrees, in their own PR, per
   `reference/beads.md`;
+- the consult order a failure will be put to, resolved per `reference/workers.md`;
 - the permissions condition: background workers cannot answer permission prompts, so the session
   must allow edits and Bash without prompting, or the run offers single-task mode instead.
 
@@ -140,9 +142,9 @@ test plan, one branch.
 
 **After go, waves proceed on their own.** Failures are the only mid-run stop.
 
-Model choice is the root's, made at the gate. A bead already carrying execution metadata is taken
-as a recommendation and shown in the table; **implement never writes or edits bead metadata** —
-what actually ran is recorded in a `bd comment`, beside the PR link.
+Model choice is the root's, made at the gate. A bead's own execution metadata is a recommendation
+shown in the table; **implement never writes bead metadata** — what ran goes in a `bd comment`
+beside the PR link.
 
 ## Verification and done
 
@@ -301,14 +303,15 @@ When the user overrules the classifier the same way twice, offer to record the p
 ### 6. Execute the waves
 
 Per `reference/workers.md`. Per wave: render worker prompts, launch the batch, wait for results.
-Verify each success — branch on the remote, PR exists, or it did not happen. One automatic retry
-per failed bead at higher effort; a second failure escalates. File discovered work, in the form
+Verify each success — branch on the remote, PR exists, or it did not happen. A failed bead is
+consulted on and retried once; a second failure is consulted on and escalates, per
+`reference/workers.md`. File discovered work, in the form
 its `kind` names, and read each `amended` list per `reference/beads.md`. Comment the PR link, close
 the bead with what was verified, gate the landed bead with the new PR (stacked runs), `bd dolt push`. `--suggest-next` names the next wave; claim it and
 go again. Epic branch: merge each worker PR into the epic branch, serialized, at the wave boundary.
 Update the mirror per `reference/mirror.md`.
 
-Single-bead scope is the same loop with one iteration, run in one worktree.
+Single-bead scope is one iteration of the same loop, in one worktree.
 
 ### 7. Integrate
 
@@ -326,6 +329,7 @@ Do not merge, and do not wait for merges; the next session's `bd gate check` fin
 - Upstream amendments, by document and PR; then discovered work filed, in two buckets: code
   follow-ups, and what was handed back to design — "DESIGN-NNN has N revision beads" — with the
   `bd comment` on the epic that names them.
+- Every consult: the bead, who answered, what it changed.
 - The tracker mirror's state, the vision transition if one fired.
 - The worktree list, with the cleanup offer.
 - Final `bd dolt push`.
@@ -356,9 +360,10 @@ Do not merge, and do not wait for merges; the next session's `bd gate check` fin
   fixed in passing; a design or spec found wrong is amended in the PR or becomes a
   `design-revision` bead, never a quiet workaround.
 - **Bead IDs ride every commit message.**
-- **Verify workers, never trust them.** Branch on the remote and PR open, or it did not happen.
-- **One automatic retry, then a human.**
-- **No permission prompts mid-run.** Workers cannot answer them; the go gate holds the condition.
+- **Verify workers, never trust them.**
+- **One consult, one automatic retry, one more consult, then a human.** The root consults; a worker
+  never does.
+- **No permission prompts mid-run.** The go gate holds the condition.
 - **Tests are part of done.** Planned or discovered, written now, never deferred to `test`.
 - **A test case the criteria name is written first, from those criteria**, before the code and
   before its spec. Never from the sibling spec, the code, or a pull request's text. The case counts

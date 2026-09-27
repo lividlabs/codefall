@@ -38,6 +38,9 @@ const (
 	RepoPattern   = `^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$`
 	SchemaID      = "https://raw.githubusercontent.com/lividlabs/codefall-cli/main/schemas/settings.schema.json"
 	BlockReview   = "review"
+	// BlockConsult is what a verb reaches for when a run cannot settle a question on its own
+	// (ADR-009). It carries only an order of agents; absent, the top-level order applies.
+	BlockConsult = "consult"
 	// BlockLocal is the project's two local-environment commands (ADR-005): what brings the services
 	// it develops against up, and what makes the local environment match the checkout. Both are
 	// shell commands run from the project root, so a project may point at a Makefile target, a
@@ -174,6 +177,7 @@ var topLevelFields = []fieldSpec{
 	{FieldAgents, false, isAgents},
 	{FieldAgentsByHarness, false, isObject},
 	{BlockReview, false, isObject},
+	{BlockConsult, false, isObject},
 	{BlockLocal, false, isObject},
 	{BlockTest, false, isObject},
 }
@@ -187,6 +191,12 @@ var topLevelFields = []fieldSpec{
 var reviewFields = []fieldSpec{
 	{"postToPullRequest", true, isBool},
 	{FieldReviewAgents, false, isNameList},
+}
+
+// consultFields is the shape of the consult block: nothing but its own order of agents, and that
+// optional, because the block exists only to walk a different order from every other use.
+var consultFields = []fieldSpec{
+	{FieldConsultAgents, false, isNameList},
 }
 
 // localFields is the shape of the local block. Both commands are required once the block is there:
@@ -472,6 +482,7 @@ func Validate(doc Document) []string {
 		fields []fieldSpec
 	}{
 		{BlockReview, reviewFields},
+		{BlockConsult, consultFields},
 		{BlockLocal, localFields},
 		{BlockTest, testFields},
 	} {

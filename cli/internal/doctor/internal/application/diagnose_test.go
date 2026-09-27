@@ -704,6 +704,20 @@ func TestDiagnoseRun(t *testing.T) {
 			wantRemedy: mo.Some(currentRemedy),
 		},
 		{
+			// The consult block's own order is checked like review's.
+			name: "the consult order names no agent on current",
+			mutate: func(f *fakeFileSystem, r *fakeCommandRunner) {
+				document := withAgents(twoAgents, "", "")
+				f.files[settingsPath] = []byte(strings.Replace(document, `"review":`, `"consult": { "agents": ["architect"] },
+  "review":`, 1))
+				r.paths["codex"] = "/opt/homebrew/bin/codex"
+			},
+			want:       outcomes(map[string]domain.Status{domain.AgentsCurrent.ID: domain.StatusWarn}),
+			target:     domain.AgentsCurrent.ID,
+			wantDetail: "consult.agents names no agent on current",
+			wantRemedy: mo.Some(currentRemedy),
+		},
+		{
 			name: "the top-level order itself has no agent on current",
 			mutate: func(f *fakeFileSystem, r *fakeCommandRunner) {
 				f.files[settingsPath] = []byte(withAgents(`[{ "name": "architect", "harness": "codex" }]`, "", ""))

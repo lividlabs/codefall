@@ -69,8 +69,8 @@ func (d *Diagnose) agentsRunnable(defined []settings.Agent) domain.Result {
 	return domain.AgentsRunnable.Warn(strings.Join(missing, "; "), mo.Some(agentsRemedy))
 }
 
-// agentsEndAtCurrent is check 13: the top-level order, the review block's own order when it has
-// one, and each per-harness order name at least one agent on current. An order without one can end
+// agentsEndAtCurrent is check 13: the top-level order, the review and consult blocks' own orders
+// when they have one, and each per-harness order name at least one agent on current. An order without one can end
 // with nothing to run when every external harness is missing or fails, and a project that wants
 // exactly that stop is told what it has chosen.
 func agentsEndAtCurrent(doc settings.Document, defined []settings.Agent) domain.Result {
@@ -82,6 +82,10 @@ func agentsEndAtCurrent(doc settings.Document, defined []settings.Agent) domain.
 
 	if order, ok := settings.ReviewAgents(doc).Get(); ok && !settings.HasCurrent(defined, order) {
 		without = append(without, settings.BlockReview+"."+settings.FieldReviewAgents)
+	}
+
+	if order, ok := settings.ConsultAgents(doc).Get(); ok && !settings.HasCurrent(defined, order) {
+		without = append(without, settings.BlockConsult+"."+settings.FieldConsultAgents)
 	}
 
 	byHarness := settings.AgentsByHarness(doc)

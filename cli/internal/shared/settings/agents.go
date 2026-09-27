@@ -26,6 +26,8 @@ const (
 	// FieldReviewAgents is the review block's own order, an ordered subset of the names above. The
 	// same word means the same thing wherever it appears.
 	FieldReviewAgents = "agents"
+	// FieldConsultAgents is the consult block's own order, the same shape under the same word.
+	FieldConsultAgents = "agents"
 	// The three fields of one agent.
 	FieldAgentName    = "name"
 	FieldAgentHarness = "harness"
@@ -111,12 +113,22 @@ func AgentNames(agents []Agent) []string {
 // ReviewAgents returns the review block's own order when the document carries one that Validate
 // accepts, and None when it does not, which means the top-level order applies.
 func ReviewAgents(doc Document) mo.Option[[]string] {
-	block, ok := lookupObject(doc, BlockReview)
+	return useOrder(doc, BlockReview, FieldReviewAgents)
+}
+
+// ConsultAgents is ReviewAgents for the consult block.
+func ConsultAgents(doc Document) mo.Option[[]string] {
+	return useOrder(doc, BlockConsult, FieldConsultAgents)
+}
+
+// useOrder reads one use's own order out of its block: present and acceptable, or None.
+func useOrder(doc Document, block, field string) mo.Option[[]string] {
+	object, ok := lookupObject(doc, block)
 	if !ok {
 		return mo.None[[]string]()
 	}
 
-	value, present := lookup(block, FieldReviewAgents)
+	value, present := lookup(object, field)
 	if !present || isNameList(value) != "" {
 		return mo.None[[]string]()
 	}
@@ -280,9 +292,14 @@ func agentReferences(doc Document, rejected map[string]bool) []string {
 
 	var problems []string
 
-	if block, ok := lookupObject(doc, BlockReview); ok && !rejected[BlockReview] {
-		if value, present := lookup(block, FieldReviewAgents); present && isNameList(value) == "" {
-			problems = append(problems, undefinedNames(BlockReview+"."+FieldReviewAgents, nameList(value), defined)...)
+	for _, use := range []struct{ block, field string }{
+		{BlockReview, FieldReviewAgents},
+		{BlockConsult, FieldConsultAgents},
+	} {
+		if block, ok := lookupObject(doc, use.block); ok && !rejected[use.block] {
+			if value, present := lookup(block, use.field); present && isNameList(value) == "" {
+				problems = append(problems, undefinedNames(use.block+"."+use.field, nameList(value), defined)...)
+			}
 		}
 	}
 

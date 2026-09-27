@@ -122,6 +122,24 @@ func TestSchemaMatchesTheFieldTables(t *testing.T) {
 		t.Errorf("properties.%s.properties.%s.items.type = %q, want string", BlockReview, FieldReviewAgents, got)
 	}
 
+	// The consult block carries an order and nothing required: it is optional at the top level and
+	// every field inside it is optional too, because absent means the top-level order (ADR-009).
+	consult := schemaObject(t, properties, BlockConsult)
+
+	if slices.Contains(schemaList(t, schema, "required"), BlockConsult) {
+		t.Errorf("required contains %q, want the consult block to stay optional", BlockConsult)
+	}
+
+	if _, has := consult["required"]; has {
+		t.Errorf("properties.%s.required is present, want no required field", BlockConsult)
+	}
+
+	consultProperties := schemaObject(t, consult, "properties")
+
+	if got := schemaText(t, schemaObject(t, schemaObject(t, consultProperties, FieldConsultAgents), "items"), "type"); got != "string" {
+		t.Errorf("properties.%s.properties.%s.items.type = %q, want string", BlockConsult, FieldConsultAgents, got)
+	}
+
 	// The agents list: a name that is a slug, a harness that is one codefall can start or current,
 	// and nothing required of the document as a whole, because absent means the default (ADR-009).
 	agents := schemaObject(t, properties, FieldAgents)

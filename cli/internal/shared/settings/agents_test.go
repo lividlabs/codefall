@@ -127,6 +127,39 @@ func TestReviewAgents(t *testing.T) {
 	}
 }
 
+func TestConsultAgents(t *testing.T) {
+	for _, tc := range []struct {
+		name string
+		doc  Document
+		want mo.Option[[]string]
+	}{
+		{
+			name: "no consult block",
+			doc:  complete(),
+			want: mo.None[[]string](),
+		},
+		{
+			name: "a consult block with no order of its own",
+			doc:  with(complete(), BlockConsult, map[string]any{}),
+			want: mo.None[[]string](),
+		},
+		{
+			name: "consult's own order",
+			doc: with(with(complete(), FieldAgents, twoAgents()), BlockConsult,
+				map[string]any{"agents": []any{"architect", "subagent"}}),
+			want: mo.Some([]string{"architect", "subagent"}),
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			got := ConsultAgents(tc.doc)
+
+			if got.IsPresent() != tc.want.IsPresent() || !slices.Equal(got.OrEmpty(), tc.want.OrEmpty()) {
+				t.Errorf("ConsultAgents() = %v, want %v", got, tc.want)
+			}
+		})
+	}
+}
+
 func TestAgentsByHarness(t *testing.T) {
 	doc := with(with(complete(), FieldAgents, twoAgents()), FieldAgentsByHarness, map[string]any{
 		"claude": []any{"architect", "subagent"},
@@ -252,6 +285,22 @@ func TestValidateAgents(t *testing.T) {
 			doc: with(with(complete(), FieldAgents, twoAgents()),
 				BlockReview, map[string]any{"postToPullRequest": false, "agents": []any{"architect", "reviewer"}}),
 			want: []string{`review.agents: names "reviewer", which agents does not define`},
+		},
+		{
+			name: "consult's order is not a list",
+			doc:  with(complete(), BlockConsult, map[string]any{"agents": "subagent"}),
+			want: []string{"consult.agents: must be an array of agent names"},
+		},
+		{
+			// The block has no required field, so an empty object is a complete consult block.
+			name: "an empty consult block",
+			doc:  with(complete(), BlockConsult, map[string]any{}),
+		},
+		{
+			name: "consult's order names an agent the list does not define",
+			doc: with(with(complete(), FieldAgents, twoAgents()),
+				BlockConsult, map[string]any{"agents": []any{"architect", "oracle"}}),
+			want: []string{`consult.agents: names "oracle", which agents does not define`},
 		},
 		{
 			name: "the override is not an object",

@@ -13,6 +13,7 @@ holds the reasoning.
 - Walking the order
 - `via=` overrides for one run
 - An agent proposes
+- Consulting
 
 ## Which harness this is
 
@@ -78,3 +79,25 @@ choice, and never stands in for the person the verb's own rules name: a disagree
 is a preference and not a question for another agent, and a missing precondition is an exit and
 not a question at all. One round per stuck point, which may put the question to several agents at
 once; never a second round because the first was inconclusive.
+
+## Consulting
+
+A consult is one question a run cannot settle on its own, put to the order under `consult.agents`
+(resolved as above) with the files that bear on it and the options the run sees. The prompt is the consult prompt
+beside this file (consult-prompt.md), rendered once, and the answer follows the consult schema
+beside it (consult.schema.json): an `answer`, a `confidence` of `high`, `medium`, or `low`, the `reasoning` with the files
+that decided it, whether the answer is `reversible`, and `cannotSettle`. Walk the order as above; an
+answer with `cannotSettle` true or `confidence` low advances the walk the way a failure does, and
+the first answer that does neither ends it. One pass, one question, first answer wins.
+
+What a verb does with the answer is the verb's rule, and every verb holds to three things. The
+session decides: a consult proposes, and a `high` answer on a reversible choice is still confirmed
+with the user like anything else written. A consult never settles a hard-to-reverse choice, never
+writes an ADR, and is never asked about a preference the user has stated. The report names every
+agent consulted, what each said, and what the session did with it; where the answer reaches a
+document or a bead, the line that records the decision names the consult that informed it.
+
+The order's default is one entry on `current`, so a project that has configured nothing still
+consults its own harness's subagent: a fresh context reading the same files, which is worth having
+at no configuration cost. What configuration adds is a second model.
+

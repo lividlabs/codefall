@@ -46,8 +46,8 @@ agent may run it when the environment is stale. In order:
 | `scaffold` | a vision; an interview for what a template cannot decide | ratified ADRs, scoped `AGENTS.md` files, optionally project files, boundary lint, and the `start` and `update` scripts | a project ready for `specify` |
 | `specify` | the idea or vision, and an audit of what already exists | `docs/specs/SPEC-NNN-slug.md`, the *what*: requirements with EARS acceptance criteria, mirrored to the tracker as a parent issue and one child per requirement | `design` |
 | `mock-up` | a design-tool export, or nothing | `docs/mockups/<slug>/`, matching the app's own design system | `design`; an issue labelled `requires-mockup` blocks design until it exists |
-| `design` | the spec, the vision, the code | `docs/designs/DESIGN-NNN-slug.md`, the *how*, scaled to the change; ADRs for hard-to-reverse choices; beads with dependency edges, each carrying its acceptance criteria and, where the task is verified through the wired product, the test case and its criteria | `implement` |
-| `implement` | ready beads, an epic, or a design | a worktree per task, the test case before the code, verification against the bead's criteria and the project's checks, a pull request per task, walked in parallel waves until the frontier is empty | the human, who merges; `design`, for a disagreement that moves work, filed as a revision bead |
+| `design` | the spec, the vision, the code; the project's consult agents for a technical point it cannot settle | `docs/designs/DESIGN-NNN-slug.md`, the *how*, scaled to the change; ADRs for hard-to-reverse choices; beads with dependency edges, each carrying its acceptance criteria and, where the task is verified through the wired product, the test case and its criteria | `implement` |
+| `implement` | ready beads, an epic, or a design; the project's consult agents when a worker fails | a worktree per task, the test case before the code, verification against the bead's criteria and the project's checks, a pull request per task, walked in parallel waves until the frontier is empty | the human, who merges; `design`, for a disagreement that moves work, filed as a revision bead |
 | `review` | anything live: uncommitted work, a branch, a PR, a commit range, a path, a document | `.codefall/reviews/`, a JSON and Markdown pair per review; fixes on the target's branch for the findings the user takes | the human; `design`, for a deferred finding that moves work |
 | `test` | what the project declares: suites, the changed subset, or one case in its `spec` or `agentic` modality | `.codefall/tests/`, a report per run; findings triaged, never an edit that makes a run pass | tracker issues on the user's word |
 
@@ -120,3 +120,7 @@ dependency, a migration, or generated code changes `start` or `update` in the sa
   implementation it verifies, and never edited to make a run pass.
 - **A skill refuses only what it cannot do.** A missing runner, tool, or tracker profile is an exit;
   disagreement about size or fit is said aloud and then the user's call is followed.
+- **A consult proposes; the session decides.** A run that cannot settle a technical question puts it
+  once to the project's `consult` order of agents, a subagent of the current harness when nothing is
+  configured, and reads the answer as analysis: never a write, never an ADR, never a stand-in for a
+  preference the user has stated, and every consult named in the report.

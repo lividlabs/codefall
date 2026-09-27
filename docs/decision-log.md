@@ -1345,6 +1345,26 @@ Decided at scaffold, 2026-08-16.
   `--print` in `--mode plan`; its `--json-schema` flag was not tried against the findings schema, so
   like Muse it reads the schema from the prompt.
 
+- **Implement and design consult the configured agents when stuck, 2026-09-26.** The `consult`
+  block joins `review` in `settings.json`, carrying only its own `agents` order, validated like
+  review's and covered by doctor's no-`current` warning. The prompt and the answer's shape are
+  shared, `consult-prompt.md` and `consult.schema.json` beside `run-agent.sh`: one question, the
+  files, the options the run sees, back as an answer with a confidence, the reasoning, whether it is
+  reversible, and `cannotSettle`; low confidence or `cannotSettle` advances the walk like a
+  failure. Implement consults at two points: between a worker's first failure and the automatic
+  retry, folding the answer into the retry prompt as a suggestion beside the failure reason, and
+  again at the second failure so the escalation reaches the human with the analysis. Design
+  consults once, at step 5, on a technical point still unsettled after the concern was raised and
+  the research done; a high-confidence answer on a reversible choice comes to the user as the run's
+  recommendation naming the consult, and everything else comes as analysis beside the concern. With
+  nothing configured the order is one entry on `current`, so the default run consults its own
+  harness's subagent — a fresh context on the same files — and configuration adds a second model
+  rather than switching consulting on. Seen and not taken: workers consulting for themselves, since
+  every external call is the root's like every `bd` write and a worker cannot answer the
+  permission prompt an external harness might raise; consulting to settle a disagreement with the
+  user, which is a preference and not a question; and a consult writing or settling an ADR, which
+  stays the user's to ratify with the consult's analysis in front of them.
+
 ## Open
 
 - **UI composition.** Half settled by **Shared modules, 2026-08-27** above: the theme, the styles,
