@@ -16,7 +16,7 @@ is what `codefall upgrade` reads to report the old directory it removes as a ren
 | --- | --- |
 | `skills/conceptualize/` (– 0.9.0), `skills/codefall-conceptualize/` (0.9.0 – 0.16.x) | `skills/codefall-envision/` |
 | `skills/design/` | `skills/codefall-design/` |
-| `skills/graft/` (– 0.9.0), `skills/codefall-graft/` (0.9.0 – 0.20.x) | `skills/codefall-upgrade/` |
+| `skills/graft/` (– 0.9.0), `skills/codefall-graft/` (0.9.0 – 0.19.x) | `skills/codefall-upgrade/` |
 | `skills/implement/` | `skills/codefall-implement/` |
 | `skills/mock-up/` | `skills/codefall-mock-up/` |
 | `skills/scaffold/` | `skills/codefall-scaffold/` |
