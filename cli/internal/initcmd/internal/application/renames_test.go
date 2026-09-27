@@ -90,13 +90,91 @@ func TestRunLeavesCurrentHarnessNamesAlone(t *testing.T) {
 	}
 }
 
+// formerBesideCurrent is a settings file that names one harness under both spellings, one per line,
+// which is what a person who added the new name by hand before upgrading leaves.
+const formerBesideCurrent = `{
+  "version": 1,
+  "harnesses": [
+    "claude",
+    "claude-code"
+  ],
+  "tracker": "beads",
+  "test": { "dir": "testing" }
+}
+`
+
+// A rerun over a list that already names the harness under its current name removes the old
+// spelling rather than rewriting it into a second copy, and the file keeps its layout. The manifest
+// holding both entries keeps the current one, and the step says the old one was removed from both.
+func TestRunRemovesAFormerHarnessNameTheFilesAlreadyListUnderItsCurrentName(t *testing.T) {
+	files := newFakeFileSystem()
+	files.files[settingsFull] = []byte(formerBesideCurrent)
+	files.files[manifestFull] = []byte(`{"harnesses": {
+  "claude-code": {"version": "v0.19.0", "files": ["old"]},
+  "claude": {"version": "v0.20.0", "files": [".claude/skills/design/SKILL.md"]}
+}}`)
+
+	request := beadsRequest()
+	request.Harnesses = []string{harness.Claude}
+	request.CLIVersion = "v0.20.0"
+
+	report := runFor(t, files, newFakeExtensionSource(), request)
+
+	result := report.Results()[0]
+	if result.Outcome != domain.OutcomeDone {
+		t.Errorf("settings outcome = %v, want DONE", result.Outcome)
+	}
+
+	want := "removed harness claude-code from .codefall/settings.json and .codefall/manifest.json, already listed as claude"
+	if result.Detail != want {
+		t.Errorf("settings detail = %q, want %q", result.Detail, want)
+	}
+
+	wantSettings := strings.Replace(formerBesideCurrent, "\"claude\",\n    \"claude-code\"", `"claude"`, 1)
+	if got := string(files.files[settingsFull]); got != wantSettings {
+		t.Errorf("settings.json =\n%s\nwant\n%s", got, wantSettings)
+	}
+
+	recorded := recordedManifestIn(t, files)
+	if got, want := slices.Sorted(maps.Keys(recorded.Harnesses)), []string{harness.Claude}; !slices.Equal(got, want) {
+		t.Errorf("manifest harnesses = %q, want %q", got, want)
+	}
+}
+
+// Each file is described by what happened to it: the settings already named the harness, so the old
+// spelling went, while the manifest had only the old spelling, so it was renamed.
+func TestRunDescribesARemovalAndARenameInDifferentFilesSeparately(t *testing.T) {
+	files := newFakeFileSystem()
+	files.files[settingsFull] = []byte(formerBesideCurrent)
+	files.files[manifestFull] = []byte(formerManifest)
+
+	request := beadsRequest()
+	request.Harnesses = []string{harness.Claude}
+	request.CLIVersion = "v0.20.0"
+
+	report := runFor(t, files, newFakeExtensionSource(), request)
+
+	want := "removed harness claude-code from .codefall/settings.json, already listed as claude; " +
+		"renamed harness claude-code to claude in .codefall/manifest.json"
+	if got := report.Results()[0].Detail; got != want {
+		t.Errorf("settings detail = %q, want %q", got, want)
+	}
+}
+
 func TestRespelledSettingsChangesOnlyTheNamesInTheHarnessesList(t *testing.T) {
 	for _, tc := range []struct {
 		name        string
 		body        string
 		want        string
 		wantRenamed []string
+		wantRemoved []string
 	}{
+		{
+			name:        "a former spelling alone",
+			body:        `{"harnesses": ["claude-code"]}`,
+			want:        `{"harnesses": ["claude"]}`,
+			wantRenamed: []string{"claude-code"},
+		},
 		{
 			name:        "both former spellings, beside a current name",
 			body:        `{"harnesses": ["antigravity", "codex", "claude-code"]}`,
@@ -106,9 +184,60 @@ func TestRespelledSettingsChangesOnlyTheNamesInTheHarnessesList(t *testing.T) {
 		{
 			// JSON may escape any character, and the name is what the file means, not how it spells it.
 			name:        "a former spelling written with an escape",
-			body:        `{"harnesses": ["claude-code"]}`,
+			body:        `{"harnesses": ["claude\u002dcode"]}`,
 			want:        `{"harnesses": ["claude"]}`,
 			wantRenamed: []string{"claude-code"},
+		},
+		{
+			name:        "the current name first, the former spelling last",
+			body:        `{"harnesses": ["claude", "claude-code"]}`,
+			want:        `{"harnesses": ["claude"]}`,
+			wantRemoved: []string{"claude-code"},
+		},
+		{
+			name:        "the former spelling first, the current name last",
+			body:        `{"harnesses": ["claude-code", "claude"]}`,
+			want:        `{"harnesses": ["claude"]}`,
+			wantRemoved: []string{"claude-code"},
+		},
+		{
+			name:        "the former spelling between two others, one per line",
+			body:        "{\n  \"harnesses\": [\n    \"claude\",\n    \"claude-code\",\n    \"codex\"\n  ]\n}\n",
+			want:        "{\n  \"harnesses\": [\n    \"claude\",\n    \"codex\"\n  ]\n}\n",
+			wantRemoved: []string{"claude-code"},
+		},
+		{
+			name:        "the former spelling first, one per line",
+			body:        "{\n  \"harnesses\": [\n    \"claude-code\",\n    \"claude\"\n  ]\n}\n",
+			want:        "{\n  \"harnesses\": [\n    \"claude\"\n  ]\n}\n",
+			wantRemoved: []string{"claude-code"},
+		},
+		{
+			name:        "both former spellings ahead of both current names",
+			body:        `{"harnesses": ["antigravity", "claude-code", "claude", "agy"]}`,
+			want:        `{"harnesses": ["claude", "agy"]}`,
+			wantRemoved: []string{"antigravity", "claude-code"},
+		},
+		{
+			name:        "one former spelling renamed and another removed",
+			body:        `{"harnesses": ["antigravity", "claude", "claude-code"]}`,
+			want:        `{"harnesses": ["agy", "claude"]}`,
+			wantRenamed: []string{"antigravity"},
+			wantRemoved: []string{"claude-code"},
+		},
+		{
+			// The first is renamed, and then the list names the harness under its current name.
+			name:        "the former spelling twice",
+			body:        `{"harnesses": ["claude-code", "codex", "claude-code"]}`,
+			want:        `{"harnesses": ["claude", "codex"]}`,
+			wantRenamed: []string{"claude-code"},
+			wantRemoved: []string{"claude-code"},
+		},
+		{
+			name:        "an element that is not a name stays where it was",
+			body:        `{"harnesses": ["claude", 1, "claude-code"]}`,
+			want:        `{"harnesses": ["claude", 1]}`,
+			wantRemoved: []string{"claude-code"},
 		},
 		{
 			// A block of the project's own that happens to hold a harnesses field is not the one the
@@ -129,7 +258,7 @@ func TestRespelledSettingsChangesOnlyTheNamesInTheHarnessesList(t *testing.T) {
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			got, renamed, err := respelledSettings([]byte(tc.body))
+			got, edits, err := respelledSettings([]byte(tc.body))
 			if err != nil {
 				t.Fatalf("respelledSettings: %v", err)
 			}
@@ -138,8 +267,12 @@ func TestRespelledSettingsChangesOnlyTheNamesInTheHarnessesList(t *testing.T) {
 				t.Errorf("body = %s, want %s", got, tc.want)
 			}
 
-			if !slices.Equal(renamed, tc.wantRenamed) {
-				t.Errorf("renamed = %q, want %q", renamed, tc.wantRenamed)
+			if !slices.Equal(edits.renamed, tc.wantRenamed) {
+				t.Errorf("renamed = %q, want %q", edits.renamed, tc.wantRenamed)
+			}
+
+			if !slices.Equal(edits.removed, tc.wantRemoved) {
+				t.Errorf("removed = %q, want %q", edits.removed, tc.wantRemoved)
 			}
 		})
 	}
@@ -161,6 +294,7 @@ func TestFormerHarnessNamesReadsBothFiles(t *testing.T) {
 			manifest: `{"harnesses": {"antigravity": {"version": "v0.19.0"}}}`,
 			want:     []string{"antigravity"},
 		},
+		{name: "a settings file naming both spellings", settings: formerBesideCurrent, want: []string{"claude-code"}},
 		{name: "neither", settings: `{"harnesses": ["claude"]}`},
 		{name: "no files at all"},
 	} {

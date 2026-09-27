@@ -99,6 +99,22 @@ func TestValidate(t *testing.T) {
 			want: []string{"harnesses: must name at least one harness"},
 		},
 		{
+			name: "the same harness twice",
+			doc:  with(complete(), FieldHarnesses, []any{"claude", "codex", "claude"}),
+			want: []string{`harnesses: names "claude" twice`},
+		},
+		{
+			name: "a former spelling twice",
+			doc:  with(complete(), FieldHarnesses, []any{"claude-code", "claude-code"}),
+			want: []string{`harnesses: names "claude-code" twice`},
+		},
+		{
+			// Doctor warns about the former spelling and names codefall upgrade, which removes it.
+			// Refusing the file would stop doctor before that check.
+			name: "one harness under its current name and its former spelling",
+			doc:  with(complete(), FieldHarnesses, []any{"claude", "claude-code"}),
+		},
+		{
 			name: "a harness codefall cannot set up",
 			doc:  with(complete(), FieldHarnesses, []any{"claude", "cursor"}),
 			want: []string{`harnesses: unknown value "cursor" ` +

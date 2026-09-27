@@ -10,9 +10,10 @@
     "version": { "type": "integer", "const": 1 },
     "tracker": { "type": "string", "enum": ["beads", "github"] },
     "harnesses": {
-      "description": "The harnesses the project is set up for, each named for its binary. codefall still reads claude-code and antigravity, the names claude and agy had before, and codefall init rewrites them.",
+      "description": "The harnesses the project is set up for, each named for its binary. codefall still reads claude-code and antigravity, the names claude and agy had before, and codefall upgrade rewrites them. A name appears once.",
       "type": "array",
       "minItems": 1,
+      "uniqueItems": true,
       "items": {
         "type": "string",
         "enum": ["agy", "claude", "codex", "muse", "opencode"]
