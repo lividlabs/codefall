@@ -8,10 +8,14 @@ writing and changing a skill; the extension-wide rules, ADR immutability, prose,
 
 - Named as **verbs** (`codefall-scaffold`, `codefall-graft`), one directory each:
   `<verb>/SKILL.md`.
-- Every skill carries `disable-model-invocation: true`, except `codefall-refresh`, which carries no
-  such line. Running a verb is a deliberate act; refresh is the one exception because it writes
-  nothing but a git-ignored stamp, and `implement`, `design`, and `specify` run it when preflight
-  reports the environment stale. No other skill invokes another through the harness.
+- `codefall-envision`, `codefall-specify`, `codefall-mock-up`, `codefall-scaffold`,
+  `codefall-graft`, and `codefall-equip` carry `disable-model-invocation: true`; a user invokes
+  each deliberately. `codefall-design`, `codefall-implement`, `codefall-test`, `codefall-review`,
+  and `codefall-refresh` carry no such line, so an agent may also run them: a session can carry a
+  design through implementation, review, and test without a person typing each verb. Each still
+  reports, offers, and applies only what the user takes; a human still performs every merge.
+  `implement`, `design`, and `specify` run refresh when preflight reports the environment stale.
+  No other skill invokes another through the harness.
 - A skill reports and offers; it applies only what the user takes. Nothing lands unrequested.
   Recording an observable fact is the exception: a skill that owns a status transition sets it when
   the fact occurs and reports that it did — `codefall-implement` flipping a vision to `Active` at first

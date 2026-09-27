@@ -18,9 +18,11 @@ is where it is edited; `codefall init` installs the copy and replaces it on a re
 
 ## The chain
 
-Each verb is explicitly invoked (`disable-model-invocation: true`), reports what it found, offers, and
-applies only what the user takes. `refresh` is the one exception: it carries no such line, and an
-agent may run it when the environment is stale. In order:
+`envision`, `specify`, `mock-up`, `scaffold`, `graft`, and `equip` are invoked deliberately by a
+user (`disable-model-invocation: true`). `design`, `implement`, `test`, `review`, and `refresh`
+carry no such line, so an agent may run these too, and a session can carry a design through
+implementation, review, and test without a person typing each verb. Whichever way a verb starts, it
+reports what it found, offers, and applies only what the user takes. In order:
 
 | Verb | Reads | Writes | Hands to |
 | --- | --- | --- | --- |
