@@ -2,7 +2,6 @@
 name: codefall-review
 description: Review something and fix what the user accepts — uncommitted work, a branch, an open pull request, a path, a document, or a description of what to look at. The reviewer is a subagent or another harness; this session triages the findings with the user and applies the ones they take. Every finding and what was decided about it is written to .codefall/reviews/.
 argument-hint: "[what to review — nothing for uncommitted work] [via=<agent name>|<harness>[:model]]"
-disable-model-invocation: true
 allowed-tools:
   - Read
   - Glob

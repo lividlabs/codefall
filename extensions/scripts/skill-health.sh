@@ -46,7 +46,7 @@ LINES_MAX=500
 TOKENS_MAX=5000
 DESC_MAX=1024
 # Skills an agent may invoke on its own; every other skill carries disable-model-invocation: true.
-MODEL_INVOCABLE="codefall-refresh"
+MODEL_INVOCABLE="codefall-refresh codefall-design codefall-implement codefall-test codefall-review"
 TOC_LINES=100
 
 strict=0

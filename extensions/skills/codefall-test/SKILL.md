@@ -2,7 +2,6 @@
 name: codefall-test
 description: Run what the project declares — every suite, the subset the changed files reach, a named subset — or one test case in one of its two modalities. A spec case runs through the project's own runner and reports that runner's pass or fail. An agentic case is worked step by step through a driver the session already has, and each criterion is judged against what the run made observable. Every run writes a report under .codefall/tests/, with runner output, logs, and run-scoped state left git-ignored under the testing root's .artifacts/. Findings are triaged and become tracker issues only on the user's word; a criterion is never edited to make a run pass. Use when the user says /codefall-test, "run the tests", "run the suite for what changed", or "run <case> agentically".
 argument-hint: "[suites | changed | <suite> | <area>/<slug>] [modality=spec|agentic] [variant=<name>]"
-disable-model-invocation: true
 allowed-tools:
   - Read
   - Glob
