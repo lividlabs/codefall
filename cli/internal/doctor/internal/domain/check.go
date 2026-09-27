@@ -31,18 +31,23 @@ func (s Status) String() string {
 }
 
 // Category is the part of a project's setup a check belongs to. The report groups by category, so a
-// healthy project is six lines rather than twenty-three.
+// healthy project is seven lines rather than twenty-three.
 type Category struct {
 	ID    string
 	Title string
 }
 
-// The six categories, in the order doctor reports them. Testing sits between Local environment and
-// Beads for the same reason Local environment sits where it does: the first four are about the
+// The seven categories, in the order doctor reports them. Testing sits between Local environment and
+// Beads for the same reason Local environment sits where it does: the first five are about the
 // project, and the last two are about tools on the machine.
+//
+// Agents is its own category rather than part of Harnesses. A passing check's detail goes into its
+// section's header, and the installed harnesses and the configured agents in one header read as one
+// list of harnesses.
 var (
 	CategorySettings  = Category{ID: "settings", Title: "Settings"}
 	CategoryHarnesses = Category{ID: "harnesses", Title: "Harnesses"}
+	CategoryAgents    = Category{ID: "agents", Title: "Agents"}
 	CategoryLocal     = Category{ID: "local", Title: "Local environment"}
 	CategoryTesting   = Category{ID: "testing", Title: "Testing"}
 	CategoryBeads     = Category{ID: "beads", Title: "Beads"}
@@ -116,11 +121,11 @@ var (
 	// AgentsRunnable is whether every agent the settings define runs on a harness this machine can
 	// start (ADR-009). A run skips one it cannot, so this warns.
 	AgentsRunnable = Check{ID: "agents-runnable",
-		Title: "every agent runs on a harness this machine can start", Category: CategoryHarnesses}
+		Title: "every agent runs on a harness this machine can start", Category: CategoryAgents}
 	// AgentsCurrent is whether every order of agents names one on current, the harness running the
 	// session, so a run always has a reader it can start.
 	AgentsCurrent = Check{ID: "agents-current",
-		Title: "every agent order names one on the current harness", Category: CategoryHarnesses}
+		Title: "every agent order names one on the current harness", Category: CategoryAgents}
 	// LocalDeclared is whether the settings name the project's start and update commands (ADR-005).
 	LocalDeclared = Check{ID: "local-declared",
 		Title: "the local start and update commands are declared", Category: CategoryLocal}
