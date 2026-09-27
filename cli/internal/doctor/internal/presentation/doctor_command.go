@@ -37,7 +37,7 @@ func NewDoctorCommand(diagnose DiagnoseUseCase) *cobra.Command {
 	return &cobra.Command{
 		Use:   "doctor",
 		Short: "Check that this directory and your tools are ready for codefall",
-		Long: "Reports on .codefall/settings.json, whether codefall is installed for each harness it " +
+		Long: "Reports on .codefall/settings.json and .codefall/user.json, whether codefall is installed for each harness it " +
 			"records and still installed for any it no longer names, whether the local start and " +
 			"update commands are declared and can be run, Beads, and gh. It never changes anything.",
 		Args: cobra.NoArgs,

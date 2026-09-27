@@ -10,6 +10,7 @@ import (
 
 	"github.com/lividlabs/codefall-cli/cli/internal/initcmd/internal/domain"
 	"github.com/lividlabs/codefall-cli/cli/internal/shared/settings"
+	"github.com/lividlabs/codefall-cli/cli/internal/shared/userfile"
 )
 
 // ignoreEntry is one line codefall needs in an ignore file: the entry, and the comment that says why
@@ -27,8 +28,9 @@ type ignoreFile struct {
 
 // ignoreFiles is what the step writes. The .ignore entries keep what codefall commits and nobody
 // greps — review findings, and the report an agentic test run leaves (ADR-007) — out of every search
-// that goes through ripgrep. The .gitignore entries keep out what belongs to one machine or one run:
-// the refresh stamp (ADR-005), and everything a test run produces that is not its report. The
+// that goes through ripgrep. The .gitignore entries keep out what belongs to one machine, one person,
+// or one run: the refresh stamp (ADR-005), the user file, and everything a test run produces that is
+// not its report. The
 // .gitattributes entry is the one line that is not about ignoring: bd's interaction log is
 // append-only and committed, and a union merge is what keeps two branches' appends from conflicting.
 //
@@ -42,6 +44,7 @@ func ignoreFiles(root string) []ignoreFile {
 		}},
 		{file: settings.GitIgnoreName, entries: []ignoreEntry{
 			{entry: settings.RefreshStamp, comment: settings.GitIgnoreComment},
+			{entry: userfile.Name, comment: userfile.GitIgnoreComment},
 			{entry: settings.TestArtifacts(root), comment: settings.TestArtifactsComment},
 		}},
 		{file: settings.GitAttributesName, entries: []ignoreEntry{

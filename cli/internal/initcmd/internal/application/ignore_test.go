@@ -7,6 +7,7 @@ import (
 
 	"github.com/lividlabs/codefall-cli/cli/internal/initcmd/internal/domain"
 	"github.com/lividlabs/codefall-cli/cli/internal/shared/settings"
+	"github.com/lividlabs/codefall-cli/cli/internal/shared/userfile"
 )
 
 var (
@@ -17,10 +18,10 @@ var (
 	artifactsEntry = settings.TestArtifacts(settings.DefaultTestDir)
 )
 
-// gitIgnored is a .gitignore that already names both of its entries and a .gitattributes that
+// gitIgnored is a .gitignore that already names all three of its entries and a .gitattributes that
 // already names its one, for the tests about the other file.
 func gitIgnored(files *fakeFileSystem) *fakeFileSystem {
-	files.files[gitIgnoreFull] = []byte(settings.RefreshStamp + "\n" + artifactsEntry + "\n")
+	files.files[gitIgnoreFull] = []byte(settings.RefreshStamp + "\n" + userfile.Name + "\n" + artifactsEntry + "\n")
 	files.files[gitAttributesFull] = []byte(settings.InteractionsAttribute + "\n")
 
 	return files
@@ -69,6 +70,7 @@ func TestIgnoreStepWritesTheFilesWhenThereAreNone(t *testing.T) {
 	}
 
 	want = settings.GitIgnoreComment + "\n" + settings.RefreshStamp + "\n\n" +
+		userfile.GitIgnoreComment + "\n" + userfile.Name + "\n\n" +
 		settings.TestArtifactsComment + "\n" + artifactsEntry + "\n"
 	if got := string(files.files[gitIgnoreFull]); got != want {
 		t.Errorf("%s =\n%q\nwant\n%q", settings.GitIgnoreName, got, want)
@@ -85,7 +87,7 @@ func TestIgnoreStepWritesTheFilesWhenThereAreNone(t *testing.T) {
 func TestIgnoreStepAddsTheMergeDriverToAGitattributesThatIsAlreadyThere(t *testing.T) {
 	files := settled("{}")
 	files.files[ignoreFull] = []byte(settings.IgnoreEntry + "\n" + settings.IgnoreEntryTests + "\n")
-	files.files[gitIgnoreFull] = []byte(settings.RefreshStamp + "\n" + artifactsEntry + "\n")
+	files.files[gitIgnoreFull] = []byte(settings.RefreshStamp + "\n" + userfile.Name + "\n" + artifactsEntry + "\n")
 	files.files[gitAttributesFull] = []byte("* text=auto\n")
 
 	result := ignoreResult(t, files)
@@ -133,12 +135,13 @@ func TestIgnoreStepAddsTheEntriesToAGitignoreThatIsAlreadyThere(t *testing.T) {
 		t.Errorf("outcome = %v, want DONE", result.Outcome)
 	}
 
-	want := "added " + settings.RefreshStamp + " and " + artifactsEntry + " to .gitignore"
+	want := "added " + settings.RefreshStamp + ", " + userfile.Name + " and " + artifactsEntry + " to .gitignore"
 	if result.Detail != want {
 		t.Errorf("detail = %q, want %q", result.Detail, want)
 	}
 
 	want = "node_modules/\ndist/\n\n" + settings.GitIgnoreComment + "\n" + settings.RefreshStamp + "\n\n" +
+		userfile.GitIgnoreComment + "\n" + userfile.Name + "\n\n" +
 		settings.TestArtifactsComment + "\n" + artifactsEntry + "\n"
 	if got := string(files.files[gitIgnoreFull]); got != want {
 		t.Errorf("%s =\n%q\nwant\n%q", settings.GitIgnoreName, got, want)
@@ -246,7 +249,8 @@ func TestIgnoreStepLeavesAFileThatAlreadyNamesItsEntries(t *testing.T) {
 				}
 
 				want := ".ignore already names " + settings.IgnoreEntry + " and " + settings.IgnoreEntryTests +
-					", .gitignore already names " + settings.RefreshStamp + " and " + artifactsEntry +
+					", .gitignore already names " + settings.RefreshStamp + ", " + userfile.Name + " and " +
+					artifactsEntry +
 					" and .gitattributes already names " + settings.InteractionsAttribute
 				if result.Detail != want {
 					t.Errorf("detail = %q, want %q", result.Detail, want)
@@ -267,5 +271,27 @@ func TestIgnoreStepLeavesAFileThatAlreadyNamesItsEntries(t *testing.T) {
 				t.Errorf("%s =\n%q\nwant the entries added", settings.IgnoreName, files.files[ignoreFull])
 			}
 		})
+	}
+}
+
+// A project set up before the user file existed has a .gitignore naming the stamp and the run output
+// and not the user file, and an upgrade adds that one line under its comment and nothing else.
+func TestIgnoreStepAddsTheUserFileToAGitignoreFromBeforeItExisted(t *testing.T) {
+	files := settled("{}")
+	before := settings.GitIgnoreComment + "\n" + settings.RefreshStamp + "\n\n" +
+		settings.TestArtifactsComment + "\n" + artifactsEntry + "\n"
+	files.files[ignoreFull] = []byte(settings.IgnoreEntry + "\n" + settings.IgnoreEntryTests + "\n")
+	files.files[gitIgnoreFull] = []byte(before)
+	files.files[gitAttributesFull] = []byte(settings.InteractionsAttribute + "\n")
+
+	result := ignoreResult(t, files)
+
+	if want := "added " + userfile.Name + " to .gitignore"; result.Detail != want {
+		t.Errorf("detail = %q, want %q", result.Detail, want)
+	}
+
+	want := before + "\n" + userfile.GitIgnoreComment + "\n" + userfile.Name + "\n"
+	if got := string(files.files[gitIgnoreFull]); got != want {
+		t.Errorf("%s =\n%q\nwant\n%q", settings.GitIgnoreName, got, want)
 	}
 }

@@ -26,6 +26,9 @@
 #   local            declared | undeclared | unknown — whether settings carry a `local` block
 #   test             undeclared | unequipped | equipped | unknown — whether settings carry a `test`
 #                    block, and whether it names a runner (ADR-007)
+#   persona          engineer | product-manager — who `.codefall/user.json` says the person at the
+#                    keyboard works as; `engineer` when the file is missing, unreadable, or names
+#                    a persona codefall does not know
 #   refresh_stamp    the commit `refresh` last succeeded at, or `none`
 #   refresh          current | stale | undeclared — the stamp against HEAD, when declared
 #
@@ -61,6 +64,9 @@ emit "project_dir=$PWD"
 # The stamp is machine-local and git-ignored; `refresh` writes it and nothing else does.
 settings_file=.codefall/settings.json
 stamp_file=.codefall/refresh.stamp
+# The user file is one person's and git-ignored, like the stamp; the person writes it, by hand or
+# through `codefall config persona`.
+user_file=.codefall/user.json
 
 # The default branch is what origin/HEAD names. A clone made before the remote moved its default,
 # or a remote that was added by hand, may not have origin/HEAD at all; then main or master, when one
@@ -137,6 +143,29 @@ test_state() {
   fi
 }
 
+# Who the person at the keyboard works as. Anything this cannot read as a known persona — no file, a
+# file it cannot parse, a value codefall does not know — is `engineer`, the default; doctor is what
+# reports a file that is wrong. Without jq, the first `"persona": "<value>"` in the file is taken as
+# written, and anything else is the default.
+persona() {
+  local value=""
+
+  if [ -f "$user_file" ]; then
+    if command -v jq >/dev/null 2>&1; then
+      value=$(jq -r 'if (.persona | type) == "string" then .persona else "" end' \
+        "$user_file" 2>/dev/null)
+    else
+      value=$(grep -o '"persona"[[:space:]]*:[[:space:]]*"[^"]*"' "$user_file" 2>/dev/null |
+        head -n 1 | sed 's/.*"\([^"]*\)"$/\1/')
+    fi
+  fi
+
+  case $value in
+    engineer|product-manager) printf '%s\n' "$value" ;;
+    *) printf 'engineer\n' ;;
+  esac
+}
+
 checkout() {
   if [ "$(git rev-parse --is-inside-work-tree 2>/dev/null)" != "true" ]; then
     emit "checkout=not_a_repository"
@@ -181,6 +210,7 @@ checkout() {
   declared=$(local_declared)
   emit "local=$declared"
   emit "test=$(test_state)"
+  emit "persona=$(persona)"
 
   local stamped=""
   if [ -f "$stamp_file" ]; then

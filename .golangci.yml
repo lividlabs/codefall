@@ -4,7 +4,7 @@
 #
 # Components: create, doctor, initcmd. Shared modules: internal/shared/ui, internal/shared/process and
 # internal/shared/buildinfo (impure), internal/shared/harness, internal/shared/manifest, internal/shared/settings,
-# internal/shared/text and internal/shared/version (pure — ADR-003). The layer rules were
+# internal/shared/text, internal/shared/userfile and internal/shared/version (pure — ADR-003). The layer rules were
 # proven against a deliberate Cobra import from `application/` on 2026-08-27 — from doctor's when
 # they were written, and from initcmd's when it was added — and re-proven the same day against an
 # `internal/shared/ui` import from `internal/initcmd/internal/application/` and from
@@ -13,7 +13,9 @@
 # `charm.land/lipgloss/v2` import in `internal/shared/settings/` — it compiled and failed lint. It was
 # proven again for `internal/shared/harness/` on 2026-09-16 the same way, and that run also proved
 # that module's `domain-layer` allow entry: a deliberate `harness` import from
-# `internal/initcmd/internal/domain/` compiled and was not reported.
+# `internal/initcmd/internal/domain/` compiled and was not reported. Both proofs were made again for
+# `internal/shared/userfile/` on 2026-09-27, against a `charm.land/lipgloss/v2` import in the module
+# and a `userfile` import from `internal/doctor/internal/domain/`.
 #
 # Proving `shared-modules` needs a throwaway package: a real shared module imports a component only
 # in a build that already has an import cycle, and a cycle is a compile error rather than the lint
@@ -54,6 +56,7 @@ linters:
             - github.com/lividlabs/codefall-cli/cli/internal/shared/manifest
             - github.com/lividlabs/codefall-cli/cli/internal/shared/settings
             - github.com/lividlabs/codefall-cli/cli/internal/shared/text
+            - github.com/lividlabs/codefall-cli/cli/internal/shared/userfile
             - github.com/lividlabs/codefall-cli/cli/internal/shared/version
           deny:
             - pkg: net
@@ -86,6 +89,7 @@ linters:
             - github.com/lividlabs/codefall-cli/cli/internal/shared/manifest
             - github.com/lividlabs/codefall-cli/cli/internal/shared/settings
             - github.com/lividlabs/codefall-cli/cli/internal/shared/text
+            - github.com/lividlabs/codefall-cli/cli/internal/shared/userfile
             - github.com/lividlabs/codefall-cli/cli/internal/shared/version
           deny:
             - pkg: net
@@ -125,6 +129,7 @@ linters:
             - "**/internal/shared/manifest/**"
             - "**/internal/shared/settings/**"
             - "**/internal/shared/text/**"
+            - "**/internal/shared/userfile/**"
             - "**/internal/shared/version/**"
           allow:
             - $gostd
@@ -133,6 +138,7 @@ linters:
             - github.com/lividlabs/codefall-cli/cli/internal/shared/manifest
             - github.com/lividlabs/codefall-cli/cli/internal/shared/settings
             - github.com/lividlabs/codefall-cli/cli/internal/shared/text
+            - github.com/lividlabs/codefall-cli/cli/internal/shared/userfile
             - github.com/lividlabs/codefall-cli/cli/internal/shared/version
 
 # gofmt as a rule the linter enforces, not a habit. golangci-lint v2 runs formatters as their own

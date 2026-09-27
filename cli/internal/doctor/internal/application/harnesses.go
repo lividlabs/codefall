@@ -24,7 +24,7 @@ const renameRemedy = "run codefall upgrade, which rewrites them"
 // settingsName is the settings file as a person reads it in a report.
 const settingsName = ".codefall/settings.json"
 
-// harnesses runs checks 9 to 11, all of which read .codefall/manifest.json, so the file is read once
+// harnesses runs checks 11 to 13, all of which read .codefall/manifest.json, so the file is read once
 // here and handed to each of them.
 //
 // The two checks after the first read both files under the names the harnesses have now. An old
@@ -75,7 +75,7 @@ func currentNames(names []string) ([]string, []string) {
 	return current, slices.Compact(slices.Sorted(slices.Values(formers)))
 }
 
-// namesAreCurrent is check 9: the settings and the manifest name each harness the way codefall does
+// namesAreCurrent is check 11: the settings and the manifest name each harness the way codefall does
 // now. A harness is named for its binary, and a project set up before two of them were renamed still
 // records the spellings they had.
 //
@@ -120,7 +120,7 @@ func renames(formers []string) string {
 	return strings.Join(pairs[:len(pairs)-1], ", ") + " and " + pairs[len(pairs)-1]
 }
 
-// installed is check 10: the files a finished run recorded for each chosen harness are still where it
+// installed is check 12: the files a finished run recorded for each chosen harness are still where it
 // wrote them.
 //
 // What this used to stat was hooks/shared/ under each harness's own skills directory, which the
@@ -191,7 +191,7 @@ func (d *Diagnose) firstMissing(dir string, files []string) (bool, string, error
 	return false, "", nil
 }
 
-// leftOver is check 11: nothing codefall installed is still sitting there for a harness the settings
+// leftOver is check 13: nothing codefall installed is still sitting there for a harness the settings
 // no longer name. A project set up for two harnesses that later drops one keeps everything codefall
 // wrote for it, because codefall only ever writes what it owns and never deletes.
 //

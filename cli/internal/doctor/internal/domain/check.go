@@ -31,7 +31,7 @@ func (s Status) String() string {
 }
 
 // Category is the part of a project's setup a check belongs to. The report groups by category, so a
-// healthy project is seven lines rather than twenty-three.
+// healthy project is seven lines rather than twenty-five.
 type Category struct {
 	ID    string
 	Title string
@@ -91,7 +91,7 @@ func (c Check) Fail(detail string, remedy mo.Option[string]) Result {
 	return Result{Check: c, Status: StatusFail, Detail: mo.Some(detail), Remedy: remedy}
 }
 
-// The twenty-three checks doctor runs, in the order it runs them.
+// The twenty-five checks doctor runs, in the order it runs them.
 var (
 	CodefallDir      = Check{ID: "codefall-dir", Title: ".codefall/ exists", Category: CategorySettings}
 	SettingsFile     = Check{ID: "settings-file", Title: ".codefall/settings.json exists", Category: CategorySettings}
@@ -102,10 +102,16 @@ var (
 	TestsIgnored = Check{ID: "tests-ignored", Title: ".ignore hides test run reports", Category: CategorySettings}
 	// StampIgnored is whether the refresh stamp, a per-machine file, is kept out of the repository.
 	StampIgnored = Check{ID: "stamp-ignored", Title: ".gitignore hides the refresh stamp", Category: CategorySettings}
+	// UserIgnored is whether the user file, which describes one person rather than the project, is
+	// kept out of the repository.
+	UserIgnored = Check{ID: "user-ignored", Title: ".gitignore hides the user file", Category: CategorySettings}
 	// InteractionsMerged is whether bd's append-only interaction log is merged by union, so two
 	// branches that both appended to it do not conflict.
 	InteractionsMerged = Check{ID: "interactions-merged",
 		Title: ".gitattributes merges bd's interaction log by union", Category: CategorySettings}
+	// Persona is whether the user file, when there is one, is valid and names a persona codefall
+	// knows. No file is the default persona.
+	Persona = Check{ID: "persona", Title: "the user file names a known persona", Category: CategorySettings}
 	// HarnessNames is whether the settings and the manifest name each harness the way codefall does
 	// now: a harness is named for its binary, and two were named for their products before that.
 	HarnessNames = Check{ID: "harness-names",
