@@ -36,7 +36,7 @@ jobs:
         run: go test ./...
 
       - name: Skill health
-        # Every skill against ADR-004's guidelines. Fails when one drifts outside them.
+        # Every skill against ADR-004.2's guidelines. Fails when one drifts outside them.
         run: extensions/scripts/skill-health.sh --strict
 
       - name: Workflow copy

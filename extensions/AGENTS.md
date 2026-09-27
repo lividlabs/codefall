@@ -17,7 +17,7 @@ never restates the reasoning.
 
 - The rules for writing and changing a skill — shape, length, what goes where, supporting files,
   templates — live in [`skills/AGENTS.md`](skills/AGENTS.md). Length is governed by
-  [ADR-004](../docs/adrs/ADR-004-skill-length-guidelines.md).
+  [ADR-004.2](../docs/adrs/ADR-004.2-skill-length-guidelines.md).
 
 ## Hooks
 
