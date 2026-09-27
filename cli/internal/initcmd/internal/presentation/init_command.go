@@ -48,6 +48,10 @@ type InitializeUseCase interface {
 	// no settings or they declare none. A rerun works with the root the project already declared and
 	// never moves it (ADR-007).
 	DeclaredTestDir(dir string) (mo.Option[string], error)
+	// FormerHarnessNames reads the old harness spellings .codefall/settings.json and
+	// .codefall/manifest.json still carry. A rerun that finds one has a rewrite to make, so it is
+	// never a no-op.
+	FormerHarnessNames(dir string) ([]string, error)
 }
 
 // The trackers the survey shows but does not accept. Huh has no disabled option, so they are offered
@@ -293,12 +297,18 @@ func buildRequest(
 			return application.Request{}, fmt.Errorf("init: %w", err)
 		}
 
+		formers, err := initialize.FormerHarnessNames(dir)
+		if err != nil {
+			return application.Request{}, fmt.Errorf("init: %w", err)
+		}
+
 		if recorded, ok := previous.Get(); ok {
 			// A run for a harness the project has never been set up for is work to do, however
 			// current the version that installed the others is — and so is a project that has never
 			// declared a testing root, because the tree is what this run would make and doctor's
-			// remedy for an undeclared root is this command.
-			if declaredTest.IsPresent() &&
+			// remedy for an undeclared root is this command. A harness still recorded under an old
+			// spelling is work for the same reason: doctor's remedy for it is this command too.
+			if declaredTest.IsPresent() && len(formers) == 0 &&
 				installedEverything(recorded, request.Harnesses, request.CLIVersion) {
 				request.NoOp = true
 				return request, nil
@@ -624,11 +634,11 @@ func harnessField(harnesses *[]string) huh.Field {
 // no entry here reads as its own name, which is wrong in its capitals rather than absent from the
 // list.
 var harnessLabels = map[string]string{
-	harness.Antigravity: "Antigravity",
-	harness.ClaudeCode:  "Claude Code",
-	harness.Codex:       "Codex",
-	harness.Muse:        "Muse",
-	harness.OpenCode:    "OpenCode",
+	harness.Agy:      "Antigravity",
+	harness.Claude:   "Claude Code",
+	harness.Codex:    "Codex",
+	harness.Muse:     "Muse",
+	harness.OpenCode: "OpenCode",
 }
 
 func harnessLabel(name string) string {

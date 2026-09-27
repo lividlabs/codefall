@@ -12,6 +12,7 @@ import (
 	"github.com/samber/mo"
 
 	"github.com/lividlabs/codefall-cli/cli/internal/initcmd/internal/domain"
+	"github.com/lividlabs/codefall-cli/cli/internal/shared/harness"
 	"github.com/lividlabs/codefall-cli/cli/internal/shared/settings"
 )
 
@@ -44,6 +45,9 @@ func (i *Initialize) SettingsExist(dir string) (bool, error) {
 // the project already chose rather than asking again. None means there is no settings file, or the
 // file records none — which is what a file written before the field existed looks like (ADR-GO-03).
 //
+// A harness recorded under a spelling it had before it was named for its binary is reported under the
+// name it has now, which is the name every step installs for and the settings step writes back.
+//
 // It decodes the one field it needs rather than the whole document: what the rest of the file may
 // hold is the format's business, and this is a question about one answer the project gave.
 func (i *Initialize) ChosenHarnesses(dir string) (mo.Option[[]string], error) {
@@ -68,7 +72,12 @@ func (i *Initialize) ChosenHarnesses(dir string) (mo.Option[[]string], error) {
 		return mo.None[[]string](), nil
 	}
 
-	return mo.Some(document.Harnesses), nil
+	names := make([]string, 0, len(document.Harnesses))
+	for _, name := range document.Harnesses {
+		names = append(names, harness.Renamed(name).OrElse(name))
+	}
+
+	return mo.Some(names), nil
 }
 
 // DeclaredTestDir reports the testing root .codefall/settings.json records, so a rerun works with
@@ -109,7 +118,9 @@ func (i *Initialize) DeclaredTestDir(dir string) (mo.Option[string], error) {
 //
 // Settings that are already there are left alone unless the run asked for them to be rewritten,
 // because init is safe to run again — the steps after this one still have work to do in a project
-// that is half set up.
+// that is half set up. The one edit it makes to them is the harness names: an old spelling in the
+// settings or the manifest is rewritten to the name the harness has now, and nothing else in either
+// file changes.
 func (i *Initialize) settings(_ context.Context, request Request) (domain.StepResult, error) {
 	exists, err := i.SettingsExist(request.Dir)
 	if err != nil {
@@ -117,6 +128,15 @@ func (i *Initialize) settings(_ context.Context, request Request) (domain.StepRe
 	}
 
 	if exists && !request.Force {
+		renamed, err := i.respell(request.Dir, true)
+		if err != nil {
+			return domain.StepResult{}, err
+		}
+
+		if renamed != "" {
+			return domain.SettingsStep.Done(renamed), nil
+		}
+
 		return domain.SettingsStep.Skipped(settingsName + " already exists (use --force to rewrite it)"), nil
 	}
 
@@ -140,7 +160,20 @@ func (i *Initialize) settings(_ context.Context, request Request) (domain.StepRe
 		return domain.StepResult{}, fmt.Errorf("write %s: %w", settingsName, err)
 	}
 
-	return domain.SettingsStep.Done(fmt.Sprintf("wrote %s (%s)", settingsName, describe(chosen))), nil
+	wrote := fmt.Sprintf("wrote %s (%s)", settingsName, describe(chosen))
+
+	// The settings were just written from the run's answers, so only the manifest can still carry an
+	// old spelling.
+	renamed, err := i.respell(request.Dir, false)
+	if err != nil {
+		return domain.StepResult{}, err
+	}
+
+	if renamed != "" {
+		wrote += "; " + renamed
+	}
+
+	return domain.SettingsStep.Done(wrote), nil
 }
 
 func settingsPath(dir string) string {

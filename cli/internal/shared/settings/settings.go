@@ -601,6 +601,11 @@ func isTracker(v any) string {
 // isHarnesses accepts the harnesses a project is set up for: at least one, each one codefall can set
 // up. An empty list is refused rather than read as "none", because a project codefall sets up for no
 // harness at all has nowhere to install.
+//
+// A name is checked through harness.Parse, so a spelling a harness had before it was named for its
+// binary is accepted: the file is still valid, doctor warns about the spelling, and codefall init
+// rewrites it. The schema lists only the current names, and the message for a name nobody knows
+// offers only those.
 func isHarnesses(v any) string {
 	values, ok := v.([]any)
 	if !ok {

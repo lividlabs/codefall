@@ -182,7 +182,7 @@ func (i *Initialize) writeTestingTree(request Request, root string) ([]string, e
 
 	// The pointer is the same one line the root of the project gets, and for the same reason: Claude
 	// Code reads CLAUDE.md, and the rules are not kept in two places.
-	if slices.Contains(chosen(request), harness.ClaudeCode) {
+	if slices.Contains(chosen(request), harness.Claude) {
 		documents = append(documents, struct {
 			name string
 			body string

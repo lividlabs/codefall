@@ -30,6 +30,7 @@ type fakeInitialize struct {
 	installed  mo.Option[application.Installation]
 	harnesses  mo.Option[[]string]
 	testDir    mo.Option[string]
+	formers    []string
 
 	got       application.Request
 	ran       bool
@@ -70,6 +71,12 @@ func (f *fakeInitialize) ChosenHarnesses(string) (mo.Option[[]string], error) {
 // for a project with no settings, and for one whose settings predate the block.
 func (f *fakeInitialize) DeclaredTestDir(string) (mo.Option[string], error) {
 	return f.testDir, nil
+}
+
+// FormerHarnessNames reports the old harness spellings a settled project's files carry. None is the
+// answer unless a test says otherwise.
+func (f *fakeInitialize) FormerHarnessNames(string) ([]string, error) {
+	return f.formers, nil
 }
 
 func (f *fakeInitialize) SuggestIssuesRepo(context.Context, string) mo.Option[string] {
@@ -139,7 +146,7 @@ func TestInitCommandPassesTheFlagsToTheUseCase(t *testing.T) {
 		"--tracker", "github",
 		"--issues-repo", "lividlabs/codefall-cli",
 		"--issues-project", "3",
-		"--harness", "claude-code",
+		"--harness", "claude",
 		"--test-dir", "e2e",
 		"--force",
 	); err != nil {
@@ -156,7 +163,7 @@ func TestInitCommandPassesTheFlagsToTheUseCase(t *testing.T) {
 		Tracker:       settings.TrackerGitHub,
 		IssuesRepo:    mo.Some("lividlabs/codefall-cli"),
 		IssuesProject: mo.Some(3),
-		Harnesses:     []string{harness.ClaudeCode},
+		Harnesses:     []string{harness.Claude},
 		TestDir:       "e2e",
 		CLIVersion:    buildinfo.Version(),
 		Force:         true,
@@ -175,12 +182,12 @@ func TestInitCommandPassesTheFlagsToTheUseCase(t *testing.T) {
 func TestInitCommandLeavesTheOptionalValuesAbsent(t *testing.T) {
 	initialize := newFakeInitialize()
 
-	if _, err := run(t, initialize, "--tracker", "beads", "--harness", harness.ClaudeCode,
+	if _, err := run(t, initialize, "--tracker", "beads", "--harness", harness.Claude,
 		"--test-dir", settings.DefaultTestDir); err != nil {
 		t.Fatalf("Execute: %v", err)
 	}
 
-	if want := []string{harness.ClaudeCode}; !slices.Equal(initialize.got.Harnesses, want) {
+	if want := []string{harness.Claude}; !slices.Equal(initialize.got.Harnesses, want) {
 		t.Errorf("Harnesses = %q, want %q", initialize.got.Harnesses, want)
 	}
 
@@ -212,7 +219,7 @@ func TestInitCommandRejects(t *testing.T) {
 		{
 			name: "a harness codefall cannot set up yet",
 			args: []string{"--tracker", "beads", "--harness", "cursor"},
-			want: `harness "cursor" is not supported yet (supported: antigravity, claude-code, codex, muse, opencode)`,
+			want: `harness "cursor" is not supported yet (supported: agy, claude, codex, muse, opencode)`,
 		},
 		{
 			name: "a repository that is not owner/name",
@@ -226,13 +233,13 @@ func TestInitCommandRejects(t *testing.T) {
 		},
 		{
 			name: "a repository on a tracker that has no use for one",
-			args: []string{"--harness", harness.ClaudeCode, "--tracker", "beads", "--test-dir", "testing",
+			args: []string{"--harness", harness.Claude, "--tracker", "beads", "--test-dir", "testing",
 				"--issues-repo", "owner/name"},
 			want: "the --issues-repo flag is only used with --tracker github",
 		},
 		{
 			name: "a project number on a tracker that has no use for one",
-			args: []string{"--harness", harness.ClaudeCode, "--tracker", "beads", "--test-dir", "testing",
+			args: []string{"--harness", harness.Claude, "--tracker", "beads", "--test-dir", "testing",
 				"--issues-project", "3"},
 			want: "the --issues-project flag is only used with --tracker github",
 		},
@@ -283,19 +290,19 @@ func TestInitCommandWithoutATerminalNamesTheMissingFlag(t *testing.T) {
 		},
 		{
 			name: "no tracker",
-			args: []string{"--harness", harness.ClaudeCode},
+			args: []string{"--harness", harness.Claude},
 			want: "missing --tracker (stdin is not a terminal)",
 		},
 		{
 			name: "github without a repository",
-			args: []string{"--harness", harness.ClaudeCode, "--tracker", "github"},
+			args: []string{"--harness", harness.Claude, "--tracker", "github"},
 			want: "missing --issues-repo (stdin is not a terminal)",
 		},
 		{
 			// The testing root has a default, and the default is what the survey offers rather than
 			// what a script gets: where a project's cases live is a decision the project makes.
 			name: "no testing root",
-			args: []string{"--harness", harness.ClaudeCode, "--tracker", "beads"},
+			args: []string{"--harness", harness.Claude, "--tracker", "beads"},
 			want: "missing --test-dir (stdin is not a terminal)",
 		},
 	} {
@@ -320,7 +327,7 @@ func TestInitCommandUsesTheRepositoryGHSuggests(t *testing.T) {
 	initialize := newFakeInitialize()
 	initialize.suggestion = mo.Some("lividlabs/codefall-cli")
 
-	if _, err := run(t, initialize, "--harness", harness.ClaudeCode, "--tracker", "github",
+	if _, err := run(t, initialize, "--harness", harness.Claude, "--tracker", "github",
 		"--test-dir", settings.DefaultTestDir); err != nil {
 		t.Fatalf("Execute: %v", err)
 	}
@@ -335,7 +342,7 @@ func TestInitCommandUsesTheRepositoryGHSuggests(t *testing.T) {
 func TestInitCommandAsksNothingWhenSettingsAlreadyExist(t *testing.T) {
 	initialize := newFakeInitialize()
 	initialize.exists = true
-	initialize.harnesses = mo.Some([]string{harness.ClaudeCode})
+	initialize.harnesses = mo.Some([]string{harness.Claude})
 	initialize.report = domain.NewReport(
 		domain.SettingsStep.Skipped(".codefall/settings.json already exists (use --force to rewrite it)"))
 
@@ -380,7 +387,7 @@ func TestInitCommandPrintsALineForEachFinishedStepAndWhatToRunNext(t *testing.T)
 			"the codefall marketplace is declared and codefall@codefall enabled in .claude/settings.json"),
 	)
 
-	out, err := run(t, initialize, "--tracker", "beads", "--harness", harness.ClaudeCode,
+	out, err := run(t, initialize, "--tracker", "beads", "--harness", harness.Claude,
 		"--test-dir", settings.DefaultTestDir)
 	if err != nil {
 		t.Fatalf("Execute: %v", err)
@@ -401,7 +408,7 @@ func TestInitCommandWrapsAUseCaseError(t *testing.T) {
 	initialize.report = domain.NewReport()
 	initialize.err = failure
 
-	out, err := run(t, initialize, "--tracker", "beads", "--harness", harness.ClaudeCode,
+	out, err := run(t, initialize, "--tracker", "beads", "--harness", harness.Claude,
 		"--test-dir", settings.DefaultTestDir)
 	if !errors.Is(err, failure) {
 		t.Fatalf("Execute error = %v, want it to wrap %v", err, failure)
@@ -420,7 +427,7 @@ func TestInitCommandReportsSettingsItCannotRead(t *testing.T) {
 	initialize := newFakeInitialize()
 	initialize.existsErr = errors.New("permission denied")
 
-	if _, err := run(t, initialize, "--tracker", "beads", "--harness", harness.ClaudeCode,
+	if _, err := run(t, initialize, "--tracker", "beads", "--harness", harness.Claude,
 		"--test-dir", settings.DefaultTestDir); err == nil ||
 		!strings.Contains(err.Error(), "permission denied") {
 		t.Errorf("Execute error = %v, want it to carry the read failure", err)
@@ -581,7 +588,7 @@ func TestInitCommandBelowTheRepositoryRoot(t *testing.T) {
 			initialize := newFakeInitialize()
 			initialize.root = mo.Some("/repo")
 
-			args := append([]string{"--tracker", "beads", "--harness", harness.ClaudeCode,
+			args := append([]string{"--tracker", "beads", "--harness", harness.Claude,
 				"--test-dir", settings.DefaultTestDir}, tc.args...)
 
 			out, err := run(t, initialize, args...)
@@ -618,7 +625,7 @@ func TestInitCommandAtTheRepositoryRootNeedsNoLocation(t *testing.T) {
 
 	initialize := newFakeInitialize()
 
-	if _, err := run(t, initialize, "--tracker", "beads", "--harness", harness.ClaudeCode,
+	if _, err := run(t, initialize, "--tracker", "beads", "--harness", harness.Claude,
 		"--test-dir", settings.DefaultTestDir); err != nil {
 		t.Fatalf("Execute: %v", err)
 	}
@@ -641,13 +648,13 @@ func TestInitCommandIsANoOpOnlyForTheHarnessItInstalled(t *testing.T) {
 	}{
 		{
 			name:      "the same harness at the same version",
-			installed: application.Installation{Versions: map[string]string{harness.ClaudeCode: buildinfo.Version()}},
+			installed: application.Installation{Versions: map[string]string{harness.Claude: buildinfo.Version()}},
 			wantRun:   false,
 		},
 		{
 			name:      "another harness at the same version",
-			installed: application.Installation{Versions: map[string]string{harness.ClaudeCode: buildinfo.Version()}},
-			args:      []string{"--harness", harness.Antigravity},
+			installed: application.Installation{Versions: map[string]string{harness.Claude: buildinfo.Version()}},
+			args:      []string{"--harness", harness.Agy},
 			wantRun:   true,
 		},
 		{
@@ -655,13 +662,13 @@ func TestInitCommandIsANoOpOnlyForTheHarnessItInstalled(t *testing.T) {
 			// what decides — not whichever install happened to finish last.
 			name: "one of several recorded harnesses, at the same version",
 			installed: application.Installation{Versions: map[string]string{
-				harness.ClaudeCode: buildinfo.Version(), harness.Codex: buildinfo.Version()}},
+				harness.Claude: buildinfo.Version(), harness.Codex: buildinfo.Version()}},
 			args:    []string{"--harness", harness.Codex},
 			wantRun: false,
 		},
 		{
 			name:      "the same harness at an older version",
-			installed: application.Installation{Versions: map[string]string{harness.ClaudeCode: "v0.1.0"}},
+			installed: application.Installation{Versions: map[string]string{harness.Claude: "v0.1.0"}},
 			args:      []string{"--yes"},
 			wantRun:   true,
 		},
@@ -669,7 +676,7 @@ func TestInitCommandIsANoOpOnlyForTheHarnessItInstalled(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			initialize := newFakeInitialize()
 			initialize.exists = true
-			initialize.harnesses = mo.Some([]string{harness.ClaudeCode})
+			initialize.harnesses = mo.Some([]string{harness.Claude})
 			initialize.testDir = mo.Some(settings.DefaultTestDir)
 			initialize.installed = mo.Some(tc.installed)
 
@@ -698,11 +705,11 @@ func TestInitCommandTakesSeveralHarnesses(t *testing.T) {
 	}{
 		{
 			name: "the flag repeated",
-			args: []string{"--harness", harness.ClaudeCode, "--harness", harness.Codex},
+			args: []string{"--harness", harness.Claude, "--harness", harness.Codex},
 		},
 		{
 			name: "one flag, the names separated by commas",
-			args: []string{"--harness", harness.ClaudeCode + "," + harness.Codex},
+			args: []string{"--harness", harness.Claude + "," + harness.Codex},
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
@@ -714,7 +721,7 @@ func TestInitCommandTakesSeveralHarnesses(t *testing.T) {
 				t.Fatalf("Execute: %v", err)
 			}
 
-			if want := []string{harness.ClaudeCode, harness.Codex}; !slices.Equal(initialize.got.Harnesses, want) {
+			if want := []string{harness.Claude, harness.Codex}; !slices.Equal(initialize.got.Harnesses, want) {
 				t.Errorf("Harnesses = %q, want %q", initialize.got.Harnesses, want)
 			}
 		})
@@ -759,7 +766,7 @@ func TestInitCommandRefusesSettingsThatRecordNoHarnesses(t *testing.T) {
 func TestInitCommandTakesTheTestingRootFromTheSettingsOnARerun(t *testing.T) {
 	initialize := newFakeInitialize()
 	initialize.exists = true
-	initialize.harnesses = mo.Some([]string{harness.ClaudeCode})
+	initialize.harnesses = mo.Some([]string{harness.Claude})
 	initialize.testDir = mo.Some("packages/web/e2e")
 
 	if _, err := run(t, initialize); err != nil {
@@ -776,7 +783,7 @@ func TestInitCommandTakesTheTestingRootFromTheSettingsOnARerun(t *testing.T) {
 func TestInitCommandLeavesTheTestingRootToTheUseCaseOnARerunThatDeclaresNone(t *testing.T) {
 	initialize := newFakeInitialize()
 	initialize.exists = true
-	initialize.harnesses = mo.Some([]string{harness.ClaudeCode})
+	initialize.harnesses = mo.Some([]string{harness.Claude})
 
 	if _, err := run(t, initialize); err != nil {
 		t.Fatalf("Execute: %v", err)
@@ -796,9 +803,9 @@ func TestInitCommandLeavesTheTestingRootToTheUseCaseOnARerunThatDeclaresNone(t *
 func TestInitCommandIsNotANoOpWhileTheTestingRootIsUndeclared(t *testing.T) {
 	initialize := newFakeInitialize()
 	initialize.exists = true
-	initialize.harnesses = mo.Some([]string{harness.ClaudeCode})
+	initialize.harnesses = mo.Some([]string{harness.Claude})
 	initialize.installed = mo.Some(application.Installation{
-		Versions: map[string]string{harness.ClaudeCode: buildinfo.Version()}})
+		Versions: map[string]string{harness.Claude: buildinfo.Version()}})
 
 	out, err := run(t, initialize)
 	if err != nil {
@@ -810,13 +817,51 @@ func TestInitCommandIsNotANoOpWhileTheTestingRootIsUndeclared(t *testing.T) {
 	}
 }
 
+// An install that is current in every other way is still work when its files record a harness under
+// the spelling it had before it was named for its binary: doctor's remedy for that is this command,
+// and the run is what rewrites it.
+func TestInitCommandIsNotANoOpWhileAFormerHarnessNameIsRecorded(t *testing.T) {
+	initialize := newFakeInitialize()
+	initialize.exists = true
+	initialize.harnesses = mo.Some([]string{harness.Claude})
+	initialize.testDir = mo.Some(settings.DefaultTestDir)
+	initialize.installed = mo.Some(application.Installation{
+		Versions: map[string]string{harness.Claude: buildinfo.Version()}})
+	initialize.formers = []string{"claude-code"}
+
+	out, err := run(t, initialize)
+	if err != nil {
+		t.Fatalf("Execute: %v\n%s", err, out)
+	}
+
+	if !initialize.ran {
+		t.Errorf("ran = false, want the run to rewrite the old name\n%s", out)
+	}
+}
+
+// The flag takes a former spelling as well, and the run is asked for the harness under the name it has
+// now: a script written before the rename keeps working, and nothing downstream sees the old name.
+func TestInitCommandReadsAFormerHarnessNameAsTheCurrentOne(t *testing.T) {
+	initialize := newFakeInitialize()
+
+	args := []string{"--tracker", "beads", "--test-dir", settings.DefaultTestDir,
+		"--harness", "claude-code,antigravity"}
+	if _, err := run(t, initialize, args...); err != nil {
+		t.Fatalf("Execute: %v", err)
+	}
+
+	if want := []string{harness.Claude, harness.Agy}; !slices.Equal(initialize.got.Harnesses, want) {
+		t.Errorf("Harnesses = %q, want %q", initialize.got.Harnesses, want)
+	}
+}
+
 // A root that is not a relative path inside the project is refused where the person typed it, in
 // terms of the flag rather than of the settings field it would have filled.
 func TestInitCommandRejectsATestingRootOutsideTheProject(t *testing.T) {
 	for _, dir := range []string{"/srv/testing", "../testing"} {
 		initialize := newFakeInitialize()
 
-		_, err := run(t, initialize, "--tracker", "beads", "--harness", harness.ClaudeCode, "--test-dir", dir)
+		_, err := run(t, initialize, "--tracker", "beads", "--harness", harness.Claude, "--test-dir", dir)
 		if err == nil || !strings.Contains(err.Error(), "relative path inside the project") {
 			t.Errorf("Execute error for %q = %v, want it to refuse the path", dir, err)
 		}
@@ -850,7 +895,7 @@ func TestAtLeastOneHarness(t *testing.T) {
 		t.Error("atLeastOneHarness(nil) = nil, want an error")
 	}
 
-	if err := atLeastOneHarness([]string{harness.ClaudeCode}); err != nil {
+	if err := atLeastOneHarness([]string{harness.Claude}); err != nil {
 		t.Errorf("atLeastOneHarness of one harness = %v, want nil", err)
 	}
 }

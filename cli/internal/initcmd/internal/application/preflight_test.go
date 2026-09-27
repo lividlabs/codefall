@@ -14,7 +14,7 @@ import (
 // beadsRequest is the run every preflight test makes: the tracker and the harness are settled, and
 // what the test changes is the state of the machine and of the directory.
 func beadsRequest() Request {
-	return Request{Dir: workingDir, Tracker: settings.TrackerBeads, Harnesses: []string{harness.ClaudeCode}}
+	return Request{Dir: workingDir, Tracker: settings.TrackerBeads, Harnesses: []string{harness.Claude}}
 }
 
 // A tool that is missing is found before anything has been done, so a run that cannot finish has

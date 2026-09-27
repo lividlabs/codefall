@@ -10,7 +10,7 @@ import (
 const twoHarnesses = `{
   "harnesses": {
     "codex": {"version": "v1.1.0", "files": [".agents/skills/design/SKILL.md"]},
-    "claude-code": {"version": "v1.2.3", "files": [".claude/skills/design/SKILL.md"]}
+    "claude": {"version": "v1.2.3", "files": [".claude/skills/design/SKILL.md"]}
   }
 }`
 
@@ -20,11 +20,11 @@ func TestDecodeReadsEveryEntry(t *testing.T) {
 		t.Fatalf("Decode: %v", err)
 	}
 
-	if got, want := document.Recorded(), []string{"claude-code", "codex"}; !slices.Equal(got, want) {
+	if got, want := document.Recorded(), []string{"claude", "codex"}; !slices.Equal(got, want) {
 		t.Errorf("Recorded() = %q, want %q", got, want)
 	}
 
-	want := map[string]string{"claude-code": "v1.2.3", "codex": "v1.1.0"}
+	want := map[string]string{"claude": "v1.2.3", "codex": "v1.1.0"}
 	if got := document.Versions(); !maps.Equal(got, want) {
 		t.Errorf("Versions() = %v, want %v", got, want)
 	}
@@ -32,6 +32,79 @@ func TestDecodeReadsEveryEntry(t *testing.T) {
 	if got, want := document.Harnesses["codex"].Files,
 		[]string{".agents/skills/design/SKILL.md"}; !slices.Equal(got, want) {
 		t.Errorf("codex files = %q, want %q", got, want)
+	}
+}
+
+// A manifest written before a harness was named for its binary files it under the spelling it had.
+// Current moves the entry to the name the harness has now and says which spellings it moved, so a
+// reader can report the rename and compare the install under the name the settings use.
+func TestCurrentMovesAFormerSpellingToTheNameTheHarnessHasNow(t *testing.T) {
+	document, err := Decode([]byte(`{"harnesses": {
+  "claude-code": {"version": "v1.2.3", "files": [".claude/skills/design/SKILL.md"]},
+  "antigravity": {"version": "v1.2.3", "files": [".agents/skills/design/SKILL.md"]},
+  "codex": {"version": "v1.2.3", "files": [".agents/skills/design/SKILL.md"]}
+}}`))
+	if err != nil {
+		t.Fatalf("Decode: %v", err)
+	}
+
+	current, moved := document.Current()
+
+	if want := []string{"antigravity", "claude-code"}; !slices.Equal(moved, want) {
+		t.Errorf("Current() moved %q, want %q", moved, want)
+	}
+
+	if got, want := current.Recorded(), []string{"agy", "claude", "codex"}; !slices.Equal(got, want) {
+		t.Errorf("Current().Recorded() = %q, want %q", got, want)
+	}
+
+	if got, want := current.Harnesses["claude"].Files,
+		[]string{".claude/skills/design/SKILL.md"}; !slices.Equal(got, want) {
+		t.Errorf("claude files = %q, want %q", got, want)
+	}
+
+	// The receiver is a value a caller may still be holding, so it keeps the spellings it had.
+	if got, want := document.Recorded(), []string{"antigravity", "claude-code", "codex"}; !slices.Equal(got, want) {
+		t.Errorf("Recorded() after Current = %q, want %q", got, want)
+	}
+}
+
+// Both spellings on record means a newer binary has already written the current one, so its entry
+// is the one kept, and the former spelling is still reported as moved so a rewrite drops it.
+func TestCurrentKeepsTheEntryUnderTheCurrentNameWhenBothAreRecorded(t *testing.T) {
+	document, err := Decode([]byte(`{"harnesses": {
+  "claude-code": {"version": "v1.0.0", "files": ["old"]},
+  "claude": {"version": "v1.2.3", "files": ["new"]}
+}}`))
+	if err != nil {
+		t.Fatalf("Decode: %v", err)
+	}
+
+	current, moved := document.Current()
+
+	if want := []string{"claude-code"}; !slices.Equal(moved, want) {
+		t.Errorf("Current() moved %q, want %q", moved, want)
+	}
+
+	want := map[string]string{"claude": "v1.2.3"}
+	if got := current.Versions(); !maps.Equal(got, want) {
+		t.Errorf("Current().Versions() = %v, want %v", got, want)
+	}
+}
+
+func TestCurrentMovesNothingInARecordThatUsesTheCurrentNames(t *testing.T) {
+	document, err := Decode([]byte(twoHarnesses))
+	if err != nil {
+		t.Fatalf("Decode: %v", err)
+	}
+
+	current, moved := document.Current()
+	if len(moved) != 0 {
+		t.Errorf("Current() moved %q, want nothing", moved)
+	}
+
+	if !maps.Equal(current.Versions(), document.Versions()) {
+		t.Errorf("Current().Versions() = %v, want %v", current.Versions(), document.Versions())
 	}
 }
 
@@ -113,7 +186,7 @@ func TestDecodeNamesTheFileItCouldNotRead(t *testing.T) {
 // change to either that the other cannot follow fails here.
 func TestEncodeAndDecodeAgree(t *testing.T) {
 	document := Document{Harnesses: map[string]Install{
-		"claude-code": {Version: "v1.2.3", Files: []string{".claude/skills/design/SKILL.md"}},
+		"claude": {Version: "v1.2.3", Files: []string{".claude/skills/design/SKILL.md"}},
 	}}
 
 	data, err := Encode(document)
@@ -126,7 +199,7 @@ func TestEncodeAndDecodeAgree(t *testing.T) {
 		t.Fatalf("Decode: %v", err)
 	}
 
-	if got, want := read.Versions()["claude-code"], "v1.2.3"; got != want {
+	if got, want := read.Versions()["claude"], "v1.2.3"; got != want {
 		t.Errorf("version after a round trip = %q, want %q", got, want)
 	}
 

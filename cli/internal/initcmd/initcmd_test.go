@@ -54,9 +54,9 @@ func TestHookDefinitionsPointAtScriptsThatLand(t *testing.T) {
 		source  string
 		destDir string
 	}{
-		{"claude-code", "hooks/claude/hooks.json", installDir},
+		{"claude", "hooks/claude/hooks.json", installDir},
 		{"codex", "hooks/codex/hooks.json", installDir},
-		{"antigravity", "hooks/antigravity/hooks.json", installDir},
+		{"agy", "hooks/agy/hooks.json", installDir},
 	} {
 		t.Run(tc.harness, func(t *testing.T) {
 			body, err := fs.ReadFile(tree, tc.source)
@@ -162,9 +162,9 @@ func TestSessionStartRegistersTheNoticeBesideThePrime(t *testing.T) {
 		})
 	}
 
-	body, err := fs.ReadFile(tree, "hooks/antigravity/hooks.json")
+	body, err := fs.ReadFile(tree, "hooks/agy/hooks.json")
 	if err != nil {
-		t.Fatalf("read hooks/antigravity/hooks.json from the embedded tree: %v", err)
+		t.Fatalf("read hooks/agy/hooks.json from the embedded tree: %v", err)
 	}
 
 	if strings.Contains(string(body), "codefall-session-notice.sh") {

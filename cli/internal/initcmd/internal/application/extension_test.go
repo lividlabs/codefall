@@ -15,7 +15,7 @@ import (
 // extensionRequest is a run that has nothing to do but install the extension: the settings are already
 // there, so the first step skips and what the test watches is the second.
 func extensionRequest() Request {
-	return Request{Dir: workingDir, Tracker: settings.TrackerBeads, Harnesses: []string{harness.ClaudeCode}}
+	return Request{Dir: workingDir, Tracker: settings.TrackerBeads, Harnesses: []string{harness.Claude}}
 }
 
 // settled is a file system whose .codefall/settings.json is already written, with whatever
@@ -104,7 +104,7 @@ func TestExtensionStepInstallsNoMaintainerDocument(t *testing.T) {
 	}
 }
 
-// A claude-code harness that cannot be read runs no extension step: the report commands stay empty.
+// A claude harness that cannot be read runs no extension step: the report commands stay empty.
 // Its companion tests for enforcement about manifest write aside — done behavior.
 func TestExtensionStepStopsTheRunWhenTheCopyFails(t *testing.T) {
 	fetcher := newFakeExtensionSource()

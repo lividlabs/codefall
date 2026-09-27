@@ -10,6 +10,7 @@ import (
 	"github.com/samber/mo"
 
 	"github.com/lividlabs/codefall-cli/cli/internal/doctor/internal/domain"
+	"github.com/lividlabs/codefall-cli/cli/internal/shared/harness"
 	"github.com/lividlabs/codefall-cli/cli/internal/shared/manifest"
 	"github.com/lividlabs/codefall-cli/cli/internal/shared/settings"
 )
@@ -17,8 +18,19 @@ import (
 // initRemedy is what to do about a harness the project chose and codefall was never run for.
 const initRemedy = "codefall init"
 
-// harnesses runs checks 9 and 10, both of which read .codefall/manifest.json, so the file is read
-// once here and handed to each of them.
+// renameRemedy is what to do about a harness recorded under the spelling it had before it was named
+// for its binary: init rewrites both files on its next run.
+const renameRemedy = "run codefall init again, which rewrites them"
+
+// settingsName is the settings file as a person reads it in a report.
+const settingsName = ".codefall/settings.json"
+
+// harnesses runs checks 9 to 11, all of which read .codefall/manifest.json, so the file is read once
+// here and handed to each of them.
+//
+// The two checks after the first read both files under the names the harnesses have now. An old
+// spelling is the first check's to report, and read as written it would also look like a harness the
+// project chose and never installed, or an install left over from one it dropped.
 func (d *Diagnose) harnesses(_ context.Context, dir string, results []domain.Result) []domain.Result {
 	// Settings doctor has already complained about say nothing about which harnesses were chosen, and
 	// a second complaint about the same file would be noise. The checks are absent from the report
@@ -27,17 +39,89 @@ func (d *Diagnose) harnesses(_ context.Context, dir string, results []domain.Res
 		return results
 	}
 
-	chosen, declared := d.chosenHarnesses(dir)
+	written, declared := d.chosenHarnesses(dir)
 	if !declared {
 		return results
 	}
 
-	recorded, read := d.recordedManifest(dir)
+	chosen, settingsFormers := currentNames(written)
 
-	return d.leftOver(recorded, read, chosen, d.installed(dir, recorded, chosen, results))
+	recorded, read := d.recordedManifest(dir)
+	current, manifestFormers := recorded.Current()
+
+	results = append(results, namesAreCurrent(settingsFormers, manifestFormers))
+
+	return d.leftOver(current, read, chosen, d.installed(dir, current, chosen, results))
 }
 
-// installed is check 8: the files a finished run recorded for each chosen harness are still where it
+// currentNames is the harnesses the settings name, each under the name it has now and once, in the
+// order the settings give them, and the former spellings among them, sorted.
+func currentNames(names []string) ([]string, []string) {
+	current := make([]string, 0, len(names))
+
+	var formers []string
+
+	for _, name := range names {
+		renamed, former := harness.Renamed(name).Get()
+		if former {
+			formers = append(formers, name)
+			name = renamed
+		}
+
+		if !slices.Contains(current, name) {
+			current = append(current, name)
+		}
+	}
+
+	return current, slices.Compact(slices.Sorted(slices.Values(formers)))
+}
+
+// namesAreCurrent is check 9: the settings and the manifest name each harness the way codefall does
+// now. A harness is named for its binary, and a project set up before two of them were renamed still
+// records the spellings they had.
+//
+// It warns rather than fails, because codefall still reads the old spellings and nothing stops
+// working. What goes wrong is that a script reading the settings finds a name that is not a command
+// it can run, and init rewrites both files the next time it runs.
+func namesAreCurrent(settingsFormers, manifestFormers []string) domain.Result {
+	var found []string
+
+	switch {
+	case len(settingsFormers) > 0 && slices.Equal(settingsFormers, manifestFormers):
+		found = append(found, fmt.Sprintf("%s and %s name %s", settingsName, manifest.Name, renames(settingsFormers)))
+	default:
+		if len(settingsFormers) > 0 {
+			found = append(found, fmt.Sprintf("%s names %s", settingsName, renames(settingsFormers)))
+		}
+
+		if len(manifestFormers) > 0 {
+			found = append(found, fmt.Sprintf("%s names %s", manifest.Name, renames(manifestFormers)))
+		}
+	}
+
+	if len(found) == 0 {
+		return domain.HarnessNames.Pass()
+	}
+
+	return domain.HarnessNames.Warn(strings.Join(found, "; "), mo.Some(renameRemedy))
+}
+
+// renames is "claude-code (now claude) and antigravity (now agy)": each former spelling, and the name
+// the harness has now.
+func renames(formers []string) string {
+	pairs := make([]string, 0, len(formers))
+	for _, former := range formers {
+		pairs = append(pairs, fmt.Sprintf("%s (now %s)", former, harness.Renamed(former).OrElse(former)))
+	}
+
+	if len(pairs) < 2 {
+		return strings.Join(pairs, "")
+	}
+
+	return strings.Join(pairs[:len(pairs)-1], ", ") + " and " + pairs[len(pairs)-1]
+}
+
+// installed is check 10: the files a finished run recorded for each chosen harness are still where it
 // wrote them.
 //
 // What this used to stat was hooks/shared/ under each harness's own skills directory, which the
@@ -107,7 +191,7 @@ func (d *Diagnose) firstMissing(dir string, files []string) (bool, string, error
 	return false, "", nil
 }
 
-// leftOver is check 9: nothing codefall installed is still sitting there for a harness the settings
+// leftOver is check 11: nothing codefall installed is still sitting there for a harness the settings
 // no longer name. A project set up for two harnesses that later drops one keeps everything codefall
 // wrote for it, because codefall only ever writes what it owns and never deletes.
 //

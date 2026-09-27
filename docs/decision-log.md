@@ -1294,6 +1294,21 @@ Decided at scaffold, 2026-08-16.
   the one consequence of ADR-007 it revises. Seen and not taken: superseding ADR-007 whole for one
   consequence, which would retire a record that is otherwise current; and letting a worker edit a
   Task Plan row or a bead's criteria, which is the graph and stays `design`'s.
+- **A harness is named for its binary, 2026-09-26.** Two of the five harness names were product
+  names: `claude-code` for Claude Code, whose command is `claude`, and `antigravity` for
+  Antigravity, whose command is `agy`. The review script already runs a harness by
+  `command -v <name>`, and `via=claude` named the binary while `.codefall/settings.json` said
+  `claude-code`, so every script that starts a harness a project chose would have needed a table
+  from one name to the other. Now every harness is named for its binary — `agy`, `claude`, `codex`,
+  `muse`, `opencode` — and the rule is stated once, in `cli/internal/shared/harness/`. The hook
+  definitions follow it: `extensions/hooks/antigravity/` is now `extensions/hooks/agy/`. The old
+  spellings are still read: `harness.Parse` accepts them and returns the new name, validation
+  passes a file that carries one, `codefall doctor` warns with `codefall init` as the remedy, and
+  `codefall init` rewrites them in the settings and the manifest on its next run, changing nothing
+  else in either file. The schema's enum lists only the new names. The merge guard's
+  `--antigravity` flag keeps its name, because projects' hook files already register it. Seen and
+  not taken: listing the old spellings in the schema's enum, which would document them as current;
+  and a table from harness name to binary in each script, which is the mapping this removes.
 
 ## Open
 

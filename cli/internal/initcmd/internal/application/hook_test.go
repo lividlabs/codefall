@@ -40,7 +40,7 @@ var hookDefinitions = map[string][]byte{
     ]
   }
 }`),
-	"hooks/antigravity/hooks.json": []byte(`{
+	"hooks/agy/hooks.json": []byte(`{
   "codefall-merge-guard": {
     "PreToolUse": [{"matcher": "run_command", "hooks": [{"command": "guard --antigravity"}]}]
   }
@@ -78,9 +78,9 @@ func TestHookRegistersWhatTheTableSays(t *testing.T) {
 		harness string
 		dest    string
 	}{
-		{harness.ClaudeCode, claudeFull},
+		{harness.Claude, claudeFull},
 		{harness.Codex, filepath.Join(workingDir, ".codex/hooks.json")},
-		{harness.Antigravity, filepath.Join(workingDir, ".agents/hooks.json")},
+		{harness.Agy, filepath.Join(workingDir, ".agents/hooks.json")},
 		{harness.OpenCode, filepath.Join(workingDir, ".opencode/plugins/codefall.js")},
 	} {
 		t.Run(tc.harness, func(t *testing.T) {
@@ -295,7 +295,7 @@ func TestHookMergeKeepsTheProjectsAntigravityFlags(t *testing.T) {
 	files.files[filepath.Join(workingDir, ".agents/hooks.json")] = []byte(
 		`{"codefall-merge-guard": {"enabled": false}}`)
 
-	request := beadsRequestHarness(harness.Antigravity)
+	request := beadsRequestHarness(harness.Agy)
 	report, err := NewInitialize(files, toolsInstalled(), newFakeExtensionSource()).Run(t.Context(), request, nil)
 	if err != nil {
 		t.Fatalf("Run: %v", err)
@@ -368,37 +368,37 @@ func TestHookMergeReportsAFileItCannotWorkWith(t *testing.T) {
 	}{
 		{
 			name:     "the file is not JSON",
-			harness:  harness.ClaudeCode,
+			harness:  harness.Claude,
 			settings: "{ not json",
 			want:     "decode .claude/settings.json",
 		},
 		{
 			name:     "the file is a JSON array",
-			harness:  harness.ClaudeCode,
+			harness:  harness.Claude,
 			settings: `[{"hooks": {}}]`,
 			want:     "decode .claude/settings.json",
 		},
 		{
 			name:     "the file is a JSON string",
-			harness:  harness.ClaudeCode,
+			harness:  harness.Claude,
 			settings: `"hooks"`,
 			want:     "decode .claude/settings.json",
 		},
 		{
 			name:     "hooks is not an object",
-			harness:  harness.ClaudeCode,
+			harness:  harness.Claude,
 			settings: `{"hooks": ["SessionStart"]}`,
 			want:     ".claude/settings.json: hooks is not an object",
 		},
 		{
 			name:     "the event is not an array",
-			harness:  harness.ClaudeCode,
+			harness:  harness.Claude,
 			settings: `{"hooks": {"SessionStart": {"matcher": ""}}}`,
 			want:     ".claude/settings.json: hooks.SessionStart is not an array",
 		},
 		{
-			name:    "an event is not an array under antigravity's hook name",
-			harness: harness.Antigravity,
+			name:    "an event is not an array under agy's hook name",
+			harness: harness.Agy,
 			have:    map[string][]byte{filepath.Join(workingDir, ".agents/hooks.json"): []byte(`{"codefall-merge-guard": {"PreToolUse": {"matcher": ""}}}`)},
 			want:    ".agents/hooks.json: codefall-merge-guard.PreToolUse is not an array",
 		},

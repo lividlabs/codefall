@@ -47,9 +47,9 @@ func recordedManifestIn(t *testing.T, files *fakeFileSystem) manifest.Document {
 // chosen is what every step reads the set through, so a name given twice is one install and the
 // order a flag or a survey collected them in cannot change what a step does.
 func TestChosenSortsTheSetAndDropsRepeats(t *testing.T) {
-	got := chosen(requestFor(harness.Codex, harness.ClaudeCode, harness.Codex))
+	got := chosen(requestFor(harness.Codex, harness.Claude, harness.Codex))
 
-	if want := []string{harness.ClaudeCode, harness.Codex}; !slices.Equal(got, want) {
+	if want := []string{harness.Claude, harness.Codex}; !slices.Equal(got, want) {
 		t.Errorf("chosen = %q, want %q", got, want)
 	}
 }
@@ -58,7 +58,7 @@ func TestChosenSortsTheSetAndDropsRepeats(t *testing.T) {
 func TestExtensionStepInstallsIntoEveryDirectoryTheChosenHarnessesRead(t *testing.T) {
 	fetcher := newFakeExtensionSource()
 
-	report := runFor(t, settled(""), fetcher, requestFor(harness.ClaudeCode, harness.Codex))
+	report := runFor(t, settled(""), fetcher, requestFor(harness.Claude, harness.Codex))
 
 	result := report.Results()[1]
 	if result.Outcome != domain.OutcomeDone {
@@ -95,7 +95,7 @@ func TestExtensionStepCopiesOncePerDirectoryHoweverManyHarnessesShareIt(t *testi
 	fetcher := newFakeExtensionSource()
 	files := settled("")
 
-	request := requestFor(harness.Antigravity, harness.Codex, harness.Muse, harness.OpenCode)
+	request := requestFor(harness.Agy, harness.Codex, harness.Muse, harness.OpenCode)
 	request.CLIVersion = "v1.2.3"
 
 	report := runFor(t, files, fetcher, request)
@@ -111,10 +111,10 @@ func TestExtensionStepCopiesOncePerDirectoryHoweverManyHarnessesShareIt(t *testi
 
 	install := manifest.Install{Version: "v1.2.3", Files: []string{".agents/skills/design/SKILL.md"}}
 	want := manifest.Document{Harnesses: map[string]manifest.Install{
-		harness.Antigravity: install,
-		harness.Codex:       install,
-		harness.Muse:        install,
-		harness.OpenCode:    install,
+		harness.Agy:      install,
+		harness.Codex:    install,
+		harness.Muse:     install,
+		harness.OpenCode: install,
 	}, Shared: sharedInstall("v1.2.3")}
 
 	if got := recordedManifestIn(t, files); !reflect.DeepEqual(got, want) {
@@ -127,14 +127,14 @@ func TestExtensionStepCopiesOncePerDirectoryHoweverManyHarnessesShareIt(t *testi
 func TestTheManifestRecordsWhereEachHarnessFilesLanded(t *testing.T) {
 	files := settled("")
 
-	request := requestFor(harness.ClaudeCode, harness.Codex)
+	request := requestFor(harness.Claude, harness.Codex)
 	request.CLIVersion = "v1.2.3"
 
 	runFor(t, files, newFakeExtensionSource(), request)
 
 	want := manifest.Document{Harnesses: map[string]manifest.Install{
-		harness.ClaudeCode: {Version: "v1.2.3", Files: []string{".claude/skills/design/SKILL.md"}},
-		harness.Codex:      {Version: "v1.2.3", Files: []string{".agents/skills/design/SKILL.md"}},
+		harness.Claude: {Version: "v1.2.3", Files: []string{".claude/skills/design/SKILL.md"}},
+		harness.Codex:  {Version: "v1.2.3", Files: []string{".agents/skills/design/SKILL.md"}},
 	}, Shared: sharedInstall("v1.2.3")}
 
 	if got := recordedManifestIn(t, files); !reflect.DeepEqual(got, want) {
@@ -148,7 +148,7 @@ func TestTheManifestRecordsWhereEachHarnessFilesLanded(t *testing.T) {
 func TestTheManifestKeepsWhatAnEarlierRunRecordedForAnotherHarness(t *testing.T) {
 	files := settled("")
 	files.files[filepath.Join(workingDir, manifest.Name)] = []byte(
-		`{"harnesses": {"claude-code": {"version": "v0.1.0", "files": [".claude/skills/old/SKILL.md"]}}}`)
+		`{"harnesses": {"claude": {"version": "v0.1.0", "files": [".claude/skills/old/SKILL.md"]}}}`)
 
 	request := requestFor(harness.Codex)
 	request.CLIVersion = "v1.2.3"
@@ -156,8 +156,8 @@ func TestTheManifestKeepsWhatAnEarlierRunRecordedForAnotherHarness(t *testing.T)
 	runFor(t, files, newFakeExtensionSource(), request)
 
 	want := manifest.Document{Harnesses: map[string]manifest.Install{
-		harness.ClaudeCode: {Version: "v0.1.0", Files: []string{".claude/skills/old/SKILL.md"}},
-		harness.Codex:      {Version: "v1.2.3", Files: []string{".agents/skills/design/SKILL.md"}},
+		harness.Claude: {Version: "v0.1.0", Files: []string{".claude/skills/old/SKILL.md"}},
+		harness.Codex:  {Version: "v1.2.3", Files: []string{".agents/skills/design/SKILL.md"}},
 	}, Shared: sharedInstall("v1.2.3")}
 
 	if got := recordedManifestIn(t, files); !reflect.DeepEqual(got, want) {
@@ -170,7 +170,7 @@ func TestTheManifestKeepsWhatAnEarlierRunRecordedForAnotherHarness(t *testing.T)
 func TestHookStepRegistersWithEveryChosenHarness(t *testing.T) {
 	files := settled("")
 
-	report := runFor(t, files, newFakeExtensionSource(), requestFor(harness.ClaudeCode, harness.Codex))
+	report := runFor(t, files, newFakeExtensionSource(), requestFor(harness.Claude, harness.Codex))
 
 	result := hookResult(t, report)
 	if result.Outcome != domain.OutcomeDone {
@@ -196,7 +196,7 @@ func TestHookStepReportsEachHarnessOwnOutcome(t *testing.T) {
 	files := settled("")
 
 	report := runFor(t, files, newFakeExtensionSource(),
-		requestFor(harness.Antigravity, harness.Codex, harness.Muse, harness.OpenCode))
+		requestFor(harness.Agy, harness.Codex, harness.Muse, harness.OpenCode))
 
 	result := hookResult(t, report)
 	if result.Outcome != domain.OutcomeDone {
@@ -240,7 +240,7 @@ func TestTheClaudePointerFollowsWhetherClaudeCodeIsAmongThem(t *testing.T) {
 		names   []string
 		pointer bool
 	}{
-		{name: "claude-code beside another harness", names: []string{harness.ClaudeCode, harness.Codex}, pointer: true},
+		{name: "claude beside another harness", names: []string{harness.Claude, harness.Codex}, pointer: true},
 		{name: "harnesses that do not read it", names: []string{harness.Codex, harness.Muse}, pointer: false},
 	} {
 		t.Run(tc.name, func(t *testing.T) {

@@ -13,7 +13,7 @@ func complete() Document {
 		"$schema":      SchemaID,
 		"version":      1.0,
 		"tracker":      "github",
-		FieldHarnesses: []any{"claude-code"},
+		FieldHarnesses: []any{"claude"},
 		"github": map[string]any{
 			"issuesRepo":    "lividlabs/codefall-cli",
 			"issuesProject": 3.0,
@@ -36,21 +36,27 @@ func TestValidate(t *testing.T) {
 			doc: Document{
 				"version":      1.0,
 				"tracker":      "github",
-				FieldHarnesses: []any{"claude-code"},
+				FieldHarnesses: []any{"claude"},
 				"github":       map[string]any{"issuesRepo": "lividlabs/codefall-cli"},
 			},
 		},
 		{
 			name: "every harness codefall can set up, at once",
 			doc: with(complete(), FieldHarnesses,
-				[]any{"antigravity", "claude-code", "codex", "muse", "opencode"}),
+				[]any{"agy", "claude", "codex", "muse", "opencode"}),
+		},
+		{
+			// A project whose checked-in settings predate the rename is still valid: doctor warns
+			// about the old spelling, and codefall init rewrites it.
+			name: "a harness under the spelling it had before it was named for its binary",
+			doc:  with(complete(), FieldHarnesses, []any{"claude-code", "antigravity"}),
 		},
 		{
 			name: "unknown top-level keys are ignored",
 			doc: Document{
 				"version":      1.0,
 				"tracker":      "github",
-				FieldHarnesses: []any{"claude-code"},
+				FieldHarnesses: []any{"claude"},
 				"github":       map[string]any{"issuesRepo": "a/b"},
 				"nonsense":     "ignored",
 			},
@@ -60,7 +66,7 @@ func TestValidate(t *testing.T) {
 			doc: Document{
 				"version":      1.0,
 				"tracker":      "github",
-				FieldHarnesses: []any{"claude-code"},
+				FieldHarnesses: []any{"claude"},
 				"github":       map[string]any{"issuesRepo": "a/b"},
 				"gitlab":       map[string]any{"project": "x"},
 			},
@@ -77,7 +83,7 @@ func TestValidate(t *testing.T) {
 		},
 		{
 			name: "harnesses is not an array",
-			doc:  with(complete(), FieldHarnesses, "claude-code"),
+			doc:  with(complete(), FieldHarnesses, "claude"),
 			want: []string{"harnesses: must be an array of harness names"},
 		},
 		{
@@ -94,9 +100,9 @@ func TestValidate(t *testing.T) {
 		},
 		{
 			name: "a harness codefall cannot set up",
-			doc:  with(complete(), FieldHarnesses, []any{"claude-code", "cursor"}),
+			doc:  with(complete(), FieldHarnesses, []any{"claude", "cursor"}),
 			want: []string{`harnesses: unknown value "cursor" ` +
-				`(expected "antigravity", "claude-code", "codex", "muse", "opencode")`},
+				`(expected "agy", "claude", "codex", "muse", "opencode")`},
 		},
 		{
 			name: "version missing",
@@ -550,7 +556,7 @@ func TestNamesEntry(t *testing.T) {
 }
 
 func TestHarnesses(t *testing.T) {
-	if got, want := Harnesses(complete()), []string{"claude-code"}; !slices.Equal(got, want) {
+	if got, want := Harnesses(complete()), []string{"claude"}; !slices.Equal(got, want) {
 		t.Errorf("Harnesses() = %q, want %q", got, want)
 	}
 

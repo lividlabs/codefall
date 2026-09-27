@@ -130,7 +130,7 @@ func TestTheManifestRecordsOnlyARunThatFinished(t *testing.T) {
 		}
 
 		want := manifest.Document{Harnesses: map[string]manifest.Install{
-			harness.ClaudeCode: {Version: "v1.2.3", Files: []string{".claude/skills/design/SKILL.md"}},
+			harness.Claude: {Version: "v1.2.3", Files: []string{".claude/skills/design/SKILL.md"}},
 		}, Shared: sharedInstall("v1.2.3")}
 		if !reflect.DeepEqual(recorded, want) {
 			t.Errorf("manifest = %+v, want %+v", recorded, want)
@@ -163,9 +163,9 @@ func TestInstalledReportsWhatFinishedRunsRecorded(t *testing.T) {
 	}{
 		{
 			name: "a manifest recording two harnesses, each at the version that installed it",
-			body: `{"harnesses": {"claude-code": {"version": "v1.2.3"}, "codex": {"version": "v1.1.0"}}}`,
+			body: `{"harnesses": {"claude": {"version": "v1.2.3"}, "codex": {"version": "v1.1.0"}}}`,
 			want: mo.Some(Installation{Versions: map[string]string{
-				harness.ClaudeCode: "v1.2.3", harness.Codex: "v1.1.0"}}),
+				harness.Claude: "v1.2.3", harness.Codex: "v1.1.0"}}),
 		},
 		{name: "no manifest", missing: true, want: mo.None[Installation]()},
 		{

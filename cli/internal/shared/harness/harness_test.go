@@ -3,10 +3,12 @@ package harness
 import (
 	"slices"
 	"testing"
+
+	"github.com/samber/mo"
 )
 
 func TestAllIsSortedAndCopied(t *testing.T) {
-	want := []string{Antigravity, ClaudeCode, Codex, Muse, OpenCode}
+	want := []string{Agy, Claude, Codex, Muse, OpenCode}
 
 	if got := All(); !slices.Equal(got, want) {
 		t.Errorf("All() = %q, want %q", got, want)
@@ -15,8 +17,8 @@ func TestAllIsSortedAndCopied(t *testing.T) {
 	// The caller gets a copy: mutating it must not change what the next caller sees.
 	All()[0] = "mutated"
 
-	if got := All()[0]; got != Antigravity {
-		t.Errorf("All()[0] after a caller mutated its copy = %q, want %q", got, Antigravity)
+	if got := All()[0]; got != Agy {
+		t.Errorf("All()[0] after a caller mutated its copy = %q, want %q", got, Agy)
 	}
 }
 
@@ -27,9 +29,54 @@ func TestParse(t *testing.T) {
 
 	err := errorFrom(Parse("cursor"))
 
-	want := `harness "cursor" is not supported yet (supported: antigravity, claude-code, codex, muse, opencode)`
+	want := `harness "cursor" is not supported yet (supported: agy, claude, codex, muse, opencode)`
 	if err == nil || err.Error() != want {
 		t.Errorf("Parse(%q) error = %v, want %q", "cursor", err, want)
+	}
+}
+
+// A project's checked-in files may still carry the spelling a harness had before it was named for
+// its binary. Parse reads it as the harness it names now, so that project keeps working, and never
+// hands the old spelling back for a caller to write down again.
+func TestParseAcceptsAFormerSpellingAndReturnsTheCurrentName(t *testing.T) {
+	for _, tc := range []struct{ former, want string }{
+		{"claude-code", Claude},
+		{"antigravity", Agy},
+	} {
+		t.Run(tc.former, func(t *testing.T) {
+			if got, err := Parse(tc.former); err != nil || got != tc.want {
+				t.Errorf("Parse(%q) = %q, %v, want %q, nil", tc.former, got, err, tc.want)
+			}
+		})
+	}
+}
+
+// The former spellings are accepted and never offered: All is what a person is shown, and it names
+// only the harnesses as they are called now.
+func TestAllOffersNoFormerSpelling(t *testing.T) {
+	for _, former := range []string{"claude-code", "antigravity"} {
+		if slices.Contains(All(), former) {
+			t.Errorf("All() = %q, which offers the former spelling %q", All(), former)
+		}
+	}
+}
+
+func TestRenamedNamesTheCurrentHarnessForAFormerSpellingOnly(t *testing.T) {
+	for _, tc := range []struct {
+		name string
+		want mo.Option[string]
+	}{
+		{"claude-code", mo.Some(Claude)},
+		{"antigravity", mo.Some(Agy)},
+		{Claude, mo.None[string]()},
+		{Codex, mo.None[string]()},
+		{"cursor", mo.None[string]()},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			if got := Renamed(tc.name); got != tc.want {
+				t.Errorf("Renamed(%q) = %v, want %v", tc.name, got, tc.want)
+			}
+		})
 	}
 }
 
@@ -59,8 +106,8 @@ func TestSkillsDirNamesTheConventionEachHarnessFollows(t *testing.T) {
 		harness string
 		want    string
 	}{
-		{ClaudeCode, ".claude"},
-		{Antigravity, ".agents"},
+		{Claude, ".claude"},
+		{Agy, ".agents"},
 		{Codex, ".agents"},
 		{Muse, ".agents"},
 		{OpenCode, ".agents"},

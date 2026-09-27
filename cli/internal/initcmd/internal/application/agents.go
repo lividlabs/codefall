@@ -289,7 +289,7 @@ func sectionIn(existing string, s section) (string, sectionChange, error) {
 // Only when the file is missing. A CLAUDE.md the project already has says whatever its author meant
 // it to say, and replacing that with a pointer would throw the rules away rather than point at them.
 func (i *Initialize) writeClaudePointer(request Request) (bool, error) {
-	if !slices.Contains(chosen(request), harness.ClaudeCode) {
+	if !slices.Contains(chosen(request), harness.Claude) {
 		return false, nil
 	}
 

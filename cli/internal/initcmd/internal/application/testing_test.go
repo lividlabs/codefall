@@ -108,7 +108,7 @@ func TestTestingStepDeclaresTheRootWithoutDisturbingTheSettings(t *testing.T) {
   "version": 1,
   "tracker": "beads",
   "harnesses": [
-    "claude-code"
+    "claude"
   ],
   "beads": {},
   "local": {
@@ -129,7 +129,7 @@ func TestTestingStepDeclaresTheRootWithoutDisturbingTheSettings(t *testing.T) {
   "version": 1,
   "tracker": "beads",
   "harnesses": [
-    "claude-code"
+    "claude"
   ],
   "beads": {},
   "local": {

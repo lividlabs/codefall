@@ -54,10 +54,10 @@ var (
 // wrote for codex still recorded.
 const (
 	installedManifest = `{"harnesses": {
-  "claude-code": {"version": "v1.2.3", "files": [".claude/skills/design/SKILL.md"]}
+  "claude": {"version": "v1.2.3", "files": [".claude/skills/design/SKILL.md"]}
 }}`
 	droppedManifest = `{"harnesses": {
-  "claude-code": {"version": "v1.2.3", "files": [".claude/skills/design/SKILL.md"]},
+  "claude": {"version": "v1.2.3", "files": [".claude/skills/design/SKILL.md"]},
   "codex": {"version": "v1.2.3", "files": [".agents/skills/design/SKILL.md"]}
 }}`
 )
@@ -66,7 +66,7 @@ const validSettings = `{
   "$schema": "` + settings.SchemaID + `",
   "version": 1,
   "tracker": "github",
-  "harnesses": ["claude-code"],
+  "harnesses": ["claude"],
   "github": { "issuesRepo": "lividlabs/codefall-cli", "issuesProject": 3 },
   "local": { "start": "scripts/local.sh start", "update": "scripts/local.sh update" },
   "test": { "dir": "testing", "runners": ["playwright"] }
@@ -77,7 +77,7 @@ const twoHarnessSettings = `{
   "$schema": "` + settings.SchemaID + `",
   "version": 1,
   "tracker": "github",
-  "harnesses": ["claude-code", "codex"],
+  "harnesses": ["claude", "codex"],
   "github": { "issuesRepo": "lividlabs/codefall-cli", "issuesProject": 3 },
   "local": { "start": "scripts/local.sh start", "update": "scripts/local.sh update" },
   "test": { "dir": "testing", "runners": ["playwright"] }
@@ -89,7 +89,7 @@ const undeclaredSettings = `{
   "$schema": "` + settings.SchemaID + `",
   "version": 1,
   "tracker": "github",
-  "harnesses": ["claude-code"],
+  "harnesses": ["claude"],
   "github": { "issuesRepo": "lividlabs/codefall-cli", "issuesProject": 3 },
   "test": { "dir": "testing", "runners": ["playwright"] }
 }`
@@ -100,7 +100,7 @@ func withLocal(start, update string) string {
   "$schema": "` + settings.SchemaID + `",
   "version": 1,
   "tracker": "github",
-  "harnesses": ["claude-code"],
+  "harnesses": ["claude"],
   "github": { "issuesRepo": "lividlabs/codefall-cli", "issuesProject": 3 },
   "local": { "start": ` + fmt.Sprintf("%q", start) + `, "update": ` + fmt.Sprintf("%q", update) + ` },
   "test": { "dir": "testing", "runners": ["playwright"] }
@@ -114,7 +114,7 @@ func withTest(block string) string {
   "$schema": "` + settings.SchemaID + `",
   "version": 1,
   "tracker": "github",
-  "harnesses": ["claude-code"],
+  "harnesses": ["claude"],
   "github": { "issuesRepo": "lividlabs/codefall-cli", "issuesProject": 3 },
   "local": { "start": "scripts/local.sh start", "update": "scripts/local.sh update" }`
 
@@ -251,6 +251,7 @@ var allPass = []outcome{
 	{domain.TestsIgnored.ID, domain.StatusPass},
 	{domain.StampIgnored.ID, domain.StatusPass},
 	{domain.InteractionsMerged.ID, domain.StatusPass},
+	{domain.HarnessNames.ID, domain.StatusPass},
 	{domain.HarnessesInstalled.ID, domain.StatusPass},
 	{domain.HarnessesLeftOver.ID, domain.StatusPass},
 	{domain.LocalDeclared.ID, domain.StatusPass},
@@ -293,7 +294,7 @@ var (
 		domain.SettingsFile.ID, domain.SettingsJSON.ID, domain.SettingsComplete.ID,
 		domain.ReviewsIgnored.ID, domain.TestsIgnored.ID, domain.StampIgnored.ID,
 		domain.InteractionsMerged.ID,
-		domain.HarnessesInstalled.ID, domain.HarnessesLeftOver.ID,
+		domain.HarnessNames.ID, domain.HarnessesInstalled.ID, domain.HarnessesLeftOver.ID,
 		domain.LocalDeclared.ID, domain.LocalRunnable.ID,
 		domain.TestDeclared.ID, domain.TestEquipped.ID, domain.TestDirExists.ID,
 	}
@@ -301,7 +302,7 @@ var (
 		domain.SettingsJSON.ID, domain.SettingsComplete.ID,
 		domain.ReviewsIgnored.ID, domain.TestsIgnored.ID, domain.StampIgnored.ID,
 		domain.InteractionsMerged.ID,
-		domain.HarnessesInstalled.ID, domain.HarnessesLeftOver.ID,
+		domain.HarnessNames.ID, domain.HarnessesInstalled.ID, domain.HarnessesLeftOver.ID,
 		domain.LocalDeclared.ID, domain.LocalRunnable.ID,
 		domain.TestDeclared.ID, domain.TestEquipped.ID, domain.TestDirExists.ID,
 	}
@@ -309,14 +310,14 @@ var (
 		domain.SettingsComplete.ID,
 		domain.ReviewsIgnored.ID, domain.TestsIgnored.ID, domain.StampIgnored.ID,
 		domain.InteractionsMerged.ID,
-		domain.HarnessesInstalled.ID, domain.HarnessesLeftOver.ID,
+		domain.HarnessNames.ID, domain.HarnessesInstalled.ID, domain.HarnessesLeftOver.ID,
 		domain.LocalDeclared.ID, domain.LocalRunnable.ID,
 		domain.TestDeclared.ID, domain.TestEquipped.ID, domain.TestDirExists.ID,
 	}
 	afterSettingsDone = []string{
 		domain.ReviewsIgnored.ID, domain.TestsIgnored.ID, domain.StampIgnored.ID,
 		domain.InteractionsMerged.ID,
-		domain.HarnessesInstalled.ID, domain.HarnessesLeftOver.ID,
+		domain.HarnessNames.ID, domain.HarnessesInstalled.ID, domain.HarnessesLeftOver.ID,
 		domain.LocalDeclared.ID, domain.LocalRunnable.ID,
 		domain.TestDeclared.ID, domain.TestEquipped.ID, domain.TestDirExists.ID,
 	}
@@ -512,7 +513,7 @@ func TestDiagnoseRun(t *testing.T) {
 			},
 			want:       outcomes(map[string]domain.Status{domain.HarnessesInstalled.ID: domain.StatusFail}),
 			target:     domain.HarnessesInstalled.ID,
-			wantDetail: "codefall is not installed for claude-code",
+			wantDetail: "codefall is not installed for claude",
 			wantRemedy: mo.Some("codefall init"),
 		},
 		{
@@ -536,7 +537,7 @@ func TestDiagnoseRun(t *testing.T) {
 			},
 			want:       allPass,
 			target:     domain.HarnessesInstalled.ID,
-			wantDetail: "claude-code, codex",
+			wantDetail: "claude, codex",
 		},
 		{
 			name: "a recorded file cannot be stat'd",
@@ -574,8 +575,50 @@ func TestDiagnoseRun(t *testing.T) {
 			want: outcomes(map[string]domain.Status{domain.HarnessesInstalled.ID: domain.StatusFail},
 				domain.HarnessesLeftOver.ID),
 			target:     domain.HarnessesInstalled.ID,
-			wantDetail: "codefall is not installed for claude-code",
+			wantDetail: "codefall is not installed for claude",
 			wantRemedy: mo.Some("codefall init"),
+		},
+		{
+			// A project set up before its harnesses were named for their binaries records the old
+			// spelling in both files. codefall still reads it, so nothing else in the report changes:
+			// the settings' claude-code is the manifest's claude-code, and both are claude.
+			name: "the settings and the manifest record a former harness name",
+			mutate: func(f *fakeFileSystem, _ *fakeCommandRunner) {
+				f.files[settingsPath] = []byte(strings.Replace(validSettings, `["claude"]`, `["claude-code"]`, 1))
+				f.files[manifestPath] = []byte(strings.Replace(installedManifest, `"claude":`, `"claude-code":`, 1))
+			},
+			want:       outcomes(map[string]domain.Status{domain.HarnessNames.ID: domain.StatusWarn}),
+			target:     domain.HarnessNames.ID,
+			wantDetail: ".codefall/settings.json and .codefall/manifest.json name claude-code (now claude)",
+			wantRemedy: mo.Some(renameRemedy),
+		},
+		{
+			// The two files can disagree — the settings rewritten by hand, the manifest left alone — and
+			// the install is still found under the name the settings use.
+			name: "only the manifest records a former harness name",
+			mutate: func(f *fakeFileSystem, _ *fakeCommandRunner) {
+				f.files[manifestPath] = []byte(strings.Replace(installedManifest, `"claude":`, `"claude-code":`, 1))
+			},
+			want:       outcomes(map[string]domain.Status{domain.HarnessNames.ID: domain.StatusWarn}),
+			target:     domain.HarnessNames.ID,
+			wantDetail: ".codefall/manifest.json names claude-code (now claude)",
+			wantRemedy: mo.Some(renameRemedy),
+		},
+		{
+			name: "only the settings record former harness names",
+			mutate: func(f *fakeFileSystem, _ *fakeCommandRunner) {
+				f.files[settingsPath] = []byte(strings.Replace(validSettings, `["claude"]`,
+					`["claude-code", "antigravity", "claude"]`, 1))
+				f.files[manifestPath] = []byte(`{"harnesses": {
+  "claude": {"version": "v1.2.3", "files": [".claude/skills/design/SKILL.md"]},
+  "agy": {"version": "v1.2.3", "files": [".agents/skills/design/SKILL.md"]}
+}}`)
+				f.files[agentsSkill] = []byte("---\nname: design\n---\n")
+			},
+			want:       outcomes(map[string]domain.Status{domain.HarnessNames.ID: domain.StatusWarn}),
+			target:     domain.HarnessNames.ID,
+			wantDetail: ".codefall/settings.json names antigravity (now agy) and claude-code (now claude)",
+			wantRemedy: mo.Some(renameRemedy),
 		},
 		{
 			// Every project set up before the local block existed looks like this. Nothing else

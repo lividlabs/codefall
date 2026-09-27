@@ -84,19 +84,26 @@ func NewSettings(
 }
 
 // newHarnesses is the set a project is set up for, sorted and without repeats. A project needs at
-// least one: settings that name none would describe an install with nowhere to put anything.
+// least one: settings that name none would describe an install with nowhere to put anything. A name
+// is kept as Parse returns it, so a former spelling is written down under the name the harness has
+// now.
 func newHarnesses(names []string) ([]string, error) {
 	if len(names) == 0 {
 		return nil, errors.New("a project needs at least one harness")
 	}
 
+	parsed := make([]string, 0, len(names))
+
 	for _, name := range names {
-		if _, err := harness.Parse(name); err != nil {
+		current, err := harness.Parse(name)
+		if err != nil {
 			return nil, err
 		}
+
+		parsed = append(parsed, current)
 	}
 
-	return slices.Compact(slices.Sorted(slices.Values(names))), nil
+	return slices.Compact(slices.Sorted(slices.Values(parsed))), nil
 }
 
 func newGitHubSettings(repo mo.Option[string], project mo.Option[int]) (GitHubSettings, error) {

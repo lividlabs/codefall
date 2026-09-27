@@ -38,15 +38,18 @@ There are two ways to get started, with or without an existing repository.
 
 ### Currently Supported Harnesses
 
-- Claude Code
-- Codex
-- OpenCode
-- Antigravity
-- Muse
+- Claude Code (`claude`)
+- Codex (`codex`)
+- OpenCode (`opencode`)
+- Antigravity (`agy`)
+- Muse (`muse`)
 
 A project can use more than one, and `init` asks which ones to set up rather than choosing for you.
 `--harness` answers without asking and takes several: repeat the flag, or separate the names with
-commas.
+commas. Each harness is named for its command-line binary, shown beside it above, and that is the
+name `.codefall/settings.json` records. A project set up when Claude Code was `claude-code` and
+Antigravity was `antigravity` keeps working: `codefall doctor` warns about the old names, and the
+next `codefall init` rewrites them.
 
 ### New Projects
 

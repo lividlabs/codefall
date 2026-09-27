@@ -13,7 +13,7 @@ import (
 
 // oneHarness is the harness every case that is not about harnesses passes, so a settings value can be
 // built at all.
-var oneHarness = []string{harness.ClaudeCode}
+var oneHarness = []string{harness.Claude}
 
 func TestNewSettingsForGitHub(t *testing.T) {
 	value, err := NewSettings(settings.TrackerGitHub, oneHarness, mo.Some("lividlabs/codefall-cli"),
@@ -73,13 +73,28 @@ func TestNewSettingsForBeadsCarriesNoGitHubBlock(t *testing.T) {
 // that does not depend on how the answers were collected.
 func TestNewSettingsSortsTheHarnessesAndDropsRepeats(t *testing.T) {
 	value, err := NewSettings(settings.TrackerBeads,
-		[]string{harness.Codex, harness.ClaudeCode, harness.Codex},
+		[]string{harness.Codex, harness.Claude, harness.Codex},
 		mo.None[string](), mo.None[int](), ReviewSettings{})
 	if err != nil {
 		t.Fatalf("NewSettings: %v", err)
 	}
 
-	if want := []string{harness.ClaudeCode, harness.Codex}; !slices.Equal(value.Harnesses, want) {
+	if want := []string{harness.Claude, harness.Codex}; !slices.Equal(value.Harnesses, want) {
+		t.Errorf("Harnesses = %q, want %q", value.Harnesses, want)
+	}
+}
+
+// A former spelling is written down under the name the harness has now, and counts as a repeat of
+// it, so settings built from an old answer never carry the old name forward.
+func TestNewSettingsWritesAFormerHarnessNameAsTheCurrentOne(t *testing.T) {
+	value, err := NewSettings(settings.TrackerBeads,
+		[]string{"claude-code", "antigravity", harness.Claude},
+		mo.None[string](), mo.None[int](), ReviewSettings{})
+	if err != nil {
+		t.Fatalf("NewSettings: %v", err)
+	}
+
+	if want := []string{harness.Agy, harness.Claude}; !slices.Equal(value.Harnesses, want) {
 		t.Errorf("Harnesses = %q, want %q", value.Harnesses, want)
 	}
 }
@@ -112,7 +127,7 @@ func TestNewSettingsRejects(t *testing.T) {
 		{
 			name:      "a harness codefall cannot set up",
 			tracker:   settings.TrackerBeads,
-			harnesses: []string{harness.ClaudeCode, "cursor"},
+			harnesses: []string{harness.Claude, "cursor"},
 			repo:      mo.None[string](),
 			project:   mo.None[int](),
 			want:      `harness "cursor" is not supported yet`,

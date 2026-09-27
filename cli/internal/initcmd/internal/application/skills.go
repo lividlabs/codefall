@@ -45,7 +45,8 @@ type Installation struct {
 
 // Installed is the manifest through the use-case boundary, so presentation can compare it with the
 // binary's own tag without knowing the manifest's path. A manifest that records no usable version at
-// all reads the same as no manifest (ADR-GO-03).
+// all reads the same as no manifest (ADR-GO-03). An entry under a harness's old spelling is reported
+// under the name the harness has now, which is the name the gate holds it against.
 func (i *Initialize) Installed(dir string) (mo.Option[Installation], error) {
 	recorded, read, err := i.recordedManifest(dir)
 	if err != nil {
@@ -56,7 +57,9 @@ func (i *Initialize) Installed(dir string) (mo.Option[Installation], error) {
 		return mo.None[Installation](), nil
 	}
 
-	versions := recorded.Versions()
+	current, _ := recorded.Current()
+
+	versions := current.Versions()
 	if len(versions) == 0 {
 		return mo.None[Installation](), nil
 	}
@@ -72,10 +75,14 @@ func (i *Initialize) Installed(dir string) (mo.Option[Installation], error) {
 // nothing to another harness's install and has no business erasing the record of it. The .codefall/
 // entry is replaced rather than merged, because every run writes that directory whole.
 func (i *Initialize) writeManifest(dir, version string, written installed) error {
-	recorded, _, err := i.recordedManifest(dir)
+	previous, _, err := i.recordedManifest(dir)
 	if err != nil {
 		return err
 	}
+
+	// The settings step has already moved any entry under an old spelling; this keeps the record
+	// current whatever the file held by the time the run reached it.
+	recorded, _ := previous.Current()
 
 	if recorded.Harnesses == nil {
 		recorded.Harnesses = map[string]manifest.Install{}

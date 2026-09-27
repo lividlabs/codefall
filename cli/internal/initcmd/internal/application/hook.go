@@ -49,10 +49,10 @@ type hookSpec struct {
 // rather than errored: the run reports what it did not need to do. Adding a harness that reads one
 // of these formats is one row; adding one that needs a new treatment is a third value of hookFormat.
 var hookSpecs = map[string]hookSpec{
-	harness.ClaudeCode:  {source: "hooks/claude/hooks.json", dest: ".claude/settings.json", format: formatMerge},
-	harness.Codex:       {source: "hooks/codex/hooks.json", dest: ".codex/hooks.json", format: formatMerge},
-	harness.Antigravity: {source: "hooks/antigravity/hooks.json", dest: ".agents/hooks.json", format: formatMerge},
-	harness.OpenCode:    {source: "hooks/opencode/codefall.js", dest: ".opencode/plugins/codefall.js", format: formatCopy},
+	harness.Claude:   {source: "hooks/claude/hooks.json", dest: ".claude/settings.json", format: formatMerge},
+	harness.Codex:    {source: "hooks/codex/hooks.json", dest: ".codex/hooks.json", format: formatMerge},
+	harness.Agy:      {source: "hooks/agy/hooks.json", dest: ".agents/hooks.json", format: formatMerge},
+	harness.OpenCode: {source: "hooks/opencode/codefall.js", dest: ".opencode/plugins/codefall.js", format: formatCopy},
 }
 
 // hook is the fourth step of a run: it takes the harness's entry in hookSpecs and lands it. The
