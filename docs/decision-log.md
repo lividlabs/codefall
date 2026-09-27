@@ -1526,6 +1526,25 @@ Decided at scaffold, 2026-08-16.
   install is still not restored, since that is the extension copy's work; `doctor` reports it with
   the same remedy.
 
+- **Personas: the skills read `.codefall/user.json`, and `design` parks what the person cannot
+  settle, 2026-09-27.** Every verb's step 1 now reads the `persona=` preflight line (or the file's
+  field, for a verb that runs no preflight) and, for any value but `engineer`, follows that persona's
+  section in one shared file, `extensions/shared/personas.md`, which no skill restates. `engineer`
+  changes nothing. `product-manager` changes register (product vocabulary, no paths in prose, the
+  next-action line unchanged), gives the interviews the room, has the engineering verbs ask before
+  running, and redirects `design`'s deferral: a technical judgment the person declines is parked in a
+  new conditional section, **Decisions needed**, with the options, their costs, the affected
+  requirement, whether an ADR is owed, and any consult's analysis; such a design is `Draft`, creates
+  no beads, and hands off to an engineer's run, whose Promote mode settles the entries and then
+  creates the graph. No ADR is written under the persona. Workers never see it. ADR-011 records
+  the decision. Seen and not taken: refusing `design` outright under the persona (it throws away
+  the tier, the task cut, and the criteria a product manager can confirm); letting the run decide
+  and record a risk (a hard-to-reverse choice confirmed by nobody who weighed it); a persona block
+  in each skill (a dozen files to revise, at token budgets already spent); a persona in
+  `settings.json` (one person's choice imposed on the team); and a persona in each harness's own
+  config (five formats). Design, implement, specify, and scaffold each lost restated second
+  sentences from their Rules and one duplicated paragraph to stay under the token guideline.
+
 ## Open
 
 - **UI composition.** Half settled by **Shared modules, 2026-08-27** above: the theme, the styles,
