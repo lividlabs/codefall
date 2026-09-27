@@ -1328,6 +1328,23 @@ Decided at scaffold, 2026-08-16.
   when every harness tells its agent what it is; and `harnessAgents` or a nesting under
   `harnesses` for the override, where `harnesses` already means what the project is set up for.
 
+- **One shared script runs a configured agent, 2026-09-26.** `review-via.sh` moved out of the
+  review skill to `.codefall/shared/run-agent.sh` and takes an agent name from `settings.json`'s
+  `agents` list, or the raw `harness[:model]` form `via=` has always taken, a configured name
+  winning when the two collide. It runs one entry and never walks an order: the walk is the
+  verb's, stated once in `running-agents.md` beside it, so the script needs no knowledge of which
+  use is calling. Three decisions ADR-009 left to the script. Its exit codes are normalised into
+  the three outcomes a walk needs — `70` the entry is `current` and the caller runs its own
+  subagent, `64` and `69` not runnable here, `73`, `75`, and `76` ran and failed — rather than
+  passing a harness's own exit code through, which collided with the script's. An authentication
+  failure counts as ran-and-failed, not as not-runnable, because no harness reports it before the
+  prompt is sent and both outcomes advance the walk. And the procedure file is `running-agents.md`
+  rather than `agents.md`: macOS resolves `agents.md` and `AGENTS.md` to the same file, so a shared
+  file of that name would have answered every `AGENTS.md` reference in the directory beside it, and
+  the skill-health check found exactly that. `agy` gained a headless runner, verified by hand with
+  `--print` in `--mode plan`; its `--json-schema` flag was not tried against the findings schema, so
+  like Muse it reads the schema from the prompt.
+
 ## Open
 
 - **UI composition.** Half settled by **Shared modules, 2026-08-27** above: the theme, the styles,

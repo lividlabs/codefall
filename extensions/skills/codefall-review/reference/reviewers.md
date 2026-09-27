@@ -58,16 +58,17 @@ Each is prompted from `../reviewer-prompt.md`, rendered by substituting `{{TARGE
 ## Another harness
 
 ```
-../scripts/review-via.sh [--model <model>] <harness> <prompt-file> <schema-file> <out-file>
+../../../../.codefall/shared/run-agent.sh <harness>[:<model>] <prompt-file> <schema-file> <out-file>
 ```
 
 Runs the harness's headless read-only mode in the repository, so the reviewer reads the files
-itself. Leaving `--model` out takes the harness's own default — which is what `via=codex` with no
+itself. Leaving the model off takes the harness's own default — which is what `via=codex` with no
 model means. The prompt file is `../reviewer-prompt.md` rendered with every lens in scope. Codex and
 Claude Code also take the schema as a flag — `--output-schema` and `--json-schema` — which makes
 their output conform by construction. Muse has such a flag and the script does not pass it: its
 validator rejects the schema's `if`/`then` clause, so Muse reads the schema from the prompt like
-OpenCode and Gemini.
+OpenCode, Gemini, and agy. The script's header holds its exit codes: `0` answered, `69` not on
+PATH, `73`, `75`, and `76` ran and failed, `70` the agent is this harness's own subagent.
 
 - The external reviewer runs read-only. It proposes; it never edits.
 - A failure — missing CLI, auth error, timeout, non-zero exit — is reported with the harness name

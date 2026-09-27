@@ -25,8 +25,8 @@ new review, with its own file.
 **The reviewer and the fixer are different contexts.** The review runs in a subagent or another
 harness; the triage and the fixes happen in this session.
 
-Paths that start with `reference/`, `scripts/`, or `../` are relative to this skill's directory, not
-the user's project. A path through `../../../.codefall/` is the one that leaves the skills
+Paths that start with `reference/` or `../` are relative to this skill's directory, not the user's
+project. A path through `../../../.codefall/` is the one that leaves the skills
 directory: it names a file `codefall init` installed in the project's own `.codefall/`.
 
 ## Files beside this one
@@ -43,7 +43,8 @@ Read each when its step says to; none is loaded up front.
   an open pull request.
 - `reviewer-prompt.md` and `findings.schema.json` — the prompt each reviewer is rendered from and
   the shape every reviewer returns.
-- `scripts/review-via.sh` — runs another harness read-only.
+- `../../../.codefall/shared/run-agent.sh` — runs another harness read-only. Read
+  `../../../.codefall/shared/running-agents.md`, the shared procedure around it, at step 3 with a `via=`.
 
 ## Targets
 
@@ -269,7 +270,7 @@ Follow `../../../.codefall/shared/customizations.md` for this verb.
    `reference/lenses.md`, present [the confirmation](#the-confirmation), and wait.
 2. **Read.** Everything in [What gets read](#what-gets-read).
 3. **Review.** Read `reference/reviewers.md`. By the reviewer the run chose — subagents in
-   parallel, this session pass by pass, or one `scripts/review-via.sh` call. Every candidate finding
+   parallel, this session pass by pass, or one `../../../.codefall/shared/run-agent.sh` call. Every candidate finding
    checked against [Calibration](#calibration) before it becomes one.
 4. **Write.** Read `reference/findings-file.md`. Merge the JSON and write the findings files, every
    finding `open`.
