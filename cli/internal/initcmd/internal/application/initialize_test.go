@@ -44,9 +44,10 @@ const (
 // --- fakes -------------------------------------------------------------------------------------
 
 type fakeFileSystem struct {
-	files map[string][]byte
-	errs  map[string]error
-	made  []string
+	files   map[string][]byte
+	errs    map[string]error
+	made    []string
+	removed []string
 }
 
 func newFakeFileSystem() *fakeFileSystem {
@@ -87,6 +88,34 @@ func (f *fakeFileSystem) WriteFile(path string, data []byte) error {
 	f.files[path] = data
 
 	return nil
+}
+
+// Remove on the fake forgets a file, or a directory a test marked as one, and records the order it
+// was asked in. A path that is not there is success, as the real one has it.
+func (f *fakeFileSystem) Remove(path string) error {
+	if err, ok := f.errs["remove "+path]; ok {
+		return err
+	}
+
+	delete(f.files, path)
+	f.removed = append(f.removed, path)
+
+	return nil
+}
+
+// DirIsEmpty on the fake reads the map: a directory is empty when no file sits under it.
+func (f *fakeFileSystem) DirIsEmpty(path string) (bool, error) {
+	if err, ok := f.errs["readdir "+path]; ok {
+		return false, err
+	}
+
+	for file := range f.files {
+		if strings.HasPrefix(file, path+"/") {
+			return false, nil
+		}
+	}
+
+	return true, nil
 }
 
 type runCall struct {
@@ -233,13 +262,37 @@ func (f *fakeExtensionSource) Read(path string) ([]byte, error) {
 	return data, nil
 }
 
+// RenamedSkill on the fake knows the one rename the cleanup tests need.
+func (f *fakeExtensionSource) RenamedSkill(former string) mo.Option[string] {
+	if former == "graft" {
+		return mo.Some("codefall-graft")
+	}
+
+	return mo.None[string]()
+}
+
+// fakeChangeLog answers with whatever releases a test seeded, or an error.
+type fakeChangeLog struct {
+	releases []BreakingRelease
+	err      error
+}
+
+func (c *fakeChangeLog) BreakingChanges() ([]BreakingRelease, error) {
+	return c.releases, c.err
+}
+
+// noChanges is the changelog most tests run with: nothing recorded, because they are not about it.
+func noChanges() *fakeChangeLog {
+	return &fakeChangeLog{}
+}
+
 // --- the run -----------------------------------------------------------------------------------
 
 func TestRunWritesSettingsAndReportsWhatItWrote(t *testing.T) {
 	files := newFakeFileSystem()
 	observer := &recordingObserver{}
 
-	report, err := NewInitialize(files, toolsInstalled(), newFakeExtensionSource()).Run(
+	report, err := NewInitialize(files, toolsInstalled(), newFakeExtensionSource(), noChanges()).Run(
 		t.Context(),
 		Request{
 			Dir:           workingDir,
@@ -294,7 +347,7 @@ func TestRunWritesSettingsAndReportsWhatItWrote(t *testing.T) {
 func TestRunEncodesGitHubSettings(t *testing.T) {
 	files := newFakeFileSystem()
 
-	if _, err := NewInitialize(files, toolsInstalled(), newFakeExtensionSource()).Run(
+	if _, err := NewInitialize(files, toolsInstalled(), newFakeExtensionSource(), noChanges()).Run(
 		t.Context(),
 		Request{
 			Dir:           workingDir,
@@ -421,7 +474,7 @@ func TestRunEncodesTheOptionalFieldsTheWayTheSchemaExpects(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			files := newFakeFileSystem()
 
-			if _, err := NewInitialize(files, toolsInstalled(), newFakeExtensionSource()).Run(t.Context(), tc.request, nil); err != nil {
+			if _, err := NewInitialize(files, toolsInstalled(), newFakeExtensionSource(), noChanges()).Run(t.Context(), tc.request, nil); err != nil {
 				t.Fatalf("Run: %v", err)
 			}
 
@@ -441,7 +494,7 @@ func TestRunSkipsSettingsThatAreAlreadyThere(t *testing.T) {
 	files := newFakeFileSystem()
 	files.files[settingsFull] = []byte("{}\n")
 
-	report, err := NewInitialize(files, toolsInstalled(), newFakeExtensionSource()).Run(
+	report, err := NewInitialize(files, toolsInstalled(), newFakeExtensionSource(), noChanges()).Run(
 		t.Context(),
 		Request{Dir: workingDir, Tracker: settings.TrackerBeads, Harnesses: []string{harness.Claude}},
 		nil,
@@ -513,7 +566,7 @@ func TestRunStopsOnAStepThatFails(t *testing.T) {
 				request.IssuesRepo = mo.Some("owner/name")
 			}
 
-			report, err := NewInitialize(files, toolsInstalled(), newFakeExtensionSource()).Run(t.Context(), request, observer)
+			report, err := NewInitialize(files, toolsInstalled(), newFakeExtensionSource(), noChanges()).Run(t.Context(), request, observer)
 			if err == nil {
 				t.Fatalf("Run = %+v, want an error", report)
 			}
@@ -542,7 +595,7 @@ func TestRunReportsAnUnreadableSettingsFile(t *testing.T) {
 	files := newFakeFileSystem()
 	files.errs[settingsFull] = errors.New("permission denied")
 
-	if _, err := NewInitialize(files, toolsInstalled(), newFakeExtensionSource()).Run(
+	if _, err := NewInitialize(files, toolsInstalled(), newFakeExtensionSource(), noChanges()).Run(
 		t.Context(),
 		Request{Dir: workingDir, Tracker: settings.TrackerBeads, Harnesses: []string{harness.Claude}},
 		nil,
@@ -555,7 +608,7 @@ func TestRunStopsOnACancelledContext(t *testing.T) {
 	ctx, cancel := context.WithCancel(t.Context())
 	cancel()
 
-	_, err := NewInitialize(newFakeFileSystem(), toolsInstalled(), newFakeExtensionSource()).Run(
+	_, err := NewInitialize(newFakeFileSystem(), toolsInstalled(), newFakeExtensionSource(), noChanges()).Run(
 		ctx,
 		Request{Dir: workingDir, Tracker: settings.TrackerBeads, Harnesses: []string{harness.Claude}},
 		nil,
@@ -570,21 +623,21 @@ func TestRunStopsOnACancelledContext(t *testing.T) {
 func TestSettingsExist(t *testing.T) {
 	files := newFakeFileSystem()
 
-	exists, err := NewInitialize(files, newFakeCommandRunner(), newFakeExtensionSource()).SettingsExist(workingDir)
+	exists, err := NewInitialize(files, newFakeCommandRunner(), newFakeExtensionSource(), noChanges()).SettingsExist(workingDir)
 	if err != nil || exists {
 		t.Errorf("SettingsExist of an empty directory = %v, %v, want false, nil", exists, err)
 	}
 
 	files.files[settingsFull] = []byte("{}")
 
-	exists, err = NewInitialize(files, newFakeCommandRunner(), newFakeExtensionSource()).SettingsExist(workingDir)
+	exists, err = NewInitialize(files, newFakeCommandRunner(), newFakeExtensionSource(), noChanges()).SettingsExist(workingDir)
 	if err != nil || !exists {
 		t.Errorf("SettingsExist with a settings file = %v, %v, want true, nil", exists, err)
 	}
 
 	files.errs[settingsFull] = errors.New("permission denied")
 
-	if _, err := NewInitialize(files, newFakeCommandRunner(), newFakeExtensionSource()).SettingsExist(workingDir); err == nil {
+	if _, err := NewInitialize(files, newFakeCommandRunner(), newFakeExtensionSource(), noChanges()).SettingsExist(workingDir); err == nil {
 		t.Error("SettingsExist of an unreadable file = nil error, want an error")
 	}
 }
@@ -615,7 +668,7 @@ func TestSuggestIssuesRepo(t *testing.T) {
 		runner := withGit(withGH(), "git@github.com:lividlabs/stale.git\n")
 		runner.runs[ghRepoView] = CommandResult{Stdout: "lividlabs/codefall-cli\n"}
 
-		got := NewInitialize(newFakeFileSystem(), runner, newFakeExtensionSource()).SuggestIssuesRepo(t.Context(), workingDir)
+		got := NewInitialize(newFakeFileSystem(), runner, newFakeExtensionSource(), noChanges()).SuggestIssuesRepo(t.Context(), workingDir)
 		if repo, ok := got.Get(); !ok || repo != "lividlabs/codefall-cli" {
 			t.Errorf("SuggestIssuesRepo = %v, want Some(%q)", got, "lividlabs/codefall-cli")
 		}
@@ -647,7 +700,7 @@ func TestSuggestIssuesRepo(t *testing.T) {
 		},
 	} {
 		t.Run("the origin remote when "+tc.name, func(t *testing.T) {
-			got := NewInitialize(newFakeFileSystem(), tc.runner(), newFakeExtensionSource()).SuggestIssuesRepo(t.Context(), workingDir)
+			got := NewInitialize(newFakeFileSystem(), tc.runner(), newFakeExtensionSource(), noChanges()).SuggestIssuesRepo(t.Context(), workingDir)
 			if repo, ok := got.Get(); !ok || repo != "lividlabs/codefall-cli" {
 				t.Errorf("SuggestIssuesRepo = %v, want Some(%q)", got, "lividlabs/codefall-cli")
 			}
@@ -701,7 +754,7 @@ func TestSuggestIssuesRepo(t *testing.T) {
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			got := NewInitialize(newFakeFileSystem(), tc.runner(), newFakeExtensionSource()).SuggestIssuesRepo(t.Context(), workingDir)
+			got := NewInitialize(newFakeFileSystem(), tc.runner(), newFakeExtensionSource(), noChanges()).SuggestIssuesRepo(t.Context(), workingDir)
 			if got.IsPresent() {
 				t.Errorf("SuggestIssuesRepo = %v, want None", got)
 			}

@@ -18,6 +18,7 @@ import (
 	"github.com/samber/do/v2"
 	"github.com/spf13/cobra"
 
+	changelog "github.com/lividlabs/codefall-cli"
 	"github.com/lividlabs/codefall-cli/cli/internal/initcmd/internal/application"
 	"github.com/lividlabs/codefall-cli/cli/internal/initcmd/internal/infrastructure"
 	"github.com/lividlabs/codefall-cli/cli/internal/initcmd/internal/presentation"
@@ -39,7 +40,11 @@ func Register(injector do.Injector) {
 	})
 
 	do.Provide(injector, func(do.Injector) (application.ExtensionSource, error) {
-		return infrastructure.NewEmbeddedExtensionFetcher(extensions.Files()), nil
+		return infrastructure.NewEmbeddedExtensionFetcher(extensions.Files(), extensions.SkillRenames()), nil
+	})
+
+	do.Provide(injector, func(do.Injector) (application.ChangeLog, error) {
+		return infrastructure.NewChangeLogSource(changelog.Text()), nil
 	})
 
 	do.Provide(injector, func(i do.Injector) (presentation.InitializeUseCase, error) {
@@ -47,6 +52,7 @@ func Register(injector do.Injector) {
 			do.MustInvoke[application.FileSystem](i),
 			do.MustInvoke[application.CommandRunner](i),
 			do.MustInvoke[application.ExtensionSource](i),
+			do.MustInvoke[application.ChangeLog](i),
 		), nil
 	})
 }

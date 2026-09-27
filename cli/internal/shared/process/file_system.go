@@ -4,6 +4,7 @@ import (
 	"errors"
 	"io/fs"
 	"os"
+	"syscall"
 )
 
 // The permissions codefall creates things with. A repository's configuration is not a secret and is
@@ -101,4 +102,36 @@ func (*FileSystem) MakeExecutable(path string) error {
 	}
 
 	return os.Chmod(path, executable)
+}
+
+// Remove deletes one file, or one empty directory. A path that is not there is success: the caller
+// asked for it to be gone, and it is.
+func (*FileSystem) Remove(path string) error {
+	err := os.Remove(path)
+	if err != nil && errors.Is(err, fs.ErrNotExist) {
+		return nil
+	}
+
+	return err
+}
+
+// DirIsEmpty reports whether path is a directory holding nothing. A path that is not there, or that
+// is a file, is not an empty directory, and neither is an error — that is the answer the caller
+// asked for.
+func (*FileSystem) DirIsEmpty(path string) (bool, error) {
+	entries, err := os.ReadDir(path)
+	if err != nil {
+		if errors.Is(err, fs.ErrNotExist) {
+			return false, nil
+		}
+
+		var pathErr *fs.PathError
+		if errors.As(err, &pathErr) && errors.Is(pathErr.Err, syscall.ENOTDIR) {
+			return false, nil
+		}
+
+		return false, err
+	}
+
+	return len(entries) == 0, nil
 }

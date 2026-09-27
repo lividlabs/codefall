@@ -16,6 +16,11 @@ type Step struct {
 // author's own commit rather than bd's — which is the same reason the last two steps come last:
 // the testing tree, .ignore, and .gitignore are the author's files to commit, not bd's.
 //
+// The cleanup step runs on an upgrade only, straight after the extension step: it compares what the
+// previous finished run recorded with what the extension step just wrote and removes what this
+// version no longer ships, so it has to follow the copy and precede the manifest (ADR-010). A first
+// run has no record to compare and does not perform it.
+//
 // The testing step is sixth, after the agents step and before the ignore step. It belongs beside the
 // agents step because the two write the same pair of documents under the same rule — an AGENTS.md
 // and the CLAUDE.md that points at it — and it has to come before the ignore step, which keeps the
@@ -23,6 +28,7 @@ type Step struct {
 var (
 	SettingsStep  = Step{ID: "settings", Title: "Writing .codefall/settings.json"}
 	ExtensionStep = Step{ID: "extension", Title: "Installing the codefall extension"}
+	CleanupStep   = Step{ID: "cleanup", Title: "Removing what this version no longer ships"}
 	BeadsStep     = Step{ID: "beads", Title: "Initializing Beads"}
 	HookStep      = Step{ID: "hook", Title: "Registering codefall's hooks"}
 	AgentsStep    = Step{ID: "agents", Title: "Writing codefall's sections to AGENTS.md"}

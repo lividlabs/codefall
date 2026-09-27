@@ -6,7 +6,9 @@ reads this to recognise a rename as a rename — a project on 0.2.x holding
 paths and tags to ask git or GitHub for.
 
 **Maintenance rule:** any PR that renames, moves, or retires a template adds a row here, in the
-same PR. Without the row, graft sees a deletion plus an addition and reports nonsense.
+same PR. Without the row, graft sees a deletion plus an addition and reports nonsense. A PR that
+renames a skill adds its row to the table below and to the Go table in `extensions/renames.go`, which
+is what `codefall upgrade` reads to report the old directory it removes as a rename.
 
 ## Skill renames
 

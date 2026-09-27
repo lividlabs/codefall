@@ -76,8 +76,20 @@ skills, shared files, and hooks for the harnesses the settings record, replaces 
 wrote into `AGENTS.md`, rewrites a harness name still spelled the old way, and records the run in the
 manifest. It changes nothing it did not write, reports "already up to date" when there is nothing to
 do, and asks before moving the installed version unless `--yes` answers. `--harness` adds a harness
-the project did not choose at `init`. A project set up before the manifest existed runs `init` one
-more time, which writes the manifest, and uses `upgrade` from then on.
+the project did not choose at `init`, installs for it, and records it in the settings. A project set
+up before the manifest existed runs `init` one more time, which writes the manifest, and uses
+`upgrade` from then on.
+
+Two things happen on an upgrade that a rerun of `init` never did. Before a file changes, `upgrade`
+prints the breaking changes recorded in this repository's changelog between the version the manifest
+records and the binary's, release by release, and asks to continue; `--yes` continues past them, and a
+range with a development build at either end is reported as undeterminable rather than as empty.
+After the install, it removes what the previous run recorded writing that this one did not: a skill
+the binary no longer ships, or ships under a new name, comes out of every skills directory it
+installs for, with the directory it emptied, and the report names each one and says which were
+renames. It compares only the harnesses the settings name, only the files the manifest lists, and
+nothing outside the install directories; a manifest with no file lists gives it nothing to compare,
+and it says so.
 
 ```
 codefall upgrade
@@ -141,9 +153,10 @@ is declared, naming `codefall upgrade`; warns when no test runner is declared, n
 and fails when the directory the project declared is not there. Like every other category, it names
 the remedy and never runs it.
 
-Upgrading from a codefall before this layout: run `codefall upgrade`, then delete the old copies by
-hand. Codefall removes only what it can prove it owns, and those directories hold your own files
-beside codefall's — the pull request that landed the change lists what to delete.
+Upgrading from a codefall before this layout: run `codefall upgrade`. It removes the files the old
+install recorded that the new one does not write; a manifest from before file lists existed records
+none, and then the old copies are deleted by hand — the pull request that landed the change lists
+what to delete.
 
 ## CLI commands
 
@@ -151,7 +164,7 @@ beside codefall's — the pull request that landed the change lists what to dele
 | --- | --- |
 | `codefall create <dir>` | Makes the directory and its git repository, commits a README and a `.gitignore`, runs `init` there, and offers the push |
 | `codefall init` | Sets a directory up for codefall, once: settings, the extension for each harness, Beads, hooks, the `AGENTS.md` sections, the testing tree, and the manifest that records the run |
-| `codefall upgrade` | Brings an installed project level with the binary, for the harnesses the settings record, and touches nothing it did not write |
+| `codefall upgrade` | Brings an installed project level with the binary, for the harnesses the settings record: warns about the breaking changes in between, reinstalls, removes what it no longer ships, and touches nothing it did not write |
 | `codefall doctor` | Reports whether a project has what codefall needs, with a remedy per unmet check, and repairs nothing |
 
 [ADR-010](docs/adrs/ADR-010-upgrade.md) records why `init` runs once and `upgrade` is its own command.

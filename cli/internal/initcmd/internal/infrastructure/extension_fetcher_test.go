@@ -20,7 +20,7 @@ func TestEmbeddedExtensionFetcherCopiesTheTree(t *testing.T) {
 		"README.md":                                    &fstest.MapFile{Data: []byte("# extension\n")},
 		"docs/ROADMAP.md":                              &fstest.MapFile{Data: []byte("road")},
 	}
-	fetcher := NewEmbeddedExtensionFetcher(src)
+	fetcher := NewEmbeddedExtensionFetcher(src, nil)
 	dest := t.TempDir()
 
 	installed, err := fetcher.Fetch(context.Background(), dest, []string{"."}, nil)
@@ -49,7 +49,7 @@ func TestEmbeddedExtensionFetcherSkipsTheExcludedPrefixes(t *testing.T) {
 		},
 		"skills/x/SKILL.md": &fstest.MapFile{Data: []byte("---\nname: x\n---\n")},
 	}
-	fetcher := NewEmbeddedExtensionFetcher(src)
+	fetcher := NewEmbeddedExtensionFetcher(src, nil)
 	dest := t.TempDir()
 
 	installed, err := fetcher.Fetch(context.Background(), dest,
@@ -97,7 +97,7 @@ func TestEmbeddedExtensionFetcherCopiesOnlyTheNamedSubtrees(t *testing.T) {
 	}
 	dest := t.TempDir()
 
-	installed, err := NewEmbeddedExtensionFetcher(src).
+	installed, err := NewEmbeddedExtensionFetcher(src, nil).
 		Fetch(context.Background(), dest, []string{"hooks/shared", "shared"}, nil)
 	if err != nil {
 		t.Fatalf("Fetch: %v", err)
@@ -127,7 +127,7 @@ func TestEmbeddedExtensionFetcherExcludesAFileNameWhereverItSits(t *testing.T) {
 	}
 	dest := t.TempDir()
 
-	installed, err := NewEmbeddedExtensionFetcher(src).Fetch(context.Background(), dest,
+	installed, err := NewEmbeddedExtensionFetcher(src, nil).Fetch(context.Background(), dest,
 		[]string{"skills"}, []string{"skills/AGENTS.md", "NOTES.md"})
 	if err != nil {
 		t.Fatalf("Fetch: %v", err)
@@ -174,7 +174,7 @@ func TestEmbeddedExtensionFetcherHonoursTheContext(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
 
-	_, err := NewEmbeddedExtensionFetcher(fstest.MapFS{"one.txt": &fstest.MapFile{}}).
+	_, err := NewEmbeddedExtensionFetcher(fstest.MapFS{"one.txt": &fstest.MapFile{}}, nil).
 		Fetch(ctx, t.TempDir(), []string{"."}, nil)
 	if !errors.Is(err, context.Canceled) {
 		t.Errorf("Fetch err = %v, want context.Canceled", err)
@@ -191,7 +191,7 @@ func TestEmbeddedExtensionFetcherMakesCopiedScriptsRunnable(t *testing.T) {
 		"shared/preflight.sh":                          &fstest.MapFile{Data: []byte("#!/bin/bash\n")},
 		"skills/x/SKILL.md":                            &fstest.MapFile{Data: []byte("---\nname: x\n---\n")},
 	}
-	fetcher := NewEmbeddedExtensionFetcher(src)
+	fetcher := NewEmbeddedExtensionFetcher(src, nil)
 	dest := t.TempDir()
 
 	if _, err := fetcher.Fetch(context.Background(), dest, []string{"."}, nil); err != nil {

@@ -1420,6 +1420,28 @@ Decided at scaffold, 2026-08-16.
   reading the manifest, which is left for later since upgrade sends a manifest-less project on to
   init itself.
 
+- **Upgrade removes what it no longer ships and warns about breaking changes, 2026-09-27.** The two
+  features ADR-010 decided and did not implement. After the extension step, a cleanup step compares
+  the file lists the previous manifest recorded, for the harnesses this run installs for and for
+  `.codefall/`, with what the run wrote, removes every listed path the run did not write along with
+  the directories it empties, and reports each: a skill directory the run wrote nothing into is named
+  once, as a rename when the table in `extensions/renames.go` knows the name and as no longer
+  shipped otherwise. Nothing outside the install directories is touched whatever a hand-edited
+  manifest lists, nothing another entry still names is touched, and an entry with no file list or no
+  record removes nothing and says so. Before any step runs, `upgrade` prints the `⚠ BREAKING
+  CHANGES` bullets of every release later than the earliest version the manifest records and no
+  later than the binary's, parsed from the `CHANGELOG.md` a root `changelog.go` embeds, and the
+  confirmation names the count; `--yes` continues past them, and a development build at either end
+  makes the range undeterminable, which is said in one line. `--harness` on upgrade now adds: the
+  named harness is installed for alongside the settings' own and spliced into their list, because
+  ADR-010 says it adds and the flag said so while replacing the list for one run and recording
+  nothing. `doctor` names `init` when there is no manifest and `upgrade` when there is. A pure
+  `version` shared module holds the three-number release comparison. Seen and not taken: parsing
+  the changelog into a Go table at build time, which is the second source ADR-010 ruled out with
+  extra steps; gating removal behind `--yes`, when the breaking-change question is where a person
+  stops a run; and removing files for a harness the settings have dropped, which is doctor's
+  left-over warning and the reader's judgement, since four harnesses share one directory.
+
 ## Open
 
 - **UI composition.** Half settled by **Shared modules, 2026-08-27** above: the theme, the styles,

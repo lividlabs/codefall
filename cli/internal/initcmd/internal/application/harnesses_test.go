@@ -24,7 +24,7 @@ func requestFor(names ...string) Request {
 func runFor(t *testing.T, files *fakeFileSystem, source ExtensionSource, request Request) domain.Report {
 	t.Helper()
 
-	report, err := NewInitialize(files, toolsInstalled(), source).Run(t.Context(), request, nil)
+	report, err := NewInitialize(files, toolsInstalled(), source, noChanges()).Run(t.Context(), request, nil)
 	if err != nil {
 		t.Fatalf("Run: %v", err)
 	}
@@ -260,7 +260,7 @@ func TestTheClaudePointerFollowsWhetherClaudeCodeIsAmongThem(t *testing.T) {
 func TestPreflightRefusesARunForNoHarness(t *testing.T) {
 	files := newFakeFileSystem()
 
-	_, err := NewInitialize(files, toolsInstalled(), newFakeExtensionSource()).Run(
+	_, err := NewInitialize(files, toolsInstalled(), newFakeExtensionSource(), noChanges()).Run(
 		t.Context(), requestFor(), nil)
 
 	if want := "no harness to set up"; err == nil || err.Error() != want {

@@ -24,7 +24,7 @@ func TestRunChecksItsToolsBeforeTheFirstStep(t *testing.T) {
 	files := newFakeFileSystem()
 	observer := &recordingObserver{}
 
-	_, err := NewInitialize(files, newFakeCommandRunner(), newFakeExtensionSource()).Run(t.Context(), beadsRequest(), observer)
+	_, err := NewInitialize(files, newFakeCommandRunner(), newFakeExtensionSource(), noChanges()).Run(t.Context(), beadsRequest(), observer)
 
 	want := "bd is not on PATH (brew install beads); " +
 		"git is not on PATH"
@@ -48,7 +48,7 @@ func TestPreflightDoesNotComplainTwiceAboutOneMissingTool(t *testing.T) {
 	runner := uninitialized()
 	delete(runner.paths, gitCommand)
 
-	_, err := NewInitialize(settled(""), runner, newFakeExtensionSource()).Run(t.Context(), beadsRequest(), nil)
+	_, err := NewInitialize(settled(""), runner, newFakeExtensionSource(), noChanges()).Run(t.Context(), beadsRequest(), nil)
 
 	want := "git is not on PATH"
 	if err == nil || err.Error() != want {
@@ -89,7 +89,7 @@ func TestPreflightRefusesADirectoryThatIsNotAGitWorkTree(t *testing.T) {
 
 			files := newFakeFileSystem()
 
-			_, err := NewInitialize(files, runner, newFakeExtensionSource()).Run(t.Context(), beadsRequest(), nil)
+			_, err := NewInitialize(files, runner, newFakeExtensionSource(), noChanges()).Run(t.Context(), beadsRequest(), nil)
 
 			want := "not a git work tree (bd init would create a repository here; run git init first)"
 			if err == nil || err.Error() != want {
@@ -117,7 +117,7 @@ func TestPreflightRefusesAStagedIndexWhenBeadsIsNotInitializedYet(t *testing.T) 
 
 	files := newFakeFileSystem()
 
-	_, err := NewInitialize(files, runner, newFakeExtensionSource()).Run(t.Context(), beadsRequest(), nil)
+	_, err := NewInitialize(files, runner, newFakeExtensionSource(), noChanges()).Run(t.Context(), beadsRequest(), nil)
 
 	want := "the git index has staged changes; bd init commits the whole index, so commit or unstage them first"
 	if err == nil || err.Error() != want {
@@ -169,7 +169,7 @@ func TestPreflightRefusesUncommittedChangesToWhatBeadsWouldCommit(t *testing.T) 
 
 			files := newFakeFileSystem()
 
-			_, err := NewInitialize(files, runner, newFakeExtensionSource()).Run(t.Context(), beadsRequest(), nil)
+			_, err := NewInitialize(files, runner, newFakeExtensionSource(), noChanges()).Run(t.Context(), beadsRequest(), nil)
 			if err == nil || !strings.Contains(err.Error(), tc.want) {
 				t.Errorf("Run error = %v, want it to say %q", err, tc.want)
 			}
@@ -185,7 +185,7 @@ func TestPreflightRefusesUncommittedChangesToWhatBeadsWouldCommit(t *testing.T) 
 func TestPreflightPassesACleanWorkTree(t *testing.T) {
 	runner := uninitialized()
 
-	if _, err := NewInitialize(settled(""), runner, newFakeExtensionSource()).Run(t.Context(), beadsRequest(), nil); err != nil {
+	if _, err := NewInitialize(settled(""), runner, newFakeExtensionSource(), noChanges()).Run(t.Context(), beadsRequest(), nil); err != nil {
 		t.Fatalf("Run: %v", err)
 	}
 
@@ -201,7 +201,7 @@ func TestPreflightIgnoresWhatIsWaitingWhenBeadsIsAlreadyInitialized(t *testing.T
 	runner.runs[gitStaged] = CommandResult{ExitCode: 1}
 	runner.runs[gitStatus] = CommandResult{Stdout: " M AGENTS.md\n"}
 
-	if _, err := NewInitialize(settled(""), runner, newFakeExtensionSource()).Run(t.Context(), beadsRequest(), nil); err != nil {
+	if _, err := NewInitialize(settled(""), runner, newFakeExtensionSource(), noChanges()).Run(t.Context(), beadsRequest(), nil); err != nil {
 		t.Fatalf("Run: %v", err)
 	}
 
@@ -216,7 +216,7 @@ func TestPreflightKeepsTheErrorsItJoined(t *testing.T) {
 	runner := uninitialized()
 	runner.errs[gitStaged] = context.Canceled
 
-	_, err := NewInitialize(newFakeFileSystem(), runner, newFakeExtensionSource()).Run(t.Context(), beadsRequest(), nil)
+	_, err := NewInitialize(newFakeFileSystem(), runner, newFakeExtensionSource(), noChanges()).Run(t.Context(), beadsRequest(), nil)
 	if !errors.Is(err, context.Canceled) {
 		t.Errorf("Run error = %v, want it to unwrap to context.Canceled", err)
 	}
@@ -228,7 +228,7 @@ func TestPreflightReportsGitFailingForItsOwnReasons(t *testing.T) {
 	runner := uninitialized()
 	runner.runs[gitStaged] = CommandResult{ExitCode: 128, Stderr: "fatal: bad object HEAD\nsee git-diff(1)\n"}
 
-	_, err := NewInitialize(newFakeFileSystem(), runner, newFakeExtensionSource()).Run(t.Context(), beadsRequest(), nil)
+	_, err := NewInitialize(newFakeFileSystem(), runner, newFakeExtensionSource(), noChanges()).Run(t.Context(), beadsRequest(), nil)
 
 	want := "git diff --cached --quiet exited 128: fatal: bad object HEAD"
 	if err == nil || err.Error() != want {

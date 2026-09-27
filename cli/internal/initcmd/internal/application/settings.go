@@ -118,10 +118,11 @@ func (i *Initialize) DeclaredTestDir(dir string) (mo.Option[string], error) {
 //
 // Settings that are already there are left alone: the run is an upgrade, or an init finishing a
 // project that was set up before the manifest existed, and the steps after this one still have work
-// to do either way. The one edit it makes to them is the harness names: an old spelling in the
-// settings or the manifest is rewritten to the name the harness has now, and nothing else in either
-// file changes. Changing an answer the settings already record is a hand edit, until a command
-// exists for it.
+// to do either way. Two edits are made to them. An old spelling of a harness name in the settings or
+// the manifest is rewritten to the name the harness has now, and a harness this run installs for
+// that the settings do not name is added to their list, which is what `upgrade --harness` asks for.
+// Nothing else in either file changes: changing an answer the settings already record is a hand
+// edit, until a command exists for it.
 func (i *Initialize) settings(_ context.Context, request Request) (domain.StepResult, error) {
 	exists, err := i.SettingsExist(request.Dir)
 	if err != nil {
@@ -134,8 +135,23 @@ func (i *Initialize) settings(_ context.Context, request Request) (domain.StepRe
 			return domain.StepResult{}, err
 		}
 
+		added, err := i.recordHarnesses(request.Dir, chosen(request))
+		if err != nil {
+			return domain.StepResult{}, err
+		}
+
+		var edits []string
+
 		if renamed != "" {
-			return domain.SettingsStep.Done(renamed), nil
+			edits = append(edits, renamed)
+		}
+
+		if len(added) > 0 {
+			edits = append(edits, "added harness "+sentenceList(added)+" to "+settingsName)
+		}
+
+		if len(edits) > 0 {
+			return domain.SettingsStep.Done(strings.Join(edits, "; ")), nil
 		}
 
 		return domain.SettingsStep.Skipped(settingsName + " already exists"), nil

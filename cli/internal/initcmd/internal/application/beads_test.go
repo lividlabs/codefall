@@ -27,7 +27,7 @@ func beadsResult(t *testing.T, report domain.Report) domain.StepResult {
 func TestBeadsStepSkipsARepositoryThatAlreadyHasBeads(t *testing.T) {
 	runner := toolsInstalled()
 
-	report, err := NewInitialize(settled("{}"), runner, newFakeExtensionSource()).Run(t.Context(), beadsRequest(), nil)
+	report, err := NewInitialize(settled("{}"), runner, newFakeExtensionSource(), noChanges()).Run(t.Context(), beadsRequest(), nil)
 	if err != nil {
 		t.Fatalf("Run: %v", err)
 	}
@@ -59,7 +59,7 @@ func TestBeadsStepReportsWhenTheInteractionLogDefaultCouldNotBeWritten(t *testin
 	runner.runs[beadsInit] = CommandResult{Stdout: "bd initialized successfully!\n"}
 	runner.runs[beadsAuditOff] = CommandResult{ExitCode: 1, Stderr: "Error: unknown key\n"}
 
-	report, err := NewInitialize(settled("{}"), runner, newFakeExtensionSource()).Run(t.Context(), beadsRequest(), nil)
+	report, err := NewInitialize(settled("{}"), runner, newFakeExtensionSource(), noChanges()).Run(t.Context(), beadsRequest(), nil)
 	if err != nil {
 		t.Fatalf("Run: %v", err)
 	}
@@ -105,7 +105,7 @@ func TestBeadsStepInitializesBeads(t *testing.T) {
 			runner := uninitialized()
 			runner.runs[beadsInit] = tc.result
 
-			report, err := NewInitialize(settled("{}"), runner, newFakeExtensionSource()).Run(t.Context(), beadsRequest(), nil)
+			report, err := NewInitialize(settled("{}"), runner, newFakeExtensionSource(), noChanges()).Run(t.Context(), beadsRequest(), nil)
 			if err != nil {
 				t.Fatalf("Run: %v", err)
 			}
@@ -148,7 +148,7 @@ func TestBeadsStepStopsTheRunWhenBeadsRefuses(t *testing.T) {
 	files := settled("{}")
 	observer := &recordingObserver{}
 
-	report, err := NewInitialize(files, runner, newFakeExtensionSource()).Run(t.Context(), beadsRequest(), observer)
+	report, err := NewInitialize(files, runner, newFakeExtensionSource(), noChanges()).Run(t.Context(), beadsRequest(), observer)
 	if err == nil {
 		t.Fatalf("Run = %+v, want an error", report)
 	}
@@ -178,7 +178,7 @@ func TestBeadsStepStopsTheRunWhenBeadsCannotBeStarted(t *testing.T) {
 	runner := uninitialized()
 	runner.errs[beadsInit] = errors.New("broken pipe")
 
-	_, err := NewInitialize(settled("{}"), runner, newFakeExtensionSource()).Run(t.Context(), beadsRequest(), nil)
+	_, err := NewInitialize(settled("{}"), runner, newFakeExtensionSource(), noChanges()).Run(t.Context(), beadsRequest(), nil)
 	if err == nil || !strings.Contains(err.Error(), "run bd init --non-interactive --skip-agents") {
 		t.Errorf("Run error = %v, want it to say the command could not be run", err)
 	}
@@ -193,7 +193,7 @@ func TestBeadsStepDoesNotStartASecondDatabaseBelowTheRoot(t *testing.T) {
 	request := beadsRequest()
 	request.Dir = filepath.Join(workingDir, "apps", "web")
 
-	report, err := NewInitialize(settled("{}"), runner, newFakeExtensionSource()).Run(t.Context(), request, nil)
+	report, err := NewInitialize(settled("{}"), runner, newFakeExtensionSource(), noChanges()).Run(t.Context(), request, nil)
 	if err != nil {
 		t.Fatalf("Run: %v", err)
 	}
@@ -243,7 +243,7 @@ func TestBeadsStepLeavesTheRepositoryGitHooksAloneBelowTheRoot(t *testing.T) {
 			request := beadsRequest()
 			request.Dir = filepath.Join(workingDir, filepath.FromSlash(tc.prefix))
 
-			report, err := NewInitialize(settled("{}"), runner, newFakeExtensionSource()).Run(t.Context(), request, nil)
+			report, err := NewInitialize(settled("{}"), runner, newFakeExtensionSource(), noChanges()).Run(t.Context(), request, nil)
 			if err != nil {
 				t.Fatalf("Run: %v", err)
 			}

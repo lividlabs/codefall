@@ -37,7 +37,7 @@ func sharedInstall(version string) manifest.Install {
 func TestSkillsStepCopiesTheEmbeddedTree(t *testing.T) {
 	fetcher := newFakeExtensionSource()
 
-	report, err := NewInitialize(settled(""), toolsInstalled(), fetcher).Run(t.Context(), skillsRequest(), nil)
+	report, err := NewInitialize(settled(""), toolsInstalled(), fetcher, noChanges()).Run(t.Context(), skillsRequest(), nil)
 	if err != nil {
 		t.Fatalf("Run: %v", err)
 	}
@@ -64,7 +64,7 @@ func TestSkillsStepStopsTheRunWhenTheCopyFails(t *testing.T) {
 	fetcher := newFakeExtensionSource()
 	fetcher.err = errors.New("disk full")
 
-	_, err := NewInitialize(settled(""), toolsInstalled(), fetcher).Run(t.Context(), skillsRequest(), nil)
+	_, err := NewInitialize(settled(""), toolsInstalled(), fetcher, noChanges()).Run(t.Context(), skillsRequest(), nil)
 	if err == nil ||
 		!strings.HasPrefix(err.Error(), domain.ExtensionStep.ID+": ") ||
 		!strings.Contains(err.Error(), "install the embedded extension: disk full") {
@@ -75,7 +75,7 @@ func TestSkillsStepStopsTheRunWhenTheCopyFails(t *testing.T) {
 // A skills-directory harness runs all seven steps: the extension step installs where the mechanism
 // installs, the hook step registers there too, and the rest are untouched.
 func TestSkillsRunStillRunsEveryStep(t *testing.T) {
-	report, err := NewInitialize(settled(""), toolsInstalled(), newFakeExtensionSource()).Run(
+	report, err := NewInitialize(settled(""), toolsInstalled(), newFakeExtensionSource(), noChanges()).Run(
 		t.Context(), skillsRequest(), nil,
 	)
 	if err != nil {
@@ -120,7 +120,7 @@ func TestTheManifestRecordsOnlyARunThatFinished(t *testing.T) {
 		request := beadsRequest()
 		request.CLIVersion = "v1.2.3"
 
-		if _, err := NewInitialize(files, toolsInstalled(), newFakeExtensionSource()).Run(t.Context(), request, nil); err != nil {
+		if _, err := NewInitialize(files, toolsInstalled(), newFakeExtensionSource(), noChanges()).Run(t.Context(), request, nil); err != nil {
 			t.Fatalf("Run: %v", err)
 		}
 
@@ -140,7 +140,7 @@ func TestTheManifestRecordsOnlyARunThatFinished(t *testing.T) {
 	t.Run("a run that failed a later step", func(t *testing.T) {
 		files := settled(`{"hooks": "not an object"}`)
 
-		_, err := NewInitialize(files, toolsInstalled(), newFakeExtensionSource()).Run(t.Context(), beadsRequest(), nil)
+		_, err := NewInitialize(files, toolsInstalled(), newFakeExtensionSource(), noChanges()).Run(t.Context(), beadsRequest(), nil)
 		if err == nil {
 			t.Fatal("Run = nil error, want the hook step to stop the run")
 		}
@@ -188,7 +188,7 @@ func TestInstalledReportsWhatFinishedRunsRecorded(t *testing.T) {
 				files.files[filepath.Join(workingDir, manifest.Name)] = []byte(tc.body)
 			}
 
-			got, err := NewInitialize(files, toolsInstalled(), newFakeExtensionSource()).Installed(workingDir)
+			got, err := NewInitialize(files, toolsInstalled(), newFakeExtensionSource(), noChanges()).Installed(workingDir)
 			if err != nil {
 				t.Fatalf("Installed: %v", err)
 			}
