@@ -82,6 +82,10 @@ func TestSchemaMatchesTheFieldTables(t *testing.T) {
 		t.Errorf("properties.%s.items.enum = %q, want %q", FieldHarnesses, got, want)
 	}
 
+	if !schemaBool(t, harnesses, "uniqueItems") {
+		t.Errorf("properties.%s.uniqueItems is false, want the validator's no-duplicates rule", FieldHarnesses)
+	}
+
 	beadsBlock := schemaObject(t, properties, TrackerBeads)
 
 	if got, want := schemaRequiredList(t, beadsBlock, "required"), RequiredTrackerFields(TrackerBeads); !slices.Equal(got, want) {

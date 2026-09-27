@@ -624,9 +624,14 @@ func isTracker(v any) string {
 // harness at all has nowhere to install.
 //
 // A name is checked through harness.Parse, so a spelling a harness had before it was named for its
-// binary is accepted: the file is still valid, doctor warns about the spelling, and codefall init
+// binary is accepted: the file is still valid, doctor warns about the spelling, and codefall upgrade
 // rewrites it. The schema lists only the current names, and the message for a name nobody knows
 // offers only those.
+//
+// A name written twice is refused: the list is a set of places to install, and no command writes a
+// name into it twice. A harness under both its former spelling and its current name is accepted, for
+// the reason a former spelling alone is: doctor warns about the spelling and names codefall upgrade,
+// which removes the former one, and refusing the file here would stop doctor before it said so.
 func isHarnesses(v any) string {
 	values, ok := v.([]any)
 	if !ok {
@@ -637,6 +642,8 @@ func isHarnesses(v any) string {
 		return "must name at least one harness"
 	}
 
+	seen := map[string]bool{}
+
 	for _, value := range values {
 		name, ok := value.(string)
 		if !ok {
@@ -646,6 +653,12 @@ func isHarnesses(v any) string {
 		if _, err := harness.Parse(name); err != nil {
 			return unknownValue(name, harness.All())
 		}
+
+		if seen[name] {
+			return fmt.Sprintf("names %q twice", name)
+		}
+
+		seen[name] = true
 	}
 
 	return ""
