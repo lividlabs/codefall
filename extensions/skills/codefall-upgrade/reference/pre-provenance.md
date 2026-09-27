@@ -1,9 +1,9 @@
 # Projects scaffolded before provenance
 
-Everything graft does differently when a project has no `.codefall/scaffold.json`. Provenance has
-been written since codefall 0.4.0, and every project scaffolded before it moves out of this file
-the first time graft writes `scaffold.json` for it. When no such project remains, delete this file
-and the two places `SKILL.md` points at it.
+Everything `codefall-upgrade` does differently when a project has no `.codefall/scaffold.json`.
+Provenance has been written since codefall 0.4.0, and every project scaffolded before it moves out
+of this file the first time the verb writes `scaffold.json` for it. When no such project remains,
+delete this file and the places `SKILL.md` points at it.
 
 ## Contents
 
@@ -13,7 +13,7 @@ and the two places `SKILL.md` points at it.
 
 ## Recognising one
 
-Step 1's inventory finds no `scaffold.json`, but `docs/adrs/` holds codefall-lineage files — under
+Step 2's inventory finds no `scaffold.json`, but `docs/adrs/` holds codefall-lineage files — under
 current identifiers, or historical ones per `../lineage.md`. The decision log's *scaffolded with
 codefall `<version>`* line, when present, names the baseline version.
 
@@ -49,5 +49,5 @@ given filename can come from — `../lineage.md` names them; compare against eac
 classified is unverifiable, and unverifiable is edited. Do not guess a version, and never invent a
 hash.
 
-Step 3's **Provenance** item — offer to write `scaffold.json` — is how the project stops needing
+Step 4's **Provenance** item — offer to write `scaffold.json` — is how the project stops needing
 this file next time.

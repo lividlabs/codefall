@@ -1442,6 +1442,26 @@ Decided at scaffold, 2026-08-16.
   stops a run; and removing files for a harness the settings have dropped, which is doctor's
   left-over warning and the reader's judgement, since four harnesses share one directory.
 
+- **Graft becomes upgrade, and offers `codefall upgrade` first, 2026-09-27.** The third change
+  ADR-010 decided. `extensions/skills/codefall-graft/` moves to `codefall-upgrade/`, and a user
+  types `/codefall-upgrade` where they typed `/codefall-graft`. The document procedure is unchanged
+  apart from its step numbers and its branch, now `upgrade/<YYYY-MM-DD>`. A new first step reads
+  `.codefall/manifest.json` and compares its version, the `shared` entry's or the highest harness
+  entry's, with `codefall --version`: no manifest stops the run and names `codefall init`; no binary
+  on PATH is said and the documents go ahead, since they need none; a manifest behind the binary is
+  said and `codefall upgrade` is offered. On a yes the skill runs it without `--yes`, feeding the
+  command's own question through `ACCESSIBLE=1` because an agent's shell has no terminal for it: a
+  first run answers no, which prints the breaking changes and changes nothing, the user sees them
+  and answers the question, and a second run carries that answer. The `scaffold.json` key
+  `lastGraft` keeps its name, so a record written before the rename still reads. `lineage.md` and
+  `extensions/renames.go` both record `graft` and `codefall-graft` as former names of
+  `codefall-upgrade`, so an upgrade across this release removes `codefall-graft/` and reports it as
+  a rename, and a test holds every row of the Go table to a skill the tree ships. Seen and not
+  taken: having the skill run `codefall upgrade` unasked, which would move a project's installed
+  version and cross breaking changes on the strength of a request about documents; and keeping two
+  verbs, graft for the documents and upgrade for the files, which a user would have to run in the
+  right order with nothing to tell them the order.
+
 ## Open
 
 - **UI composition.** Half settled by **Shared modules, 2026-08-27** above: the theme, the styles,

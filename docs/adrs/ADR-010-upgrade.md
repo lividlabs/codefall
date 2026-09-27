@@ -150,7 +150,7 @@ removal above is what keeps `codefall-graft` from staying installed beside it.
   reinstalls and what the manifest's file lists record.
 - ADR-005, *Local Environment Scripts* — `codefall-refresh` brings the environment current with the
   checkout; upgrade brings the install current with the binary. Neither does the other's job.
-- `extensions/skills/codefall-graft/lineage.md` — the record of former template and skill names that
+- `extensions/skills/codefall-upgrade/lineage.md` — the record of former template and skill names that
   the rename reporting follows.
 - Repository `AGENTS.md`, *Workflow* — the definition of a breaking change and the footer release-please
   reads, which is where the upgrade warning's text comes from.

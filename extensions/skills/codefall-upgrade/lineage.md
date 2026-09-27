@@ -1,12 +1,12 @@
 # Template lineage
 
-What every current template used to be called, where it lived, and when it first shipped. `codefall-graft`
-reads this to recognise a rename as a rename — a project on 0.2.x holding
+What every current template used to be called, where it lived, and when it first shipped.
+`codefall-upgrade` reads this to recognise a rename as a rename — a project on 0.2.x holding
 `ADR-003-dependency-injection.md` has `ADR-TS-01`, not a stray file — and to know which historical
 paths and tags to ask git or GitHub for.
 
 **Maintenance rule:** any PR that renames, moves, or retires a template adds a row here, in the
-same PR. Without the row, graft sees a deletion plus an addition and reports nonsense. A PR that
+same PR. Without the row, the skill sees a deletion plus an addition and reports nonsense. A PR that
 renames a skill adds its row to the table below and to the Go table in `extensions/renames.go`, which
 is what `codefall upgrade` reads to report the old directory it removes as a rename.
 
@@ -16,7 +16,7 @@ is what `codefall upgrade` reads to report the old directory it removes as a ren
 | --- | --- |
 | `skills/conceptualize/` (– 0.9.0), `skills/codefall-conceptualize/` (0.9.0 – 0.16.x) | `skills/codefall-envision/` |
 | `skills/design/` | `skills/codefall-design/` |
-| `skills/graft/` | `skills/codefall-graft/` |
+| `skills/graft/` (– 0.9.0), `skills/codefall-graft/` (0.9.0 – 0.19.x) | `skills/codefall-upgrade/` |
 | `skills/implement/` | `skills/codefall-implement/` |
 | `skills/mock-up/` | `skills/codefall-mock-up/` |
 | `skills/scaffold/` | `skills/codefall-scaffold/` |
@@ -25,8 +25,8 @@ is what `codefall upgrade` reads to report the old directory it removes as a ren
 The envision rename changed the documents as well as the skill: `docs/concepts/CONCEPT-NNN-slug.md`
 became `docs/visions/VISION-NNN-slug.md`, the `**Concept:**` header row in a spec became `**Vision:**`,
 and the `concept:` key in a design's `Related` row became `vision:`. A project that ran
-`codefall-conceptualize` holds the old paths and identifiers, and graft reports them the same way it
-reports a renamed ADR.
+`codefall-conceptualize` holds the old paths and identifiers, and `codefall-upgrade` reports them the
+same way it reports a renamed ADR.
 
 ## Repo layout epochs
 
@@ -79,7 +79,7 @@ in `docs/adrs/` under the same basename.
 The 0.3.0 rename changed identifiers inside the files as well as the filenames — `ADR-001` became
 `ADR-BASE-01` in every cross-reference. A renamed project file therefore cites old identifiers
 throughout its body, and other docs cite the old identifier of the renamed file; both are part of
-what graft reports.
+what `codefall-upgrade` reports.
 
 Nothing has been retired yet. When something is, it gets a row here with its full former identity
 and the release that dropped it.

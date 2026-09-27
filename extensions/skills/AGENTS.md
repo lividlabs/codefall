@@ -6,10 +6,10 @@ writing and changing a skill; the extension-wide rules, ADR immutability, prose,
 
 ## Shape
 
-- Named as **verbs** (`codefall-scaffold`, `codefall-graft`), one directory each:
+- Named as **verbs** (`codefall-scaffold`, `codefall-upgrade`), one directory each:
   `<verb>/SKILL.md`.
 - `codefall-envision`, `codefall-specify`, `codefall-mock-up`, `codefall-scaffold`,
-  `codefall-graft`, and `codefall-equip` carry `disable-model-invocation: true`; a user invokes
+  `codefall-upgrade`, and `codefall-equip` carry `disable-model-invocation: true`; a user invokes
   each deliberately. `codefall-design`, `codefall-implement`, `codefall-test`, `codefall-review`,
   and `codefall-refresh` carry no such line, so an agent may also run them: a session can carry a
   design through implementation, review, and test without a person typing each verb. Each still
@@ -86,12 +86,12 @@ reasons and the sources.
 - **Whose document is it** decides who repairs it. A file the extension ships that nobody amends — the
   operative rules a verb installs alongside a directory it owns, like `docs/visions/AGENTS.md` — is
   repaired by the verb that owns it, on run. A template that becomes the project's own document, one
-  that gets stamped, amended, and cited, belongs to `codefall-graft`, and ships a row in its scope table and in
-  `lineage.md`. Do not route a fixture through `codefall-graft`: it buys consent machinery for a decision with
+  that gets stamped, amended, and cited, belongs to `codefall-upgrade`, and ships a row in its scope table and in
+  `lineage.md`. Do not route a fixture through `codefall-upgrade`: it buys consent machinery for a decision with
   no stakes, and costs a registration step whose failure is silent. Either way, **never overwrite a
   file that has drifted** — show the difference and ask.
 - Renaming, moving, or retiring a template ships a row in
-  `codefall-graft/lineage.md`, in the same PR. `codefall-graft` can only tell a rename from
+  `codefall-upgrade/lineage.md`, in the same PR. `codefall-upgrade` can only tell a rename from
   a deletion plus an addition because that record exists.
 
 ## Prose

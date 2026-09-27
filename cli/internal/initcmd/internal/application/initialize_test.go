@@ -264,8 +264,8 @@ func (f *fakeExtensionSource) Read(path string) ([]byte, error) {
 
 // RenamedSkill on the fake knows the one rename the cleanup tests need.
 func (f *fakeExtensionSource) RenamedSkill(former string) mo.Option[string] {
-	if former == "graft" {
-		return mo.Some("codefall-graft")
+	if former == "conceptualize" {
+		return mo.Some("codefall-envision")
 	}
 
 	return mo.None[string]()

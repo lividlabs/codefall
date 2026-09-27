@@ -3,7 +3,7 @@
 The shared procedure for putting a verb's files into git: a branch of their own, a commit of those
 files and nothing else, and an offered pull request. Every verb that writes to the repository follows
 it — `codefall-envision`, `codefall-scaffold`, `codefall-specify`, `codefall-mock-up`,
-`codefall-design`, `codefall-equip`, `codefall-graft` — except `codefall-implement`, which lands one
+`codefall-design`, `codefall-equip`, `codefall-upgrade` — except `codefall-implement`, which lands one
 branch and one pull request per task on its own terms, and `codefall-review`, whose fixes land on the
 branch under review.
 
@@ -40,7 +40,7 @@ Branch names carry the verb and the identifier:
 | `design` | `design/DESIGN-NNN-slug` |
 | `scaffold` | `scaffold/<project-or-surface>` |
 | `equip` | `equip/local` or `equip/test-harness` |
-| `graft` | `graft/<YYYY-MM-DD>` |
+| `upgrade` | `upgrade/<YYYY-MM-DD>` |
 
 A dirty tree does not stop the branch: `git switch -c` carries uncommitted changes along untouched.
 It decides what the commit holds, which is only the files this run wrote.

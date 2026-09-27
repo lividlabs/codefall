@@ -10,8 +10,8 @@ never restates the reasoning.
   as a **new, superseding ADR**; the only in-place edit ever made to an existing ADR is flipping
   its Status line to `Superseded by <id> — <date>`.
 - Successor naming: the current template's name when a rename is involved, an edition suffix
-  (`ADR-BASE-02.2`) when it isn't. Mechanics: `skills/<verb>/SKILL.md`, step 5.
-- This binds every verb that touches ADRs — `codefall-graft` today, `codefall-design` and the rest as they land.
+  (`ADR-BASE-02.2`) when it isn't. Mechanics: `skills/codefall-upgrade/SKILL.md`, step 6.
+- This binds every verb that touches ADRs — `codefall-upgrade` today, `codefall-design` and the rest as they land.
 
 ## Skills
 

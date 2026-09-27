@@ -83,13 +83,13 @@ func TestCleanupRemovesWhatThePreviousInstallWroteAndThisOneDidNot(t *testing.T)
 // there under its new name rather than gone.
 func TestCleanupNamesARenamedSkillAsARename(t *testing.T) {
 	files := upgrading(`{
-  "harnesses": {"codex": {"version": "v0.18.0", "files": [".agents/skills/design/SKILL.md", ".agents/skills/graft/SKILL.md"]}},
+  "harnesses": {"codex": {"version": "v0.18.0", "files": [".agents/skills/design/SKILL.md", ".agents/skills/conceptualize/SKILL.md"]}},
   "shared": {"version": "v0.18.0", "files": [".codefall/hooks/shared/codefall-block-merge-to-main.sh", ".codefall/shared/preflight.sh"]}
-}`, ".agents/skills/design/SKILL.md", ".agents/skills/graft/SKILL.md")
+}`, ".agents/skills/design/SKILL.md", ".agents/skills/conceptualize/SKILL.md")
 
 	result := cleanupResult(t, runFor(t, files, newFakeExtensionSource(), requestFor(harness.Codex)))
 
-	if want := "removed .agents/skills/graft/ (renamed to codefall-graft)"; result.Detail != want {
+	if want := "removed .agents/skills/conceptualize/ (renamed to codefall-envision)"; result.Detail != want {
 		t.Errorf("detail = %q, want %q", result.Detail, want)
 	}
 }
