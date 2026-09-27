@@ -95,8 +95,10 @@ dependency, a migration, or generated code changes `start` or `update` in the sa
   before its first file, commits what it wrote by path, and offers the push and the pull request;
   a document never sits uncommitted on `main`. `implement` does this per task; the document verbs,
   `scaffold`, `equip`, and `graft` follow the shared `landing.md` beside this file's installed copy.
-- **The context that finds a problem never fixes it.** `review` runs in a subagent or another
-  harness; the session triages and applies. A test criterion is never written from the
+- **The context that finds a problem never fixes it.** `review` runs in the first agent of the
+  project's configured order that this machine can run, a subagent of the current harness with
+  nothing configured, and `via=` overrides that for one run. Wherever it runs, that context reviews
+  and this session triages and applies. A test criterion is never written from the
   implementation it verifies, and never edited to make a run pass.
 - **A skill refuses only what it cannot do.** A missing runner, tool, or tracker profile is an exit;
   disagreement about size or fit is said aloud and then the user's call is followed.

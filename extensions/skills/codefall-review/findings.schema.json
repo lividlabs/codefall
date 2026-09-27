@@ -55,11 +55,31 @@
       "required": ["harness"],
       "additionalProperties": false,
       "properties": {
+        "name": {
+          "type": "string",
+          "description": "The configured agent that answered, from the agents list in .codefall/settings.json. Absent for a raw via= form, for this session, and for the unconfigured default."
+        },
         "harness": {
           "type": "string",
-          "description": "subagent, session, or the external CLI that ran: codex, claude, opencode, gemini."
+          "description": "subagent, session, or the external CLI that ran: claude, codex, muse, opencode, agy, gemini."
         },
-        "model": { "type": "string" }
+        "model": { "type": "string" },
+        "tried": {
+          "type": "array",
+          "description": "The agents walked before the one that answered, in order, with why each did not: skipped when not runnable on this machine, failed when it ran and returned nothing usable.",
+          "items": {
+            "type": "object",
+            "required": ["harness", "outcome"],
+            "additionalProperties": false,
+            "properties": {
+              "name": { "type": "string" },
+              "harness": { "type": "string" },
+              "model": { "type": "string" },
+              "outcome": { "type": "string", "enum": ["skipped", "failed"] },
+              "reason": { "type": "string", "description": "The exit code's meaning, or the harness's own words." }
+            }
+          }
+        }
       }
     },
 

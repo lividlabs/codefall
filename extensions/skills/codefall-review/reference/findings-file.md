@@ -27,8 +27,10 @@ is no subject at all. In full:
 ```
 
 The `.json` is the record; the `.md` is the same review written to be read. Both hold what was
-reviewed and at which revision, who reviewed it, which lenses ran, what could not be checked, and
-every finding with its status. `../findings.schema.json` is the shape of the JSON.
+reviewed and at which revision, who reviewed it and which agents were tried before it, which lenses
+ran, what could not be checked, and every finding with its status. `../findings.schema.json` is the
+shape of the JSON: `reviewer.name` is the configured agent when one answered, and `reviewer.tried`
+the agents walked before it, each `skipped` or `failed` with the reason.
 
 **The files are written three times** — after the review, after triage, after the fixes. An
 interrupted session resumes from them rather than starting over.
@@ -38,7 +40,8 @@ interrupted session resumes from them rather than starting over.
 ```markdown
 # Review: <target-key>
 
-**Reviewed:** <timestamp> · **Reviewer:** <harness>[/<model>] · **Revision:** <revision>
+**Reviewed:** <timestamp> · **Reviewer:** [<name> ]<harness>[/<model>] · **Revision:** <revision>
+**Tried:** <name or harness> (skipped: not on PATH), <name> (failed: exited 76) — only when an agent was walked before the reviewer
 **Lenses:** <the lenses that ran>
 
 ## Findings

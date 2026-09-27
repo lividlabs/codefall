@@ -95,8 +95,8 @@ than the session, such as a reviewer, in the order to try them. Each entry has a
 that runs it, named for its binary or `current` for whichever harness the session is in, and
 optionally a model. A run skips an agent this machine cannot start and moves to the next, so one
 checked-in list serves every machine, and `doctor` reports which entries yours can run. `init` writes
-one entry, `subagent` on `current`, which is what every verb does today; the verbs adopt the list in
-turn, `review` first. [ADR-009](docs/adrs/ADR-009-agents.md) records the shape.
+one entry, `subagent` on `current`, which is what every verb did before the list existed. `review`
+walks it today; consult follows. [ADR-009](docs/adrs/ADR-009-agents.md) records the shape.
 
 Init also writes into the project's own files. The Beads database it initializes gets
 `audit.enabled: false` written into `.beads/config.yaml`, so bd's interaction log stays off until the
@@ -451,11 +451,14 @@ document identifier and it takes that; or describe what to look at — "the code
 handle flight fulfillment" — and it searches, shows you the files it found, and asks before reading
 a line of them.
 
-**The context that finds a problem is never the one that fixes it.** The review runs in a subagent,
-or in another harness entirely — `via=codex`, `via=gemini`, `via=claude`, `via=opencode`,
-`via=muse`, each in its own read-only mode. Then you triage, and this session applies what you took. A model that both finds
-and fixes grades its own work on the next pass, and the second reading goes through the same blind
-spots that made the first one worth doing.
+**The context that finds a problem is never the one that fixes it.** The review runs in the first
+agent of your project's `agents` order that this machine can run — a subagent of the current
+harness when nothing is configured, otherwise whichever reader the team settled on, each in its own
+read-only mode — and `via=` names one agent or a raw `harness[:model]` for a single run. An agent
+that is not installed here is skipped, one that fails hands the prompt to the next, and the report
+names every one tried. Then you triage, and this session applies what you took. A model that both
+finds and fixes grades its own work on the next pass, and the second reading goes through the same
+blind spots that made the first one worth doing.
 
 **Eleven questions, asked separately.** Correctness, swallowed failures, behaviour changes, tests,
 type design, conventions, comment accuracy, documentation that has fallen behind, simplification,

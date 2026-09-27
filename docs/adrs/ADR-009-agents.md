@@ -91,11 +91,12 @@ for the harness the session is running in; the use's own `agents` key; the top-l
 
 ### Walking the order
 
-A run walks the resolved order from the first entry. An entry whose harness is not on PATH, not
-authenticated, or refuses the model at startup is skipped before any prompt is sent. An entry that
-ran and got stuck, meaning a timeout, a non-zero exit, output that will not parse after the one retry
-the skill already allows, or a consult that answers that it cannot settle the question, advances the
-walk to the next entry with the failure folded into the prompt. Each entry is tried once; the walk
+A run walks the resolved order from the first entry. An entry whose harness is not on PATH is
+skipped before any prompt is sent. An entry that ran and got stuck, meaning a timeout, a non-zero
+exit, which is also how an unauthenticated harness or a refused model shows up since no harness
+reports either before the prompt is sent, output that will not parse after the one retry the skill
+already allows, or a consult that answers that it cannot settle the question, advances the walk to
+the next entry with the failure folded into the prompt. Each entry is tried once; the walk
 ends at the end of the order. The report names every agent tried and why each was skipped or
 failed, and the findings file's `reviewer` records the one that answered. A configured fallback that
 is reported is not the silent fallback the review skill forbids.

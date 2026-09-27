@@ -1,7 +1,7 @@
 ---
 name: codefall-review
 description: Review something and fix what the user accepts — uncommitted work, a branch, an open pull request, a path, a document, or a description of what to look at. The reviewer is a subagent or another harness; this session triages the findings with the user and applies the ones they take. Every finding and what was decided about it is written to .codefall/reviews/.
-argument-hint: "[what to review — nothing for uncommitted work] [via=codex|claude|opencode|gemini|muse[:model]]"
+argument-hint: "[what to review — nothing for uncommitted work] [via=<agent name>|<harness>[:model]]"
 disable-model-invocation: true
 allowed-tools:
   - Read
@@ -35,16 +35,16 @@ Read each when its step says to; none is loaded up front.
 
 - `reference/lenses.md` — what every code and document lens asks, and the notes on `docs`,
   `simplify`, `trace`, and edited ADRs. Read at the confirmation and at step 3.
-- `reference/reviewers.md` — the three reviewers, the `via=` forms, the lens groups, subagent
-  merging, and the external-harness call. Read at step 3.
+- `reference/reviewers.md` — the resolved order, `current` and this session, the `via=` forms, the
+  lens groups, subagent merging, and the external call. Read at step 3.
 - `reference/findings-file.md` — naming, the Markdown shape, when the files are committed, and
   `revision`. Read at step 4.
 - `reference/posting.md` — posting findings to a pull request. Read at step 5 when the target is
   an open pull request.
 - `reviewer-prompt.md` and `findings.schema.json` — the prompt each reviewer is rendered from and
   the shape every reviewer returns.
-- `../../../.codefall/shared/run-agent.sh` — runs another harness read-only. Read
-  `../../../.codefall/shared/running-agents.md`, the shared procedure around it, at step 3 with a `via=`.
+- `../../../.codefall/shared/running-agents.md` — which harness this is, resolving and walking the
+  agent order, `via=`. Read at step 1. `../../../.codefall/shared/run-agent.sh` runs one agent.
 
 ## Targets
 
@@ -117,7 +117,8 @@ Review now, or exclude any of these?
 
 Every lens that applies to the target runs unless the user drops it here. A prose argument that
 narrows — "review the auth code for security issues" — shows the reduced list. The confirmation also
-says where fixes will land when that would create a worktree or branch.
+names the resolved agent order, or the `via=` override, and says where fixes will land when that
+would create a worktree or branch.
 
 ## What gets read
 
@@ -180,10 +181,12 @@ if present, states what the project cares about and wins.
 
 ## Who reviews
 
-A subagent of this harness by default; this session only when the work came from somewhere else;
-another harness when `via=` names one. The lens groups, how each reviewer runs them, and the
-external call are in `reference/reviewers.md`. The external reviewer runs read-only and a failure is
-reported, never worked around.
+The project's agent order, resolved and walked per `../../../.codefall/shared/running-agents.md`;
+the first agent that answers is the reviewer. `current` is a subagent of this harness, and with no
+`agents` configured it is the whole order, as before. `via=` replaces the order for one run. This
+session reviews only when the work came from somewhere else. The lens groups, how each reviewer runs
+them, and the external call are in `reference/reviewers.md`. Every reviewer runs read-only, and every
+agent tried is named in the report and the findings file.
 
 ## Where the fixes go
 
@@ -266,19 +269,22 @@ Follow `../../../.codefall/shared/customizations.md` for this verb.
 1. **Resolve and confirm.** Resolve the target per [Targets](#targets); refuse what is not
    reviewable. Interview a prose scope until the file list is recognised. Read
    `.codefall/settings.json`'s `review` block and `.codefall/skills/codefall-review/CUSTOMIZE.md`
-   if present. Check the `.ignore` entry and offer to add it if it is missing. Read
+   if present. Resolve the agent order per `../../../.codefall/shared/running-agents.md`, or take
+   the `via=` override. Check the `.ignore` entry and offer to add it if it is missing. Read
    `reference/lenses.md`, present [the confirmation](#the-confirmation), and wait.
 2. **Read.** Everything in [What gets read](#what-gets-read).
-3. **Review.** Read `reference/reviewers.md`. By the reviewer the run chose — subagents in
-   parallel, this session pass by pass, or one `../../../.codefall/shared/run-agent.sh` call. Every candidate finding
-   checked against [Calibration](#calibration) before it becomes one.
+3. **Review.** Read `reference/reviewers.md`. Walk the order: `current` runs the lens groups as
+   parallel subagents, any other agent runs one `../../../.codefall/shared/run-agent.sh` call
+   carrying every lens, this session runs pass by pass. Every candidate finding checked against
+   [Calibration](#calibration) before it becomes one.
 4. **Write.** Read `reference/findings-file.md`. Merge the JSON and write the findings files, every
    finding `open`.
 5. **Triage.** Present the list, take a decision on each, update the files. Post to the pull request
    per `reference/posting.md` if that is enabled and the target is one.
 6. **Fix.** Apply what was taken, in the place [Where the fixes go](#where-the-fixes-go) names.
    Update the files.
-7. **Report.** The target and reviewer; what was found, most severe first; what was fixed,
+7. **Report.** The target, the reviewer, and every agent tried before it with why each was skipped
+   or failed; what was found, most severe first; what was fixed,
    dismissed, deferred; what could not be checked and why; where the files are; and the branch or
    worktree the fixes landed on if one was created. **End with what the user does next**: on a pull
    request or a branch, push the fixes and merge; on uncommitted work, the findings files are left
@@ -307,7 +313,8 @@ Follow `../../../.codefall/shared/customizations.md` for this verb.
 - **Every finding carries the conditions under which it manifests.**
 - **No flattery, no filler findings.**
 - **Read the whole file, never only the hunk.**
-- **An external reviewer runs read-only.** A failure is reported, never worked around.
+- **An external reviewer runs read-only.** A failure advances the order and is reported, never
+  worked around silently; the end of the order is a stop.
 - **The target decides where fixes land**, never where the session started.
 - **Uncommitted work is never moved to a worktree**, and a dirty tree stops a move rather than
   carrying changes onto another branch.
