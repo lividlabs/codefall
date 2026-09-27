@@ -141,7 +141,7 @@ git rev-parse HEAD > .codefall/refresh.stamp
 ```
 
 Then confirm the stamp is ignored — `git check-ignore -q .codefall/refresh.stamp` — and, when it
-is not, say so and name `codefall init` as the fix. Never add the entry from here.
+is not, say so and name `codefall upgrade` as the fix. Never add the entry from here.
 
 A non-zero exit: read `reference/failures.md`, match the stderr, and say three things — what
 failed, what it means, and what to do — in one short paragraph a teammate who does not read
@@ -160,8 +160,8 @@ One block, short:
 - The beads: synced, no remote, skipped because beads is blocked, or halted and why.
 - The environment: `start` ran; `update` ran or was skipped as current.
 - The stamp: written at `<short>`, or not, and why.
-- **Last, what the user does next**: nothing, or the rebase the user has to do, the `codefall init`
-  for `.gitignore`, the `/codefall-equip` for a broken script.
+- **Last, what the user does next**: nothing, or the rebase the user has to do, the
+  `codefall upgrade` for `.gitignore`, the `/codefall-equip` for a broken script.
 
 ## Rules
 

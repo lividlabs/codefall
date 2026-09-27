@@ -58,7 +58,7 @@ func run(args []string, stdout, stderr io.Writer) error {
 	root.SetOut(stdout)
 	root.SetErr(stderr)
 	root.AddCommand(doctor.Command(injector))
-	root.AddCommand(initcmd.Command(injector))
+	root.AddCommand(initcmd.Commands(injector)...)
 	// create runs init in the directory it makes, so it gets an init command of its own.
 	root.AddCommand(create.Command(injector, initcmd.Command(injector)))
 

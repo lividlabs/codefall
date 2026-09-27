@@ -71,33 +71,6 @@ func TestRunRewritesAFormerHarnessNameInTheSettingsAndTheManifest(t *testing.T) 
 	}
 }
 
-// A run that writes the settings whole has nothing old left in them, and the manifest is the one file
-// that can still carry a former spelling.
-func TestRunWithForceRewritesAFormerHarnessNameInTheManifest(t *testing.T) {
-	files := newFakeFileSystem()
-	files.files[settingsFull] = []byte(formerSettings)
-	files.files[manifestFull] = []byte(formerManifest)
-
-	request := beadsRequest()
-	request.Force = true
-
-	report := runFor(t, files, newFakeExtensionSource(), request)
-
-	detail := report.Results()[0].Detail
-	if !strings.HasPrefix(detail, "wrote .codefall/settings.json (") ||
-		!strings.HasSuffix(detail, "; renamed harness claude-code to claude in .codefall/manifest.json") {
-		t.Errorf("settings detail = %q, want the write and the manifest rename", detail)
-	}
-
-	if strings.Contains(string(files.files[settingsFull]), "claude-code") {
-		t.Errorf("settings.json = %s, want no former spelling", files.files[settingsFull])
-	}
-
-	if _, left := recordedManifestIn(t, files).Harnesses["claude-code"]; left {
-		t.Errorf("manifest = %s, want no former spelling", files.files[manifestFull])
-	}
-}
-
 // Files that already use the current names are left as they were, and the step says what it always
 // said about settings that are already there.
 func TestRunLeavesCurrentHarnessNamesAlone(t *testing.T) {

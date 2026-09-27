@@ -40,8 +40,8 @@ type CommandResult struct {
 }
 
 // Diagnose inspects a working directory and reports what codefall needs and what is missing. It
-// reports and never repairs — every unmet check carries the remedy as text, and `codefall init`
-// will be the thing that runs them.
+// reports and never repairs — every unmet check carries the remedy as text, and `codefall init` or
+// `codefall upgrade` is what runs them.
 type Diagnose struct {
 	files  FileSystem
 	runner CommandRunner

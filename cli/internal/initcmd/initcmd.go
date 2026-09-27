@@ -1,11 +1,14 @@
-// Package initcmd is the facade for `codefall init`, the command that makes a directory ready for
-// codefall: it writes the .codefall/settings.json that doctor checks and installs the codefall
-// extension for the harness, and the step that initialises the tracker is added to the same run.
+// Package initcmd is the facade for `codefall init` and `codefall upgrade`: the command that makes a
+// directory ready for codefall, once, and the command that brings that install level with the binary
+// on every run after it. Both run one use case — write the .codefall/settings.json that doctor
+// checks, install the codefall extension for the harnesses, initialise the tracker, register the
+// hooks, write the marked sections, make the testing tree, record the run in the manifest — and
+// differ only in how the request is built: init from a survey or flags, upgrade from what the
+// settings and the manifest already record (ADR-010).
 //
 // The package is named initcmd rather than init because a package called init cannot be imported
 // without an alias — `import ".../internal/init"` does not compile, since init must be a func.
-// initcmd keeps the directory named after the command it holds. The command it exports is still
-// `init`.
+// initcmd keeps the directory named after the first command it held.
 //
 // Exported identifiers here are the component's whole public API. Its layers live under this
 // package's own internal/, where the compiler keeps them (ADR-BASE-02).
@@ -48,8 +51,19 @@ func Register(injector do.Injector) {
 	})
 }
 
-// Command returns initcmd's command for the composition root to mount. A *cobra.Command is a delivery
-// type, not a domain entity, so ADR-001 does not apply to it.
+// Commands returns both of initcmd's commands, init and upgrade, for the composition root to mount. A
+// *cobra.Command is a delivery type, not a domain entity, so ADR-001 does not apply to it.
+func Commands(injector do.Injector) []*cobra.Command {
+	return []*cobra.Command{Command(injector), UpgradeCommand(injector)}
+}
+
+// Command returns the init command alone. create runs init in the directory it makes and needs an
+// instance of its own, never the one mounted on the root.
 func Command(injector do.Injector) *cobra.Command {
 	return presentation.NewInitCommand(do.MustInvoke[presentation.InitializeUseCase](injector))
+}
+
+// UpgradeCommand returns the upgrade command alone.
+func UpgradeCommand(injector do.Injector) *cobra.Command {
+	return presentation.NewUpgradeCommand(do.MustInvoke[presentation.InitializeUseCase](injector))
 }

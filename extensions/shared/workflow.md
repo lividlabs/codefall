@@ -69,8 +69,11 @@ Four verbs sit beside the chain rather than in it:
 - **`graft`** brings a scaffolded project's documents up to the current templates, reporting each
   difference with its provenance and applying only what the user takes. It also handles first-time
   adoption of the stance on an existing repo.
-- **`codefall init`** rerun (`upgrade`) reinstalls the skills and hooks for the harnesses already
-  recorded, replacing its own marked sections and registrations and touching nothing else.
+- **`codefall upgrade`** reinstalls the skills, shared files, and hooks for the harnesses the settings
+  record, replaces its own marked sections and registrations, rewrites a harness name still spelled
+  the old way, and touches nothing else. `codefall init` runs once and refuses a project that has a
+  manifest, naming `upgrade`
+  ([ADR-010](https://github.com/lividlabs/codefall-cli/blob/main/docs/adrs/ADR-010-upgrade.md)).
 
 The scripts stay current at the point of introduction: a task that adds infrastructure, a
 dependency, a migration, or generated code changes `start` or `update` in the same pull request.

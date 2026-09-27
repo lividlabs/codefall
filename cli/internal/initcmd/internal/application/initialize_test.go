@@ -455,7 +455,7 @@ func TestRunSkipsSettingsThatAreAlreadyThere(t *testing.T) {
 		t.Fatalf("Results() = %+v, want the settings step to have skipped", results)
 	}
 
-	want := ".codefall/settings.json already exists (use --force to rewrite it)"
+	want := ".codefall/settings.json already exists"
 	if results[0].Detail != want {
 		t.Errorf("detail = %q, want %q", results[0].Detail, want)
 	}
@@ -471,28 +471,6 @@ func TestRunSkipsSettingsThatAreAlreadyThere(t *testing.T) {
 
 	if !strings.Contains(got, `"dir": "testing"`) {
 		t.Errorf("settings.json = %q, want the testing step to have declared the root", got)
-	}
-}
-
-func TestRunRewritesSettingsWithForce(t *testing.T) {
-	files := newFakeFileSystem()
-	files.files[settingsFull] = []byte("{}\n")
-
-	report, err := NewInitialize(files, toolsInstalled(), newFakeExtensionSource()).Run(
-		t.Context(),
-		Request{Dir: workingDir, Tracker: settings.TrackerBeads, Harnesses: []string{harness.Claude}, Force: true},
-		nil,
-	)
-	if err != nil {
-		t.Fatalf("Run: %v", err)
-	}
-
-	if got := report.Results()[0].Outcome; got != domain.OutcomeDone {
-		t.Errorf("outcome = %v, want DONE", got)
-	}
-
-	if got := string(files.files[settingsFull]); !strings.Contains(got, `"tracker": "beads"`) {
-		t.Errorf("settings.json = %q, want it rewritten", got)
 	}
 }
 

@@ -32,6 +32,16 @@ func TestRegisterProvidesEverythingCommandNeeds(t *testing.T) {
 	if got := cmd.Name(); got != "init" {
 		t.Errorf("Command().Name() = %q, want %q", got, "init")
 	}
+
+	// Both commands share the use case, and the root mounts both.
+	var names []string
+	for _, cmd := range initcmd.Commands(injector) {
+		names = append(names, cmd.Name())
+	}
+
+	if want := []string{"init", "upgrade"}; !slices.Equal(names, want) {
+		t.Errorf("Commands() names = %q, want %q", names, want)
+	}
 }
 
 // installDir is where the extension step copies the shared scripts, so it is where every hook

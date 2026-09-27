@@ -1,6 +1,6 @@
 // Package doctor is the facade for `codefall doctor`, the command that reports whether a project has
-// what it needs to run codefall end to end. It reports and never repairs; `codefall init` will own
-// the fixes.
+// what it needs to run codefall end to end. It reports and never repairs; `codefall init` and
+// `codefall upgrade` own the fixes.
 //
 // Exported identifiers here are the component's whole public API. Its layers live under this
 // package's own internal/, where the compiler keeps them (ADR-BASE-02).

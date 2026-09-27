@@ -230,7 +230,7 @@ reported as such with what to do.
 
 Then run `codefall doctor` when the CLI is on `PATH` and read its **Local environment** section:
 both checks pass, or the declaration is wrong and step 4 is repeated. A warning about the refresh
-stamp not being git-ignored is `codefall init`'s to fix; name it in the report.
+stamp not being git-ignored is `codefall upgrade`'s to fix; name it in the report.
 
 ### 6. Report
 
@@ -240,7 +240,7 @@ stamp not being git-ignored is `codefall init`'s to fix; name it in the report.
   path on the branch, and the push and pull request offered — its own pull request, never another
   verb's. The merge is the user's.
 - **Last, what the user does next**: merge the pull request, run `/codefall-refresh` once so the
-  stamp exists, and `codefall init` if doctor warned about `.gitignore`.
+  stamp exists, and `codefall upgrade` if doctor warned about `.gitignore`.
 
 ## Process — the test harness
 

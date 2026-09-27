@@ -116,18 +116,19 @@ func (i *Initialize) DeclaredTestDir(dir string) (mo.Option[string], error) {
 
 // settings is the first step of a run: it writes .codefall/settings.json, the file doctor checks.
 //
-// Settings that are already there are left alone unless the run asked for them to be rewritten,
-// because init is safe to run again — the steps after this one still have work to do in a project
-// that is half set up. The one edit it makes to them is the harness names: an old spelling in the
+// Settings that are already there are left alone: the run is an upgrade, or an init finishing a
+// project that was set up before the manifest existed, and the steps after this one still have work
+// to do either way. The one edit it makes to them is the harness names: an old spelling in the
 // settings or the manifest is rewritten to the name the harness has now, and nothing else in either
-// file changes.
+// file changes. Changing an answer the settings already record is a hand edit, until a command
+// exists for it.
 func (i *Initialize) settings(_ context.Context, request Request) (domain.StepResult, error) {
 	exists, err := i.SettingsExist(request.Dir)
 	if err != nil {
 		return domain.StepResult{}, err
 	}
 
-	if exists && !request.Force {
+	if exists {
 		renamed, err := i.respell(request.Dir, true)
 		if err != nil {
 			return domain.StepResult{}, err
@@ -137,7 +138,7 @@ func (i *Initialize) settings(_ context.Context, request Request) (domain.StepRe
 			return domain.SettingsStep.Done(renamed), nil
 		}
 
-		return domain.SettingsStep.Skipped(settingsName + " already exists (use --force to rewrite it)"), nil
+		return domain.SettingsStep.Skipped(settingsName + " already exists"), nil
 	}
 
 	chosen, err := domain.NewSettings(request.Tracker, request.Harnesses, request.IssuesRepo,

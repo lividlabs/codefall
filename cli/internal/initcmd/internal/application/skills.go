@@ -43,6 +43,16 @@ type Installation struct {
 	Versions map[string]string
 }
 
+// ManifestExists reports whether a finished run has recorded itself in .codefall/manifest.json. It
+// is what tells the two commands apart: init refuses a project that has one, and upgrade refuses a
+// project that has none. A manifest that is there and cannot be decoded is an error, because neither
+// command can say which it is.
+func (i *Initialize) ManifestExists(dir string) (bool, error) {
+	_, read, err := i.recordedManifest(dir)
+
+	return read, err
+}
+
 // Installed is the manifest through the use-case boundary, so presentation can compare it with the
 // binary's own tag without knowing the manifest's path. A manifest that records no usable version at
 // all reads the same as no manifest (ADR-GO-03). An entry under a harness's old spelling is reported
