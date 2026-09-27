@@ -39,8 +39,8 @@ writing and changing a skill; the extension-wide rules, ADR immutability, prose,
 
 ## Length
 
-Guidelines, not hard limits — [ADR-004](../../docs/adrs/ADR-004-skill-length-guidelines.md) has the
-reasons and the sources.
+Guidelines, not hard limits — [ADR-004.2](../../docs/adrs/ADR-004.2-skill-length-guidelines.md) has
+the reasons and the sources.
 
 - A `SKILL.md` body stays **under 500 lines** and **under 5,000 tokens**. Past 5,000 tokens the tail
   of the skill is dropped after a compaction, and the tail is where Process and Rules sit.

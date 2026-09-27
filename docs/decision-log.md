@@ -1462,6 +1462,22 @@ Decided at scaffold, 2026-08-16.
   verbs, graft for the documents and upgrade for the files, which a user would have to run in the
   right order with nothing to tell them the order.
 
+- **ADR-004.2, gemini dropped, and `lastGraft` becomes `lastUpgrade`, 2026-09-27.** ADR-004 says
+  every codefall skill sets `disable-model-invocation: true`. Since `codefall-refresh` and then four
+  chain verbs became invocable by an agent (**Design, implement, test, and review become
+  model-invocable**, above), five skills do not, so their descriptions sit in every session's
+  startup listing and the description rules apply to them in full. A ratified ADR is never rewritten, and the revision renames nothing, so it lands
+  as the edition `ADR-004.2` with the same decision and the corrected sentence, and ADR-004's Status
+  line is the one edit made to it. Gemini CLI is a deprecated harness, so `run-agent.sh` no longer
+  accepts it, `via=gemini` is gone from `codefall-review`, and the findings schema no longer names it;
+  a project that typed `via=gemini` now gets exit 64, which is breaking by the repository's
+  definition. The `scaffold.json` key kept the name `lastGraft` through the rename to
+  `codefall-upgrade` so that older records still read, but a key named for a verb that no longer
+  exists is one more thing a reader has to translate, so it follows the verb to `lastUpgrade`.
+  `codefall-upgrade` reads a file carrying `lastGraft` without complaint, writes `lastUpgrade` in its
+  place on its next write to `scaffold.json`, and says so in its report; nothing fails on the old key.
+  This repository's own `scaffold.json` was renamed by hand, the same edit the skill makes.
+
 ## Open
 
 - **UI composition.** Half settled by **Shared modules, 2026-08-27** above: the theme, the styles,

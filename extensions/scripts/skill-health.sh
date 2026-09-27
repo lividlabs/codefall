@@ -3,7 +3,7 @@
 # Report every skill against the length guidelines and the supporting-file rules.
 #
 # The guidelines are Anthropic's published ones for a SKILL.md body, adopted as
-# guidelines rather than hard limits in docs/adrs/ADR-004-skill-length-guidelines.md;
+# guidelines rather than hard limits in docs/adrs/ADR-004.2-skill-length-guidelines.md;
 # the placement rules are in extensions/skills/AGENTS.md. This script reports. It
 # fails only when asked to.
 #

@@ -53,7 +53,7 @@ The decision log entry for 2026-09-16 has the reasoning.
 ## Testing
 - Test all of the skills against an actual project.
   - [x] `scaffold`
-  - [x] `graft`
+  - [x] `codefall-upgrade`
   - [ ] `envision`
   - [ ] `mock-up`
   - [ ] `specify`
@@ -75,7 +75,7 @@ The decision log entry for 2026-09-16 has the reasoning.
 - [x] `implement` — build ready tasks and open pull requests
 - [x] `review` — review work, triage findings, apply fixes
 - [x] `scaffold` — start a new project with ADRs and AGENTS.md files
-- [x] `graft` — update a project's docs to the current templates
+- [x] `codefall-upgrade` — bring a project's installed codefall and its documents current
 - [x] Shorten every SKILL.md to the ADR-004 guidelines
 
 ### Command Line

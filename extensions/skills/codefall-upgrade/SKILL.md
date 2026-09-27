@@ -249,9 +249,10 @@ not the record here — the documents are.
   `sha256` computed with `shasum -a 256` on the file as written — never invented. A supersession
   touches two files: add an entry for the successor, which is what future runs compare against,
   and recompute the superseded file's hash after its Status flip. Add
-  `"lastGraft": { "pluginVersion": "<version or unknown>", "date": "<date>" }` at the top level;
-  the key keeps its earlier name. Take the version from `.codefall/manifest.json` — do not guess
-  it. Where the file didn't exist, write it fresh: this extension version, today's date, the
+  `"lastUpgrade": { "pluginVersion": "<version or unknown>", "date": "<date>" }` at the top level.
+  A file carrying the older key `lastGraft` is read, never refused; the write replaces that key with
+  `lastUpgrade`, and the report says so. Take the version from `.codefall/manifest.json` — do not
+  guess it. Where the file didn't exist, write it fresh: this extension version, today's date, the
   profiles and decisions as established, and an `amended` per ADR — `false` only for files that now
   hash-match a current template, `true` for anything kept that differs.
 - **`docs/decision-log.md`** — one line under `Locked`: *brought documents current with codefall
@@ -276,6 +277,7 @@ the documents' changes should be reviewable as one coherent change.
 - What was **taken**, file by file.
 - What was **left**, and why — amended, edited, retired, or declined.
 - Stale references the user chose to keep, so they aren't rediscovered as a surprise.
+- That `scaffold.json`'s `lastGraft` key was renamed to `lastUpgrade`, when this run renamed it.
 - The landing, per `../../../.codefall/shared/landing.md`: what took, committed by path on the
   branch, and the push and pull request offered. The merge is the user's. A run where nothing took
   has nothing to land.
