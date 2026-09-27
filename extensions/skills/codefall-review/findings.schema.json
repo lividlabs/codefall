@@ -4,19 +4,43 @@
   "title": "Codefall review findings",
   "description": "One review of one target: what was reviewed, at which revision, who reviewed it, what was found, and what was decided about each finding. Written to .codefall/reviews/<timestamp>-<target-key>.json and rewritten after triage and after the fixes. A reviewer — subagent or external harness — returns this shape with every finding open; the session that triages fills in the rest.",
   "type": "object",
-  "required": ["version", "target", "reviewer", "reviewedAt", "lenses", "findings"],
+  "required": [
+    "version",
+    "target",
+    "reviewer",
+    "reviewedAt",
+    "lenses",
+    "findings"
+  ],
   "additionalProperties": false,
   "properties": {
-    "version": { "type": "integer", "const": 1 },
-
+    "version": {
+      "type": "integer",
+      "const": 1
+    },
     "target": {
       "type": "object",
-      "required": ["kind", "key", "revision"],
+      "required": [
+        "kind",
+        "key",
+        "revision"
+      ],
       "additionalProperties": false,
       "properties": {
         "kind": {
           "type": "string",
-          "enum": ["uncommitted", "branch", "pr", "range", "path", "prose", "vision", "spec", "design", "adr"]
+          "enum": [
+            "uncommitted",
+            "branch",
+            "pr",
+            "range",
+            "path",
+            "prose",
+            "vision",
+            "spec",
+            "design",
+            "adr"
+          ]
         },
         "key": {
           "type": "string",
@@ -41,7 +65,9 @@
         "files": {
           "type": "array",
           "description": "For a path or prose target, the files the review actually covered, as confirmed by the user.",
-          "items": { "type": "string" }
+          "items": {
+            "type": "string"
+          }
         },
         "upstream": {
           "type": "string",
@@ -49,10 +75,11 @@
         }
       }
     },
-
     "reviewer": {
       "type": "object",
-      "required": ["harness"],
+      "required": [
+        "harness"
+      ],
       "additionalProperties": false,
       "properties": {
         "name": {
@@ -63,64 +90,115 @@
           "type": "string",
           "description": "subagent, session, or the external CLI that ran: claude, codex, muse, opencode, agy, gemini."
         },
-        "model": { "type": "string" },
+        "model": {
+          "type": "string"
+        },
         "tried": {
           "type": "array",
           "description": "The agents walked before the one that answered, in order, with why each did not: skipped when not runnable on this machine, failed when it ran and returned nothing usable.",
           "items": {
             "type": "object",
-            "required": ["harness", "outcome"],
+            "required": [
+              "harness",
+              "outcome"
+            ],
             "additionalProperties": false,
             "properties": {
-              "name": { "type": "string" },
-              "harness": { "type": "string" },
-              "model": { "type": "string" },
-              "outcome": { "type": "string", "enum": ["skipped", "failed"] },
-              "reason": { "type": "string", "description": "The exit code's meaning, or the harness's own words." }
+              "name": {
+                "type": "string"
+              },
+              "harness": {
+                "type": "string"
+              },
+              "model": {
+                "type": "string"
+              },
+              "outcome": {
+                "type": "string",
+                "enum": [
+                  "skipped",
+                  "failed"
+                ]
+              },
+              "reason": {
+                "type": "string",
+                "description": "The exit code's meaning, or the harness's own words."
+              }
             }
           }
         }
       }
     },
-
-    "reviewedAt": { "type": "string", "format": "date-time" },
-
+    "reviewedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
     "lenses": {
       "type": "array",
       "description": "The lenses that ran, after anything dropped at the confirmation.",
-      "items": { "$ref": "#/$defs/lens" }
+      "items": {
+        "$ref": "#/$defs/lens"
+      }
     },
-
     "notChecked": {
       "type": "array",
       "description": "What could not be reviewed, and why: no design behind the branch, no vision above the spec, a lens dropped at the confirmation.",
-      "items": { "type": "string" }
+      "items": {
+        "type": "string"
+      }
     },
-
     "findings": {
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["lens", "severity", "location", "claim", "status"],
+        "required": [
+          "lens",
+          "severity",
+          "location",
+          "claim",
+          "status"
+        ],
         "additionalProperties": false,
         "properties": {
-          "lens": { "$ref": "#/$defs/lens" },
-          "severity": { "type": "string", "enum": ["blocker", "important", "minor"] },
+          "lens": {
+            "$ref": "#/$defs/lens"
+          },
+          "severity": {
+            "type": "string",
+            "enum": [
+              "blocker",
+              "important",
+              "minor"
+            ]
+          },
           "location": {
             "type": "object",
-            "required": ["path"],
+            "required": [
+              "path"
+            ],
             "additionalProperties": false,
             "properties": {
-              "path": { "type": "string" },
-              "startLine": { "type": "integer", "minimum": 1 },
-              "endLine": { "type": "integer", "minimum": 1 },
+              "path": {
+                "type": "string"
+              },
+              "startLine": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "endLine": {
+                "type": "integer",
+                "minimum": 1
+              },
               "heading": {
                 "type": "string",
                 "description": "For a document target, the section the finding sits in."
               }
             }
           },
-          "claim": { "type": "string", "description": "What is wrong, in one sentence." },
+          "claim": {
+            "type": "string",
+            "description": "What is wrong, in one sentence."
+          },
           "conditions": {
             "type": "string",
             "description": "When it manifests. Absent means always."
@@ -131,7 +209,12 @@
           },
           "status": {
             "type": "string",
-            "enum": ["open", "fixed", "dismissed", "deferred"],
+            "enum": [
+              "open",
+              "fixed",
+              "dismissed",
+              "deferred"
+            ],
             "description": "open when the reviewer writes it. Triage replaces it, and no finding is still open when an invocation ends normally."
           },
           "reason": {
@@ -141,17 +224,30 @@
           "bead": {
             "type": "string",
             "description": "The design-revision bead filed for a deferred finding the design caused, when the user took the offer."
+          },
+          "consult": {
+            "type": "string",
+            "description": "Present when the finding was promoted from notChecked after a consult: the agent's name and one sentence of what it found. The session verified the cited lines before promoting; the consult never sets a status."
           }
         },
         "if": {
-          "properties": { "status": { "const": "dismissed" } },
-          "required": ["status"]
+          "properties": {
+            "status": {
+              "const": "dismissed"
+            }
+          },
+          "required": [
+            "status"
+          ]
         },
-        "then": { "required": ["reason"] }
+        "then": {
+          "required": [
+            "reason"
+          ]
+        }
       }
     }
   },
-
   "$defs": {
     "lens": {
       "type": "string",

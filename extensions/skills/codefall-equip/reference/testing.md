@@ -9,6 +9,7 @@ the testing root `test.dir` declares in `.codefall/settings.json`.
 - [The declaration](#the-declaration)
 - [What to search for](#what-to-search-for)
 - [The one question](#the-one-question)
+- [Consulting before the one question](#consulting-before-the-one-question)
 - [The runner each surface takes](#the-runner-each-surface-takes)
 - [Setting up Playwright](#setting-up-playwright)
 - [Setting up `go test`](#setting-up-go-test)
@@ -78,6 +79,16 @@ Three answers:
 report: `test.runners` has no name for it, so `codefall-test` reads the project as unequipped and a
 `spec` case has no declared runner. Offer Playwright for the cases under `<root>/test-cases/`,
 alongside whatever the project keeps running, and take the answer.
+
+## Consulting before the one question
+
+When the search leaves a surface's runner open — a repository with end-to-end tests under two
+runners, or a surface the table below does not name plainly — consult once before the question,
+the same way the local track does in *Consulting before the one question* in `signals.md`: the
+question is which runner the surface takes, the files are the runner configurations and test
+directories found, the options are the runners this file sets up and "declare what exists". The
+answer becomes the proposed option in the one question and the user still chooses. A consult never
+installs a runner and never lifts the refusal for a surface this version has no spec runner for.
 
 ## The runner each surface takes
 

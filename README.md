@@ -241,6 +241,10 @@ an issue is a deliberate act, not something inferred from a passing remark. `cod
 the one exception: it writes nothing but a git-ignored stamp, so an agent may run it on its own
 when the environment is stale.
 
+A question of fact you cannot answer in the interview, how the existing system behaves in a case the
+audit did not settle, is put to the project's consult agents once and comes back as a proposal you
+confirm; a preference is never consulted on.
+
 ### Mockups
 
 `mock-up` puts the picture in the repository, at `docs/mockups/<slug>/`. It runs before or after
@@ -491,7 +495,9 @@ another branch puts the fixes on #51's branch.
 
 **Findings are committed.** Each review writes a pair of files under `.codefall/reviews/` — JSON for
 the record, Markdown to read — carrying what was reviewed, at which revision, which questions ran,
-what could not be checked, and what you decided about every finding. They stay in the repository so
+what could not be checked, and what you decided about every finding. What the reviewer could not
+settle is consulted on once, and a consult can move an item into the findings only after the session
+has verified what it cited. They stay in the repository so
 that patterns across reviews are visible, and a `.ignore` entry keeps them out of every search that
 goes through ripgrep — `init` writes that entry, `doctor` warns when it has gone missing, and
 `review` offers to put it back before writing findings into a directory nothing is hiding. Posting
@@ -507,7 +513,8 @@ teammate who does not read diffs has no way to know which. Two verbs close that 
 needs running locally; `update` makes the local environment match the checkout. Both are declared
 under `local` in `.codefall/settings.json` as plain shell commands, so a Makefile target or a
 package script is as good as a script of the project's own, and anyone can run them from a terminal.
-On an existing project `equip` searches first and asks one question with what it found; on a new
+On an existing project `equip` searches first, consults the project's agents once on what the search
+left ambiguous, and asks one question with what it found; on a new
 one `scaffold` writes them at code depth. Both are idempotent and never destructive: "bring the
 project up to date?" has to be a question anyone can always answer yes to. The scripts are one of
 `equip`'s two tracks — the test harness above is the other — and one run equips one of them.
@@ -587,6 +594,10 @@ language or scaffold only the half that fits. A profile counts as supported once
 Run below the root of a git repository, as one team in a monorepo might, and `codefall init` first
 asks whether to install in that directory or at the root. `--location here` or `--location root`
 answers for a script.
+
+When a description leaves a surface's stack open and the directory already holds files, `scaffold`
+consults the project's agents once and folds the answer into the stack question as the proposed
+option; you still pick, and a planned profile is never proposed.
 
 ## Roadmap
 

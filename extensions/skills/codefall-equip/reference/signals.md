@@ -9,6 +9,7 @@ at step 3 while drafting.
 - [Entry points a project may already have](#entry-points-a-project-may-already-have)
 - [Signals and what they map to](#signals-and-what-they-map-to)
 - [What fails the contract](#what-fails-the-contract)
+- [Consulting before the one question](#consulting-before-the-one-question)
 
 ## Entry points a project may already have
 
@@ -97,3 +98,22 @@ costs someone data whoever runs it. A pull or a prompt is usually a script writt
 caller — a first-clone setup that asks for secrets once, a sync that someone runs by hand after
 fetching — and it is correct for that caller. SKILL.md step 2 says how to name each kind, and what
 the draft takes from the second.
+
+## Consulting before the one question
+
+The search usually settles which candidates keep the contract. When it does not — two entry points
+that both start the services and nothing says which the team runs, a migration step whose tool the
+signals do not name, a script whose effect cannot be read from its body — consult once before the
+question, per *Consulting* in `../../../../.codefall/shared/running-agents.md`. Render `../../../../.codefall/shared/consult-prompt.md`:
+`QUESTION` is what stayed ambiguous; `FILES` are the candidates and the signals they act on;
+`CONTEXT` is [the contract](../SKILL.md#the-contract) in a sentence and what was found; `OPTIONS`
+are the candidates, and "draft new"; `SCHEMA` is `../../../../.codefall/shared/consult.schema.json`. Run the `consult`
+order with `../../../../.codefall/shared/run-agent.sh`.
+
+The answer is folded into the one question as the proposed option — "I found `make dev-up` and
+`scripts/up.sh`; both keep the contract, and consulting `architect` reads `up.sh` as the one CI
+runs, so I'd declare that. Declare it, or draft new?" — and the user still chooses. `low`,
+`cannotSettle`, or no answer asks the question as it would have been asked. A consult never
+declares a script and never judges the contract: a candidate that drops, resets, or deletes is
+wrong whatever an agent says about it.
+

@@ -24,6 +24,24 @@ the profile's own ADRs.
 - `go` supplies DI (`samber/do`), boundary enforcement (`internal/` packages plus `depguard`), and
   optional values (`samber/mo`'s `Option`).
 
+## Consulting before the stack question
+
+When the description genuinely leaves a surface's stack open and the directory is not empty — a
+repository with files but no answer in the description — consult once before asking with the full
+list, per *Consulting* in `../../../../.codefall/shared/running-agents.md`. Render `../../../../.codefall/shared/consult-prompt.md`: `QUESTION` is
+which supported profile the surface takes; `FILES` are the manifests, lockfiles, and entry points
+the directory holds, and the vision's **Environment & constraints** when one frames the project;
+`CONTEXT` is the surface as described; `OPTIONS` are the supported profiles from this catalog, and
+"none of these"; `SCHEMA` is `../../../../.codefall/shared/consult.schema.json`. Run the `consult` order with
+`../../../../.codefall/shared/run-agent.sh`.
+
+The answer changes the question, not the decision. A `high` or `medium` answer naming a supported
+profile becomes the proposed option — "the lockfile and `go.mod` say `go`; I'd match that surface to
+`go`, consulting `architect` agrees" — and the user confirms or picks otherwise from the same list.
+`low`, `cannotSettle`, or no answer asks the question as it would have been asked. A consult never
+picks a profile, never proposes a planned one, and is never asked when the description already
+decided.
+
 ## ADR identifiers
 
 Three separate namespaces that never interact:

@@ -41,6 +41,10 @@ Read each when its step says to; none is loaded up front.
 - `templates/specs/AGENTS.md` — the operative rules this skill installs at `docs/specs/AGENTS.md`.
 - `trackers/github/PROFILE.md` — the GitHub tracker profile: issue shape, labels, creating,
   refreshing, archiving. Read at step 12, and at step 3 for the duplicate search.
+- `reference/consulting.md` — a question of fact the user cannot answer, put to the configured
+  agents. Read at steps 5 and 7. Names
+  `../../../.codefall/shared/running-agents.md`, `../../../.codefall/shared/run-agent.sh`, `../../../.codefall/shared/consult-prompt.md`,
+  `../../../.codefall/shared/consult.schema.json`.
 - `../../../.codefall/shared/import-mockup.md` — the shared procedure for bringing a user's mockup into the
   repository. Read at step 8 when they have one.
 - `../../../.codefall/shared/landing.md` — the branch, the commit, and the offered pull request.
@@ -59,12 +63,8 @@ Specify decides **what will be true when this is done**, never **how it gets bui
 | What is explicitly not included | Work breakdown, ticket sequencing, dependency edges |
 | Which questions remain unresolved | Estimates, effort sizing, build order |
 
-The tell is a specification that names a technology. If the criteria mention a table, a class, an
-endpoint, or a package, they are describing the solution.
-
 **You may read the codebase, but only to answer two questions**: does this already exist, and what
-would this change silently break? Reading code to decide *how* to build the thing is
-`codefall-design`'s job, even when the answer seems obvious.
+would this change silently break?
 
 ## What a specification is
 
@@ -131,7 +131,7 @@ that share nothing but the session they were written in are two specs.
 ## Tracker profiles
 
 The specification is tracker-neutral. Where the mirror lands, and in what shape, is a **tracker
-profile** — one directory per tracker, as `codefall-scaffold` handles surfaces.
+profile** — one directory per tracker.
 
 | Tracker profile | Covers | Status |
 | --- | --- | --- |
@@ -140,8 +140,7 @@ profile** — one directory per tracker, as `codefall-scaffold` handles surfaces
 | `linear` | Linear | planned |
 
 - A tracker is **supported** only when `trackers/<name>/PROFILE.md` is complete. A planned profile
-  is an exit, not a menu choice — if the user's tracker is Jira, say plainly that `codefall-specify`
-  does not mirror to it yet and stop.
+  is an exit, not a menu choice: say `codefall-specify` does not mirror to it yet and stop.
 - GitHub is the only supported profile, so there is no question to ask: state that the mirror will
   land in GitHub Issues and confirm the repository.
 - Read the profile's capability table before writing, and follow its fallbacks rather than
@@ -235,8 +234,7 @@ vocabulary.
 7. What this depends on that does not exist yet.
 8. What is explicitly out of scope.
 
-Question five feeds the `IF … THEN` criteria and question six feeds **Edge cases**: five asks what
-the system does when something goes wrong, six asks which situations nobody intends to handle.
+Question five feeds the `IF … THEN` criteria and question six feeds **Edge cases**.
 
 **Push back on vague answers.** Name the vague word and ask for a concrete replacement:
 
@@ -257,6 +255,9 @@ which ones are thin and ask.
 **Insist for at most two rounds.** If the user overrules — "just write it with what we have" — write
 it, and record every unresolved item under **Open questions**. Recorded, never quietly dropped.
 
+**A question of fact the user cannot answer is consulted on once**, per `reference/consulting.md`,
+and the answer offered as a proposal they confirm. Never a preference.
+
 **Raise design concerns as flags, not rulings.** Name a problem once and let them decide:
 
 > "One thing I want to flag — a destructive action behind a hover has no reachable equivalent on
@@ -264,9 +265,8 @@ it, and record every unresolved item under **Open questions**. Recorded, never q
 
 Cap at two rounds per concern. If it stays unresolved, it goes under **Open questions**.
 
-**"Like $COMPANY does it."** When the user references another product, offer once to look it up. On
-yes, research it and summarize only the patterns that matter — never dump page content. Confirm the
-distillation with the user before it reaches the document. On no, move on without searching.
+**"Like $COMPANY does it."** Offer once to look it up; on yes, summarize only the patterns that matter and
+confirm the summary with the user before it reaches the document.
 
 ### 6. Audit what already exists
 
@@ -294,8 +294,9 @@ Audit the surface the feature touches, not the whole application.
 Read `reference/specification.md`. Cut what the user described into requirements. Each one is a
 capability a consumer can use and a ticket someone can pick up.
 
-**Requirements decompose by what a consumer can observe.** `codefall-design` decomposes by what can
-be built, and one requirement may become several of its tickets. Do not do that cut here.
+**Requirements decompose by what a consumer can observe.** `codefall-design` cuts by what can be
+built; do not do that cut here. A fact the cut needs and the user cannot supply is consulted on, as
+at step 5.
 
 **The sizing question**: could one person hold this requirement in their head well enough to design
 it in a single pass? If not, it is more than one requirement.
@@ -370,8 +371,9 @@ Then land it per `../../../.codefall/shared/landing.md`: commit by path — the 
 the vision — and offer the push and pull request, its body carrying `Relates to #<spec-issue>`.
 The merge is the user's.
 
-Report the spec path, its identifier, its status, every open question it carries, the issues that
-were created with links, any vision amendment, the branch, and the pull request if one was opened. **End with what the
+Report the spec path, its identifier, its status, every open question it carries, every consult and
+what it settled, the issues that were created with links, any vision amendment, the branch, and the
+pull request if one was opened. **End with what the
 user does next**: merge the pull request; then `/codefall-mock-up` where a requirement carries
 `requires-mockup`, otherwise `/codefall-design SPEC-NNN`.
 
@@ -394,7 +396,6 @@ own initiative. Each lands per `../../../.codefall/shared/landing.md`.
 
 - **Nothing is written without the user confirming the document first.**
 - **The document is canonical.** Tracker issues are generated from it and regenerated on later runs.
-  A hand-edited issue body is never the source of truth.
 - **The specification says what, never how.** No file paths, no libraries, no services, no schema. A
   domain noun may be named and defined; its fields, types, and relations may not.
 - **Acceptance criteria are EARS, and nothing else is.** Pick the pattern that fits rather than
@@ -409,5 +410,6 @@ own initiative. Each lands per `../../../.codefall/shared/landing.md`.
 - **Mockups are keyed by surface**, never filed under a spec.
 - **Push back once, then defer** — on vagueness, on design concerns, on cohesion.
 - **Unresolved is recorded, not dropped**, as open questions in the document.
+- **A consult answers a question of fact, never a preference**, and the user confirms it first.
 - **A vision found wrong is amended here** when it is `Draft` or `Ready`; an `Active` one is not.
 - **Never overwrite a file that has drifted.** Show the difference and ask.

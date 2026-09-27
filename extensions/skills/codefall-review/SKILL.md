@@ -36,7 +36,8 @@ Read each when its step says to; none is loaded up front.
 - `reference/lenses.md` — what every code and document lens asks, and the notes on `docs`,
   `simplify`, `trace`, and edited ADRs. Read at the confirmation and at step 3.
 - `reference/reviewers.md` — the resolved order, `current` and this session, the `via=` forms, the
-  lens groups, subagent merging, and the external call. Read at step 3.
+  lens groups, subagent merging, the external call, and consulting on `notChecked`. Read at step 3.
+  Names `../../../.codefall/shared/consult-prompt.md` and `../../../.codefall/shared/consult.schema.json`.
 - `reference/findings-file.md` — naming, the Markdown shape, when the files are committed, and
   `revision`. Read at step 4.
 - `reference/posting.md` — posting findings to a pull request. Read at step 5 when the target is
@@ -276,7 +277,9 @@ Follow `../../../.codefall/shared/customizations.md` for this verb.
 3. **Review.** Read `reference/reviewers.md`. Walk the order: `current` runs the lens groups as
    parallel subagents, any other agent runs one `../../../.codefall/shared/run-agent.sh` call
    carrying every lens, this session runs pass by pass. Every candidate finding checked against
-   [Calibration](#calibration) before it becomes one.
+   [Calibration](#calibration) before it becomes one. Then each `notChecked` entry that is an
+   unsettled question about the target is consulted on once, per `reference/reviewers.md`; a
+   consult never becomes a finding on its own.
 4. **Write.** Read `reference/findings-file.md`. Merge the JSON and write the findings files, every
    finding `open`.
 5. **Triage.** Present the list, take a decision on each, update the files. Post to the pull request
@@ -284,7 +287,7 @@ Follow `../../../.codefall/shared/customizations.md` for this verb.
 6. **Fix.** Apply what was taken, in the place [Where the fixes go](#where-the-fixes-go) names.
    Update the files.
 7. **Report.** The target, the reviewer, and every agent tried before it with why each was skipped
-   or failed; what was found, most severe first; what was fixed,
+   or failed; every consult and what it changed; what was found, most severe first; what was fixed,
    dismissed, deferred; what could not be checked and why; where the files are; and the branch or
    worktree the fixes landed on if one was created. **End with what the user does next**: on a pull
    request or a branch, push the fixes and merge; on uncommitted work, the findings files are left
@@ -308,6 +311,8 @@ Follow `../../../.codefall/shared/customizations.md` for this verb.
 - **Nothing is changed before triage.** The user decides what gets fixed.
 - **Confirm the scope before reviewing it.** A review of the wrong files costs the whole run.
 - **Be certain, or put it in `notChecked`.** Uncertainty is recorded, never dressed as a finding.
+- **A consult proposes.** It may move a `notChecked` entry to a finding this session has verified;
+  it never decides a status.
 - **Review the target, nothing else.**
 - **Never restate a rule another verb owns.** Point at it; a copy drifts.
 - **Every finding carries the conditions under which it manifests.**

@@ -30,8 +30,10 @@ not the user's project.
 
 Read each when its step says to; none is loaded up front.
 
-- `reference/catalog.md` — the bundled ADR templates, the three ADR namespaces, and the surface
-  catalog with each profile's status. Read at step 1, before the stack question.
+- `reference/catalog.md` — the bundled ADR templates, the three ADR namespaces, the surface
+  catalog with each profile's status, and consulting before the stack question. Read at step 1,
+  before the stack question. Names `../../../.codefall/shared/running-agents.md`, `../../../.codefall/shared/run-agent.sh`,
+  `../../../.codefall/shared/consult-prompt.md`, `../../../.codefall/shared/consult.schema.json`.
 - `reference/provenance.md` — the shape and fields of `.codefall/scaffold.json`. Read at step 4.
 - `reference/depth.md` — what each depth answer emits, and the boundary-enforcement obligation.
   Read at step 5.
@@ -49,9 +51,8 @@ Scaffold decides **how this project will be built**, never **what it does**.
 | Boundary enforcement, lint, CI | API design, endpoints, message shapes |
 | Rendering strategy, topology, depth | Business rules, workflows, edge cases |
 
-- **Do not design the application.** No entities, no schema, no reasoning about how a feature will
-  behave, no questions whose only purpose is to understand the product. A description of what they
-  are building is context for matching a profile and judging shape.
+- **Do not design the application.** No entities, no schema, no questions whose only purpose is to
+  understand the product.
 - **Unnamed domains are normal.** Step 1 judges whether the thing is one cohesive domain or several
   separable capabilities; missing names decide nothing. Ask once, accept "not yet", move on.
 - **The stack is theirs; the stance is not.** Codefall has no opinion about which supported language
@@ -59,9 +60,9 @@ Scaffold decides **how this project will be built**, never **what it does**.
   wants different layering, package-by-layer, or no boundary enforcement is asking for something
   this skill does not do. Say so plainly.
 - **Keep the session short.** Stop asking the moment you have enough to emit the docs; prefer a
-  default over a question wherever the answer does not change what gets emitted. Four exchanges is
-  working correctly. A long thread about how the thing will work is `codefall-specify` and
-  `codefall-design` territory — say so, and finish scaffolding.
+  default over a question wherever the answer does not change what gets emitted. A long thread
+  about how the thing will work belongs to `codefall-specify` and `codefall-design`; say so and
+  finish.
 
 ## The stance
 
@@ -172,15 +173,16 @@ background worker" with no language named:
 - `go` — Go services, APIs, workers, daemons, and CLIs
 - **None of these**
 
-The list is generated from the catalog: a profile gains an option when it moves from planned to
-supported. **Never list a planned profile as an option**, in this question or any other.
+**Never list a planned profile as an option**, in this question or any other. When the directory
+holds files that could answer it, consult once first, per `reference/catalog.md`, and fold the
+answer in as the proposed option; the user still picks.
 
 **"None of these" is the deliberate exit.** When the user picks it, say plainly:
 
 > Sorry — we don't support your stack yet.
 
-Then name what *is* supported, offer to record the request, and stop. Do not hunt for a way in, and
-do not steer toward a supported profile they did not pick.
+Then name what *is* supported, offer to record the request, and stop. Do not steer toward a
+supported profile they did not pick.
 
 With more than one surface, ask once per surface, each with the same options.
 
@@ -225,8 +227,8 @@ instantiating a template — draft it, then have the user confirm it before writ
 ### 3. Interview
 
 The templates deliberately do not decide four things. **Batch all of it into one round of
-questions**, not a conversation. Every item has a workable default, so a user who answers none of
-them still gets a correct scaffold. #3 is not asked: it is read from step 1's shape judgement.
+questions**, not a conversation. Every item has a workable default. #3 is not asked: it is read
+from step 1's shape judgement.
 
 **Recommend only what an ADR supports.** Where a decision traces to an ADR, say so and name the
 recommendation. Where Codefall has no stance, present the options flat, say there is no house
@@ -251,16 +253,15 @@ opinion, and let the user choose. Never label an option "Recommended" without an
    from **step 1's shape judgement**, never from whether #2 produced names. ADR-BASE-02 names two
    conditions favoring p&a: one cohesive domain, or boundaries genuinely unknown. Several separable
    capabilities means package-by-component **even when nobody has named them yet**, and **even when
-   the project will never be deployed as separate services**. "We haven't named them" is not one of
-   the conditions.
+   the project will never be deployed as separate services**.
    If p&a is chosen because the shape is *cohesive*, amend ADR-BASE-02 for that surface. If it is
    chosen because the shape is *unclear*, leave ADR-BASE-02 alone and record it under `Open` in the
    decision log at step 4.
 4. **Depth** — docs only, docs + project files, or a runnable skeleton? Default to **docs only**
    unless the user wants more. See `reference/depth.md`.
 
-**Ask where it goes**, in the same batch. The current working directory is not a default — the user
-may be standing in an unrelated repo. Only then check the chosen target: never scaffold into a
+**Ask where it goes**, in the same batch. The current working directory is not a default. Only then
+check the chosen target: never scaffold into a
 non-empty directory without saying so first, and never overwrite an existing path. A directory
 holding only `docs/visions/` is the expected state, not a non-empty directory.
 
@@ -334,6 +335,7 @@ and every `AGENTS.md` link resolves.
   package-by-component whether or not anyone has named them.
 - **Never show or improvise a profile that is not supported.** Planned profiles are exits, and
   ADRs for an unsupported language are never hand-authored.
+- **A consult proposes a profile; the user picks it.** Only when the description left it open.
 - **Recommend only what an ADR supports.** Where Codefall has no stance, present the options flat.
 - **The inherited ADRs ship Accepted.** Amend only when the interview requires it, and report every
   amendment.

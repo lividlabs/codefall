@@ -49,8 +49,9 @@ today, and ask which of the two to equip before anything else.
 Read each when its step says to; none is loaded up front.
 
 - `reference/signals.md` — what in a repository says which tools it uses, the entry points a
-  project may already have, and what each maps to in `start` and `update`. Read at step 2 of the
-  local track.
+  project may already have, what each maps to in `start` and `update`, and consulting before the
+  one question. Read at step 2 of the local track. Names `../../../.codefall/shared/running-agents.md`,
+  `../../../.codefall/shared/run-agent.sh`, `../../../.codefall/shared/consult-prompt.md`, `../../../.codefall/shared/consult.schema.json`.
 - `templates/local.sh` — the default shape of the script when the project has no task runner of
   its own: one file, two subcommands. Read at step 3 of the local track.
 - `reference/testing.md` — the whole testing procedure: what to search for, the runner each surface
@@ -115,6 +116,10 @@ repository answers that faster than the person, and the person may not know.
 The testing track works the same way. A project that already runs end-to-end tests has a runner
 configuration and a directory holding them, and both are found and named before the question is
 asked.
+
+**What the search leaves ambiguous is consulted on once** before the question, per
+`reference/signals.md` for the local track and `reference/testing.md` for the testing track, and the
+answer becomes the proposed option. The user still chooses; a consult never declares or installs.
 
 ## When another verb follows this skill
 
@@ -304,6 +309,7 @@ case is written by `/codefall-implement` when a bead names one.
 ## Rules
 
 - **Search before asking.** Name what was found; never open with "do scripts exist?"
+- **A consult proposes the option; the user picks it.** Never a declaration, never an install.
 - **The contract is not negotiable.** A candidate that drops, resets, or deletes is reported and
   never declared, however convenient it is.
 - **Nothing is written without confirmation.** The full draft or the diff, shown first.

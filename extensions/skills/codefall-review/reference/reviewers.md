@@ -2,6 +2,14 @@
 
 Read at step 3, before the review starts.
 
+## Contents
+
+- Who reviews
+- Lens groups
+- Subagents
+- Another agent
+- Consulting on `notChecked`
+
 ## Who reviews
 
 The project's agent order, resolved at step 1 per `../../../../.codefall/shared/running-agents.md`
@@ -86,3 +94,30 @@ OpenCode, Gemini, and agy. The exit code decides the walk, per `running-agents.m
   is sent, so it exits `76` with its own error, the order advances, and the report says so with the
   harness's output. When the order ends with no answer, stop, report every agent tried, and offer
   this session as the reviewer. Never fall back silently, and never past the end of the order.
+
+## Consulting on `notChecked`
+
+After the reviewer returns and before the files are written, read its `notChecked`. Some entries
+are gaps in the material — a missing hop, a dropped lens, a file it could not reach — and those
+stay as they are. An entry that is an unsettled question about the target — "could not tell whether
+the retry loop can run twice on one message" — gets one consult, per *Consulting* in
+`../../../../.codefall/shared/running-agents.md`.
+
+**The question**, rendered into `../../../../.codefall/shared/consult-prompt.md`: `QUESTION` is the entry in the
+reviewer's words; `FILES` are the files it names, or the target's changed files when it names none;
+`CONTEXT` is the target and its revision, and which lens raised it; `OPTIONS` are three — it is a
+defect, with the severity the run would give it; it is not a defect; the repository does not say.
+`PRIOR` is an earlier agent's failure, or empty. `SCHEMA` is `../../../../.codefall/shared/consult.schema.json`. Walk the
+`consult` order with `../../../../.codefall/shared/run-agent.sh`.
+
+**What the answer does.** A consult never becomes a finding on its own. An answer of `high`
+confidence that names a defect and cites the file and line lets this session promote the entry to a
+finding — `open`, the severity the answer argued for, the consult's name and one sentence of its
+reasoning in the finding's `consult` field — after this session has read the cited lines and agrees.
+Any other answer leaves the entry in `notChecked`, with the consult's view appended: *consulted
+`architect` (codex): not a defect, the queue is single-consumer (`queue.go:41`)*. When no agent
+answered, the entry stays as the reviewer wrote it.
+
+One consult per entry, one pass over the order, and the report names every consult beside the
+reviewer. A promoted finding is triaged like every other one; the consult does not decide its
+status.

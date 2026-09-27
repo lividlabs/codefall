@@ -25,12 +25,12 @@ agent may run it when the environment is stale. In order:
 | Verb | Reads | Writes | Hands to |
 | --- | --- | --- | --- |
 | `envision` | whatever the user arrived with: a sentence, a pitch document, a folder of mockups | `docs/visions/VISION-NNN-slug.md`, the *why*; sources kept verbatim under `docs/visions/sources/` | `scaffold` requires one; `specify` may draw on one |
-| `scaffold` | a vision; an interview for what a template cannot decide | ratified ADRs, scoped `AGENTS.md` files, optionally project files, boundary lint, and the `start` and `update` scripts | a project ready for `specify` |
-| `specify` | the idea or vision, and an audit of what already exists | `docs/specs/SPEC-NNN-slug.md`, the *what*: requirements with EARS acceptance criteria, mirrored to the tracker as a parent issue and one child per requirement | `design` |
+| `scaffold` | a vision; an interview for what a template cannot decide; the project's consult agents when a stack stays open | ratified ADRs, scoped `AGENTS.md` files, optionally project files, boundary lint, and the `start` and `update` scripts | a project ready for `specify` |
+| `specify` | the idea or vision, and an audit of what already exists; the project's consult agents for a question of fact the user cannot answer | `docs/specs/SPEC-NNN-slug.md`, the *what*: requirements with EARS acceptance criteria, mirrored to the tracker as a parent issue and one child per requirement | `design` |
 | `mock-up` | a design-tool export, or nothing | `docs/mockups/<slug>/`, matching the app's own design system | `design`; an issue labelled `requires-mockup` blocks design until it exists |
 | `design` | the spec, the vision, the code; the project's consult agents for a technical point it cannot settle | `docs/designs/DESIGN-NNN-slug.md`, the *how*, scaled to the change; ADRs for hard-to-reverse choices; beads with dependency edges, each carrying its acceptance criteria and, where the task is verified through the wired product, the test case and its criteria | `implement` |
 | `implement` | ready beads, an epic, or a design; the project's consult agents when a worker fails | a worktree per task, the test case before the code, verification against the bead's criteria and the project's checks, a pull request per task, walked in parallel waves until the frontier is empty | the human, who merges; `design`, for a disagreement that moves work, filed as a revision bead |
-| `review` | anything live: uncommitted work, a branch, a PR, a commit range, a path, a document | `.codefall/reviews/`, a JSON and Markdown pair per review; fixes on the target's branch for the findings the user takes | the human; `design`, for a deferred finding that moves work |
+| `review` | anything live: uncommitted work, a branch, a PR, a commit range, a path, a document; the project's consult agents for what the reviewer could not settle | `.codefall/reviews/`, a JSON and Markdown pair per review; fixes on the target's branch for the findings the user takes | the human; `design`, for a deferred finding that moves work |
 | `test` | what the project declares: suites, the changed subset, or one case in its `spec` or `agentic` modality | `.codefall/tests/`, a report per run; findings triaged, never an edit that makes a run pass | tracker issues on the user's word |
 
 A contained fix skips the documents: `design` writes beads only when a change stays inside one
@@ -58,7 +58,8 @@ Four verbs sit beside the chain rather than in it:
   The other is the test harness: a spec runner per surface, declared in `test.runners`, its
   commands recorded in the testing root's `AGENTS.md`
   ([ADR-007](https://github.com/lividlabs/codefall-cli/blob/main/docs/adrs/ADR-007-test-cases.md)).
-  One run equips one track, and setting a harness up is its own pull request.
+  One run equips one track, and setting a harness up is its own pull request. What its search
+  leaves ambiguous is consulted on once before the one question.
 - **`refresh`** is what to run instead of pulling by hand: fetch, fast-forward `main` when safe,
   `bd sync` the beads with their Dolt remote, run `start`, run `update` when the commit moved,
   record the commit in a git-ignored stamp. It never rebases a feature branch, stashes a dirty

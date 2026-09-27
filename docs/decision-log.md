@@ -1365,6 +1365,26 @@ Decided at scaffold, 2026-08-16.
   user, which is a preference and not a question; and a consult writing or settling an ADR, which
   stays the user's to ratify with the consult's analysis in front of them.
 
+- **Review, specify, scaffold, and equip consult when stuck, 2026-09-26.** The same consult
+  implement and design gained: one question, the shared prompt and schema, the `consult` order,
+  first answer wins, the session decides. Review consults on each `notChecked` entry that is an
+  unsettled question about the target, and a `high` answer citing file and line lets the session
+  promote it to a finding it has verified, recorded in a new optional `consult` field; anything
+  else leaves the entry where it was with the consult's view appended. Specify consults on a
+  question of fact the user cannot answer — how the existing system behaves, what a term means
+  here — and offers the answer as a proposal the user confirms; never on a preference, which is
+  pushed back on instead. Scaffold consults before the full-list stack question when the
+  description left a surface open and the directory holds files, and equip before its one question
+  when the search left two candidates or a runner ambiguous; in both the answer becomes the proposed
+  option and the user still picks. Left out on purpose: envision, whose every question is a
+  preference; mock-up, which draws nothing and imports what the user has; graft, whose differences
+  are mechanical and whose amended-document rule already forbids deciding for the user; refresh,
+  which has no judgment call; and test, whose rule that a criterion is never edited to make a run
+  pass is exactly what a consult would be asked to bend. Seen and not taken: a consult creating a
+  finding directly, which would put an unverified claim in front of the user with the reviewer's
+  authority; and consulting on the stack for an empty directory, where nothing but the user's
+  preference can answer.
+
 ## Open
 
 - **UI composition.** Half settled by **Shared modules, 2026-08-27** above: the theme, the styles,
