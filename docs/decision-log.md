@@ -1400,6 +1400,26 @@ Decided at scaffold, 2026-08-16.
   `extensions/skills/AGENTS.md`, and the Codefall section every project's `AGENTS.md` carries are
   restated to match.
 
+- **Upgrade is its own command, and init runs once, 2026-09-27.** `codefall init` did two jobs
+  under one name: the first run that surveys and sets a project up, and every run after it, which
+  read the settings back, compared the manifest with the binary, and reinstalled. `upgrade` was an
+  alias of `init` and `--force` made a rerun behave like a first run. Now `init` refuses a project
+  that has `.codefall/manifest.json`, naming `codefall upgrade`, and `upgrade` refuses a project
+  that has none, naming `init`; a project set up before the manifest existed runs `init` one more
+  time, which writes it. Both commands run the one use case in `initcmd`, because every step is
+  shared and the steps are not pure; the facade exports `Commands` and the root mounts both.
+  `--force` and the alias are gone, `--yes` moves to `upgrade`, and every remedy that said to rerun
+  `codefall init` says `codefall upgrade`. ADR-010 records the rule and decides two things this
+  change does not yet implement: upgrade removes files the previous manifest lists that the new
+  install did not write, naming a rename as a rename from an embedded table, and it prints the
+  changelog's `⚠ BREAKING CHANGES` entries between the recorded version and the binary's before it
+  applies anything. It also decides that `codefall-graft` becomes `codefall-upgrade`. Seen and not
+  taken: a second component for upgrade, which would have duplicated the steps or moved impure code
+  into a shared module; a hand-maintained table of breaking changes, which is a second source that
+  drifts from the changelog; and doctor choosing between `init` and `upgrade` in its remedies by
+  reading the manifest, which is left for later since upgrade sends a manifest-less project on to
+  init itself.
+
 ## Open
 
 - **UI composition.** Half settled by **Shared modules, 2026-08-27** above: the theme, the styles,

@@ -49,7 +49,7 @@ A project can use more than one, and `init` asks which ones to set up rather tha
 commas. Each harness is named for its command-line binary, shown beside it above, and that is the
 name `.codefall/settings.json` records. A project set up when Claude Code was `claude-code` and
 Antigravity was `antigravity` keeps working: `codefall doctor` warns about the old names, and the
-next `codefall init` rewrites them.
+next `codefall upgrade` rewrites them.
 
 ### New Projects
 
@@ -64,12 +64,23 @@ codefall create
 
 Running the `init` command installs configuration for codefall, and the extension for each harness you
 choose. It asks which harnesses the project uses and where the project's test cases live, and records
-both in `.codefall/settings.json`; a rerun installs for the harnesses already recorded there and keeps
-the testing root already declared, so `--harness` and `--test-dir` are only needed the first time, or
-to add a harness.
+both in `.codefall/settings.json`. It runs once: a project that already has `.codefall/manifest.json`
+is `upgrade`'s, and `init` says so rather than repeating itself.
 
 ```
 codefall init
+```
+
+Running the `upgrade` command brings an installed project level with the binary: it reinstalls the
+skills, shared files, and hooks for the harnesses the settings record, replaces the sections codefall
+wrote into `AGENTS.md`, rewrites a harness name still spelled the old way, and records the run in the
+manifest. It changes nothing it did not write, reports "already up to date" when there is nothing to
+do, and asks before moving the installed version unless `--yes` answers. `--harness` adds a harness
+the project did not choose at `init`. A project set up before the manifest existed runs `init` one
+more time, which writes the manifest, and uses `upgrade` from then on.
+
+```
+codefall upgrade
 ```
 
 ### What init writes
@@ -126,17 +137,24 @@ never pulls, never runs the project's `update`, and never fails a session it cou
 Antigravity has no session event, so it gets the guard alone.
 
 `codefall doctor` reports on the declaration in a **Testing** category: it warns when no testing root
-is declared, naming `codefall init`; warns when no test runner is declared, naming `/codefall-equip`;
+is declared, naming `codefall upgrade`; warns when no test runner is declared, naming `/codefall-equip`;
 and fails when the directory the project declared is not there. Like every other category, it names
 the remedy and never runs it.
 
-Upgrading from a codefall before this layout: rerun `codefall init`, then delete the old copies by
+Upgrading from a codefall before this layout: run `codefall upgrade`, then delete the old copies by
 hand. Codefall removes only what it can prove it owns, and those directories hold your own files
 beside codefall's — the pull request that landed the change lists what to delete.
 
 ## CLI commands
 
-TODO
+| Command | What it does |
+| --- | --- |
+| `codefall create <dir>` | Makes the directory and its git repository, commits a README and a `.gitignore`, runs `init` there, and offers the push |
+| `codefall init` | Sets a directory up for codefall, once: settings, the extension for each harness, Beads, hooks, the `AGENTS.md` sections, the testing tree, and the manifest that records the run |
+| `codefall upgrade` | Brings an installed project level with the binary, for the harnesses the settings record, and touches nothing it did not write |
+| `codefall doctor` | Reports whether a project has what codefall needs, with a remedy per unmet check, and repairs nothing |
+
+[ADR-010](docs/adrs/ADR-010-upgrade.md) records why `init` runs once and `upgrade` is its own command.
 
 ## Skills
 
