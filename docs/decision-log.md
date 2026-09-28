@@ -1613,6 +1613,30 @@ Decided at scaffold, 2026-08-16.
   list of "when I am in X" entries, and validation covers the duplicate); agent names (one more thing
   to define, saying nothing `harness:model` does not).
 
+- **How a harness is called is settings, and equip sets it up from inside the harness,
+  2026-09-28.** Through `run-agent.sh`, codex on Bedrock failed every run on one machine: the
+  harness reaches Bedrock through the AWS SDK for Rust, which cannot refresh an `aws login` session
+  the AWS CLI can, and the credential export that made interactive runs work was a zsh function a
+  bash script never sees. Two more things surfaced on the way: the findings schema's `if`/`then`
+  clause is rejected by Bedrock's structured output as well as Muse's, and a headless run loaded the
+  project's session-start hooks and followed them into a refresh. Nothing in settings could say how
+  a harness is called, and nothing could tell a person that `gpt-6-astra` is `us.openai.gpt-6-astra`
+  on Bedrock. Now `harnessConfig` says it, keyed by the name a list item or `via=` uses as its
+  harness: a harness-named key configures that harness, any other key is a variant naming its
+  binary in `harness`, and a block carries `modelFlag`, `provider`, `args`, and `env`, a command
+  whose output is exported before the harness starts. The script reads the block with jq, turns
+  `provider` into each harness's own switch, and runs every harness with its hooks off where a
+  switch exists. The model string comes from the harness itself: `codefall-equip agents` runs inside
+  the harness, reads its own session record (codex's thread row, Claude Code's transcript, Muse's
+  session log; OpenCode by directory and recency, agy by asking), proposes the block and the list
+  entries, writes them through `codefall config`, and proves the agent by running it once. The
+  `if`/`then` clause is gone from the schema and triage checks the reason instead. ADR-009.3 is the
+  edition. Seen and not taken: provider, args, and env on each list item (repeated wherever the
+  harness appears, and the script would need them passed as flags); a per-user file for the block
+  (the provider is the project's choice, and a variant covers a second one); a shipped catalog of
+  model strings per provider (stale within a release); doctor probing every agent (doctor runs
+  nothing a project declares, and equip's proof is where the run belongs).
+
 ## Open
 
 - (nothing open; the last item graduated to ADR-012 on 2026-09-27)

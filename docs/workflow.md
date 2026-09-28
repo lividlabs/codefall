@@ -80,8 +80,12 @@ Four verbs sit beside the chain rather than in it:
   The other is the test harness: a spec runner per surface, declared in `test.runners`, its
   commands recorded in the testing root's `AGENTS.md`
   ([ADR-007](https://github.com/lividlabs/codefall-cli/blob/main/docs/adrs/ADR-007-test-cases.md)).
-  One run equips one track, and setting a harness up is its own pull request. What its search
-  leaves ambiguous is consulted on once before the one question.
+  The third is the agents: how another harness is called, under `harnessConfig`, and who reviews
+  and consults, in the `agents` lists, set up from inside the harness being configured, which is
+  the one that knows its own model strings
+  ([ADR-009.3](https://github.com/lividlabs/codefall-cli/blob/main/docs/adrs/ADR-009.3-agents.md)).
+  One run equips one track, and each lands as its own pull request. What a search leaves ambiguous
+  is consulted on once before the one question.
 - **`refresh`** is what to run instead of pulling by hand: fetch, fast-forward `main` when safe,
   `bd sync` the beads with their Dolt remote, run `start`, run `update` when the commit moved,
   record the commit in a git-ignored stamp. It never rebases a feature branch, stashes a dirty

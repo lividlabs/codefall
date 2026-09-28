@@ -1,7 +1,7 @@
 ---
 name: codefall-equip
-description: Equip a project with the two things it has to have before the other verbs work. The local environment — start, which brings the services the project develops against up, and update, which makes the local environment match the checkout — declared under local in .codefall/settings.json and run by codefall-refresh. The test harness — a spec runner per surface, its configuration pointed at the testing root, its name declared in test.runners and its commands recorded in the testing root's AGENTS.md — which codefall-test runs cases through. Either way it finds what the project already has, or drafts it from what the repository shows, confirms, writes, and declares. Builds and rebuilds; codefall-scaffold and codefall-implement follow the local-scripts procedure.
-argument-hint: "[local | test] [path]"
+description: Equip a project with the three things it has to have before the other verbs work. The local environment — start, which brings the services the project develops against up, and update, which makes the local environment match the checkout — declared under local in .codefall/settings.json and run by codefall-refresh. The test harness — a spec runner per surface, its configuration pointed at the testing root, its name declared in test.runners and its commands recorded in the testing root's AGENTS.md — which codefall-test runs cases through. The agents — how another harness is called, declared under harnessConfig, and who reviews and consults, in the agents lists — set up from inside the harness, which knows its own model strings. Each finds what the project already has, or drafts it from what the repository or the session shows, confirms, writes, and declares. Builds and rebuilds; codefall-scaffold and codefall-implement follow the local-scripts procedure.
+argument-hint: "[local | test | agents] [path]"
 disable-model-invocation: true
 allowed-tools:
   - Read
@@ -15,12 +15,13 @@ allowed-tools:
 
 # Equip
 
-Equip a repository with what the other verbs need it to have. Two things: the **local environment**
-— a `start` command that brings its services up and an `update` command that makes the local
-environment match the checkout — and the **test harness** — the spec runner that collects the specs
-beside the project's test cases. Both are the project's own, and both are declared in
-`.codefall/settings.json`: the scripts under `local`, which `codefall-refresh` runs from then on,
-and the runner's name under `test.runners`, which `codefall-test` reads before it runs a case.
+Equip a repository with what the other verbs need it to have. Three things: the **local
+environment** — `start`, which brings its services up, and `update`, which makes the local
+environment match the checkout; the **test harness** — the spec runner that collects the specs
+beside the project's test cases; and the **agents** — how another harness is called, and who
+reviews and consults. All are declared in `.codefall/settings.json`: `local`, which
+`codefall-refresh` runs; `test.runners`, which `codefall-test` reads; `harnessConfig` and the
+`agents` lists, which `codefall-review` and every consult read.
 
 Equipping is neither refreshing nor testing. This skill finds, drafts, or revises what a project
 runs with and declares it; it runs it only to prove it. Bringing an environment current on an
@@ -30,33 +31,38 @@ Paths that start with `reference/`, `templates/`, or `../` are relative to this 
 not the user's project. A path through `../../../.codefall/` is the one that leaves the skills
 directory: it names a file `codefall init` installed in the project's own `.codefall/`.
 
-## The two tracks
+## The three tracks
 
-One run equips one of the two. Each has its own search, its own question, its own declaration, and
-its own proof, and in the user's project each lands as its own pull request.
+One run equips one of the three. Each has its own search, its own question, its own declaration,
+and its own proof, and in the user's project each lands as its own pull request.
 
 | Argument | Track | Procedure |
 | --- | --- | --- |
 | `local`, or a path alone | the two local-environment scripts | [Process — the local scripts](#process--the-local-scripts) |
 | `test` | the test harness | [Process — the test harness](#process--the-test-harness) |
+| `agents` | how this harness is called, and who reviews and consults | [Process — the agents](#process--the-agents) |
 
-A path may follow either word; it is the project directory, and the working directory is the
-default. With no word at all, read `.codefall/settings.json`, say what `local` and `test` declare
-today, and ask which of the two to equip before anything else.
+A path may follow any word; it is the project directory, and the working directory is the default.
+With no word at all, read `.codefall/settings.json`, say what `local`, `test`, `harnessConfig`, and
+`agents` declare today, and ask which of the three to equip before anything else.
 
 ## Files beside this one
 
 Read each when its step says to; none is loaded up front.
 
-- `reference/signals.md` — what in a repository says which tools it uses, the entry points a
-  project may already have, what each maps to in `start` and `update`, and consulting before the
-  one question. Read at step 2 of the local track. Names `../../../.codefall/shared/running-agents.md`,
+- `reference/signals.md` — what in a repository says which tools it uses, the entry points it may
+  already have, what each maps to, and consulting before the one question. Read at step 2 of the
+  local track. Names `../../../.codefall/shared/running-agents.md`,
   `../../../.codefall/shared/run-agent.sh`, `../../../.codefall/shared/consult-prompt.md`, `../../../.codefall/shared/consult.schema.json`.
-- `templates/local.sh` — the default shape of the script when the project has no task runner of
-  its own: one file, two subcommands. Read at step 3 of the local track.
+- `templates/local.sh` — the default script when the project has no task runner: one file, two
+  subcommands. Read at step 3 of the local track.
 - `reference/testing.md` — the whole testing procedure: what to search for, the runner each surface
   takes, what installing each one means, the exact shape of every write, and how the result is
   proven. Read at step 1 of the testing track.
+- `reference/agents.md` — the whole agents procedure: where each harness records its session's
+  model and provider, the one question, the writes, the proof. Read at step 1 of the agents track.
+- `reference/contract.md` — what `start` and `update` promise, in full. Read at step 2 of the
+  local track.
 - `../../../.codefall/shared/landing.md` — the shared procedure for the branch, the commit, and the
   offered pull request. Read before the first write on either track.
 
@@ -68,36 +74,18 @@ Read each when its step says to; none is loaded up front.
 | Drafting the scripts when there are none | Running a suite or a case | `codefall-test` |
 | Installing or declaring a spec runner per surface | Writing a test case | `codefall-implement` |
 | Revising either when the project's tools change | Deciding which tools the project uses | `codefall-design` |
-| Declaring `local` and `test.runners` in `.codefall/settings.json` | Per-branch databases, shared or otherwise | the project |
+| Declaring `local`, `test.runners`, `harnessConfig`, and the `agents` lists in `.codefall/settings.json` | Per-branch databases, shared or otherwise | the project |
 | Recording the runner's commands in the testing root's `AGENTS.md` | The testing root, its tree, and the `CODEFALL TESTING` section | `codefall init` |
-| Proving a candidate meets the contract | Any other settings field | `codefall init` |
+| Proving a candidate meets the contract, or an agent answers | Any other settings field | `codefall init` |
 
 **Every run does the same thing**, whether what it equips exists or not: read the project, read what
 is there, propose the draft or the revision, confirm, write, declare. There is no first-time mode.
 
 ## The contract
 
-What the declared `start` and `update` promise. A candidate that does not keep it is reported and
-never declared; a draft that would not keep it is not written.
-
-- Both are **shell commands run from the project root**, declared as strings. A Makefile target, a
-  package script, or a script of the project's own are all fine.
-- **`start`** brings up what the project needs running locally to develop against. Exit `0` when
-  everything it manages is up, whether it started it or found it running. Safe to call twice; the
-  second call is cheap.
-- **`update`** makes the local environment match the checkout: dependencies to the lockfile,
-  pending migrations applied, generated code regenerated, whatever a changed definition
-  invalidates rebuilt. Exit `0` when the environment matches. Safe to call when nothing changed,
-  and cheap then — it asks the package manager and the migration tool, which already answer
-  "nothing to do" quickly, rather than doing the work unconditionally.
-- **`update` may assume `start` has run.** It does not start anything; `codefall-refresh` runs
-  `start` first.
-- **Plain scripts.** A person runs either from a terminal. CI can run either. Neither needs the
-  extension or a harness. A non-zero exit and a sentence on stderr are how one reports a problem,
-  written for the person who reads it next.
-- **Never destructive.** No dropping a database, no deleting data directories, no `--force`
-  recreation. A command that resets state to get to a known state is not idempotent; it is
-  starting over every time.
+What `start` and `update` promise, in `reference/contract.md`: plain shell commands from the
+project root, idempotent and cheap the second time, never destructive. A candidate that does not
+keep it is reported and never declared; a draft that would not keep it is not written.
 
 ## Search first, then ask with evidence
 
@@ -107,15 +95,14 @@ before asking anything, name what was found, and ask one question:
 > I found `make dev-up`, which starts Postgres and Redis through compose, and `npm run db:migrate`.
 > Are these the start and update commands, or should I draft new ones?
 
-A user who knows corrects it. A user who does not know takes what was found. A repository with
-nothing gets the draft offer. A repository whose scripts were written for a different caller — a
-first-clone setup that prompts, a sync that pulls — gets the draft offer too, with the steps the
-draft keeps from those scripts named. **Never ask whether something exists before looking**: the
+A user who knows corrects it; one who does not takes what was found. A repository with nothing,
+or whose scripts were written for a different caller — a first-clone setup that prompts, a sync
+that pulls — gets the draft offer, with the steps the draft keeps from those scripts named. **Never ask whether something exists before looking**: the
 repository answers that faster than the person, and the person may not know.
 
-The testing track works the same way. A project that already runs end-to-end tests has a runner
-configuration and a directory holding them, and both are found and named before the question is
-asked.
+The testing track works the same way: a project that already runs end-to-end tests has a runner
+configuration and a directory holding them, found and named before the question. The agents track
+reads the session's own record instead of the repository, and shows it before asking.
 
 **What the search leaves ambiguous is consulted on once** before the question, per
 `reference/signals.md` for the local track and `reference/testing.md` for the testing track, and the
@@ -137,6 +124,7 @@ another verb's pull request.** When a task needs a case and no runner is declare
   confirmation. Read the declared scripts, revise them per step 3 for what the task introduced,
   keep the contract, and change the declaration only when an entry point moved. The change lands
   in the task's own pull request and is named in its body.
+- **Neither follows the agents track.**
 
 ## Project customizations and persona
 
@@ -165,14 +153,13 @@ Read `reference/signals.md`. Two searches:
   directory, a codegen config, a dotenv sample file — which decide what a draft has to do and what
   a candidate has to cover.
 
-Check each candidate against [the contract](#the-contract) by reading it, not by running it, and
-say which of two things a candidate that does not keep it is. A candidate that resets, drops, or
+Read `reference/contract.md`. Check each candidate against it by reading the candidate, not by
+running it, and say which of two things a candidate that does not keep it is. A candidate that resets, drops, or
 deletes is **wrong** for any caller; say which line and why. A candidate that prompts, or that
 pulls before it migrates, is **written for a different caller** — a first-clone setup, a sync
 someone runs by hand — and is correct for that caller; say so in those words, and say what
-`codefall-refresh` needs instead: "`scripts/sync.sh` is right for what it does. Refresh runs
-`update` with nobody at the keyboard and with the checkout its own, so it needs the same steps
-without the git ones." Never tell the user their scripts are broken when they are not.
+`codefall-refresh` needs instead: "`scripts/sync.sh` is right for what it does; refresh needs the
+same steps without the git ones." Never tell the user their scripts are broken when they are not.
 
 Then ask the one question, with what was found beside it. Three answers:
 
@@ -196,11 +183,11 @@ Read `templates/local.sh`. The shape follows the project:
   its subcommands and the declaration pointing at each.
 
 Each step in `update` is the tool's own idempotent form: `npm ci` not `npm install`, `migrate
-deploy` not `migrate reset`, `go mod download`, `uv sync`. A step whose tool has no cheap no-op —
-`npm ci` reinstalls every run — is guarded the way the template shows. The project's sample env
-file is copied to the file its tooling loads only when that file is missing, never overwritten,
-and before any step that reads it. `start` uses the compose file's own wait (`up -d --wait`) where
-it has one. Every step carries a one-line comment saying what it brings current.
+deploy` not `migrate reset`. A step with no cheap no-op — `npm ci` reinstalls every run — is
+guarded the way the template shows. The sample env file is copied to the file the tooling loads
+only when that file is missing, before any step that reads it. `start` uses the compose file's own
+wait (`up -d --wait`) where it has one. Every step carries a one-line comment on what it brings
+current.
 
 A **revision** changes only what the introduced tool needs and leaves the rest of the script as
 the project wrote it. Show the diff, not the whole file.
@@ -309,6 +296,25 @@ the branch, and the push and pull request offered — its own pull request, neve
 The merge is the user's. **End with what the user does next**: merge the pull request; the first
 case is written by `/codefall-implement` when a bead names one.
 
+## Process — the agents
+
+`reference/agents.md` carries this track in full. Read it at step 1 and follow it. It runs inside
+the harness being set up, whose own session record holds the exact model string and provider.
+
+1. **Read the declaration**: `harnessConfig` and the `agents` lists; no settings file means
+   `codefall init` comes first. Answer which harness this is per
+   `../../../.codefall/shared/running-agents.md`; `unknown` stops here.
+2. **Read this session's record** for the model and provider, and show it. A record that cannot be
+   read means asking for the model string, and saying why.
+3. **Ask the one question**: the block's key and fields, and which active agents' lists gain
+   `<key>:<model>`, each with a proposed answer.
+4. **Write** on `equip/agents`, through `codefall config harness` and `codefall config agents` when
+   the CLI is on `PATH`, else the JSON directly, keeping the file's formatting.
+5. **Prove it**: run the agent once through `../../../.codefall/shared/run-agent.sh` with a
+   one-line prompt; exit `0` and a non-empty out-file. Then `codefall doctor` when it is on `PATH`.
+6. **Report**, land it as its own pull request, and end with what the user does next: merge, and
+   run this track inside each other harness the project wants set up.
+
 ## Rules
 
 - **Search before asking.** Name what was found; never open with "do scripts exist?"
@@ -322,9 +328,9 @@ case is written by `/codefall-implement` when a bead names one.
 - **Declare relative to the project root.** Commands, not paths; a task runner's target is a
   command.
 - **Proving runs real services, so it is offered.** Never started on the user's machine unasked.
-- **Only the `local` block and the `test` block's `runners`.** No other settings field is this
-  skill's to touch — the testing root, the tree under it, and the `CODEFALL TESTING` section are
-  `codefall init`'s.
+- **Only the `local` block, the `test` block's `runners`, `harnessConfig`, and the `agents` lists.**
+  No other settings field is this skill's to touch — the testing root, the tree under it, and the
+  `CODEFALL TESTING` section are `codefall init`'s.
 - **The runner follows the surface.** Playwright for a browser front end, an Electron shell, or an
   HTTP API; `go test` for a Go surface.
 - **Refuse the `spec` modality where this version has no runner** — React Native, Tauri,
@@ -333,5 +339,7 @@ case is written by `/codefall-implement` when a bead names one.
 - **A harness is equipped in its own pull request.** It never rides along in a task's.
 - **Cases are not this skill's.** An empty tree is what proves a harness; writing the first case is
   `/codefall-implement`.
-- **Refresh and test are not this skill.** Say so and stop when the user wants the environment
-  brought current, or a suite run, rather than equipped.
+- **Refresh, test, and review are not this skill.** Say so and stop when the user wants the
+  environment brought current, a suite run, or a review done, rather than equipped.
+- **The agents track runs inside the harness it sets up.** What the session's own record says is
+  what is written, once the user confirms it.
