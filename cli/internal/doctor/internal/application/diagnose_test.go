@@ -142,6 +142,22 @@ func withAgents(agents string) string {
 }`
 }
 
+// withHarnessConfig is the fixture's settings with an agents list and a harnessConfig object, both
+// written as JSON.
+func withHarnessConfig(agents, blocks string) string {
+	return strings.Replace(withAgents(agents), `  "agents": `, `  "harnessConfig": `+blocks+`,
+  "agents": `, 1)
+}
+
+// codexDirectReviews is a project whose sessions in Claude Code have a Codex variant review, then
+// this harness's own subagent. The variant's binary is codex.
+const codexDirectReviews = `[
+    { "activeAgent": "claude", "review": [{ "harness": "codex-direct", "model": "gpt-6-astra" }, { "harness": "current" }] }
+  ]`
+
+// codexDirectBlock is the variant codexDirectReviews names.
+const codexDirectBlock = `{ "codex-direct": { "harness": "codex", "args": ["-c", "model_reasoning_effort=high"] } }`
+
 // museReviewsElsewhere is a project whose sessions in Muse have Claude review, then Codex on a chosen
 // model, then this harness's own subagent, while every other harness and every consult keeps the
 // subagent alone.
@@ -921,6 +937,44 @@ func TestDiagnoseRun(t *testing.T) {
 			target:     domain.AgentsRunnable.ID,
 			wantDetail: "codex is not on PATH",
 			wantRemedy: mo.Some(agentsRemedy),
+		},
+		{
+			// An agent on a variant runs on the binary the variant names, so that binary is what is
+			// looked for, and the report names the agent as the list does.
+			name: "an agent runs on a harnessConfig variant whose binary this machine has",
+			mutate: func(f *fakeFileSystem, r *fakeCommandRunner) {
+				f.files[settingsPath] = []byte(withHarnessConfig(codexDirectReviews, codexDirectBlock))
+				r.paths["codex"] = "/opt/homebrew/bin/codex"
+			},
+			want:       allPass,
+			target:     domain.AgentsRunnable.ID,
+			wantDetail: "claude: review codex-direct:gpt-6-astra, current",
+		},
+		{
+			name: "an agent runs on a harnessConfig variant whose binary is not on PATH",
+			mutate: func(f *fakeFileSystem, _ *fakeCommandRunner) {
+				f.files[settingsPath] = []byte(withHarnessConfig(codexDirectReviews, codexDirectBlock))
+			},
+			want:       outcomes(map[string]domain.Status{domain.AgentsRunnable.ID: domain.StatusWarn}),
+			target:     domain.AgentsRunnable.ID,
+			wantDetail: "codex is not on PATH",
+			wantRemedy: mo.Some(agentsRemedy),
+		},
+		{
+			// The block is the settings module's to refuse, so it is the settings-complete check's
+			// finding, and the two agent checks are absent.
+			name: "a harnessConfig block names no harness",
+			mutate: func(f *fakeFileSystem, _ *fakeCommandRunner) {
+				f.files[settingsPath] = []byte(withHarnessConfig(codexDirectReviews, `{ "codex-direct": { "provider": "x" } }`))
+			},
+			want: outcomes(map[string]domain.Status{domain.SettingsComplete.ID: domain.StatusFail},
+				afterSettingsDone...),
+			target: domain.SettingsComplete.ID,
+			wantDetail: `settings.json is incomplete: harnessConfig.codex-direct.harness: missing; a key that is not a ` +
+				`harness name says which harness runs it ("agy", "claude", "codex", "muse", "opencode"); ` +
+				`agents: [0].review[0].harness: unknown value "codex-direct" ` +
+				`(expected "agy", "claude", "codex", "current", "muse", "opencode", or a harnessConfig key)`,
+			wantRemedy: mo.Some(fixRemedy),
 		},
 		{
 			// Every list the settings write is checked. Here the default entry has current in both
