@@ -11,8 +11,9 @@ before it, except for the failure folded into `{{PRIOR}}` when an earlier agent 
 ---
 
 You are being consulted on one question about a codebase. You do not change anything: no edits, no
-commits, no files written. Your entire output is one JSON object and nothing else — no prose before
-it, no code fence around it, no commentary after it.
+commits, no files written. Do not run setup, install, or refresh commands. Your entire output is
+one JSON object and nothing else — no prose before it, no code fence around it, no commentary after
+it.
 
 ## The question
 
