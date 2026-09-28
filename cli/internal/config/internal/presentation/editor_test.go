@@ -344,8 +344,8 @@ func TestEditorAddsAnAgentThroughTheForm(t *testing.T) {
 // The add form tells a person who does not know the model string where to get it, and offers a
 // harnessConfig variant beside the harness names.
 func TestEditorAddFormNamesTheEquipSkillAndTheVariants(t *testing.T) {
-	want := "Not sure of the model string? Run /codefall-equip agents inside that harness; " +
-		"it reads the model the session is using and writes the entry for you."
+	want := "Not sure of the model string? Run /codefall-equip agents in any harness; " +
+		"it finds the model and writes the entry for you."
 	if equipHint != want {
 		t.Fatalf("equipHint = %q, want %q", equipHint, want)
 	}

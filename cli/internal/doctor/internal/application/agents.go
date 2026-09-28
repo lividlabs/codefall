@@ -17,7 +17,7 @@ import (
 // binary anyway, may want the agent gone from the list, or may leave it.
 const agentsRemedy = "install the missing binary, run codefall config agents <activeAgent> <review|consult> " +
 	"<harness[:model]>... to write the list without it, or leave it: a run skips an agent it cannot start here" +
-	", or run /codefall-equip agents inside that harness to set the entry up"
+	", or run /codefall-equip agents to set the entry up"
 
 // currentRemedy is what to do about a list that names no agent on current: name one in it, or clear
 // it so the default entry's list applies.

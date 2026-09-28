@@ -597,10 +597,10 @@ func (e editor) listHeight() int {
 	return max(e.height-8, 6)
 }
 
-// equipHint is what the add form says about the model: the skill that reads it from inside the
-// harness and writes the entry, for whoever does not know the model string by heart.
-const equipHint = "Not sure of the model string? Run /codefall-equip agents inside that harness; it reads the " +
-	"model the session is using and writes the entry for you."
+// equipHint is what the add form says about the model: the skill that finds it and writes the
+// entry, for whoever does not know the model string by heart.
+const equipHint = "Not sure of the model string? Run /codefall-equip agents in any harness; it finds the " +
+	"model and writes the entry for you."
 
 // addForm is the form that adds an agent to the list on screen: the harness that runs it, or a
 // harnessConfig variant that names one, and optionally the model that harness is asked for.
