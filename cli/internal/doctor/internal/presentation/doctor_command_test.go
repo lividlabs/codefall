@@ -87,7 +87,7 @@ func TestDoctorCommandListsHarnessesAndAgentsOnSeparateLines(t *testing.T) {
 		domain.HarnessesInstalled.PassWithDetail("claude"),
 		domain.SharedInstalled.PassWithDetail("5 shared files"),
 		domain.HarnessesLeftOver.Pass(),
-		domain.AgentsRunnable.PassWithDetail("architect (codex, gpt-5-codex), subagent (current)"),
+		domain.AgentsRunnable.PassWithDetail("default: review current, consult current; muse: review claude, codex:gpt-5-codex, current"),
 		domain.AgentsCurrent.Pass(),
 	)}
 
@@ -98,7 +98,7 @@ func TestDoctorCommandListsHarnessesAndAgentsOnSeparateLines(t *testing.T) {
 
 	want := headingLines +
 		"[✓] Harnesses (claude, 5 shared files)\n" +
-		"[✓] Agents (architect (codex, gpt-5-codex), subagent (current))\n" +
+		"[✓] Agents (default: review current, consult current; muse: review claude, codex:gpt-5-codex, current)\n" +
 		"• No issues found.\n"
 	if out != want {
 		t.Errorf("output =\n%q\nwant\n%q", out, want)

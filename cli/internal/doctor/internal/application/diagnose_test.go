@@ -50,10 +50,6 @@ var (
 		" to use the engineer persona"
 	personaRemoveRemedy = "remove " + userfile.Name + " to use the engineer persona, then run " +
 		"codefall config persona <engineer|product-manager> to choose another"
-	// The remedies for an order that names no agent on current: the list is fixed by a command, and a
-	// narrower order by the command that sets or clears it.
-	addCurrentRemedy = "run codefall config agents add <name> --harness current, " +
-		"so a run always has a reader it can start"
 	mergeRemedy = "add " + settings.InteractionsAttribute + " to " + settings.GitAttributesName +
 		", or run codefall upgrade"
 	leftoverRemedy = "remove the files " + manifest.Name +
@@ -131,37 +127,27 @@ const undeclaredSettings = `{
   "test": { "dir": "testing", "runners": ["playwright"] }
 }`
 
-// withAgents is the fixture's settings with an agents list and, when they are not empty, a review
-// order and a per-harness override, each written as JSON.
-func withAgents(agents, reviewOrder, byHarness string) string {
-	document := `{
+// withAgents is the fixture's settings with an agents list, written as JSON.
+func withAgents(agents string) string {
+	return `{
   "$schema": "` + settings.SchemaID + `",
   "version": 1,
   "tracker": "github",
   "harnesses": ["claude"],
-  "agents": ` + agents + `,`
-
-	if byHarness != "" {
-		document += "\n  \"agentsByHarness\": " + byHarness + ","
-	}
-
-	review := `{ "postToPullRequest": false`
-	if reviewOrder != "" {
-		review += `, "agents": ` + reviewOrder
-	}
-
-	return document + `
+  "agents": ` + agents + `,
   "github": { "issuesRepo": "lividlabs/codefall-cli", "issuesProject": 3 },
-  "review": ` + review + ` },
+  "review": { "postToPullRequest": false },
   "local": { "start": "scripts/local.sh start", "update": "scripts/local.sh update" },
   "test": { "dir": "testing", "runners": ["playwright"] }
 }`
 }
 
-// twoAgents is a project that reaches for Codex first and its own subagent after.
-const twoAgents = `[
-    { "name": "architect", "harness": "codex", "model": "gpt-5-codex" },
-    { "name": "subagent", "harness": "current" }
+// museReviewsElsewhere is a project whose sessions in Muse have Claude review, then Codex on a chosen
+// model, then this harness's own subagent, while every other harness and every consult keeps the
+// subagent alone.
+const museReviewsElsewhere = `[
+    { "activeAgent": "default", "review": [{ "harness": "current" }], "consult": [{ "harness": "current" }] },
+    { "activeAgent": "muse", "review": [{ "harness": "claude" }, { "harness": "codex", "model": "gpt-5-codex" }, { "harness": "current" }] }
   ]`
 
 // withLocal is the fixture's settings with a different local block.
@@ -904,114 +890,90 @@ func TestDiagnoseRun(t *testing.T) {
 			wantRemedy: mo.Some(renameRemedy),
 		},
 		{
-			// Settings written before the list existed name no agents, which means the default: this
-			// harness's own subagent, which is always runnable and is itself the current entry.
+			// Settings written before the list existed name no agents, which means the default: one
+			// entry whose two lists each hold this harness's own subagent, always runnable.
 			name:       "no agents are declared, so the default applies",
 			mutate:     func(*fakeFileSystem, *fakeCommandRunner) {},
 			want:       allPass,
 			target:     domain.AgentsRunnable.ID,
-			wantDetail: "subagent (current)",
+			wantDetail: "default: review current, consult current",
 		},
 		{
 			name: "every agent runs on a harness this machine has",
 			mutate: func(f *fakeFileSystem, r *fakeCommandRunner) {
-				f.files[settingsPath] = []byte(withAgents(twoAgents, "", ""))
+				f.files[settingsPath] = []byte(withAgents(museReviewsElsewhere))
+				r.paths["claude"] = "/opt/homebrew/bin/claude"
 				r.paths["codex"] = "/opt/homebrew/bin/codex"
 			},
 			want:       allPass,
 			target:     domain.AgentsRunnable.ID,
-			wantDetail: "architect (codex, gpt-5-codex), subagent (current)",
+			wantDetail: "default: review current, consult current; muse: review claude, codex:gpt-5-codex, current",
 		},
 		{
 			// A run skips what it cannot start and moves on, so this is information and a warning,
-			// not a failure.
+			// not a failure. Each harness is named once however many lists name it.
 			name: "an agent runs on a harness that is not on PATH",
-			mutate: func(f *fakeFileSystem, _ *fakeCommandRunner) {
-				f.files[settingsPath] = []byte(withAgents(twoAgents, "", ""))
+			mutate: func(f *fakeFileSystem, r *fakeCommandRunner) {
+				f.files[settingsPath] = []byte(withAgents(museReviewsElsewhere))
+				r.paths["claude"] = "/opt/homebrew/bin/claude"
 			},
 			want:       outcomes(map[string]domain.Status{domain.AgentsRunnable.ID: domain.StatusWarn}),
 			target:     domain.AgentsRunnable.ID,
-			wantDetail: "architect runs on codex, which is not on PATH",
+			wantDetail: "codex is not on PATH",
 			wantRemedy: mo.Some(agentsRemedy),
 		},
 		{
-			// Every order is checked: the list itself, review's own, and each harness's. Here the
-			// list has current but neither of the narrower orders does.
-			name: "the review and per-harness orders name no agent on current",
+			// Every list the settings write is checked. Here the default entry has current in both
+			// lists and the muse entry's review list does not; its consult, left out, resolves to the
+			// default's and is not a list of its own.
+			name: "a list names no agent on current",
 			mutate: func(f *fakeFileSystem, r *fakeCommandRunner) {
-				f.files[settingsPath] = []byte(withAgents(twoAgents, `["architect"]`, `{ "claude": ["architect"] }`))
-				r.paths["codex"] = "/opt/homebrew/bin/codex"
+				f.files[settingsPath] = []byte(withAgents(`[
+    { "activeAgent": "default", "review": [{ "harness": "current" }], "consult": [{ "harness": "current" }] },
+    { "activeAgent": "muse", "review": [{ "harness": "claude" }] }
+  ]`))
+				r.paths["claude"] = "/opt/homebrew/bin/claude"
 			},
 			want:       outcomes(map[string]domain.Status{domain.AgentsCurrent.ID: domain.StatusWarn}),
 			target:     domain.AgentsCurrent.ID,
-			wantDetail: "review.agents, agentsByHarness.claude names no agent on current",
-			wantRemedy: mo.Some("name an agent on current with codefall config order review <name>... and " +
-				"codefall config order claude <name>..., or clear each order with --clear, " +
-				"so a run always has a reader it can start"),
+			wantDetail: "muse review names no agent on current",
+			wantRemedy: mo.Some(currentRemedy),
 		},
 		{
-			// The consult block's own order is checked like review's.
-			name: "the consult order names no agent on current",
+			name: "the default entry's lists have no agent on current",
 			mutate: func(f *fakeFileSystem, r *fakeCommandRunner) {
-				document := withAgents(twoAgents, "", "")
-				f.files[settingsPath] = []byte(strings.Replace(document, `"review":`, `"consult": { "agents": ["architect"] },
-  "review":`, 1))
+				f.files[settingsPath] = []byte(withAgents(
+					`[{ "activeAgent": "default", "review": [{ "harness": "codex" }], "consult": [{ "harness": "codex" }] }]`))
 				r.paths["codex"] = "/opt/homebrew/bin/codex"
 			},
 			want:       outcomes(map[string]domain.Status{domain.AgentsCurrent.ID: domain.StatusWarn}),
 			target:     domain.AgentsCurrent.ID,
-			wantDetail: "consult.agents names no agent on current",
-			wantRemedy: mo.Some("name an agent on current with codefall config order consult <name>..., " +
-				"or clear the order with --clear, so a run always has a reader it can start"),
-		},
-		{
-			name: "the top-level order itself has no agent on current",
-			mutate: func(f *fakeFileSystem, r *fakeCommandRunner) {
-				f.files[settingsPath] = []byte(withAgents(`[{ "name": "architect", "harness": "codex" }]`, "", ""))
-				r.paths["codex"] = "/opt/homebrew/bin/codex"
-			},
-			want:       outcomes(map[string]domain.Status{domain.AgentsCurrent.ID: domain.StatusWarn}),
-			target:     domain.AgentsCurrent.ID,
-			wantDetail: "agents names no agent on current",
-			wantRemedy: mo.Some(addCurrentRemedy),
-		},
-		{
-			// The command adds the agent to the list; the narrower orders still need it named.
-			name: "the top-level and review orders have no agent on current",
-			mutate: func(f *fakeFileSystem, r *fakeCommandRunner) {
-				f.files[settingsPath] = []byte(withAgents(`[{ "name": "architect", "harness": "codex" }]`,
-					`["architect"]`, ""))
-				r.paths["codex"] = "/opt/homebrew/bin/codex"
-			},
-			want:       outcomes(map[string]domain.Status{domain.AgentsCurrent.ID: domain.StatusWarn}),
-			target:     domain.AgentsCurrent.ID,
-			wantDetail: "agents, review.agents names no agent on current",
-			wantRemedy: mo.Some("run codefall config agents add <name> --harness current, then name that agent " +
-				"with codefall config order review <name>..., so a run always has a reader it can start"),
+			wantDetail: "default review, default consult names no agent on current",
+			wantRemedy: mo.Some(currentRemedy),
 		},
 		{
 			// What the list may hold is the format's to say, so a bad entry is the settings-complete
 			// check's finding and the two agent checks are absent, like everything after it.
 			name: "an agent names a harness codefall cannot start",
 			mutate: func(f *fakeFileSystem, _ *fakeCommandRunner) {
-				f.files[settingsPath] = []byte(withAgents(`[{ "name": "helper", "harness": "cursor" }]`, "", ""))
+				f.files[settingsPath] = []byte(withAgents(`[{ "activeAgent": "default", "review": [{ "harness": "cursor" }] }]`))
 			},
 			want: outcomes(map[string]domain.Status{domain.SettingsComplete.ID: domain.StatusFail},
 				afterSettingsDone...),
 			target: domain.SettingsComplete.ID,
-			wantDetail: `settings.json is incomplete: agents: [0].harness: unknown value "cursor" ` +
+			wantDetail: `settings.json is incomplete: agents: [0].review[0].harness: unknown value "cursor" ` +
 				`(expected "agy", "claude", "codex", "current", "muse", "opencode")`,
 			wantRemedy: mo.Some(fixRemedy),
 		},
 		{
-			name: "review's order names an agent the list does not define",
+			name: "an entry names an active agent twice",
 			mutate: func(f *fakeFileSystem, _ *fakeCommandRunner) {
-				f.files[settingsPath] = []byte(withAgents(twoAgents, `["reviewer"]`, ""))
+				f.files[settingsPath] = []byte(withAgents(`[{ "activeAgent": "muse" }, { "activeAgent": "muse" }]`))
 			},
 			want: outcomes(map[string]domain.Status{domain.SettingsComplete.ID: domain.StatusFail},
 				afterSettingsDone...),
 			target:     domain.SettingsComplete.ID,
-			wantDetail: `settings.json is incomplete: review.agents: names "reviewer", which agents does not define`,
+			wantDetail: `settings.json is incomplete: agents: names activeAgent "muse" twice`,
 			wantRemedy: mo.Some(fixRemedy),
 		},
 		{

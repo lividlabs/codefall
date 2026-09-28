@@ -20,30 +20,32 @@
       }
     },
     "agents": {
-      "description": "The agents a verb reaches for when it needs another reader, in order (ADR-009): a reviewer, or a second opinion on a decision a run cannot settle. Each is named for a person to type after via=, runs on a harness named for its binary or on current, the harness running the session, and may name a model, passed to that harness untouched. Absent means one agent, subagent on current, which codefall init writes explicitly.",
+      "description": "Who codefall reaches for when a verb needs another reader, by the harness the session is running in (ADR-009.2). Each entry is for one active agent, one of the five harness names or default, and holds a review list and a consult list, each the agents to try in order until one answers. A list left out means the default entry's list; a default entry left out means the current harness's own subagent. Absent means one default entry whose two lists each hold current, which codefall init writes explicitly.",
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["name", "harness"],
+        "required": ["activeAgent"],
         "properties": {
-          "name": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
-          "harness": { "type": "string", "enum": ["agy", "claude", "codex", "current", "muse", "opencode"] },
-          "model": { "type": "string" }
+          "activeAgent": {
+            "description": "The harness a session is running in when this entry applies, or default for every harness without an entry of its own. Each value appears at most once.",
+            "type": "string",
+            "enum": ["agy", "claude", "codex", "default", "muse", "opencode"]
+          },
+          "review": {
+            "description": "Who reviews for a session in this harness, tried in order: a run skips an agent this machine cannot start and moves on when one fails.",
+            "type": "array",
+            "minItems": 1,
+            "items": { "$ref": "#/$defs/agent" }
+          },
+          "consult": {
+            "description": "Who is asked when a run in this harness cannot settle a question on its own, tried in order. A consult proposes; the session decides.",
+            "type": "array",
+            "minItems": 1,
+            "items": { "$ref": "#/$defs/agent" }
+          }
         },
         "additionalProperties": true
       }
-    },
-    "agentsByHarness": {
-      "description": "The order a session walks when it is running in the named harness, as names from agents. A harness with no entry, or a session that cannot say which harness it is in, walks the top-level order.",
-      "type": "object",
-      "properties": {
-        "agy": { "type": "array", "items": { "type": "string" } },
-        "claude": { "type": "array", "items": { "type": "string" } },
-        "codex": { "type": "array", "items": { "type": "string" } },
-        "muse": { "type": "array", "items": { "type": "string" } },
-        "opencode": { "type": "array", "items": { "type": "string" } }
-      },
-      "additionalProperties": false
     },
     "beads": { "type": "object", "properties": {}, "additionalProperties": true },
     "github": {
@@ -61,23 +63,6 @@
         "postToPullRequest": {
           "description": "Whether codefall-review may post its findings to a pull request. Absent means false.",
           "type": "boolean"
-        },
-        "agents": {
-          "description": "The order review walks, as names from agents, when it differs from the top-level order.",
-          "type": "array",
-          "items": { "type": "string" }
-        }
-      },
-      "additionalProperties": true
-    },
-    "consult": {
-      "description": "What a verb reaches for when a run cannot settle a question on its own (ADR-009): a second opinion that proposes and never decides.",
-      "type": "object",
-      "properties": {
-        "agents": {
-          "description": "The order a consult walks, as names from agents, when it differs from the top-level order.",
-          "type": "array",
-          "items": { "type": "string" }
         }
       },
       "additionalProperties": true
@@ -116,5 +101,20 @@
     { "properties": { "tracker": { "const": "beads" }, "github": false }, "required": ["tracker", "beads"] },
     { "properties": { "tracker": { "const": "github" }, "beads": false }, "required": ["tracker", "github"] }
   ],
-  "additionalProperties": true
+  "additionalProperties": true,
+  "$defs": {
+    "agent": {
+      "type": "object",
+      "required": ["harness"],
+      "properties": {
+        "harness": {
+          "description": "The harness that runs the agent, named for its binary, or current: a subagent of the harness the session is running in, which is always runnable.",
+          "type": "string",
+          "enum": ["agy", "claude", "codex", "current", "muse", "opencode"]
+        },
+        "model": { "description": "The model to ask that harness for, passed to it as written.", "type": "string" }
+      },
+      "additionalProperties": true
+    }
+  }
 }

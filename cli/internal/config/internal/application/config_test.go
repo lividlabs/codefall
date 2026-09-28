@@ -3,7 +3,6 @@ package application
 import (
 	"errors"
 	"io/fs"
-	"maps"
 	"path/filepath"
 	"slices"
 	"strings"
@@ -35,8 +34,17 @@ const initSettings = `{
   ],
   "agents": [
     {
-      "name": "subagent",
-      "harness": "current"
+      "activeAgent": "default",
+      "review": [
+        {
+          "harness": "current"
+        }
+      ],
+      "consult": [
+        {
+          "harness": "current"
+        }
+      ]
     }
   ],
   "beads": {},
@@ -90,37 +98,83 @@ func project(settingsBody string) *fakeFileSystem {
 	return newFakeFileSystem(map[string]string{settingsFull: settingsBody})
 }
 
-func added(name, runs string) NewAgent {
-	return NewAgent{Name: name, Harness: runs, Model: mo.None[string](), Before: mo.None[string](), After: mo.None[string]()}
+// agent is one agent of a list as a test names it.
+func agent(runs string) settings.Agent {
+	return settings.Agent{Harness: runs, Model: mo.None[string]()}
 }
 
-// --- agents --------------------------------------------------------------------------------------
+// modelled is one agent on a chosen model.
+func modelled(runs, model string) settings.Agent {
+	return settings.Agent{Harness: runs, Model: mo.Some(model)}
+}
 
-// A new agent goes last by default, and only the list's own text changes: every other key keeps its
-// place and its bytes, which a decode and re-encode would not have left alone.
-func TestAddAgentAppendsAndLeavesTheRestOfTheFileAlone(t *testing.T) {
+// --- lists ---------------------------------------------------------------------------------------
+
+// A list set on an entry the file holds replaces only that list's text: the entry's other list, and
+// every other key in the file, keep their place and their bytes. The new list is laid out the way the
+// old one was.
+func TestSetListReplacesOneListAndLeavesTheRestOfTheFileAlone(t *testing.T) {
 	files := project(initSettings)
 
-	agent := added("architect", "codex")
-	agent.Model = mo.Some("gpt-5-codex")
-
-	write, err := NewConfig(files).AddAgent(workingDir, agent)
+	write, err := NewConfig(files).SetList(workingDir, "default", "review", []settings.Agent{agent("codex"), agent("current")})
 	if err != nil {
-		t.Fatalf("AddAgent: %v", err)
+		t.Fatalf("SetList: %v", err)
 	}
 
-	if want := domain.Changed("added agent architect (codex, gpt-5-codex) to .codefall/settings.json"); write != want {
+	if want := domain.Changed("set default review in .codefall/settings.json: codex, current"); write != want {
 		t.Errorf("write = %+v, want %+v", write, want)
 	}
 
-	want := strings.Replace(initSettings, `      "harness": "current"
+	want := strings.Replace(initSettings, `      "review": [
+        {
+          "harness": "current"
+        }
+      ],`, `      "review": [
+        {
+          "harness": "codex"
+        },
+        {
+          "harness": "current"
+        }
+      ],`, 1)
+	if got := string(files.files[settingsFull]); got != want {
+		t.Errorf("settings.json =\n%s\nwant\n%s", got, want)
+	}
+}
+
+// An entry the file does not hold is added last, holding the active agent and the one list set, and
+// laid out like the entries beside it.
+func TestSetListAddsAnEntryForANewActiveAgent(t *testing.T) {
+	files := project(initSettings)
+
+	write, err := NewConfig(files).SetList(workingDir, "muse", "review", []settings.Agent{agent("claude"), modelled("codex", "gpt-5-codex")})
+	if err != nil {
+		t.Fatalf("SetList: %v", err)
+	}
+
+	if want := domain.Changed("set muse review in .codefall/settings.json: claude, codex:gpt-5-codex"); write != want {
+		t.Errorf("write = %+v, want %+v", write, want)
+	}
+
+	want := strings.Replace(initSettings, `          "harness": "current"
+        }
+      ]
     }
-  ],`, `      "harness": "current"
+  ],`, `          "harness": "current"
+        }
+      ]
     },
     {
-      "name": "architect",
-      "harness": "codex",
-      "model": "gpt-5-codex"
+      "activeAgent": "muse",
+      "review": [
+        {
+          "harness": "claude"
+        },
+        {
+          "harness": "codex",
+          "model": "gpt-5-codex"
+        }
+      ]
     }
   ],`, 1)
 	if got := string(files.files[settingsFull]); got != want {
@@ -128,56 +182,25 @@ func TestAddAgentAppendsAndLeavesTheRestOfTheFileAlone(t *testing.T) {
 	}
 }
 
-func TestAddAgentPlacesItBeforeOrAfterANamedAgent(t *testing.T) {
-	files := project(initSettings)
-	config := NewConfig(files)
-
-	if _, err := config.AddAgent(workingDir, added("architect", "codex")); err != nil {
-		t.Fatalf("AddAgent: %v", err)
-	}
-
-	second := added("second", "muse")
-	second.Before = mo.Some("architect")
-
-	write, err := config.AddAgent(workingDir, second)
-	if err != nil {
-		t.Fatalf("AddAgent --before: %v", err)
-	}
-
-	if !strings.HasSuffix(write.Detail, ", before architect") {
-		t.Errorf("detail = %q, want it to say where the agent went", write.Detail)
-	}
-
-	third := added("third", "current")
-	third.After = mo.Some("subagent")
-
-	if _, err := config.AddAgent(workingDir, third); err != nil {
-		t.Fatalf("AddAgent --after: %v", err)
-	}
-
-	agents, err := config.Agents(workingDir)
-	if err != nil {
-		t.Fatalf("Agents: %v", err)
-	}
-
-	if got, want := settings.AgentNames(agents), []string{"subagent", "third", "second", "architect"}; !slices.Equal(got, want) {
-		t.Errorf("names = %q, want %q", got, want)
-	}
-}
-
-// Settings that list no agents mean the default, so a write starts from it: the agent every reader
-// was already using stays first, and the list is added to the file.
-func TestAddAgentToSettingsThatListNoneKeepsTheDefault(t *testing.T) {
+// A list added to an entry that lacks it goes in as the entry's last key, on one line, and the entry's
+// existing list is untouched.
+func TestSetListAddsTheOtherListToAnEntry(t *testing.T) {
 	files := project(`{
   "version": 1,
   "tracker": "beads",
   "harnesses": ["claude"],
-  "beads": {}
+  "beads": {},
+  "agents": [
+    {
+      "activeAgent": "muse",
+      "review": [{ "harness": "claude" }]
+    }
+  ]
 }
 `)
 
-	if _, err := NewConfig(files).AddAgent(workingDir, added("architect", "codex")); err != nil {
-		t.Fatalf("AddAgent: %v", err)
+	if _, err := NewConfig(files).SetList(workingDir, "muse", "consult", []settings.Agent{agent("codex")}); err != nil {
+		t.Fatalf("SetList: %v", err)
 	}
 
 	want := `{
@@ -187,12 +210,9 @@ func TestAddAgentToSettingsThatListNoneKeepsTheDefault(t *testing.T) {
   "beads": {},
   "agents": [
     {
-      "name": "subagent",
-      "harness": "current"
-    },
-    {
-      "name": "architect",
-      "harness": "codex"
+      "activeAgent": "muse",
+      "review": [{ "harness": "claude" }],
+      "consult": [{"harness":"codex"}]
     }
   ]
 }
@@ -202,68 +222,140 @@ func TestAddAgentToSettingsThatListNoneKeepsTheDefault(t *testing.T) {
 	}
 }
 
-// A list written on one line stays on one line.
-func TestAddAgentKeepsAOneLineList(t *testing.T) {
-	files := project(`{"version": 1, "tracker": "beads", "harnesses": ["claude"], "beads": {},
-  "agents": [{"name": "subagent", "harness": "current"}]}
+// Settings that write no list start from nothing: the entry set is the only one written, since the
+// default entry is what absence already means.
+func TestSetListOnSettingsThatWriteNoneAddsTheList(t *testing.T) {
+	files := project(`{
+  "version": 1,
+  "tracker": "beads",
+  "harnesses": ["claude"],
+  "beads": {}
+}
 `)
 
-	if _, err := NewConfig(files).AddAgent(workingDir, added("architect", "codex")); err != nil {
-		t.Fatalf("AddAgent: %v", err)
+	if _, err := NewConfig(files).SetList(workingDir, "codex", "consult", []settings.Agent{agent("claude"), agent("current")}); err != nil {
+		t.Fatalf("SetList: %v", err)
 	}
 
-	want := `"agents": [{"name": "subagent", "harness": "current"}, {"name":"architect","harness":"codex"}]}`
+	want := `{
+  "version": 1,
+  "tracker": "beads",
+  "harnesses": ["claude"],
+  "beads": {},
+  "agents": [
+    {
+      "activeAgent": "codex",
+      "consult": [
+        {
+          "harness": "claude"
+        },
+        {
+          "harness": "current"
+        }
+      ]
+    }
+  ]
+}
+`
+	if got := string(files.files[settingsFull]); got != want {
+		t.Errorf("settings.json =\n%s\nwant\n%s", got, want)
+	}
+}
+
+// A list written on one line stays on one line, and so does the list of entries.
+func TestSetListKeepsAOneLineLayout(t *testing.T) {
+	files := project(`{"version": 1, "tracker": "beads", "harnesses": ["claude"], "beads": {},
+  "agents": [{"activeAgent": "default", "review": [{"harness": "current"}]}]}
+`)
+
+	if _, err := NewConfig(files).SetList(workingDir, "default", "review", []settings.Agent{agent("codex"), agent("current")}); err != nil {
+		t.Fatalf("SetList: %v", err)
+	}
+
+	want := `"agents": [{"activeAgent": "default", "review": [{"harness":"codex"},{"harness":"current"}]}]}`
+	if got := string(files.files[settingsFull]); !strings.Contains(got, want) {
+		t.Errorf("settings.json =\n%s\nwant it to hold\n%s", got, want)
+	}
+
+	if _, err := NewConfig(files).SetList(workingDir, "muse", "consult", []settings.Agent{agent("claude")}); err != nil {
+		t.Fatalf("SetList: %v", err)
+	}
+
+	want = `, {"activeAgent":"muse","consult":[{"harness":"claude"}]}]}`
 	if got := string(files.files[settingsFull]); !strings.Contains(got, want) {
 		t.Errorf("settings.json =\n%s\nwant it to hold\n%s", got, want)
 	}
 }
 
-// Each refusal leaves the file exactly as it was, and says why in words a person can act on — the
+func TestSetListThatIsAlreadySetWritesNothing(t *testing.T) {
+	files := project(initSettings)
+
+	write, err := NewConfig(files).SetList(workingDir, "default", "consult", []settings.Agent{agent("current")})
+	if err != nil {
+		t.Fatalf("SetList: %v", err)
+	}
+
+	if want := domain.Unchanged(".codefall/settings.json already sets default consult to current"); write != want {
+		t.Errorf("write = %+v, want %+v", write, want)
+	}
+
+	if len(files.writes) != 0 {
+		t.Errorf("wrote %q, want nothing", files.writes)
+	}
+}
+
+// Each refusal leaves the file exactly as it was, and says why in words a person can act on: the
 // settings module's own, where the module is what refused.
-func TestAddAgentRefuses(t *testing.T) {
+func TestSetListRefuses(t *testing.T) {
 	for _, tc := range []struct {
-		name     string
-		settings string
-		agent    NewAgent
-		want     string
+		name            string
+		settings        string
+		active, feature string
+		agents          []settings.Agent
+		want            string
 	}{
 		{
-			name:     "a name already in the list",
+			name:     "an empty list",
 			settings: initSettings,
-			agent:    added("subagent", "codex"),
-			want:     `an agent named "subagent" is already in the list`,
+			active:   "default", feature: "review",
+			want: "name at least one agent, or clear the list",
 		},
 		{
-			name:     "a name that is not a slug",
+			name:     "an active agent codefall does not know",
 			settings: initSettings,
-			agent:    added("Architect", "codex"),
-			want:     "agents: [1].name: must match " + settings.AgentNamePattern,
+			active:   "cursor", feature: "review",
+			agents: []settings.Agent{agent("current")},
+			want:   `active agent "cursor" is not one codefall knows`,
 		},
 		{
+			name:     "a feature an entry does not hold",
+			settings: initSettings,
+			active:   "default", feature: "testing",
+			agents: []settings.Agent{agent("current")},
+			want:   `"testing" is not a list an entry holds`,
+		},
+		{
+			// The agent parsed, so it is the settings module that refuses the result.
 			name:     "a harness codefall cannot start",
 			settings: initSettings,
-			agent:    added("architect", "claude-code"),
-			want:     `agents: [1].harness: unknown value "claude-code"`,
-		},
-		{
-			name:     "a place by an agent the list does not hold",
-			settings: initSettings,
-			agent:    NewAgent{Name: "architect", Harness: "codex", Before: mo.Some("reviewer")},
-			want:     `no agent named "reviewer" in the list`,
+			active:   "default", feature: "review",
+			agents: []settings.Agent{agent("cursor")},
+			want:   `agents: [0].review[0].harness: unknown value "cursor"`,
 		},
 		{
 			name:     "settings that are already invalid",
 			settings: `{"version": 1, "harnesses": ["claude"]}`,
-			agent:    added("architect", "codex"),
-			want:     ".codefall/settings.json is not valid, so nothing was changed: tracker: missing",
+			active:   "default", feature: "review",
+			agents: []settings.Agent{agent("current")},
+			want:   ".codefall/settings.json is not valid, so nothing was changed: tracker: missing",
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			files := project(tc.settings)
 
-			_, err := NewConfig(files).AddAgent(workingDir, tc.agent)
+			_, err := NewConfig(files).SetList(workingDir, tc.active, tc.feature, tc.agents)
 			if err == nil || !strings.Contains(err.Error(), tc.want) {
-				t.Fatalf("AddAgent error = %v, want it to say %q", err, tc.want)
+				t.Fatalf("SetList error = %v, want it to say %q", err, tc.want)
 			}
 
 			if len(files.writes) != 0 || string(files.files[settingsFull]) != tc.settings {
@@ -273,139 +365,156 @@ func TestAddAgentRefuses(t *testing.T) {
 	}
 }
 
+const twoEntries = `{
+  "version": 1,
+  "tracker": "beads",
+  "harnesses": ["claude"],
+  "beads": {},
+  "agents": [
+    {"activeAgent": "default", "review": [{"harness": "current"}], "consult": [{"harness": "current"}]},
+    {"activeAgent": "muse", "review": [{"harness": "claude"}], "consult": [{"harness": "codex"}]}
+  ],
+  "review": {"postToPullRequest": false}
+}
+`
+
+// Clearing one list takes the key out of its entry and leaves the entry's other list, and every other
+// entry, as they were.
+func TestClearListRemovesTheKey(t *testing.T) {
+	files := project(twoEntries)
+
+	write, err := NewConfig(files).ClearList(workingDir, "muse", "consult")
+	if err != nil {
+		t.Fatalf("ClearList: %v", err)
+	}
+
+	if want := domain.Changed("removed muse consult from .codefall/settings.json"); write != want {
+		t.Errorf("write = %+v, want %+v", write, want)
+	}
+
+	want := strings.Replace(twoEntries, `, "consult": [{"harness": "codex"}]}`, `}`, 1)
+	if got := string(files.files[settingsFull]); got != want {
+		t.Errorf("settings.json =\n%s\nwant\n%s", got, want)
+	}
+}
+
+// An entry left with neither list would say nothing, so it goes with its last list.
+func TestClearListRemovesAnEntryLeftEmpty(t *testing.T) {
+	files := project(twoEntries)
+	config := NewConfig(files)
+
+	if _, err := config.ClearList(workingDir, "muse", "consult"); err != nil {
+		t.Fatalf("ClearList consult: %v", err)
+	}
+
+	write, err := config.ClearList(workingDir, "muse", "review")
+	if err != nil {
+		t.Fatalf("ClearList review: %v", err)
+	}
+
+	if want := domain.Changed("removed muse review from .codefall/settings.json, and the muse entry with it, since it named nothing else"); write != want {
+		t.Errorf("write = %+v, want %+v", write, want)
+	}
+
+	want := strings.Replace(twoEntries, `,
+    {"activeAgent": "muse", "review": [{"harness": "claude"}], "consult": [{"harness": "codex"}]}`, "", 1)
+	if got := string(files.files[settingsFull]); got != want {
+		t.Errorf("settings.json =\n%s\nwant\n%s", got, want)
+	}
+}
+
+func TestClearListThatIsNotSetWritesNothing(t *testing.T) {
+	files := project(twoEntries)
+
+	write, err := NewConfig(files).ClearList(workingDir, "codex", "review")
+	if err != nil {
+		t.Fatalf("ClearList: %v", err)
+	}
+
+	if want := domain.Unchanged(".codefall/settings.json has no codex review to clear"); write != want {
+		t.Errorf("write = %+v, want %+v", write, want)
+	}
+
+	if len(files.writes) != 0 {
+		t.Errorf("wrote %q, want nothing", files.writes)
+	}
+}
+
+// --- posting -------------------------------------------------------------------------------------
+
+func TestSetPostingChangesTheFieldOrCreatesTheBlock(t *testing.T) {
+	files := project(twoEntries)
+	config := NewConfig(files)
+
+	write, err := config.SetPosting(workingDir, true)
+	if err != nil {
+		t.Fatalf("SetPosting: %v", err)
+	}
+
+	if want := domain.Changed("set posting on in .codefall/settings.json"); write != want {
+		t.Errorf("write = %+v, want %+v", write, want)
+	}
+
+	if got, want := string(files.files[settingsFull]), strings.Replace(twoEntries, `"postToPullRequest": false`, `"postToPullRequest": true`, 1); got != want {
+		t.Errorf("settings.json =\n%s\nwant\n%s", got, want)
+	}
+
+	write, err = config.SetPosting(workingDir, true)
+	if err != nil {
+		t.Fatalf("SetPosting again: %v", err)
+	}
+
+	if want := domain.Unchanged(".codefall/settings.json already has posting on"); write != want {
+		t.Errorf("write = %+v, want %+v", write, want)
+	}
+
+	noBlock := project(`{
+  "version": 1,
+  "tracker": "beads",
+  "harnesses": ["claude"],
+  "beads": {}
+}
+`)
+
+	if _, err := NewConfig(noBlock).SetPosting(workingDir, true); err != nil {
+		t.Fatalf("SetPosting with no block: %v", err)
+	}
+
+	want := `{
+  "version": 1,
+  "tracker": "beads",
+  "harnesses": ["claude"],
+  "beads": {},
+  "review": {
+    "postToPullRequest": true
+  }
+}
+`
+	if got := string(noBlock.files[settingsFull]); got != want {
+		t.Errorf("settings.json =\n%s\nwant\n%s", got, want)
+	}
+}
+
 // Every write refuses a directory init has not set up, and names the command that does.
 func TestWritesRefuseADirectoryWithNoSettings(t *testing.T) {
 	config := NewConfig(newFakeFileSystem(nil))
 
-	_, addErr := config.AddAgent(workingDir, added("architect", "codex"))
-	_, removeErr := config.RemoveAgent(workingDir, "subagent")
-	_, orderErr := config.OrderAgents(workingDir, []string{"subagent"})
+	_, setErr := config.SetList(workingDir, "default", "review", []settings.Agent{agent("current")})
+	_, clearErr := config.ClearList(workingDir, "default", "review")
+	_, postErr := config.SetPosting(workingDir, true)
 	_, personaErr := config.SetPersona(workingDir, userfile.PersonaProductManager)
 
-	for _, err := range []error{addErr, removeErr, orderErr, personaErr} {
+	for _, err := range []error{setErr, clearErr, postErr, personaErr} {
 		if !errors.Is(err, errNotSetUp) || !strings.Contains(err.Error(), "run codefall init") {
 			t.Errorf("error = %v, want it to name codefall init", err)
 		}
 	}
 }
 
-const referencedSettings = `{
-  "version": 1,
-  "tracker": "beads",
-  "harnesses": ["claude"],
-  "beads": {},
-  "agents": [
-    {"name": "subagent", "harness": "current"},
-    {"name": "architect", "harness": "codex"},
-    {"name": "second", "harness": "muse"}
-  ],
-  "review": {"postToPullRequest": false, "agents": ["architect", "subagent"]},
-  "agentsByHarness": {"claude": ["architect"]}
-}
-`
-
-func TestRemoveAgent(t *testing.T) {
-	files := project(referencedSettings)
-
-	write, err := NewConfig(files).RemoveAgent(workingDir, "second")
-	if err != nil {
-		t.Fatalf("RemoveAgent: %v", err)
-	}
-
-	if want := domain.Changed("removed agent second from .codefall/settings.json"); write != want {
-		t.Errorf("write = %+v, want %+v", write, want)
-	}
-
-	want := strings.Replace(referencedSettings, `,
-    {"name": "second", "harness": "muse"}`, "", 1)
-	if got := string(files.files[settingsFull]); got != want {
-		t.Errorf("settings.json =\n%s\nwant\n%s", got, want)
-	}
-}
-
-// Removing an agent an order still names would leave the order pointing at nothing, so it is refused
-// and every order that names it is listed; so is removing the last one, which would mean the default.
-func TestRemoveAgentRefuses(t *testing.T) {
-	for _, tc := range []struct {
-		name     string
-		settings string
-		agent    string
-		want     string
-	}{
-		{
-			name:     "an agent an order still names",
-			settings: referencedSettings,
-			agent:    "architect",
-			want: "architect is named in review.agents and agentsByHarness.claude. " +
-				"Change those orders first, in codefall config, then remove it",
-		},
-		{
-			name:     "an agent the list does not hold",
-			settings: referencedSettings,
-			agent:    "reviewer",
-			want:     `no agent named "reviewer" in the list (agents: subagent, architect, second)`,
-		},
-		{
-			name:     "the last agent",
-			settings: initSettings,
-			agent:    "subagent",
-			want:     `agent "subagent" is the only one in the list`,
-		},
-	} {
-		t.Run(tc.name, func(t *testing.T) {
-			files := project(tc.settings)
-
-			_, err := NewConfig(files).RemoveAgent(workingDir, tc.agent)
-			if err == nil || !strings.Contains(err.Error(), tc.want) {
-				t.Fatalf("RemoveAgent error = %v, want it to say %q", err, tc.want)
-			}
-
-			if len(files.writes) != 0 {
-				t.Errorf("wrote %q, want nothing written", files.writes)
-			}
-		})
-	}
-}
-
-func TestOrderAgents(t *testing.T) {
-	files := project(referencedSettings)
-	config := NewConfig(files)
-
-	write, err := config.OrderAgents(workingDir, []string{"second", "architect", "subagent"})
-	if err != nil {
-		t.Fatalf("OrderAgents: %v", err)
-	}
-
-	if want := "ordered the agents in .codefall/settings.json: second, architect, subagent"; write.Detail != want || !write.Changed {
-		t.Errorf("write = %+v, want a change saying %q", write, want)
-	}
-
-	if got := string(files.files[settingsFull]); !strings.Contains(got, `"agents": [
-    {"name": "second", "harness": "muse"},
-    {"name": "architect", "harness": "codex"},
-    {"name": "subagent", "harness": "current"}
-  ],`) {
-		t.Errorf("settings.json =\n%s\nwant the entries in the new order, each as it was written", got)
-	}
-
-	// The same order again writes nothing and says so.
-	files.writes = nil
-
-	write, err = config.OrderAgents(workingDir, []string{"second", "architect", "subagent"})
-	if err != nil || write.Changed || len(files.writes) != 0 {
-		t.Errorf("OrderAgents again = %+v, %v, wrote %q, want nothing changed", write, err, files.writes)
-	}
-
-	if _, err := config.OrderAgents(workingDir, []string{"second", "architect"}); err == nil ||
-		!strings.Contains(err.Error(), "missing subagent") {
-		t.Errorf("OrderAgents with one left out = %v, want it to name the one", err)
-	}
-}
-
 // --- show ----------------------------------------------------------------------------------------
 
 func TestShow(t *testing.T) {
-	files := project(referencedSettings)
+	files := project(twoEntries)
 	files.files[userFull] = []byte(`{"version": 1, "persona": "product-manager"}`)
 
 	shown, err := NewConfig(files).Show(workingDir)
@@ -413,20 +522,16 @@ func TestShow(t *testing.T) {
 		t.Fatalf("Show: %v", err)
 	}
 
-	if got, want := settings.AgentNames(shown.Agents), []string{"subagent", "architect", "second"}; !slices.Equal(got, want) || shown.Default {
-		t.Errorf("Agents = %q, Default = %v, want %q and not the default", got, shown.Default, want)
+	if got, want := settings.ActiveAgentNames(shown.Entries), []string{"default", "muse"}; !slices.Equal(got, want) || shown.Default {
+		t.Errorf("Entries = %q, Default = %v, want %q and not the default", got, shown.Default, want)
 	}
 
-	if got, ok := shown.Review.Get(); !ok || !slices.Equal(got, []string{"architect", "subagent"}) {
-		t.Errorf("Review = %v, want architect, subagent", shown.Review)
+	if got, ok := shown.Entries[1].Consult.Get(); !ok || !slices.Equal(got, []settings.Agent{agent("codex")}) {
+		t.Errorf("muse consult = %v, want codex", shown.Entries[1].Consult)
 	}
 
-	if shown.Consult.IsPresent() {
-		t.Errorf("Consult = %v, want None", shown.Consult)
-	}
-
-	if want := map[string][]string{"claude": {"architect"}}; !maps.EqualFunc(shown.ByHarness, want, slices.Equal) {
-		t.Errorf("ByHarness = %v, want %v", shown.ByHarness, want)
+	if shown.Posting {
+		t.Error("Posting = true, want false")
 	}
 
 	if want := (domain.Persona{Name: userfile.PersonaProductManager, FromFile: true}); shown.Persona != want {
@@ -440,7 +545,7 @@ func TestShowMarksTheDefaultList(t *testing.T) {
 		t.Fatalf("Show: %v", err)
 	}
 
-	if !shown.Default || !slices.Equal(settings.AgentNames(shown.Agents), []string{settings.DefaultAgentName}) {
+	if !shown.Default || !slices.Equal(settings.ActiveAgentNames(shown.Entries), []string{settings.ActiveDefault}) {
 		t.Errorf("Show = %+v, want the default list, marked as the default", shown)
 	}
 

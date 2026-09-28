@@ -9,9 +9,10 @@ import (
 	"github.com/lividlabs/codefall-cli/cli/internal/shared/userfile"
 )
 
-// Show reads the effective configuration: the agents and their orders as the settings module reads
-// them, and the persona as the user file module reads it. It reads the way every other reader does,
-// so a value Validate would refuse shows as the default it falls back to; doctor is what reports it.
+// Show reads the effective configuration: the agents list as the settings module reads it, whether
+// review may post, and the persona as the user file module reads it. It reads the way every other
+// reader does, so a value Validate would refuse shows as the default it falls back to; doctor is what
+// reports it.
 func (c *Config) Show(dir string) (domain.Configuration, error) {
 	project, err := c.readSettings(dir)
 	if err != nil {
@@ -24,17 +25,15 @@ func (c *Config) Show(dir string) (domain.Configuration, error) {
 	}
 
 	return domain.Configuration{
-		Agents:    settings.Agents(project.doc),
-		Default:   !listsAgents(project.doc),
-		Review:    settings.ReviewAgents(project.doc),
-		Consult:   settings.ConsultAgents(project.doc),
-		ByHarness: settings.AgentsByHarness(project.doc),
-		Persona:   persona,
+		Entries: settings.Agents(project.doc),
+		Default: !listsAgents(project.doc),
+		Posting: settings.PostToPullRequest(project.doc),
+		Persona: persona,
 	}, nil
 }
 
-// Agents reads the agents list in order, the default when the settings list none.
-func (c *Config) Agents(dir string) ([]settings.Agent, error) {
+// Agents reads the agents list in order, the default when the settings write none.
+func (c *Config) Agents(dir string) ([]settings.Entry, error) {
 	project, err := c.readSettings(dir)
 	if err != nil {
 		return nil, err

@@ -42,9 +42,6 @@ const (
 	// Optional, and absent means false: posting is visible to everyone on the pull request, so it is
 	// on only when the project said so.
 	FieldPostToPullRequest = "postToPullRequest"
-	// BlockConsult is what a verb reaches for when a run cannot settle a question on its own
-	// (ADR-009). It carries only an order of agents; absent, the top-level order applies.
-	BlockConsult = "consult"
 	// BlockLocal is the project's two local-environment commands (ADR-005): what brings the services
 	// it develops against up, and what makes the local environment match the checkout. Both are
 	// shell commands run from the project root, so a project may point at a Makefile target, a
@@ -226,35 +223,24 @@ type fieldSpec struct {
 //
 // The review, local, and test blocks are optional at the top level and complete when they are there:
 // a project set up before a block existed is still valid settings, and one that carries it carries
-// every field. The agents list and its per-harness override are optional too, and absent means the
-// default (ADR-009).
+// every field. The agents list is optional too, and absent means the default (ADR-009.2).
 var topLevelFields = []fieldSpec{
 	{"$schema", false, isString},
 	{"version", true, isVersion},
 	{"tracker", true, isTracker},
 	{FieldHarnesses, true, isHarnesses},
 	{FieldAgents, false, isAgents},
-	{FieldAgentsByHarness, false, isObject},
 	{BlockReview, false, isObject},
-	{BlockConsult, false, isObject},
 	{BlockLocal, false, isObject},
 	{BlockTest, false, isObject},
 }
 
 // reviewFields is the shape of the review block, which codefall-review reads. Posting findings to a
 // pull request is visible to everyone on it, so it is off unless the project turned it on: the field
-// is optional, and absent means false, so a block may carry only its own order of agents. That
-// order is an ordered subset of the top-level list, for when review should walk a different order
-// from every other use (ADR-009).
+// is optional, and absent means false. Which agents review is not here: it varies by the harness the
+// session is running in, so it lives in the agents list (ADR-009.2).
 var reviewFields = []fieldSpec{
 	{FieldPostToPullRequest, false, isBool},
-	{FieldReviewAgents, false, isNameList},
-}
-
-// consultFields is the shape of the consult block: nothing but its own order of agents, and that
-// optional, because the block exists only to walk a different order from every other use.
-var consultFields = []fieldSpec{
-	{FieldConsultAgents, false, isNameList},
 }
 
 // localFields is the shape of the local block. Both commands are required once the block is there:
@@ -554,7 +540,6 @@ func Validate(doc Document) []string {
 		fields []fieldSpec
 	}{
 		{BlockReview, reviewFields},
-		{BlockConsult, consultFields},
 		{BlockLocal, localFields},
 		{BlockTest, testFields},
 	} {
@@ -562,9 +547,6 @@ func Validate(doc Document) []string {
 			problems = append(problems, validateBlock(doc, block.name, block.fields)...)
 		}
 	}
-
-	// The orders name agents the top-level list defines, which no field's own check can see.
-	problems = append(problems, agentReferences(doc, rejected)...)
 
 	// A missing or unknown tracker selects no block, so there is nothing further to say.
 	if _, known := trackerFields[selected]; !known {
