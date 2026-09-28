@@ -76,7 +76,7 @@ The decision log entry for 2026-09-16 has the reasoning.
 - [x] `review` — review work, triage findings, apply fixes
 - [x] `scaffold` — start a new project with ADRs and AGENTS.md files
 - [x] `codefall-upgrade` — bring a project's installed codefall and its documents current
-- [x] Shorten every SKILL.md to the ADR-004 guidelines
+- [x] Shorten every SKILL.md to the ADR-004.2 guidelines
 
 ### Command Line
 - [x] `init` — survey settings, install skills and hooks for each harness; `upgrade` alias

@@ -44,11 +44,16 @@ var (
 		", or run codefall upgrade"
 	stampRemedy = "add " + settings.RefreshStamp + " to " + settings.GitIgnoreName +
 		", or run codefall upgrade"
-	userRemedy = "add " + userfile.Name + " to " + settings.GitIgnoreName +
-		", or run codefall upgrade"
+	userRemedy    = "run codefall config persona engineer, which adds the line, or run codefall upgrade"
 	userFilePath  = filepath.Join(workingDir, userfile.Name)
-	personaRemedy = "edit " + userfile.Name + ", or remove it to use the engineer persona; schema: " +
-		userfile.SchemaID
+	personaRemedy = "run codefall config persona <engineer|product-manager>, or remove " + userfile.Name +
+		" to use the engineer persona"
+	personaRemoveRemedy = "remove " + userfile.Name + " to use the engineer persona, then run " +
+		"codefall config persona <engineer|product-manager> to choose another"
+	// The remedies for an order that names no agent on current: the list is fixed by a command, and a
+	// narrower order by naming an agent in the settings.
+	addCurrentRemedy = "run codefall config agents add <name> --harness current, " +
+		"so a run always has a reader it can start"
 	mergeRemedy = "add " + settings.InteractionsAttribute + " to " + settings.GitAttributesName +
 		", or run codefall upgrade"
 	leftoverRemedy = "remove the files " + manifest.Name +
@@ -545,6 +550,20 @@ func TestDiagnoseRun(t *testing.T) {
 			wantRemedy: mo.Some(userRemedy),
 		},
 		{
+			// The command that adds the line is given the persona the person already has, so running
+			// it changes nothing else.
+			name: ".gitignore does not name the user file, which names a persona",
+			mutate: func(f *fakeFileSystem, _ *fakeCommandRunner) {
+				f.files[gitIgnorePath] = []byte("node_modules/\n" + settings.RefreshStamp + "\n")
+				f.files[userFilePath] = []byte(`{"version": 1, "persona": "product-manager"}`)
+			},
+			want:       outcomes(map[string]domain.Status{domain.UserIgnored.ID: domain.StatusWarn}),
+			target:     domain.UserIgnored.ID,
+			wantDetail: ".gitignore does not name " + userfile.Name,
+			wantRemedy: mo.Some("run codefall config persona product-manager, which adds the line, " +
+				"or run codefall upgrade"),
+		},
+		{
 			// No user file is the default persona, which is what every project had before the file
 			// existed, and the report says which persona that is.
 			name:       "no user file, so the persona is the default",
@@ -592,7 +611,7 @@ func TestDiagnoseRun(t *testing.T) {
 			want:       outcomes(map[string]domain.Status{domain.Persona.ID: domain.StatusFail}),
 			target:     domain.Persona.ID,
 			wantDetail: userfile.Name + " is not valid JSON: unexpected end of JSON input",
-			wantRemedy: mo.Some(personaRemedy),
+			wantRemedy: mo.Some(personaRemoveRemedy),
 		},
 		{
 			name: "the user file is JSON but not an object",
@@ -602,7 +621,7 @@ func TestDiagnoseRun(t *testing.T) {
 			want:       outcomes(map[string]domain.Status{domain.Persona.ID: domain.StatusFail}),
 			target:     domain.Persona.ID,
 			wantDetail: userfile.Name + "'s top level must be a JSON object",
-			wantRemedy: mo.Some(personaRemedy),
+			wantRemedy: mo.Some(personaRemoveRemedy),
 		},
 		{
 			name: "the user file cannot be read",
@@ -808,7 +827,8 @@ func TestDiagnoseRun(t *testing.T) {
 			want:       outcomes(map[string]domain.Status{domain.AgentsCurrent.ID: domain.StatusWarn}),
 			target:     domain.AgentsCurrent.ID,
 			wantDetail: "review.agents, agentsByHarness.claude names no agent on current",
-			wantRemedy: mo.Some(currentRemedy),
+			wantRemedy: mo.Some("name an agent on current in review.agents, agentsByHarness.claude in " +
+				".codefall/settings.json, so a run always has a reader it can start"),
 		},
 		{
 			// The consult block's own order is checked like review's.
@@ -822,7 +842,8 @@ func TestDiagnoseRun(t *testing.T) {
 			want:       outcomes(map[string]domain.Status{domain.AgentsCurrent.ID: domain.StatusWarn}),
 			target:     domain.AgentsCurrent.ID,
 			wantDetail: "consult.agents names no agent on current",
-			wantRemedy: mo.Some(currentRemedy),
+			wantRemedy: mo.Some("name an agent on current in consult.agents in .codefall/settings.json, " +
+				"so a run always has a reader it can start"),
 		},
 		{
 			name: "the top-level order itself has no agent on current",
@@ -833,7 +854,21 @@ func TestDiagnoseRun(t *testing.T) {
 			want:       outcomes(map[string]domain.Status{domain.AgentsCurrent.ID: domain.StatusWarn}),
 			target:     domain.AgentsCurrent.ID,
 			wantDetail: "agents names no agent on current",
-			wantRemedy: mo.Some(currentRemedy),
+			wantRemedy: mo.Some(addCurrentRemedy),
+		},
+		{
+			// The command adds the agent to the list; the narrower orders still need it named.
+			name: "the top-level and review orders have no agent on current",
+			mutate: func(f *fakeFileSystem, r *fakeCommandRunner) {
+				f.files[settingsPath] = []byte(withAgents(`[{ "name": "architect", "harness": "codex" }]`,
+					`["architect"]`, ""))
+				r.paths["codex"] = "/opt/homebrew/bin/codex"
+			},
+			want:       outcomes(map[string]domain.Status{domain.AgentsCurrent.ID: domain.StatusWarn}),
+			target:     domain.AgentsCurrent.ID,
+			wantDetail: "agents, review.agents names no agent on current",
+			wantRemedy: mo.Some("run codefall config agents add <name> --harness current, and name that agent " +
+				"in review.agents in .codefall/settings.json, so a run always has a reader it can start"),
 		},
 		{
 			// What the list may hold is the format's to say, so a bad entry is the settings-complete

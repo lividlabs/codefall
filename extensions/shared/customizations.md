@@ -1,7 +1,10 @@
 # Project customizations
 
-Shared procedure. Every verb follows it. Factored out of the individual skills once a third one
-needed it, so that the rule about what a customization may and may not do is stated once.
+Shared procedure. Every verb follows it except `codefall-scaffold`, which runs in a directory that
+has no `.codefall/skills/` yet, and `codefall-upgrade`, which compares a project's documents against
+the extension's templates, where a project procedure would work against the comparison. Factored out
+of the individual skills once a third one needed it, so that the rule about what a customization may
+and may not do is stated once.
 
 If `.codefall/skills/<verb>/CUSTOMIZE.md` exists in the user's project, read it before step 1, say
 you loaded it, and follow it for this run. `<verb>` is the name of the skill that is running —
