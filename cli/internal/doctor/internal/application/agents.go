@@ -16,7 +16,8 @@ import (
 // start and moves to the next in its list (ADR-009.2), so nothing is broken; the person may want the
 // binary anyway, may want the agent gone from the list, or may leave it.
 const agentsRemedy = "install the missing binary, run codefall config agents <activeAgent> <review|consult> " +
-	"<harness[:model]>... to write the list without it, or leave it: a run skips an agent it cannot start here"
+	"<harness[:model]>... to write the list without it, or leave it: a run skips an agent it cannot start here" +
+	", or run /codefall-equip agents inside that harness to set the entry up"
 
 // currentRemedy is what to do about a list that names no agent on current: name one in it, or clear
 // it so the default entry's list applies.
@@ -42,26 +43,27 @@ func (d *Diagnose) agents(_ context.Context, dir string, results []domain.Result
 
 	entries := settings.Agents(doc)
 
-	results = append(results, d.agentsRunnable(entries))
+	results = append(results, d.agentsRunnable(doc, entries))
 
 	return append(results, agentsEndAtCurrent(entries))
 }
 
 // agentsRunnable is check 15: every harness an agent in any list runs on is on PATH, or is current,
-// which is always runnable because it is the harness running the session.
+// which is always runnable because it is the harness running the session. An agent on a
+// harnessConfig variant runs on the binary the variant names, so that is what is looked for.
 //
 // It warns rather than fails. An agent this machine cannot start is skipped by every run, which is
 // the configured behaviour and not an error; what the warning adds is that the person sees it before
 // a run does, and can tell a missing install from a deliberate choice.
-func (d *Diagnose) agentsRunnable(entries []settings.Entry) domain.Result {
+func (d *Diagnose) agentsRunnable(doc settings.Document, entries []settings.Entry) domain.Result {
 	var missing []string
 
-	for _, runs := range harnessesNamed(entries) {
-		if runs == settings.HarnessCurrent || d.runner.LookPath(runs).IsPresent() {
+	for _, binary := range binariesNamed(doc, entries) {
+		if binary == settings.HarnessCurrent || d.runner.LookPath(binary).IsPresent() {
 			continue
 		}
 
-		missing = append(missing, runs+" is not on PATH")
+		missing = append(missing, binary+" is not on PATH")
 	}
 
 	if len(missing) == 0 {
@@ -71,15 +73,20 @@ func (d *Diagnose) agentsRunnable(entries []settings.Entry) domain.Result {
 	return domain.AgentsRunnable.Warn(strings.Join(missing, "; "), mo.Some(agentsRemedy))
 }
 
-// harnessesNamed is every harness any list names, each once, in the order first named.
-func harnessesNamed(entries []settings.Entry) []string {
+// binariesNamed is every binary any list's agents run on, each once, in the order first named: a
+// harness name and a variant of it are one binary. A name the settings module cannot resolve is
+// looked for as written, though the settings-complete check has refused the file before this one
+// runs on it.
+func binariesNamed(doc settings.Document, entries []settings.Entry) []string {
 	var named []string
 
 	for _, entry := range entries {
 		for _, feature := range settings.Features() {
 			for _, agent := range entry.List(feature).OrElse(nil) {
-				if !slices.Contains(named, agent.Harness) {
-					named = append(named, agent.Harness)
+				binary := settings.ResolveHarness(doc, agent.Harness).OrElse(agent.Harness)
+
+				if !slices.Contains(named, binary) {
+					named = append(named, binary)
 				}
 			}
 		}

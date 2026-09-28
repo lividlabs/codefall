@@ -11,6 +11,9 @@ type Configuration struct {
 	// settings write none so the format's default applies.
 	Entries []settings.Entry
 	Default bool
+	// HarnessConfigs is how each harness is called, keyed as the settings key it: empty when the
+	// settings say nothing, and every harness runs bare.
+	HarnessConfigs map[string]settings.HarnessConfig
 	// Posting is whether codefall-review may post its findings to a pull request.
 	Posting bool
 	Persona Persona

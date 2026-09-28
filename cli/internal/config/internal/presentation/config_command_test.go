@@ -21,12 +21,33 @@ type fakeConfig struct {
 	writes  []domain.Write
 	err     error
 
+	configs map[string]settings.HarnessConfig
+
 	// What the last write was asked for.
 	active, feature string
 	agents          []settings.Agent
 	cleared         bool
 	posting         mo.Option[bool]
 	set             string
+	key             string
+	block           mo.Option[settings.HarnessConfig]
+	blockCleared    bool
+}
+
+func (f *fakeConfig) HarnessConfigs(string) (map[string]settings.HarnessConfig, error) {
+	return f.configs, f.err
+}
+
+func (f *fakeConfig) SetHarnessConfig(_, key string, block settings.HarnessConfig) (domain.Write, error) {
+	f.key, f.block = key, mo.Some(block)
+
+	return f.write, f.err
+}
+
+func (f *fakeConfig) ClearHarnessConfig(_, key string) (domain.Write, error) {
+	f.key, f.blockCleared = key, true
+
+	return f.write, f.err
 }
 
 func (f *fakeConfig) Show(string) (domain.Configuration, error) { return f.shown, f.err }
@@ -206,7 +227,7 @@ func TestAgentsRefusesTheWrongArguments(t *testing.T) {
 		{name: "an active agent alone", args: []string{"agents", "muse"}, want: "name the list too"},
 		{name: "no agents and no --clear", args: []string{"agents", "muse", "review"}, want: "name at least one agent"},
 		{name: "agents with --clear", args: []string{"agents", "muse", "review", "claude", "--clear"}, want: "--clear takes no agents"},
-		{name: "a harness codefall cannot start", args: []string{"agents", "muse", "review", "cursor"}, want: `agent "cursor": harness unknown value "cursor"`},
+		{name: "a harness written no way codefall reads", args: []string{"agents", "muse", "review", "Cursor"}, want: `agent "Cursor": harness "Cursor" is not a harness`},
 		{name: "an empty model", args: []string{"agents", "muse", "review", "codex:"}, want: "names an empty model"},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
@@ -231,6 +252,184 @@ func TestAgentsReturnsTheRefusalAsItIs(t *testing.T) {
 	_, err := run(t, &fakeConfig{err: refusal}, "agents", "default", "review", "current")
 	if !errors.Is(err, refusal) {
 		t.Errorf("error = %v, want %v", err, refusal)
+	}
+}
+
+// harnessBlocks is Codex called through a provider, and a variant that calls it directly.
+var harnessBlocks = map[string]settings.HarnessConfig{
+	"codex": {
+		Harness:   "codex",
+		ModelFlag: mo.Some("--model"),
+		Provider:  mo.Some("amazon-bedrock-runtime"),
+		Env:       mo.Some("aws configure export-credentials --format env"),
+		Args:      []string{"-c", "model_reasoning_effort=high"},
+	},
+	"codex-direct": {
+		Harness: "codex", ModelFlag: mo.None[string](), Provider: mo.None[string](), Env: mo.None[string](),
+		Args: []string{"-c", "model_reasoning_effort=high"},
+	},
+}
+
+// The blocks print after the agents, in key order, one field per line, and a block under a harness
+// name does not repeat the harness.
+const harnessBlockLines = "harnessConfig.codex:\n" +
+	"  modelFlag: --model\n" +
+	"  provider: amazon-bedrock-runtime\n" +
+	"  args: -c, model_reasoning_effort=high\n" +
+	"  env: aws configure export-credentials --format env\n" +
+	"harnessConfig.codex-direct:\n" +
+	"  harness: codex\n" +
+	"  args: -c, model_reasoning_effort=high\n"
+
+func TestShowPrintsHowEachHarnessIsCalled(t *testing.T) {
+	config := &fakeConfig{shown: domain.Configuration{
+		Entries:        []settings.Entry{defaultEntry},
+		HarnessConfigs: harnessBlocks,
+		Persona:        domain.Persona{Name: "engineer"},
+	}}
+
+	out, err := run(t, config, "show")
+	if err != nil {
+		t.Fatalf("Execute: %v", err)
+	}
+
+	want := "agents:\n" +
+		"  default (any harness without its own entry):\n" +
+		"    review: this harness\n" +
+		"    consult: this harness\n" +
+		harnessBlockLines +
+		"review posting: off\n" +
+		"persona: engineer (default)\n"
+	if out != want {
+		t.Errorf("output =\n%q\nwant\n%q", out, want)
+	}
+}
+
+// `harness` alone and `harness list` print the same thing, and say so when there is nothing.
+func TestHarnessPrintsTheBlocks(t *testing.T) {
+	config := &fakeConfig{configs: harnessBlocks}
+
+	for _, args := range [][]string{{"harness"}, {"harness", "list"}} {
+		out, err := run(t, config, args...)
+		if err != nil {
+			t.Fatalf("Execute %q: %v", args, err)
+		}
+
+		if out != harnessBlockLines {
+			t.Errorf("output of %q = %q, want %q", args, out, harnessBlockLines)
+		}
+	}
+
+	out, err := run(t, &fakeConfig{}, "harness")
+	if err != nil {
+		t.Fatalf("Execute: %v", err)
+	}
+
+	if want := "harnessConfig: none set in .codefall/settings.json; every harness runs bare\n"; out != want {
+		t.Errorf("output = %q, want %q", out, want)
+	}
+}
+
+// Every flag reaches the use case as the field it stands for, and a flag not given is absent.
+func TestHarnessSetsABlockAndPrintsTheWrite(t *testing.T) {
+	config := &fakeConfig{write: domain.Changed("set harnessConfig.codex-direct in .codefall/settings.json")}
+
+	out, err := run(t, config, "harness", "codex-direct", "--harness", "codex",
+		"--arg", "-c", "--arg", "model_reasoning_effort=high", "--env", "aws configure export-credentials --format env")
+	if err != nil {
+		t.Fatalf("Execute: %v", err)
+	}
+
+	want := settings.HarnessConfig{
+		Harness:   "codex",
+		ModelFlag: mo.None[string](),
+		Provider:  mo.None[string](),
+		Env:       mo.Some("aws configure export-credentials --format env"),
+		Args:      []string{"-c", "model_reasoning_effort=high"},
+	}
+
+	if block, ok := config.block.Get(); config.key != "codex-direct" || !ok || block.Harness != want.Harness ||
+		block.ModelFlag != want.ModelFlag || block.Provider != want.Provider || block.Env != want.Env ||
+		!slices.Equal(block.Args, want.Args) {
+		t.Errorf("SetHarnessConfig was given %q %+v, want codex-direct %+v", config.key, config.block, want)
+	}
+
+	if want := "✓ set harnessConfig.codex-direct in .codefall/settings.json\n"; out != want {
+		t.Errorf("output = %q, want %q", out, want)
+	}
+
+	config = &fakeConfig{write: domain.Changed("set harnessConfig.codex in .codefall/settings.json")}
+
+	if _, err := run(t, config, "harness", "codex", "--model-flag", "--model", "--provider", "amazon-bedrock-runtime"); err != nil {
+		t.Fatalf("Execute: %v", err)
+	}
+
+	if block, ok := config.block.Get(); !ok || block.Harness != "" || block.ModelFlag != mo.Some("--model") ||
+		block.Provider != mo.Some("amazon-bedrock-runtime") || block.Env.IsPresent() || block.Args != nil {
+		t.Errorf("SetHarnessConfig was given %+v, want only the model flag and the provider", config.block)
+	}
+}
+
+func TestHarnessClearsABlock(t *testing.T) {
+	config := &fakeConfig{write: domain.Changed("removed harnessConfig.codex from .codefall/settings.json")}
+
+	if _, err := run(t, config, "harness", "codex", "--clear"); err != nil {
+		t.Fatalf("Execute: %v", err)
+	}
+
+	if !config.blockCleared || config.key != "codex" {
+		t.Errorf("ClearHarnessConfig was given %q, cleared = %v; want codex cleared", config.key, config.blockCleared)
+	}
+}
+
+// The command refuses what it can see is wrong before the use case is reached, naming the flags.
+func TestHarnessRefusesTheWrongArguments(t *testing.T) {
+	for _, tc := range []struct {
+		name string
+		args []string
+		want string
+	}{
+		{name: "a key and no flags", args: []string{"harness", "codex"}, want: "pass at least one of --harness, --model-flag, --provider, --arg, or --env, or --clear"},
+		{name: "flags and no key", args: []string{"harness", "--provider", "x"}, want: "name the key the flags are for"},
+		{name: "--clear and no key", args: []string{"harness", "--clear"}, want: "name the key the flags are for"},
+		{name: "two keys", args: []string{"harness", "codex", "muse", "--provider", "x"}, want: "name one key"},
+		{name: "--clear with a flag", args: []string{"harness", "codex", "--clear", "--provider", "x"}, want: "--clear takes no other flags"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			config := &fakeConfig{}
+
+			_, err := run(t, config, tc.args...)
+			if err == nil || !strings.Contains(err.Error(), tc.want) {
+				t.Fatalf("error = %v, want it to say %q", err, tc.want)
+			}
+
+			if config.block.IsPresent() || config.blockCleared {
+				t.Error("the use case was reached with arguments the command should have refused")
+			}
+		})
+	}
+}
+
+// A refusal from the use case is returned as it is, so the settings module's words reach the person.
+func TestHarnessReturnsTheRefusalAsItIs(t *testing.T) {
+	refusal := errors.New(`that change would leave .codefall/settings.json invalid, so nothing was changed: harnessConfig.bedrock.harness: missing`)
+
+	_, err := run(t, &fakeConfig{err: refusal}, "harness", "bedrock", "--provider", "amazon-bedrock-runtime")
+	if !errors.Is(err, refusal) {
+		t.Errorf("error = %v, want %v", err, refusal)
+	}
+}
+
+// A variant key is an agent like any harness name; the file decides whether it is there.
+func TestAgentsAcceptsAVariantKey(t *testing.T) {
+	config := &fakeConfig{write: domain.Changed("set claude consult in .codefall/settings.json: codex-direct:gpt-6-astra")}
+
+	if _, err := run(t, config, "agents", "claude", "consult", "codex-direct:gpt-6-astra"); err != nil {
+		t.Fatalf("Execute: %v", err)
+	}
+
+	if want := []settings.Agent{{Harness: "codex-direct", Model: mo.Some("gpt-6-astra")}}; !slices.Equal(config.agents, want) {
+		t.Errorf("SetList was given %+v, want %+v", config.agents, want)
 	}
 }
 

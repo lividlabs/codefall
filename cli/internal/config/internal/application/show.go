@@ -25,11 +25,23 @@ func (c *Config) Show(dir string) (domain.Configuration, error) {
 	}
 
 	return domain.Configuration{
-		Entries: settings.Agents(project.doc),
-		Default: !listsAgents(project.doc),
-		Posting: settings.PostToPullRequest(project.doc),
-		Persona: persona,
+		Entries:        settings.Agents(project.doc),
+		Default:        !listsAgents(project.doc),
+		HarnessConfigs: settings.HarnessConfigs(project.doc),
+		Posting:        settings.PostToPullRequest(project.doc),
+		Persona:        persona,
 	}, nil
+}
+
+// HarnessConfigs reads how each harness is called, keyed as the settings key it, and nothing when
+// the settings say nothing.
+func (c *Config) HarnessConfigs(dir string) (map[string]settings.HarnessConfig, error) {
+	project, err := c.readSettings(dir)
+	if err != nil {
+		return nil, err
+	}
+
+	return settings.HarnessConfigs(project.doc), nil
 }
 
 // Agents reads the agents list in order, the default when the settings write none.

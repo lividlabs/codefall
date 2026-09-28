@@ -47,6 +47,41 @@
         "additionalProperties": true
       }
     },
+    "harnessConfig": {
+      "description": "How each harness is called when an agent runs on it. A key that is a harness name configures that harness; any other key is a variant whose harness field names the binary, so one project can call Codex through a provider for review and directly for consult. An agent's harness may name either. A harness with no block runs bare. The shared script that starts a harness reads the block at run time.",
+      "type": "object",
+      "patternProperties": {
+        "^[a-z0-9]+(-[a-z0-9]+)*$": {
+          "type": "object",
+          "properties": {
+            "harness": {
+              "description": "The binary a variant runs, one of the five harness names; never current. Refused on a block whose key is already a harness name.",
+              "type": "string",
+              "enum": ["agy", "claude", "codex", "muse", "opencode"]
+            },
+            "modelFlag": {
+              "description": "The flag the shared script passes the model with. The script's built-in flag for the harness is the fallback.",
+              "type": "string"
+            },
+            "provider": {
+              "description": "The harness's own provider name, which the script turns into that harness's switch.",
+              "type": "string"
+            },
+            "args": {
+              "description": "Extra command-line arguments, appended verbatim.",
+              "type": "array",
+              "items": { "type": "string" }
+            },
+            "env": {
+              "description": "A shell command whose standard output is evaluated before the harness starts, so export lines take effect.",
+              "type": "string"
+            }
+          },
+          "additionalProperties": true
+        }
+      },
+      "additionalProperties": false
+    },
     "beads": { "type": "object", "properties": {}, "additionalProperties": true },
     "github": {
       "type": "object",
@@ -108,9 +143,9 @@
       "required": ["harness"],
       "properties": {
         "harness": {
-          "description": "The harness that runs the agent, named for its binary, or current: a subagent of the harness the session is running in, which is always runnable.",
+          "description": "What runs the agent, in one of three forms: a harness name (agy, claude, codex, muse, opencode); current, a subagent of the harness the session is running in, which is always runnable; or a harnessConfig key, which names a harness and how it is called.",
           "type": "string",
-          "enum": ["agy", "claude", "codex", "current", "muse", "opencode"]
+          "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
         },
         "model": { "description": "The model to ask that harness for, passed to it as written.", "type": "string" }
       },

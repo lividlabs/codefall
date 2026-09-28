@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"maps"
 	"slices"
 	"strconv"
 	"strings"
@@ -596,8 +597,13 @@ func (e editor) listHeight() int {
 	return max(e.height-8, 6)
 }
 
-// addForm is the form that adds an agent to the list on screen: the harness that runs it, and
-// optionally the model that harness is asked for.
+// equipHint is what the add form says about the model: the skill that reads it from inside the
+// harness and writes the entry, for whoever does not know the model string by heart.
+const equipHint = "Not sure of the model string? Run /codefall-equip agents inside that harness; it reads the " +
+	"model the session is using and writes the entry for you."
+
+// addForm is the form that adds an agent to the list on screen: the harness that runs it, or a
+// harnessConfig variant that names one, and optionally the model that harness is asked for.
 func (e editor) addForm() *huh.Form {
 	harnesses := settings.AgentHarnesses()
 	options := make([]huh.Option[string], 0, len(harnesses))
@@ -611,9 +617,16 @@ func (e editor) addForm() *huh.Form {
 		options = append(options, huh.NewOption(label, name))
 	}
 
+	for _, key := range slices.Sorted(maps.Keys(e.shown.HarnessConfigs)) {
+		if block := e.shown.HarnessConfigs[key]; block.Harness != key {
+			options = append(options, huh.NewOption(key+" ("+block.Harness+", called as "+
+				settings.FieldHarnessConfig+"."+key+" says)", key))
+		}
+	}
+
 	return huh.NewForm(huh.NewGroup(
 		huh.NewSelect[string]().Title("Which harness runs it?").Options(options...).Value(&e.fields.harness),
-		huh.NewInput().Title("Model").Description("Optional; passed to the harness as written").
+		huh.NewInput().Title("Model").Description("Optional; passed to the harness as written. "+equipHint).
 			Value(&e.fields.model),
 	)).WithShowHelp(true).WithWidth(min(e.width, 72))
 }

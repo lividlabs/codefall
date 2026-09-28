@@ -8,13 +8,16 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"maps"
 	"os"
+	"slices"
 	"strings"
 
 	"github.com/samber/mo"
 	"github.com/spf13/cobra"
 
 	"github.com/lividlabs/codefall-cli/cli/internal/config/internal/domain"
+	"github.com/lividlabs/codefall-cli/cli/internal/shared/harness"
 	"github.com/lividlabs/codefall-cli/cli/internal/shared/settings"
 	"github.com/lividlabs/codefall-cli/cli/internal/shared/ui"
 	"github.com/lividlabs/codefall-cli/cli/internal/shared/userfile"
@@ -27,6 +30,9 @@ type ConfigUseCase interface {
 	SetList(dir, active, feature string, agents []settings.Agent) (domain.Write, error)
 	ClearList(dir, active, feature string) (domain.Write, error)
 	SetPosting(dir string, on bool) (domain.Write, error)
+	HarnessConfigs(dir string) (map[string]settings.HarnessConfig, error)
+	SetHarnessConfig(dir, key string, block settings.HarnessConfig) (domain.Write, error)
+	ClearHarnessConfig(dir, key string) (domain.Write, error)
 	Persona(dir string) (domain.Persona, error)
 	SetPersona(dir, name string) ([]domain.Write, error)
 }
@@ -44,10 +50,11 @@ const settingsName = ".codefall/settings.json"
 func NewConfigCommand(config ConfigUseCase) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "config",
-		Short: "Edit who reviews and consults for this project, and your persona",
+		Short: "Edit who reviews and consults for this project, how each harness is called, and your persona",
 		Long: "With no arguments in a terminal, opens an editor over the agents, reviews, and your persona. " +
 			"The agents are who codefall asks to review or for a second opinion, chosen by the harness you " +
-			"are running in; they and the review settings live in " + settingsName + ", which is checked in. " +
+			"are running in; they, how each harness is called, and the review settings live in " + settingsName +
+			", which is checked in. " +
 			"The persona lives in " + userfile.Name + ", which is yours alone and kept out of version " +
 			"control. The subcommands change one value each, take every value as an argument, and never " +
 			"prompt, so a script can run them. A write the settings would not accept is refused, in the " +
@@ -78,6 +85,7 @@ func NewConfigCommand(config ConfigUseCase) *cobra.Command {
 	cmd.AddCommand(
 		newShowCommand(config),
 		newAgentsCommand(config),
+		newHarnessCommand(config),
 		newReviewCommand(config),
 		newPersonaCommand(config),
 	)
@@ -88,7 +96,7 @@ func NewConfigCommand(config ConfigUseCase) *cobra.Command {
 func newShowCommand(config ConfigUseCase) *cobra.Command {
 	return &cobra.Command{
 		Use:   "show",
-		Short: "Print who reviews and consults, whether review posts, and your persona",
+		Short: "Print who reviews and consults, how each harness is called, whether review posts, and your persona",
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			dir, err := os.Getwd()
@@ -115,6 +123,7 @@ func configurationLines(shown domain.Configuration) []string {
 	}
 
 	lines := append([]string{heading}, entryLines(shown.Entries)...)
+	lines = append(lines, harnessConfigLines(shown.HarnessConfigs)...)
 
 	posting := "off"
 	if shown.Posting {
@@ -124,6 +133,39 @@ func configurationLines(shown domain.Configuration) []string {
 	lines = append(lines, "review posting: "+posting)
 
 	return append(lines, "persona: "+personaLine(shown.Persona))
+}
+
+// harnessConfigLines is how each harness is called, one block per heading in key order and one
+// field per line under it. A block under a harness's own name does not repeat the harness.
+func harnessConfigLines(configs map[string]settings.HarnessConfig) []string {
+	var lines []string
+
+	for _, key := range slices.Sorted(maps.Keys(configs)) {
+		block := configs[key]
+		lines = append(lines, settings.FieldHarnessConfig+"."+key+":")
+
+		if block.Harness != key {
+			lines = append(lines, "  "+settings.FieldConfigHarness+": "+block.Harness)
+		}
+
+		if flag, ok := block.ModelFlag.Get(); ok {
+			lines = append(lines, "  "+settings.FieldModelFlag+": "+flag)
+		}
+
+		if provider, ok := block.Provider.Get(); ok {
+			lines = append(lines, "  "+settings.FieldProvider+": "+provider)
+		}
+
+		if len(block.Args) > 0 {
+			lines = append(lines, "  "+settings.FieldArgs+": "+strings.Join(block.Args, ", "))
+		}
+
+		if env, ok := block.Env.Get(); ok {
+			lines = append(lines, "  "+settings.FieldEnv+": "+env)
+		}
+	}
+
+	return lines
 }
 
 // entryLines is the agents list, one active agent per heading and one list per line under it.
@@ -265,6 +307,133 @@ func runAgentsList(cmd *cobra.Command, config ConfigUseCase, dir string) error {
 	}
 
 	return writeLines(cmd.OutOrStdout(), entryLines(entries))
+}
+
+// harnessFlags is what `config harness <key>` takes: every field a block may carry, each as a flag,
+// and --clear in place of them all.
+type harnessFlags struct {
+	harness, modelFlag, provider, env string
+	args                              []string
+	clear                             bool
+}
+
+// The flags, in the order the block writes their fields, for the message that names them.
+const harnessFlagNames = "--harness, --model-flag, --provider, --arg, or --env"
+
+func newHarnessCommand(config ConfigUseCase) *cobra.Command {
+	flags := &harnessFlags{}
+
+	cmd := &cobra.Command{
+		Use: "harness [<key> [--harness <" + strings.Join(harness.All(), "|") + ">] [--model-flag <flag>] " +
+			"[--provider <name>] [--arg <argument>]... [--env <command>] | <key> --clear]",
+		Short: "Print how each harness is called, or set how one is called",
+		Long: "With no arguments, prints the " + settings.FieldHarnessConfig + " blocks in " + settingsName +
+			". With a key, replaces that block with exactly the flags given. A key that is a harness name (" +
+			strings.Join(harness.All(), ", ") + ") configures that harness; any other key is a variant, and " +
+			"--harness names the binary it runs. --model-flag is the flag the model is passed with, when the " +
+			"harness's usual one is not it; --provider is the harness's own provider name; --arg is an extra " +
+			"argument, appended as written, repeated for several; --env is a shell command whose output is " +
+			"evaluated before the harness starts, so its export lines take effect. A harness with no block " +
+			"runs bare. --clear removes the block. An agent in a list names a block by its key, so " +
+			"codefall config agents claude review codex-direct:gpt-6-astra reviews on the codex-direct block.",
+		Args: harnessArgs(flags),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			dir, err := os.Getwd()
+			if err != nil {
+				return fmt.Errorf("config: %w", err)
+			}
+
+			if len(args) == 0 {
+				return runHarnessList(cmd, config, dir)
+			}
+
+			var write domain.Write
+
+			if flags.clear {
+				write, err = config.ClearHarnessConfig(dir, args[0])
+			} else {
+				write, err = config.SetHarnessConfig(dir, args[0], settings.HarnessConfig{
+					Harness:   flags.harness,
+					ModelFlag: given(flags.modelFlag),
+					Provider:  given(flags.provider),
+					Env:       given(flags.env),
+					Args:      flags.args,
+				})
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return writeResults(cmd.OutOrStdout(), write)
+		},
+	}
+
+	cmd.Flags().StringVar(&flags.harness, "harness", "", "the binary a variant runs ("+strings.Join(harness.All(), ", ")+")")
+	cmd.Flags().StringVar(&flags.modelFlag, "model-flag", "", "the flag the model is passed with")
+	cmd.Flags().StringVar(&flags.provider, "provider", "", "the harness's own provider name")
+	cmd.Flags().StringArrayVar(&flags.args, "arg", nil, "an extra argument, appended as written; repeat for several")
+	cmd.Flags().StringVar(&flags.env, "env", "", "a shell command whose output is evaluated before the harness starts")
+	cmd.Flags().BoolVar(&flags.clear, "clear", false, "remove the block, so the harness runs bare")
+
+	cmd.AddCommand(&cobra.Command{
+		Use:   "list",
+		Short: "Print how each harness is called, one block at a time",
+		Args:  cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			dir, err := os.Getwd()
+			if err != nil {
+				return fmt.Errorf("config: %w", err)
+			}
+
+			return runHarnessList(cmd, config, dir)
+		},
+	})
+
+	return cmd
+}
+
+// harnessArgs checks the harness command's arguments: nothing, to list; or a key with at least one
+// field flag, or with --clear alone.
+func harnessArgs(flags *harnessFlags) cobra.PositionalArgs {
+	return func(cmd *cobra.Command, args []string) error {
+		fields := 0
+
+		for _, name := range []string{"harness", "model-flag", "provider", "arg", "env"} {
+			if cmd.Flags().Changed(name) {
+				fields++
+			}
+		}
+
+		switch {
+		case len(args) > 1:
+			return errors.New("name one key")
+		case len(args) == 0 && (fields > 0 || flags.clear):
+			return errors.New("name the key the flags are for")
+		case len(args) == 0:
+			return nil
+		case flags.clear && fields > 0:
+			return errors.New("--clear takes no other flags")
+		case !flags.clear && fields == 0:
+			return errors.New("pass at least one of " + harnessFlagNames + ", or --clear")
+		}
+
+		return nil
+	}
+}
+
+func runHarnessList(cmd *cobra.Command, config ConfigUseCase, dir string) error {
+	configs, err := config.HarnessConfigs(dir)
+	if err != nil {
+		return err
+	}
+
+	lines := harnessConfigLines(configs)
+	if len(lines) == 0 {
+		lines = []string{settings.FieldHarnessConfig + ": none set in " + settingsName + "; every harness runs bare"}
+	}
+
+	return writeLines(cmd.OutOrStdout(), lines)
 }
 
 func newReviewCommand(config ConfigUseCase) *cobra.Command {

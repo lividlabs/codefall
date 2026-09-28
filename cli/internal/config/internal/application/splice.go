@@ -146,6 +146,41 @@ func withoutField(data []byte, key string) ([]byte, error) {
 	}
 }
 
+// withoutNestedField is withoutField for a key inside the object a top-level key holds. The block
+// must be there and be an object; the caller decides what to do when it is not.
+func withoutNestedField(data []byte, block, key string) ([]byte, error) {
+	for {
+		inner, err := nestedObject(data, block)
+		if err != nil {
+			return nil, err
+		}
+
+		if _, ok := inner.last(key); !ok {
+			return data, nil
+		}
+
+		data = removeMember(data, inner, key)
+	}
+}
+
+// objectWithMember renders a fresh object holding one member, laid out on lines one level in from
+// the key whose value it becomes: the shape a block gets when a write creates it.
+func objectWithMember(indent, key string, render func(indent string) ([]byte, error)) ([]byte, error) {
+	quoted, err := json.Marshal(key)
+	if err != nil {
+		return nil, fmt.Errorf("encode %q: %w", key, err)
+	}
+
+	inner := indent + "  "
+
+	value, err := render(inner)
+	if err != nil {
+		return nil, err
+	}
+
+	return slices.Concat([]byte("{\n"+inner), quoted, []byte(": "), value, []byte("\n"+indent+"}")), nil
+}
+
 // nestedObject reads the object a top-level key holds, with offsets into the whole text.
 func nestedObject(data []byte, block string) (object, error) {
 	top, err := parseObject(data, 0, len(data))

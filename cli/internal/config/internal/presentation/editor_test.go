@@ -341,6 +341,46 @@ func TestEditorAddsAnAgentThroughTheForm(t *testing.T) {
 	}
 }
 
+// The add form tells a person who does not know the model string where to get it, and offers a
+// harnessConfig variant beside the harness names.
+func TestEditorAddFormNamesTheEquipSkillAndTheVariants(t *testing.T) {
+	want := "Not sure of the model string? Run /codefall-equip agents inside that harness; " +
+		"it reads the model the session is using and writes the entry for you."
+	if equipHint != want {
+		t.Fatalf("equipHint = %q, want %q", equipHint, want)
+	}
+
+	shown := twoEntries()
+	shown.HarnessConfigs = harnessBlocks
+
+	config := &fakeConfig{shown: shown, write: domain.Changed("set default review in .codefall/settings.json: current, codex-direct")}
+	e := newTestEditor(t, config)
+
+	// default, review, add; the model field is the second, so its description is drawn once the
+	// select has been answered.
+	e = send(t, e, enter, enter, enter, press('a', "a", 0))
+	if e.screen != screenAdd || e.form == nil {
+		t.Fatalf("after a: screen = %v, form nil = %v", e.screen, e.form == nil)
+	}
+
+	view := e.View().Content
+	for _, fragment := range []string{"codefall-equip", "codex-direct"} {
+		if !strings.Contains(view, fragment) {
+			t.Errorf("add form view = %q, want it to hold %q", view, fragment)
+		}
+	}
+
+	// The variant is the last option: below current, muse, and opencode.
+	e = send(t, e, press(tea.KeyDown, "", 0), press(tea.KeyDown, "", 0), press(tea.KeyDown, "", 0), enter, enter)
+	if e.screen != screenList {
+		t.Fatalf("after the form: screen = %v, want the list", e.screen)
+	}
+
+	if got := e.orderedWorking(); !slices.Equal(got, []settings.Agent{current, {Harness: "codex-direct", Model: mo.None[string]()}}) {
+		t.Fatalf("the list shows %+v, want current then codex-direct", got)
+	}
+}
+
 func TestEditorSetsPosting(t *testing.T) {
 	config := &fakeConfig{shown: twoEntries(), write: domain.Changed("set posting on in .codefall/settings.json")}
 	e := newTestEditor(t, config)

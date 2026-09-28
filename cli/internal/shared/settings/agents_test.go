@@ -90,8 +90,14 @@ func TestParseAgent(t *testing.T) {
 		{in: "current", want: Agent{Harness: "current", Model: mo.None[string]()}},
 		{in: "claude-code:opus", want: Agent{Harness: "claude", Model: mo.Some("opus")}},
 		{in: "codex:", wantErr: `agent "codex:" names an empty model`},
-		{in: "cursor", wantErr: `agent "cursor": harness unknown value "cursor" ` +
-			`(expected "agy", "claude", "codex", "current", "muse", "opencode")`},
+		{in: "current:", wantErr: `agent "current:" names an empty model`},
+		// A slug that is not a harness may be a harnessConfig key; the document decides.
+		{in: "codex-direct:gpt-6-astra", want: Agent{Harness: "codex-direct", Model: mo.Some("gpt-6-astra")}},
+		{in: "cursor", want: Agent{Harness: "cursor", Model: mo.None[string]()}},
+		{in: "Codex", wantErr: `agent "Codex": harness "Codex" is not a harness (agy, claude, codex, muse, opencode), ` +
+			`current, or a harnessConfig key, which is lowercase letters and digits joined by hyphens`},
+		{in: "", wantErr: `agent "": harness "" is not a harness (agy, claude, codex, muse, opencode), ` +
+			`current, or a harnessConfig key, which is lowercase letters and digits joined by hyphens`},
 	} {
 		got, err := ParseAgent(tc.in)
 
@@ -294,7 +300,12 @@ func TestValidateAgents(t *testing.T) {
 			name: "a harness codefall cannot start",
 			doc:  with(complete(), FieldAgents, []any{map[string]any{"activeAgent": "muse", "review": []any{map[string]any{"harness": "cursor"}}}}),
 			want: []string{`agents: [0].review[0].harness: unknown value "cursor" ` +
-				`(expected "agy", "claude", "codex", "current", "muse", "opencode")`},
+				`(expected "agy", "claude", "codex", "current", "muse", "opencode", or a harnessConfig key)`},
+		},
+		{
+			name: "a harness that is not a string",
+			doc:  with(complete(), FieldAgents, []any{map[string]any{"activeAgent": "muse", "review": []any{map[string]any{"harness": 5.0}}}}),
+			want: []string{"agents: [0].review[0].harness: must be a string"},
 		},
 		{
 			// The list is newer than the rename, so nothing checked in can carry a former spelling,
@@ -302,7 +313,7 @@ func TestValidateAgents(t *testing.T) {
 			name: "a harness under its former spelling",
 			doc:  with(complete(), FieldAgents, []any{map[string]any{"activeAgent": "muse", "review": []any{map[string]any{"harness": "claude-code"}}}}),
 			want: []string{`agents: [0].review[0].harness: unknown value "claude-code" ` +
-				`(expected "agy", "claude", "codex", "current", "muse", "opencode")`},
+				`(expected "agy", "claude", "codex", "current", "muse", "opencode", or a harnessConfig key)`},
 		},
 		{
 			name: "a model that is not a string",
