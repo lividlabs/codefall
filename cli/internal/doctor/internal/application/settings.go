@@ -13,10 +13,11 @@ import (
 
 	"github.com/lividlabs/codefall-cli/cli/internal/doctor/internal/domain"
 	"github.com/lividlabs/codefall-cli/cli/internal/shared/settings"
+	"github.com/lividlabs/codefall-cli/cli/internal/shared/userfile"
 )
 
-// settings runs checks 1 to 4, and hands on to the four ignore-entry checks. Each of the first four
-// is the prerequisite of the next, so the first failure ends the group and the remaining checks are
+// settings runs checks 1 to 4, and hands on to the five ignore-entry checks and the persona check.
+// Each of the first four is the prerequisite of the next, so the first failure ends the group and the remaining checks are
 // absent from the report.
 //
 // Every detail is a whole sentence, because the report prints it under a category header without the
@@ -89,13 +90,14 @@ func (d *Diagnose) settings(_ context.Context, dir string, results []domain.Resu
 
 	results = append(results, domain.SettingsComplete.Pass())
 
-	return d.ignored(dir, results)
+	return append(d.ignored(dir, results), d.persona(dir))
 }
 
 // ignoredEntries is what each of the three files has to name, one check each and in the order
 // doctor reports them. The .ignore entries are what codefall commits and nobody greps: review
-// findings, and the report an agentic test run leaves (ADR-007). The .gitignore entry is the refresh
-// stamp, which belongs to one machine (ADR-005). The .gitattributes entry is the union merge for
+// findings, and the report an agentic test run leaves (ADR-007). The .gitignore entries are the
+// refresh stamp, which belongs to one machine (ADR-005), and the user file, which belongs to one
+// person. The .gitattributes entry is the union merge for
 // bd's append-only interaction log, which is committed and would otherwise conflict on every merge
 // of two branches that both appended to it.
 //
@@ -109,19 +111,21 @@ var ignoredEntries = []struct {
 	{domain.ReviewsIgnored, settings.IgnoreName, settings.IgnoreEntry},
 	{domain.TestsIgnored, settings.IgnoreName, settings.IgnoreEntryTests},
 	{domain.StampIgnored, settings.GitIgnoreName, settings.RefreshStamp},
+	{domain.UserIgnored, settings.GitIgnoreName, userfile.Name},
 	{domain.InteractionsMerged, settings.GitAttributesName, settings.InteractionsAttribute},
 }
 
-// ignored is checks 5 to 8: each entry codefall needs in an ignore or attributes file is there.
+// ignored is checks 5 to 9: each entry codefall needs in an ignore or attributes file is there.
 //
 // They warn rather than fail. Nothing stops working without an entry — findings and reports are
 // still written and still tracked, and every other verb behaves identically. What goes wrong is
-// quieter: agents searching the codebase start reading old findings as if they were code, and a
-// committed stamp tells every other clone it was current at a commit it never refreshed at, and a
-// merge of the interaction log stops on a conflict that has only one right answer. That is worth
-// reporting and is not worth an exit status.
+// quieter: agents searching the codebase start reading old findings as if they were code, a
+// committed stamp tells every other clone it was current at a commit it never refreshed at, a
+// committed user file hands one person's persona to everyone who clones the project, and a merge of
+// the interaction log stops on a conflict that has only one right answer. That is worth reporting
+// and is not worth an exit status.
 //
-// Each check is independent of the ones beside it, so all four run whatever any of them found.
+// Each check is independent of the ones beside it, so all five run whatever any of them found.
 func (d *Diagnose) ignored(dir string, results []domain.Result) []domain.Result {
 	for _, want := range ignoredEntries {
 		results = append(results, d.entryIgnored(dir, want.check, want.file, want.entry))
@@ -147,4 +151,44 @@ func (d *Diagnose) entryIgnored(dir string, check domain.Check, file, entry stri
 	default:
 		return check.Warn(file+" does not name "+entry, remedy)
 	}
+}
+
+// persona is check 10: the user file, when there is one, is valid and names a persona codefall knows.
+// No file means the default persona, which is what every project had before the file existed, so it
+// passes and says which persona that is.
+//
+// It fails rather than warns. The skills read the persona through the shared preflight script, which
+// falls back to the default on a file it cannot read, so a person who wrote the file to change how
+// the skills talk to them would get the default without being told. The file is one person's and is
+// never checked in, so the remedy is theirs: fix it, or remove it.
+func (d *Diagnose) persona(dir string) domain.Result {
+	fixRemedy := mo.Some("edit " + userfile.Name + ", or remove it to use the " + userfile.DefaultPersona +
+		" persona; schema: " + userfile.SchemaID)
+
+	data, err := d.files.ReadFile(filepath.Join(dir, userfile.Name))
+
+	switch {
+	case errors.Is(err, fs.ErrNotExist):
+		return domain.Persona.PassWithDetail("persona: " + userfile.DefaultPersona + " by default")
+	case err != nil:
+		return domain.Persona.Fail(
+			fmt.Sprintf("Cannot read %s: %v", userfile.Name, err), mo.None[string]())
+	}
+
+	var doc userfile.Document
+
+	if err := json.Unmarshal(data, &doc); err != nil {
+		var typeErr *json.UnmarshalTypeError
+		if errors.As(err, &typeErr) {
+			return domain.Persona.Fail(userfile.Name+"'s top level must be a JSON object", fixRemedy)
+		}
+
+		return domain.Persona.Fail(fmt.Sprintf("%s is not valid JSON: %v", userfile.Name, err), fixRemedy)
+	}
+
+	if problems := userfile.Validate(doc); len(problems) > 0 {
+		return domain.Persona.Fail(userfile.Name+" is not valid: "+strings.Join(problems, "; "), fixRemedy)
+	}
+
+	return domain.Persona.PassWithDetail("persona: " + userfile.Persona(doc))
 }

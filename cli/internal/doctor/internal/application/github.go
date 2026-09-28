@@ -28,7 +28,7 @@ type ghAccount struct {
 // githubHost is the only host doctor checks. GitHub Enterprise is out of scope.
 const githubHost = "github.com"
 
-// github runs checks 18 to 20.
+// github runs checks 23 to 25.
 //
 // `gh auth status --json hosts` exits 0 even when authentication is broken, so its exit code is
 // ignored and the answer is read out of the JSON instead.

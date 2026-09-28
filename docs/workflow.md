@@ -28,8 +28,9 @@ installs for each:
   three sit inside, and it points at `.codefall/shared/workflow.md`, the installed copy of the
   chain, the verbs beside it, and who is authoritative for what;
 - the entries other tools read: `.ignore` for what codefall commits and nobody greps, `.gitignore`
-  for the refresh stamp and a test run's output, and `.gitattributes` for a union merge of bd's
-  append-only interaction log, each appended only when the file does not already name it.
+  for the refresh stamp, the per-user `.codefall/user.json`, and a test run's output, and
+  `.gitattributes` for a union merge of bd's append-only interaction log, each appended only when
+  the file does not already name it.
 
 `codefall doctor` checks that all of it is present and runnable. [ADR-006](adrs/ADR-006-install-layout.md)
 records the layout.

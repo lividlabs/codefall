@@ -15,6 +15,7 @@ import (
 	"github.com/lividlabs/codefall-cli/cli/internal/doctor/internal/domain"
 	"github.com/lividlabs/codefall-cli/cli/internal/shared/manifest"
 	"github.com/lividlabs/codefall-cli/cli/internal/shared/settings"
+	"github.com/lividlabs/codefall-cli/cli/internal/shared/userfile"
 )
 
 const workingDir = "/work"
@@ -43,6 +44,11 @@ var (
 		", or run codefall upgrade"
 	stampRemedy = "add " + settings.RefreshStamp + " to " + settings.GitIgnoreName +
 		", or run codefall upgrade"
+	userRemedy = "add " + userfile.Name + " to " + settings.GitIgnoreName +
+		", or run codefall upgrade"
+	userFilePath  = filepath.Join(workingDir, userfile.Name)
+	personaRemedy = "edit " + userfile.Name + ", or remove it to use the engineer persona; schema: " +
+		userfile.SchemaID
 	mergeRemedy = "add " + settings.InteractionsAttribute + " to " + settings.GitAttributesName +
 		", or run codefall upgrade"
 	leftoverRemedy = "remove the files " + manifest.Name +
@@ -240,7 +246,8 @@ func healthy() (*fakeFileSystem, *fakeCommandRunner) {
 			manifestPath: []byte(installedManifest),
 			ignorePath: []byte(settings.IgnoreComment + "\n" + settings.IgnoreEntry + "\n\n" +
 				settings.IgnoreTestsComment + "\n" + settings.IgnoreEntryTests + "\n"),
-			gitIgnorePath:     []byte("node_modules/\n\n" + settings.GitIgnoreComment + "\n" + settings.RefreshStamp + "\n"),
+			gitIgnorePath: []byte("node_modules/\n\n" + settings.GitIgnoreComment + "\n" + settings.RefreshStamp + "\n\n" +
+				userfile.GitIgnoreComment + "\n" + userfile.Name + "\n"),
 			gitAttributesPath: []byte(settings.GitAttributesComment + "\n" + settings.InteractionsAttribute + "\n"),
 			localScript:       []byte("#!/usr/bin/env bash\n"),
 		},
@@ -283,7 +290,9 @@ var allPass = []outcome{
 	{domain.ReviewsIgnored.ID, domain.StatusPass},
 	{domain.TestsIgnored.ID, domain.StatusPass},
 	{domain.StampIgnored.ID, domain.StatusPass},
+	{domain.UserIgnored.ID, domain.StatusPass},
 	{domain.InteractionsMerged.ID, domain.StatusPass},
+	{domain.Persona.ID, domain.StatusPass},
 	{domain.HarnessNames.ID, domain.StatusPass},
 	{domain.HarnessesInstalled.ID, domain.StatusPass},
 	{domain.HarnessesLeftOver.ID, domain.StatusPass},
@@ -328,7 +337,7 @@ var (
 	afterCodefallDir = []string{
 		domain.SettingsFile.ID, domain.SettingsJSON.ID, domain.SettingsComplete.ID,
 		domain.ReviewsIgnored.ID, domain.TestsIgnored.ID, domain.StampIgnored.ID,
-		domain.InteractionsMerged.ID,
+		domain.UserIgnored.ID, domain.InteractionsMerged.ID, domain.Persona.ID,
 		domain.HarnessNames.ID, domain.HarnessesInstalled.ID, domain.HarnessesLeftOver.ID,
 		domain.AgentsRunnable.ID, domain.AgentsCurrent.ID,
 		domain.LocalDeclared.ID, domain.LocalRunnable.ID,
@@ -337,7 +346,7 @@ var (
 	afterSettingsFile = []string{
 		domain.SettingsJSON.ID, domain.SettingsComplete.ID,
 		domain.ReviewsIgnored.ID, domain.TestsIgnored.ID, domain.StampIgnored.ID,
-		domain.InteractionsMerged.ID,
+		domain.UserIgnored.ID, domain.InteractionsMerged.ID, domain.Persona.ID,
 		domain.HarnessNames.ID, domain.HarnessesInstalled.ID, domain.HarnessesLeftOver.ID,
 		domain.AgentsRunnable.ID, domain.AgentsCurrent.ID,
 		domain.LocalDeclared.ID, domain.LocalRunnable.ID,
@@ -346,7 +355,7 @@ var (
 	afterSettingsJSON = []string{
 		domain.SettingsComplete.ID,
 		domain.ReviewsIgnored.ID, domain.TestsIgnored.ID, domain.StampIgnored.ID,
-		domain.InteractionsMerged.ID,
+		domain.UserIgnored.ID, domain.InteractionsMerged.ID, domain.Persona.ID,
 		domain.HarnessNames.ID, domain.HarnessesInstalled.ID, domain.HarnessesLeftOver.ID,
 		domain.AgentsRunnable.ID, domain.AgentsCurrent.ID,
 		domain.LocalDeclared.ID, domain.LocalRunnable.ID,
@@ -354,7 +363,7 @@ var (
 	}
 	afterSettingsDone = []string{
 		domain.ReviewsIgnored.ID, domain.TestsIgnored.ID, domain.StampIgnored.ID,
-		domain.InteractionsMerged.ID,
+		domain.UserIgnored.ID, domain.InteractionsMerged.ID, domain.Persona.ID,
 		domain.HarnessNames.ID, domain.HarnessesInstalled.ID, domain.HarnessesLeftOver.ID,
 		domain.AgentsRunnable.ID, domain.AgentsCurrent.ID,
 		domain.LocalDeclared.ID, domain.LocalRunnable.ID,
@@ -506,7 +515,9 @@ func TestDiagnoseRun(t *testing.T) {
 			mutate: func(f *fakeFileSystem, _ *fakeCommandRunner) {
 				delete(f.files, gitIgnorePath)
 			},
-			want:       outcomes(map[string]domain.Status{domain.StampIgnored.ID: domain.StatusWarn}),
+			want: outcomes(map[string]domain.Status{
+				domain.StampIgnored.ID: domain.StatusWarn, domain.UserIgnored.ID: domain.StatusWarn,
+			}),
 			target:     domain.StampIgnored.ID,
 			wantDetail: ".gitignore not found",
 			wantRemedy: mo.Some(stampRemedy),
@@ -514,12 +525,94 @@ func TestDiagnoseRun(t *testing.T) {
 		{
 			name: ".gitignore is there but does not name the stamp",
 			mutate: func(f *fakeFileSystem, _ *fakeCommandRunner) {
-				f.files[gitIgnorePath] = []byte("node_modules/\n")
+				f.files[gitIgnorePath] = []byte("node_modules/\n" + userfile.Name + "\n")
 			},
 			want:       outcomes(map[string]domain.Status{domain.StampIgnored.ID: domain.StatusWarn}),
 			target:     domain.StampIgnored.ID,
 			wantDetail: ".gitignore does not name " + settings.RefreshStamp,
 			wantRemedy: mo.Some(stampRemedy),
+		},
+		{
+			// A committed user file hands one person's persona to everyone who clones the project.
+			// Nothing is wrong until someone writes one, so it warns.
+			name: ".gitignore is there but does not name the user file",
+			mutate: func(f *fakeFileSystem, _ *fakeCommandRunner) {
+				f.files[gitIgnorePath] = []byte("node_modules/\n" + settings.RefreshStamp + "\n")
+			},
+			want:       outcomes(map[string]domain.Status{domain.UserIgnored.ID: domain.StatusWarn}),
+			target:     domain.UserIgnored.ID,
+			wantDetail: ".gitignore does not name " + userfile.Name,
+			wantRemedy: mo.Some(userRemedy),
+		},
+		{
+			// No user file is the default persona, which is what every project had before the file
+			// existed, and the report says which persona that is.
+			name:       "no user file, so the persona is the default",
+			mutate:     func(*fakeFileSystem, *fakeCommandRunner) {},
+			want:       allPass,
+			target:     domain.Persona.ID,
+			wantDetail: "persona: engineer by default",
+		},
+		{
+			name: "the user file names a persona",
+			mutate: func(f *fakeFileSystem, _ *fakeCommandRunner) {
+				f.files[userFilePath] = []byte(`{"version": 1, "persona": "product-manager"}`)
+			},
+			want:       allPass,
+			target:     domain.Persona.ID,
+			wantDetail: "persona: product-manager",
+		},
+		{
+			name: "the user file says nothing about the persona",
+			mutate: func(f *fakeFileSystem, _ *fakeCommandRunner) {
+				f.files[userFilePath] = []byte(`{"version": 1}`)
+			},
+			want:       allPass,
+			target:     domain.Persona.ID,
+			wantDetail: "persona: engineer",
+		},
+		{
+			// The preflight script falls back to the default on a persona it does not know, so the
+			// person who wrote it would get the default without being told. Doctor is where they are.
+			name: "the user file names a persona codefall does not know",
+			mutate: func(f *fakeFileSystem, _ *fakeCommandRunner) {
+				f.files[userFilePath] = []byte(`{"version": 1, "persona": "designer"}`)
+			},
+			want:   outcomes(map[string]domain.Status{domain.Persona.ID: domain.StatusFail}),
+			target: domain.Persona.ID,
+			wantDetail: userfile.Name + ` is not valid: persona: unknown value "designer" ` +
+				`(expected "engineer", "product-manager")`,
+			wantRemedy: mo.Some(personaRemedy),
+		},
+		{
+			name: "the user file is not JSON",
+			mutate: func(f *fakeFileSystem, _ *fakeCommandRunner) {
+				f.files[userFilePath] = []byte(`{"version": 1,`)
+			},
+			want:       outcomes(map[string]domain.Status{domain.Persona.ID: domain.StatusFail}),
+			target:     domain.Persona.ID,
+			wantDetail: userfile.Name + " is not valid JSON: unexpected end of JSON input",
+			wantRemedy: mo.Some(personaRemedy),
+		},
+		{
+			name: "the user file is JSON but not an object",
+			mutate: func(f *fakeFileSystem, _ *fakeCommandRunner) {
+				f.files[userFilePath] = []byte(`["product-manager"]`)
+			},
+			want:       outcomes(map[string]domain.Status{domain.Persona.ID: domain.StatusFail}),
+			target:     domain.Persona.ID,
+			wantDetail: userfile.Name + "'s top level must be a JSON object",
+			wantRemedy: mo.Some(personaRemedy),
+		},
+		{
+			name: "the user file cannot be read",
+			mutate: func(f *fakeFileSystem, _ *fakeCommandRunner) {
+				f.errs[userFilePath] = fs.ErrPermission
+			},
+			want:       outcomes(map[string]domain.Status{domain.Persona.ID: domain.StatusFail}),
+			target:     domain.Persona.ID,
+			wantDetail: "Cannot read " + userfile.Name + ": permission denied",
+			wantRemedy: mo.None[string](),
 		},
 		{
 			// Without the union merge, two branches that both appended to bd's interaction log

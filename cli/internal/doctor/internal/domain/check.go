@@ -31,18 +31,23 @@ func (s Status) String() string {
 }
 
 // Category is the part of a project's setup a check belongs to. The report groups by category, so a
-// healthy project is six lines rather than twenty-three.
+// healthy project is seven lines rather than twenty-five.
 type Category struct {
 	ID    string
 	Title string
 }
 
-// The six categories, in the order doctor reports them. Testing sits between Local environment and
-// Beads for the same reason Local environment sits where it does: the first four are about the
+// The seven categories, in the order doctor reports them. Testing sits between Local environment and
+// Beads for the same reason Local environment sits where it does: the first five are about the
 // project, and the last two are about tools on the machine.
+//
+// Agents is its own category rather than part of Harnesses. A passing check's detail goes into its
+// section's header, and the installed harnesses and the configured agents in one header read as one
+// list of harnesses.
 var (
 	CategorySettings  = Category{ID: "settings", Title: "Settings"}
 	CategoryHarnesses = Category{ID: "harnesses", Title: "Harnesses"}
+	CategoryAgents    = Category{ID: "agents", Title: "Agents"}
 	CategoryLocal     = Category{ID: "local", Title: "Local environment"}
 	CategoryTesting   = Category{ID: "testing", Title: "Testing"}
 	CategoryBeads     = Category{ID: "beads", Title: "Beads"}
@@ -86,7 +91,7 @@ func (c Check) Fail(detail string, remedy mo.Option[string]) Result {
 	return Result{Check: c, Status: StatusFail, Detail: mo.Some(detail), Remedy: remedy}
 }
 
-// The twenty-three checks doctor runs, in the order it runs them.
+// The twenty-five checks doctor runs, in the order it runs them.
 var (
 	CodefallDir      = Check{ID: "codefall-dir", Title: ".codefall/ exists", Category: CategorySettings}
 	SettingsFile     = Check{ID: "settings-file", Title: ".codefall/settings.json exists", Category: CategorySettings}
@@ -97,10 +102,16 @@ var (
 	TestsIgnored = Check{ID: "tests-ignored", Title: ".ignore hides test run reports", Category: CategorySettings}
 	// StampIgnored is whether the refresh stamp, a per-machine file, is kept out of the repository.
 	StampIgnored = Check{ID: "stamp-ignored", Title: ".gitignore hides the refresh stamp", Category: CategorySettings}
+	// UserIgnored is whether the user file, which describes one person rather than the project, is
+	// kept out of the repository.
+	UserIgnored = Check{ID: "user-ignored", Title: ".gitignore hides the user file", Category: CategorySettings}
 	// InteractionsMerged is whether bd's append-only interaction log is merged by union, so two
 	// branches that both appended to it do not conflict.
 	InteractionsMerged = Check{ID: "interactions-merged",
 		Title: ".gitattributes merges bd's interaction log by union", Category: CategorySettings}
+	// Persona is whether the user file, when there is one, is valid and names a persona codefall
+	// knows. No file is the default persona.
+	Persona = Check{ID: "persona", Title: "the user file names a known persona", Category: CategorySettings}
 	// HarnessNames is whether the settings and the manifest name each harness the way codefall does
 	// now: a harness is named for its binary, and two were named for their products before that.
 	HarnessNames = Check{ID: "harness-names",
@@ -116,11 +127,11 @@ var (
 	// AgentsRunnable is whether every agent the settings define runs on a harness this machine can
 	// start (ADR-009). A run skips one it cannot, so this warns.
 	AgentsRunnable = Check{ID: "agents-runnable",
-		Title: "every agent runs on a harness this machine can start", Category: CategoryHarnesses}
+		Title: "every agent runs on a harness this machine can start", Category: CategoryAgents}
 	// AgentsCurrent is whether every order of agents names one on current, the harness running the
 	// session, so a run always has a reader it can start.
 	AgentsCurrent = Check{ID: "agents-current",
-		Title: "every agent order names one on the current harness", Category: CategoryHarnesses}
+		Title: "every agent order names one on the current harness", Category: CategoryAgents}
 	// LocalDeclared is whether the settings name the project's start and update commands (ADR-005).
 	LocalDeclared = Check{ID: "local-declared",
 		Title: "the local start and update commands are declared", Category: CategoryLocal}

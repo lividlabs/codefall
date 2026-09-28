@@ -78,6 +78,32 @@ func TestDoctorCommandPrintsAPassingReport(t *testing.T) {
 	}
 }
 
+// The installed harnesses and the configured agents are each a passing check's detail, and a
+// section's header carries its passing details, so the two lists get a header each: in one they
+// read as a single list of harnesses.
+func TestDoctorCommandListsHarnessesAndAgentsOnSeparateLines(t *testing.T) {
+	diagnose := &fakeDiagnose{report: domain.NewReport(
+		domain.HarnessNames.Pass(),
+		domain.HarnessesInstalled.PassWithDetail("claude"),
+		domain.HarnessesLeftOver.Pass(),
+		domain.AgentsRunnable.PassWithDetail("architect (codex, gpt-5-codex), subagent (current)"),
+		domain.AgentsCurrent.Pass(),
+	)}
+
+	out, err := run(t, diagnose)
+	if err != nil {
+		t.Fatalf("Execute: %v", err)
+	}
+
+	want := headingLines +
+		"[✓] Harnesses (claude)\n" +
+		"[✓] Agents (architect (codex, gpt-5-codex), subagent (current))\n" +
+		"• No issues found.\n"
+	if out != want {
+		t.Errorf("output =\n%q\nwant\n%q", out, want)
+	}
+}
+
 // The heading is the one line that paints a background, so it is the one whose plain-text form is
 // worth asserting: colorprofile has to strip the styling on a non-terminal stdout and under
 // NO_COLOR, leaving the word.

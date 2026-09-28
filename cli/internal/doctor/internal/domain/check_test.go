@@ -78,11 +78,12 @@ func TestWarnAndFailCarryDetailAndRemedy(t *testing.T) {
 	}
 }
 
-// allChecks is the twenty-one checks in the order doctor runs them.
+// allChecks is the twenty-five checks in the order doctor runs them.
 var allChecks = []Check{
 	CodefallDir, SettingsFile, SettingsJSON, SettingsComplete,
-	ReviewsIgnored, TestsIgnored, StampIgnored, InteractionsMerged,
+	ReviewsIgnored, TestsIgnored, StampIgnored, UserIgnored, InteractionsMerged, Persona,
 	HarnessNames, HarnessesInstalled, HarnessesLeftOver,
+	AgentsRunnable, AgentsCurrent,
 	LocalDeclared, LocalRunnable,
 	TestDeclared, TestEquipped, TestDirExists,
 	BeadsInstalled, BeadsInitialized, GHInstalled, GHAuthenticated, GHScopes,
@@ -106,7 +107,7 @@ func TestCheckIdentifiersAreDistinct(t *testing.T) {
 	}
 }
 
-func TestEveryCheckBelongsToOneOfTheSixCategories(t *testing.T) {
+func TestEveryCheckBelongsToOneOfTheSevenCategories(t *testing.T) {
 	want := map[string]Category{
 		CodefallDir.ID:        CategorySettings,
 		SettingsFile.ID:       CategorySettings,
@@ -115,10 +116,14 @@ func TestEveryCheckBelongsToOneOfTheSixCategories(t *testing.T) {
 		ReviewsIgnored.ID:     CategorySettings,
 		TestsIgnored.ID:       CategorySettings,
 		StampIgnored.ID:       CategorySettings,
+		UserIgnored.ID:        CategorySettings,
 		InteractionsMerged.ID: CategorySettings,
+		Persona.ID:            CategorySettings,
 		HarnessNames.ID:       CategoryHarnesses,
 		HarnessesInstalled.ID: CategoryHarnesses,
 		HarnessesLeftOver.ID:  CategoryHarnesses,
+		AgentsRunnable.ID:     CategoryAgents,
+		AgentsCurrent.ID:      CategoryAgents,
 		LocalDeclared.ID:      CategoryLocal,
 		LocalRunnable.ID:      CategoryLocal,
 		TestDeclared.ID:       CategoryTesting,
@@ -139,8 +144,8 @@ func TestEveryCheckBelongsToOneOfTheSixCategories(t *testing.T) {
 }
 
 func TestCategoriesAreDistinctAndNamed(t *testing.T) {
-	categories := []Category{CategorySettings, CategoryHarnesses, CategoryLocal, CategoryTesting,
-		CategoryBeads, CategoryGitHub}
+	categories := []Category{CategorySettings, CategoryHarnesses, CategoryAgents, CategoryLocal,
+		CategoryTesting, CategoryBeads, CategoryGitHub}
 
 	seen := map[string]bool{}
 
