@@ -1,7 +1,7 @@
 ---
 name: codefall-upgrade
-description: Bring a project's installed codefall and its documents current. The installed skills, shared files, and hooks come through `codefall upgrade`, offered first when the manifest is behind the binary and run only on a yes. The documents — inherited ADRs, `docs/adrs/_TEMPLATE.md`, `AGENTS.md` skeletons, `.codefall/scaffold.json` — are compared against the current templates, every difference is reported with its provenance, and only the pieces the user takes are applied, one at a time. Works on projects scaffolded before provenance existed, and on repos adopting the stance for the first time.
-argument-hint: "[path]"
+description: Bring a project's installed codefall and its documents current. The installed skills, shared files, and hooks come through `codefall upgrade`, offered first when the manifest is behind the binary and run only on a yes. The documents — inherited ADRs, `docs/adrs/_TEMPLATE.md`, `AGENTS.md` skeletons, `.codefall/scaffold.json` — are compared against the current templates, every difference is reported with its provenance, and only the pieces the user takes are applied, one at a time. Works on projects scaffolded before provenance existed, and on repos adopting the stance for the first time. A declined template is not offered again until `adopt` is given.
+argument-hint: "[path] [adopt]"
 disable-model-invocation: true
 allowed-tools:
   - Read
@@ -26,8 +26,7 @@ supersedes within it. Application is per item, never wholesale. And where a revi
 a project that amended its ancestor, the amendment wins.
 
 This skill is **only ever invoked explicitly**: it runs on a project people depend on. Never suggest
-it, never fire it from a passing remark, never chain into it from another skill. Someone types `/codefall-upgrade` on
-purpose or it does not run.
+it, never fire it from a passing remark, never chain into it from another skill.
 
 Template paths in this document are relative to `../codefall-scaffold/templates/`, resolved from
 this skill's directory, because this verb reasons about `codefall-scaffold`'s templates and has none
@@ -39,6 +38,8 @@ of its own. Neither path is relative to the user's project.
   project doc carries a historical identifier.
 - `reference/pre-provenance.md` — everything this verb does differently for a project scaffolded
   before `scaffold.json` existed. Read only when step 2 finds no provenance.
+- `reference/declined.md` — how a declined template is recorded and skipped. Read at step 2 when
+  `scaffold.json` holds `declined`, and at step 5 when missing templates are offered.
 - `../../../.codefall/shared/landing.md` — the shared procedure for the branch, the commit, and the
   offered pull request. Read at step 6, before the first item is applied.
 
@@ -100,9 +101,9 @@ Read `persona` in `.codefall/user.json`; when it is not `engineer`, follow that 
 
 ### 1. Bring the install current — offered, never assumed
 
-The target is the path argument, or the current directory if none was given. Read
-`.codefall/manifest.json` there. With none, say codefall is not set up here and `codefall init`
-comes first, and stop; the user reruns this verb after it.
+The target is the path argument, or the current directory without one; `adopt` offers declined
+templates again. Read `.codefall/manifest.json` there. With none, say codefall is not set up here
+and `codefall init` comes first, and stop; the user reruns this verb after it.
 
 The installed version is the `shared` entry's `version`, or the highest harness entry's when
 `shared` carries none. The binary's is what `codefall --version` prints after `codefall version`.
@@ -137,7 +138,7 @@ Inventory the project: `.codefall/scaffold.json`, `docs/adrs/`, `docs/decision-l
 `AGENTS.md`. That yields one of three starting points, and the rest of the process is the same for
 all three — they differ only in how much step 3 must reconstruct:
 
-- **Provenanced** — `scaffold.json` exists. The normal case from codefall 0.4.0 on.
+- **Provenanced** — `scaffold.json` exists and lists ADRs. The normal case from codefall 0.4.0 on.
 - **Scaffolded, pre-provenance** — no `scaffold.json`, but `docs/adrs/` holds codefall-lineage
   files. Read `reference/pre-provenance.md`; it covers this case from here on.
 - **Never scaffolded** — no codefall docs at all. This is **first-time adoption**: every applicable

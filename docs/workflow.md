@@ -94,7 +94,8 @@ Four verbs sit beside the chain rather than in it:
   and puts the command's breaking changes and its question to the user. Then it brings a scaffolded
   project's documents up to the current templates, reporting each difference with its provenance
   and applying only what the user takes. It also handles first-time adoption of the stance on an
-  existing repo.
+  existing repo. A missing template the user declines is recorded and not offered again, and
+  `/codefall-upgrade adopt` offers the declined ones again.
 - **`codefall upgrade`** prints the breaking changes recorded between the installed version and the
   binary's and asks to continue, then reinstalls the skills, shared files, and hooks for the harnesses
   the settings record, replaces its own marked sections and registrations, rewrites a harness name

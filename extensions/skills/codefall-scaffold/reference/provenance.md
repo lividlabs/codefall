@@ -31,6 +31,9 @@ it lies about history rather than changing a setting. Read at step 4.
 - `depth` — `docs-only`, `project-files`, or `runnable-skeleton`.
 - `adrs` — one entry per ADR emitted, with `id`, `file` relative to the project root, `amended`, and
   `sha256`.
+- `declined` — written by `codefall-upgrade`, never by this skill: one entry per missing template
+  the user declined, with `id` and `date`, so later runs do not offer it again. A file that holds
+  `declined` and no `adrs` belongs to a project that was never scaffolded.
 
 ## `amended` and `sha256`
 
