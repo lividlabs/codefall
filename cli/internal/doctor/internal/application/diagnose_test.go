@@ -60,16 +60,42 @@ var (
 		" lists for codex; upgrade removes stale files only for the harnesses the settings name"
 )
 
+// The files a finished run wrote once into .codefall/, in the order the manifest records them. The
+// fixture's disk holds every one of them.
+var sharedFiles = []string{
+	".codefall/hooks/shared/codefall-block-merge-to-main.sh",
+	".codefall/shared/landing.md",
+	".codefall/shared/personas.md",
+	".codefall/shared/preflight.sh",
+	".codefall/shared/run-agent.sh",
+}
+
 // installedManifest is what a finished run leaves on record: one entry for the harness the settings
-// name. droppedManifest is the same project after it stopped naming codex, with everything codefall
-// wrote for codex still recorded.
+// name, and one for what it wrote into .codefall/. droppedManifest is the same project after it
+// stopped naming codex, with everything codefall wrote for codex still recorded.
 const (
+	sharedEntry = `"shared": {"version": "v1.2.3", "files": [
+    ".codefall/hooks/shared/codefall-block-merge-to-main.sh",
+    ".codefall/shared/landing.md",
+    ".codefall/shared/personas.md",
+    ".codefall/shared/preflight.sh",
+    ".codefall/shared/run-agent.sh"
+  ]}`
 	installedManifest = `{"harnesses": {
   "claude": {"version": "v1.2.3", "files": [".claude/skills/design/SKILL.md"]}
-}}`
+},
+  ` + sharedEntry + `
+}`
 	droppedManifest = `{"harnesses": {
   "claude": {"version": "v1.2.3", "files": [".claude/skills/design/SKILL.md"]},
   "codex": {"version": "v1.2.3", "files": [".agents/skills/design/SKILL.md"]}
+},
+  ` + sharedEntry + `
+}`
+	// harnessesOnlyManifest is a manifest written before the shared entry existed: it records the
+	// harnesses and says nothing about .codefall/.
+	harnessesOnlyManifest = `{"harnesses": {
+  "claude": {"version": "v1.2.3", "files": [".claude/skills/design/SKILL.md"]}
 }}`
 )
 
@@ -259,6 +285,10 @@ func healthy() (*fakeFileSystem, *fakeCommandRunner) {
 		errs: map[string]error{},
 	}
 
+	for _, file := range sharedFiles {
+		files.files[filepath.Join(workingDir, file)] = []byte("#!/usr/bin/env bash\n")
+	}
+
 	runner := &fakeCommandRunner{
 		paths: map[string]string{
 			"bd": "/opt/homebrew/bin/bd", "gh": "/opt/homebrew/bin/gh",
@@ -300,6 +330,7 @@ var allPass = []outcome{
 	{domain.Persona.ID, domain.StatusPass},
 	{domain.HarnessNames.ID, domain.StatusPass},
 	{domain.HarnessesInstalled.ID, domain.StatusPass},
+	{domain.SharedInstalled.ID, domain.StatusPass},
 	{domain.HarnessesLeftOver.ID, domain.StatusPass},
 	{domain.AgentsRunnable.ID, domain.StatusPass},
 	{domain.AgentsCurrent.ID, domain.StatusPass},
@@ -343,7 +374,8 @@ var (
 		domain.SettingsFile.ID, domain.SettingsJSON.ID, domain.SettingsComplete.ID,
 		domain.ReviewsIgnored.ID, domain.TestsIgnored.ID, domain.StampIgnored.ID,
 		domain.UserIgnored.ID, domain.InteractionsMerged.ID, domain.Persona.ID,
-		domain.HarnessNames.ID, domain.HarnessesInstalled.ID, domain.HarnessesLeftOver.ID,
+		domain.HarnessNames.ID, domain.HarnessesInstalled.ID, domain.SharedInstalled.ID,
+		domain.HarnessesLeftOver.ID,
 		domain.AgentsRunnable.ID, domain.AgentsCurrent.ID,
 		domain.LocalDeclared.ID, domain.LocalRunnable.ID,
 		domain.TestDeclared.ID, domain.TestEquipped.ID, domain.TestDirExists.ID,
@@ -352,7 +384,8 @@ var (
 		domain.SettingsJSON.ID, domain.SettingsComplete.ID,
 		domain.ReviewsIgnored.ID, domain.TestsIgnored.ID, domain.StampIgnored.ID,
 		domain.UserIgnored.ID, domain.InteractionsMerged.ID, domain.Persona.ID,
-		domain.HarnessNames.ID, domain.HarnessesInstalled.ID, domain.HarnessesLeftOver.ID,
+		domain.HarnessNames.ID, domain.HarnessesInstalled.ID, domain.SharedInstalled.ID,
+		domain.HarnessesLeftOver.ID,
 		domain.AgentsRunnable.ID, domain.AgentsCurrent.ID,
 		domain.LocalDeclared.ID, domain.LocalRunnable.ID,
 		domain.TestDeclared.ID, domain.TestEquipped.ID, domain.TestDirExists.ID,
@@ -361,7 +394,8 @@ var (
 		domain.SettingsComplete.ID,
 		domain.ReviewsIgnored.ID, domain.TestsIgnored.ID, domain.StampIgnored.ID,
 		domain.UserIgnored.ID, domain.InteractionsMerged.ID, domain.Persona.ID,
-		domain.HarnessNames.ID, domain.HarnessesInstalled.ID, domain.HarnessesLeftOver.ID,
+		domain.HarnessNames.ID, domain.HarnessesInstalled.ID, domain.SharedInstalled.ID,
+		domain.HarnessesLeftOver.ID,
 		domain.AgentsRunnable.ID, domain.AgentsCurrent.ID,
 		domain.LocalDeclared.ID, domain.LocalRunnable.ID,
 		domain.TestDeclared.ID, domain.TestEquipped.ID, domain.TestDirExists.ID,
@@ -369,7 +403,8 @@ var (
 	afterSettingsDone = []string{
 		domain.ReviewsIgnored.ID, domain.TestsIgnored.ID, domain.StampIgnored.ID,
 		domain.UserIgnored.ID, domain.InteractionsMerged.ID, domain.Persona.ID,
-		domain.HarnessNames.ID, domain.HarnessesInstalled.ID, domain.HarnessesLeftOver.ID,
+		domain.HarnessNames.ID, domain.HarnessesInstalled.ID, domain.SharedInstalled.ID,
+		domain.HarnessesLeftOver.ID,
 		domain.AgentsRunnable.ID, domain.AgentsCurrent.ID,
 		domain.LocalDeclared.ID, domain.LocalRunnable.ID,
 		domain.TestDeclared.ID, domain.TestEquipped.ID, domain.TestDirExists.ID,
@@ -715,19 +750,100 @@ func TestDiagnoseRun(t *testing.T) {
 			wantRemedy: mo.Some(leftoverRemedy),
 		},
 		{
-			// No record means no install that could be left over, so the left-over check is absent.
-			// It also means no install the other check can confirm: the record is the evidence, and a
-			// project with none has nothing that says a run ever finished. A project with no manifest
-			// is init's — upgrade refuses it — so the remedy names init (ADR-010).
+			// No record means no install that could be left over, so the left-over check is absent,
+			// and no list of shared files to stat, so the shared check is absent too. It also means no
+			// install the other check can confirm: the record is the evidence, and a project with none
+			// has nothing that says a run ever finished. A project with no manifest is init's —
+			// upgrade refuses it — so the remedy names init (ADR-010).
 			name: "there is no manifest to hold the settings against",
 			mutate: func(f *fakeFileSystem, _ *fakeCommandRunner) {
 				delete(f.files, manifestPath)
 			},
 			want: outcomes(map[string]domain.Status{domain.HarnessesInstalled.ID: domain.StatusFail},
-				domain.HarnessesLeftOver.ID),
+				domain.SharedInstalled.ID, domain.HarnessesLeftOver.ID),
 			target:     domain.HarnessesInstalled.ID,
 			wantDetail: "codefall is not installed for claude",
 			wantRemedy: mo.Some("codefall init"),
+		},
+		{
+			// A manifest that cannot be decoded records nothing, the same as no manifest; the file is
+			// there, so the remedy is upgrade, which says what is wrong with it.
+			name: "the manifest cannot be read",
+			mutate: func(f *fakeFileSystem, _ *fakeCommandRunner) {
+				f.files[manifestPath] = []byte("{not json")
+			},
+			want: outcomes(map[string]domain.Status{domain.HarnessesInstalled.ID: domain.StatusFail},
+				domain.SharedInstalled.ID, domain.HarnessesLeftOver.ID),
+			target:     domain.HarnessesInstalled.ID,
+			wantDetail: "codefall is not installed for claude",
+			wantRemedy: mo.Some("codefall upgrade"),
+		},
+		{
+			name:       "every shared file the manifest records is there",
+			mutate:     func(*fakeFileSystem, *fakeCommandRunner) {},
+			want:       allPass,
+			target:     domain.SharedInstalled.ID,
+			wantDetail: "5 shared files",
+		},
+		{
+			// The harness's own skills are all in place, so the install check passes; what is gone is
+			// the script every verb's first step runs.
+			name: "a shared file the manifest records is gone",
+			mutate: func(f *fakeFileSystem, _ *fakeCommandRunner) {
+				delete(f.files, filepath.Join(workingDir, ".codefall", "shared", "preflight.sh"))
+			},
+			want:       outcomes(map[string]domain.Status{domain.SharedInstalled.ID: domain.StatusFail}),
+			target:     domain.SharedInstalled.ID,
+			wantDetail: ".codefall/shared/preflight.sh is missing",
+			wantRemedy: mo.Some("codefall upgrade"),
+		},
+		{
+			name: "two shared files are gone",
+			mutate: func(f *fakeFileSystem, _ *fakeCommandRunner) {
+				delete(f.files, filepath.Join(workingDir, ".codefall", "shared", "preflight.sh"))
+				delete(f.files, filepath.Join(workingDir, ".codefall", "shared", "run-agent.sh"))
+			},
+			want:   outcomes(map[string]domain.Status{domain.SharedInstalled.ID: domain.StatusFail}),
+			target: domain.SharedInstalled.ID,
+			wantDetail: ".codefall/shared/preflight.sh and .codefall/shared/run-agent.sh " +
+				"are missing",
+			wantRemedy: mo.Some("codefall upgrade"),
+		},
+		{
+			// More than a handful gone is named by the first few and counted after that, so the line
+			// stays readable when the whole directory has been deleted.
+			name: "more shared files are gone than the report names",
+			mutate: func(f *fakeFileSystem, _ *fakeCommandRunner) {
+				for _, file := range sharedFiles {
+					delete(f.files, filepath.Join(workingDir, file))
+				}
+			},
+			want:   outcomes(map[string]domain.Status{domain.SharedInstalled.ID: domain.StatusFail}),
+			target: domain.SharedInstalled.ID,
+			wantDetail: ".codefall/hooks/shared/codefall-block-merge-to-main.sh, .codefall/shared/landing.md, " +
+				".codefall/shared/personas.md and 2 more are missing",
+			wantRemedy: mo.Some("codefall upgrade"),
+		},
+		{
+			name: "a shared file cannot be stat'd",
+			mutate: func(f *fakeFileSystem, _ *fakeCommandRunner) {
+				f.errs[filepath.Join(workingDir, ".codefall", "shared", "preflight.sh")] = errors.New("permission denied")
+			},
+			want:   outcomes(map[string]domain.Status{domain.SharedInstalled.ID: domain.StatusFail}),
+			target: domain.SharedInstalled.ID,
+			wantDetail: "Cannot stat " + filepath.Join(workingDir, ".codefall", "shared", "preflight.sh") +
+				": permission denied",
+			wantRemedy: mo.None[string](),
+		},
+		{
+			// A manifest written before the shared entry existed says nothing about .codefall/, so
+			// the check has nothing to hold the disk against and is absent. The harness entries still
+			// say claude is installed.
+			name: "the manifest has no shared entry",
+			mutate: func(f *fakeFileSystem, _ *fakeCommandRunner) {
+				f.files[manifestPath] = []byte(harnessesOnlyManifest)
+			},
+			want: outcomes(nil, domain.SharedInstalled.ID),
 		},
 		{
 			// The same choice for every remedy that names a command: with no manifest, init.
@@ -738,7 +854,7 @@ func TestDiagnoseRun(t *testing.T) {
 			},
 			want: outcomes(map[string]domain.Status{
 				domain.TestDeclared.ID: domain.StatusWarn, domain.HarnessesInstalled.ID: domain.StatusFail},
-				append([]string{domain.HarnessesLeftOver.ID}, afterTestUndeclared...)...),
+				append([]string{domain.SharedInstalled.ID, domain.HarnessesLeftOver.ID}, afterTestUndeclared...)...),
 			target:     domain.TestDeclared.ID,
 			wantDetail: "no testing root is declared in settings.json",
 			wantRemedy: mo.Some("codefall init"),
@@ -777,7 +893,9 @@ func TestDiagnoseRun(t *testing.T) {
 				f.files[manifestPath] = []byte(`{"harnesses": {
   "claude": {"version": "v1.2.3", "files": [".claude/skills/design/SKILL.md"]},
   "agy": {"version": "v1.2.3", "files": [".agents/skills/design/SKILL.md"]}
-}}`)
+},
+  ` + sharedEntry + `
+}`)
 				f.files[agentsSkill] = []byte("---\nname: design\n---\n")
 			},
 			want:       outcomes(map[string]domain.Status{domain.HarnessNames.ID: domain.StatusWarn}),

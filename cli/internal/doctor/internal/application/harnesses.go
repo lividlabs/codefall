@@ -24,7 +24,7 @@ const renameRemedy = "run codefall upgrade, which rewrites them"
 // settingsName is the settings file as a person reads it in a report.
 const settingsName = ".codefall/settings.json"
 
-// harnesses runs checks 11 to 13, all of which read .codefall/manifest.json, so the file is read once
+// harnesses runs checks 11 to 14, all of which read .codefall/manifest.json, so the file is read once
 // here and handed to each of them.
 //
 // The two checks after the first read both files under the names the harnesses have now. An old
@@ -49,8 +49,10 @@ func (d *Diagnose) harnesses(_ context.Context, dir string, results []domain.Res
 	current, manifestFormers := recorded.Current()
 
 	results = append(results, namesAreCurrent(settingsFormers, manifestFormers))
+	results = d.installed(dir, current, chosen, results)
+	results = d.sharedInstalled(dir, current.Shared, read, results)
 
-	return d.leftOver(current, read, chosen, d.installed(dir, current, chosen, results))
+	return d.leftOver(current, read, chosen, results)
 }
 
 // currentNames is the harnesses the settings name, each under the name it has now and once, in the
@@ -191,7 +193,79 @@ func (d *Diagnose) firstMissing(dir string, files []string) (bool, string, error
 	return false, "", nil
 }
 
-// leftOver is check 13: nothing codefall installed is still sitting there for a harness the settings
+// sharedNamed is how many missing shared files a failure names before it counts the rest.
+const sharedNamed = 3
+
+// sharedInstalled is check 13: the files a finished run wrote once into .codefall/ are still where it
+// wrote them. The skills reach them by path, and so does every harness's hook, so a file gone from
+// there breaks every harness at once — every verb's first step runs .codefall/shared/preflight.sh —
+// while each harness's own skills are all still in place and check 12 passes (ADR-006).
+//
+// It fails rather than warns, for the reason check 12 does. The remedy is upgrade, which rewrites
+// the whole directory on every run: the check runs only when a manifest was read, and a project with
+// one is upgrade's (ADR-010).
+//
+// A manifest that is missing or unreadable records nothing here, and check 12 has already reported
+// the project as not installed. An entry with no version was written before the field existed, and
+// says nothing about what is in .codefall/. The check is absent from the report in each of those
+// cases.
+func (d *Diagnose) sharedInstalled(
+	dir string, shared manifest.Install, read bool, results []domain.Result,
+) []domain.Result {
+	if !read || shared.Version == "" {
+		return results
+	}
+
+	var missing []string
+
+	for _, file := range shared.Files {
+		path := filepath.Join(dir, file)
+
+		there, err := d.files.Exists(path)
+		if err != nil {
+			return append(results, domain.SharedInstalled.Fail(
+				fmt.Sprintf("Cannot stat %s: %v", path, err), mo.None[string]()))
+		}
+
+		if !there {
+			missing = append(missing, file)
+		}
+	}
+
+	if len(missing) > 0 {
+		return append(results, domain.SharedInstalled.Fail(missingFiles(missing), mo.Some("codefall upgrade")))
+	}
+
+	return append(results, domain.SharedInstalled.PassWithDetail(sharedCount(len(shared.Files))))
+}
+
+// missingFiles is ".codefall/shared/preflight.sh is missing", or the first few of a longer list and
+// how many more: ".codefall/a, .codefall/b, .codefall/c and 2 more are missing".
+func missingFiles(missing []string) string {
+	if len(missing) == 1 {
+		return missing[0] + " is missing"
+	}
+
+	if len(missing) > sharedNamed {
+		named := strings.Join(missing[:sharedNamed], ", ")
+
+		return fmt.Sprintf("%s and %d more are missing", named, len(missing)-sharedNamed)
+	}
+
+	return strings.Join(missing[:len(missing)-1], ", ") + " and " + missing[len(missing)-1] + " are missing"
+}
+
+// sharedCount is the passing detail, which the report prints in the Harnesses header beside the
+// installed harnesses.
+func sharedCount(files int) string {
+	if files == 1 {
+		return "1 shared file"
+	}
+
+	return fmt.Sprintf("%d shared files", files)
+}
+
+// leftOver is check 14: nothing codefall installed is still sitting there for a harness the settings
 // no longer name. A project set up for two harnesses that later drops one keeps everything codefall
 // wrote for it, because codefall only ever writes what it owns and never deletes.
 //

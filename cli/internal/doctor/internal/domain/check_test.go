@@ -78,11 +78,11 @@ func TestWarnAndFailCarryDetailAndRemedy(t *testing.T) {
 	}
 }
 
-// allChecks is the twenty-five checks in the order doctor runs them.
+// allChecks is the twenty-six checks in the order doctor runs them.
 var allChecks = []Check{
 	CodefallDir, SettingsFile, SettingsJSON, SettingsComplete,
 	ReviewsIgnored, TestsIgnored, StampIgnored, UserIgnored, InteractionsMerged, Persona,
-	HarnessNames, HarnessesInstalled, HarnessesLeftOver,
+	HarnessNames, HarnessesInstalled, SharedInstalled, HarnessesLeftOver,
 	AgentsRunnable, AgentsCurrent,
 	LocalDeclared, LocalRunnable,
 	TestDeclared, TestEquipped, TestDirExists,
@@ -121,6 +121,7 @@ func TestEveryCheckBelongsToOneOfTheSevenCategories(t *testing.T) {
 		Persona.ID:            CategorySettings,
 		HarnessNames.ID:       CategoryHarnesses,
 		HarnessesInstalled.ID: CategoryHarnesses,
+		SharedInstalled.ID:    CategoryHarnesses,
 		HarnessesLeftOver.ID:  CategoryHarnesses,
 		AgentsRunnable.ID:     CategoryAgents,
 		AgentsCurrent.ID:      CategoryAgents,
