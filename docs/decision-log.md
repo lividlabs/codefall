@@ -1545,6 +1545,20 @@ Decided at scaffold, 2026-08-16.
   config (five formats). Design, implement, specify, and scaffold each lost restated second
   sentences from their Rules and one duplicated paragraph to stay under the token guideline.
 
+- **Upgrade reinstalls the extension on every run, 2026-09-27.** After **Upgrade repairs a current
+  install** above, a current install still skipped the extension copy, the cleanup after it, and
+  the manifest write, so a skill directory or a `.codefall/shared/` file deleted by hand stayed
+  missing while `doctor` named `codefall upgrade` as the remedy. The skip is gone: every upgrade
+  copies the extension, runs the cleanup, and writes the manifest. The copy is small and
+  idempotent, and it now compares each file with what the binary ships before writing, so an
+  unchanged tree writes nothing and the step reports a skip; a file that was missing or edited is
+  written and named. The manifest comes out byte for byte as it went in when nothing changed, and
+  is not reported. A current install still skips Beads and the version question, and needs no `bd`
+  on PATH. "Already up to date" now means that no step changed anything, the extension copy and the
+  cleanup included, rather than that the recorded version matched the binary's. Seen and not taken:
+  a separate check that compares the manifest's file list with the disk before deciding to copy,
+  which would miss an edited file and duplicate what the copy already does.
+
 ## Open
 
 - **UI composition.** Half settled by **Shared modules, 2026-08-27** above: the theme, the styles,
