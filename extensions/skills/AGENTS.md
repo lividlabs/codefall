@@ -33,8 +33,9 @@ writing and changing a skill; the extension-wide rules, ADR immutability, prose,
   after it. A user should never have to work out the next step from what was produced.
 - Never present an option that would be refused — unsupported stacks and planned profiles are
   exits, not menu choices. See the stack question in `codefall-scaffold`'s SKILL.md.
-- Every verb reads `.codefall/skills/<verb>/CUSTOMIZE.md` from the user's project when it exists —
-  project procedure the extension cannot know. The procedure lives in
+- Every verb except `codefall-scaffold` and `codefall-upgrade` reads
+  `.codefall/skills/<verb>/CUSTOMIZE.md` from the user's project when it exists — project procedure
+  the extension cannot know. The procedure lives in
   `extensions/shared/customizations.md`; a skill points at it and never restates it.
 
 ## Length
