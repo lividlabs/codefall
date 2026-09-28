@@ -90,6 +90,25 @@ func TestSetOrder(t *testing.T) {
     ],`,
 		},
 		{
+			// Nothing in the review block is required, so an order is enough to make one; posting to a
+			// pull request stays off until the project says otherwise.
+			name: "review, making the block",
+			settings: strings.Replace(orderSettings, `  "review": {
+    "postToPullRequest": false
+  },
+`, "", 1),
+			order:  ReviewOrder(),
+			names:  []string{"subagent"},
+			detail: "set review.agents in .codefall/settings.json: subagent",
+			old: `  "note": "kept <as> written"
+}`,
+			new: `  "note": "kept <as> written",
+  "review": {
+    "agents": ["subagent"]
+  }
+}`,
+		},
+		{
 			name:     "consult, making the block",
 			settings: orderSettings,
 			order:    ConsultOrder(),
@@ -392,16 +411,6 @@ func TestSetOrderRefuses(t *testing.T) {
 			name: "a harness codefall cannot set up", settings: orderedSettings,
 			order: HarnessOrder("cursor"), names: []string{"subagent"},
 			want: `harness "cursor" is not supported yet (supported: agy, claude, codex, muse, opencode)`,
-		},
-		{
-			// The review block carries a choice of its own, so an order is not a reason to invent one.
-			name: "review with no review block",
-			settings: strings.Replace(orderSettings, `  "review": {
-    "postToPullRequest": false
-  },
-`, "", 1),
-			order: ReviewOrder(), names: []string{"subagent"},
-			want: ".codefall/settings.json has no review block, and one must carry postToPullRequest",
 		},
 		{
 			name: "settings that are already invalid", settings: `{"version": 1, "harnesses": ["claude"]}`,

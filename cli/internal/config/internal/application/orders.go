@@ -38,33 +38,30 @@ func HarnessOrder(name string) Order {
 	return Order{block: settings.FieldAgentsByHarness, harness: name}
 }
 
+// Harness is the harness a per-harness order is for, and None for review's or consult's own order.
+func (o Order) Harness() mo.Option[string] {
+	if o.block != settings.FieldAgentsByHarness {
+		return mo.None[string]()
+	}
+
+	return mo.Some(o.harness)
+}
+
 // errEmptyOrder refuses an order with no agents in it, which would leave a use nothing to walk. The
 // way back to the wider order is to clear this one.
 var errEmptyOrder = errors.New("an order needs at least one agent; clear it instead to walk the wider order")
 
-// orderPlace is where one narrower order sits in the settings, and the command that changes it.
+// orderPlace is where one narrower order sits in the settings.
 type orderPlace struct {
 	// block is the top-level key, and key the one inside it that holds the order.
 	block string
 	key   string
-	// needsBlock says the block carries required fields of its own, so the order is added only to a
-	// block that is already there rather than to one this write would have to invent.
-	needsBlock bool
 	// dropEmpty says the block means nothing without an entry, so clearing the last one removes it.
 	dropEmpty bool
 }
 
 func (p orderPlace) path() string {
 	return p.block + "." + p.key
-}
-
-// command is the `codefall config` command that sets or clears this order.
-func (p orderPlace) command() string {
-	if p.block == settings.FieldAgentsByHarness {
-		return "codefall config agents for " + p.key
-	}
-
-	return "codefall config " + p.block + " agents"
 }
 
 // read is the order as the settings hold it, None when they hold none. It is called only on settings
@@ -92,7 +89,7 @@ func (p orderPlace) read(doc settings.Document) mo.Option[[]string] {
 func (o Order) place() (orderPlace, error) {
 	switch o.block {
 	case settings.BlockReview:
-		return orderPlace{block: settings.BlockReview, key: settings.FieldReviewAgents, needsBlock: true}, nil
+		return orderPlace{block: settings.BlockReview, key: settings.FieldReviewAgents}, nil
 	case settings.BlockConsult:
 		return orderPlace{block: settings.BlockConsult, key: settings.FieldConsultAgents}, nil
 	}
@@ -105,24 +102,11 @@ func (o Order) place() (orderPlace, error) {
 	return orderPlace{block: settings.FieldAgentsByHarness, key: name, dropEmpty: true}, nil
 }
 
-// allPlaces is every narrower order the settings can carry, in the order Referrers reports them.
-func allPlaces() []orderPlace {
-	places := []orderPlace{
-		{block: settings.BlockReview, key: settings.FieldReviewAgents, needsBlock: true},
-		{block: settings.BlockConsult, key: settings.FieldConsultAgents},
-	}
-
-	for _, name := range harness.All() {
-		places = append(places, orderPlace{block: settings.FieldAgentsByHarness, key: name, dropEmpty: true})
-	}
-
-	return places
-}
-
 // SetOrder sets one narrower order to the names given, in that order. Every name must be an agent the
-// list defines, each once. The consult block and agentsByHarness are created when absent; the review
-// block is not, because it carries a choice of its own the project has to make first. Only the
-// order's own text changes, and an order already equal to the one given is left alone.
+// list defines, each once. A block that is absent is created holding only the order: nothing in the
+// review or consult block is required, and posting to a pull request stays off until the project
+// says otherwise. Only the order's own text changes, and an order already equal to the one given is
+// left alone.
 func (c *Config) SetOrder(dir string, order Order, names []string) (domain.Write, error) {
 	place, err := order.place()
 	if err != nil {
@@ -161,8 +145,8 @@ func (c *Config) SetOrder(dir string, order Order, names []string) (domain.Write
 }
 
 // ClearOrder removes one narrower order, so the use or the harness walks the wider order again. The
-// consult block stays when it is left empty, which the schema allows; agentsByHarness goes with its
-// last entry.
+// review and consult blocks stay when they are left empty, which the schema allows; agentsByHarness
+// goes with its last entry.
 func (c *Config) ClearOrder(dir string, order Order) (domain.Write, error) {
 	place, err := order.place()
 	if err != nil {
@@ -216,7 +200,7 @@ func (c *Config) startOrder(dir string) (projectSettings, error) {
 
 // withOrder is the settings' text with one order set: the order's value replaced in a block that is
 // there, the order added to it when it holds none, and a new block holding only the order when there
-// is none and the order may have one made for it.
+// is none.
 func withOrder(project projectSettings, place orderPlace, names []string) ([]byte, error) {
 	if _, isObject := project.doc[place.block].(map[string]any); isObject {
 		inner, err := nestedObject(project.data, place.block)
@@ -235,12 +219,6 @@ func withOrder(project projectSettings, place orderPlace, names []string) ([]byt
 		}
 
 		return body, nil
-	}
-
-	if place.needsBlock {
-		return nil, fmt.Errorf("%s has no %s block, and one must carry %s, which is the project's choice; "+
-			"add the block first, then set its order", settingsName, place.block,
-			strings.Join(settings.RequiredReviewFields(), ", "))
 	}
 
 	body, err := withField(project.data, place.block, func(indent string) ([]byte, error) {
@@ -286,31 +264,4 @@ func renderNames(names []string, multiline bool, indent string) ([]byte, error) 
 	inner := indent + "  "
 
 	return slices.Concat([]byte("[\n"+inner), bytes.Join(items, []byte(",\n"+inner)), []byte("\n"+indent+"]")), nil
-}
-
-// changeOrders is, for each order that still names an agent, the command that changes it: set to the
-// rest of its names when any are left, and cleared when none are.
-func changeOrders(doc settings.Document, name string, referrers []string) []string {
-	places := allPlaces()
-	commands := make([]string, 0, len(referrers))
-
-	for _, path := range referrers {
-		at := slices.IndexFunc(places, func(p orderPlace) bool { return p.path() == path })
-		if at < 0 {
-			continue
-		}
-
-		place := places[at]
-		rest := slices.DeleteFunc(place.read(doc).OrElse(nil), func(other string) bool { return other == name })
-
-		if len(rest) == 0 {
-			commands = append(commands, place.command()+" --clear")
-
-			continue
-		}
-
-		commands = append(commands, place.command()+" "+strings.Join(rest, " ")+" (or --clear)")
-	}
-
-	return commands
 }

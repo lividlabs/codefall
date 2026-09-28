@@ -38,6 +38,10 @@ const (
 	RepoPattern   = `^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$`
 	SchemaID      = "https://raw.githubusercontent.com/lividlabs/codefall-cli/main/schemas/settings.schema.json"
 	BlockReview   = "review"
+	// FieldPostToPullRequest is whether codefall-review may post its findings to a pull request.
+	// Optional, and absent means false: posting is visible to everyone on the pull request, so it is
+	// on only when the project said so.
+	FieldPostToPullRequest = "postToPullRequest"
 	// BlockConsult is what a verb reaches for when a run cannot settle a question on its own
 	// (ADR-009). It carries only an order of agents; absent, the top-level order applies.
 	BlockConsult = "consult"
@@ -237,14 +241,13 @@ var topLevelFields = []fieldSpec{
 	{BlockTest, false, isObject},
 }
 
-// reviewFields is the shape of the review block, which codefall-review reads and nothing else
-// writes. Posting findings to a pull request is visible to everyone on it, so the field exists to
-// make that a decision the project made rather than a default it inherited.
-//
-// The block may also carry its own order of agents, an ordered subset of the top-level list, when
-// review should walk a different order from every other use (ADR-009).
+// reviewFields is the shape of the review block, which codefall-review reads. Posting findings to a
+// pull request is visible to everyone on it, so it is off unless the project turned it on: the field
+// is optional, and absent means false, so a block may carry only its own order of agents. That
+// order is an ordered subset of the top-level list, for when review should walk a different order
+// from every other use (ADR-009).
 var reviewFields = []fieldSpec{
-	{"postToPullRequest", true, isBool},
+	{FieldPostToPullRequest, false, isBool},
 	{FieldReviewAgents, false, isNameList},
 }
 
@@ -329,10 +332,24 @@ func RequiredTrackerFields(tracker string) []string {
 	return requiredNames(trackerFields[tracker])
 }
 
-// RequiredReviewFields returns the fields the review block must carry once it is present, in
-// definition order.
-func RequiredReviewFields() []string {
-	return requiredNames(reviewFields)
+// PostToPullRequest reports whether codefall-review may post its findings to a pull request. It is
+// off unless the review block says true: a missing block, a missing field, or a value Validate would
+// refuse all read as false, because posting is visible to everyone on the pull request and is never
+// a default a project inherited.
+func PostToPullRequest(doc Document) bool {
+	block, ok := lookup(doc, BlockReview)
+	if !ok {
+		return false
+	}
+
+	review, ok := block.(map[string]any)
+	if !ok {
+		return false
+	}
+
+	post, _ := review[FieldPostToPullRequest].(bool)
+
+	return post
 }
 
 // RequiredLocalFields returns the fields the local block must carry once it is present, in

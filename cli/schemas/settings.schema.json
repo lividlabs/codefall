@@ -57,9 +57,11 @@
     },
     "review": {
       "type": "object",
-      "required": ["postToPullRequest"],
       "properties": {
-        "postToPullRequest": { "type": "boolean" },
+        "postToPullRequest": {
+          "description": "Whether codefall-review may post its findings to a pull request. Absent means false.",
+          "type": "boolean"
+        },
         "agents": {
           "description": "The order review walks, as names from agents, when it differs from the top-level order.",
           "type": "array",

@@ -110,8 +110,10 @@ func TestSchemaMatchesTheFieldTables(t *testing.T) {
 
 	review := schemaObject(t, properties, BlockReview)
 
-	if got, want := schemaList(t, review, "required"), RequiredReviewFields(); !slices.Equal(got, want) {
-		t.Errorf("properties.%s.required = %q, want %q", BlockReview, got, want)
+	// Nothing in the block is required: posting is off unless the project said so, and a block may
+	// carry only its own order of agents.
+	if _, required := review["required"]; required {
+		t.Errorf("properties.%s.required is set, want every field of the review block optional", BlockReview)
 	}
 
 	// The block is optional at the top level, so it must not appear in the schema's own required

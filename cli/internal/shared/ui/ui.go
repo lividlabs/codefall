@@ -51,6 +51,15 @@ var styles = sync.OnceValue(func() map[Tone]lipgloss.Style {
 	}
 })
 
+// Prime settles the palette now rather than on first use. Deciding it asks the terminal for its
+// background colour and reads the answer from stdin, so a program that will own stdin — a Bubble Tea
+// screen — calls this before it starts; a first use from inside the program's View would race the
+// program's own reader for the reply and could wait on it for ever. The spinner is safe without it
+// because its first style is built before its program starts.
+func Prime() {
+	_ = styles()
+}
+
 // Style is the one place a tone becomes a colour, so no two commands can drift apart. An
 // unrecognised tone is left unstyled.
 func Style(tone Tone) lipgloss.Style {

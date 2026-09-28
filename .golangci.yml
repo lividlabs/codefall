@@ -17,7 +17,9 @@
 # `internal/shared/userfile/` on 2026-09-27, against a `charm.land/lipgloss/v2` import in the module
 # and a `userfile` import from `internal/doctor/internal/domain/`. The `config` component's entries
 # were proven on 2026-09-27: a Cobra import from its `application/` and an `internal/shared/proof/`
-# importing its facade each compiled and failed lint.
+# importing its facade each compiled and failed lint. The `charm.land/` deny entry was proven the same
+# day against a `charm.land/bubbletea/v2` import from `internal/config/internal/application/`, when
+# Bubble Tea first appeared outside the shared spinner (ADR-012): it compiled and failed lint.
 #
 # Proving `shared-modules` needs a throwaway package: a real shared module imports a component only
 # in a build that already has an import cycle, and a cycle is a compile error rather than the lint

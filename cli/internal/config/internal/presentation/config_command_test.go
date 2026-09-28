@@ -237,9 +237,9 @@ func TestAgentsOrderHandsOverEveryName(t *testing.T) {
 	}
 }
 
-// Each of the three order commands hands the use case the order it names and the agents in the
-// order given, or asks it to clear the order, and prints the one line that comes back.
-func TestOrderCommandsHandOverTheOrder(t *testing.T) {
+// The order command hands the use case the order its target names and the agents in the order
+// given, or asks it to clear the order, and prints the one line that comes back.
+func TestOrderCommandHandsOverTheOrder(t *testing.T) {
 	for _, tc := range []struct {
 		name    string
 		args    []string
@@ -248,21 +248,21 @@ func TestOrderCommandsHandOverTheOrder(t *testing.T) {
 		cleared bool
 	}{
 		{
-			name: "review", args: []string{"review", "agents", "architect", "subagent"},
+			name: "review", args: []string{"order", "review", "architect", "subagent"},
 			order: application.ReviewOrder(), names: []string{"architect", "subagent"},
 		},
-		{name: "review --clear", args: []string{"review", "agents", "--clear"}, order: application.ReviewOrder(), cleared: true},
+		{name: "review --clear", args: []string{"order", "review", "--clear"}, order: application.ReviewOrder(), cleared: true},
 		{
-			name: "consult", args: []string{"consult", "agents", "subagent"},
+			name: "consult", args: []string{"order", "consult", "subagent"},
 			order: application.ConsultOrder(), names: []string{"subagent"},
 		},
-		{name: "consult --clear", args: []string{"consult", "agents", "--clear"}, order: application.ConsultOrder(), cleared: true},
+		{name: "consult --clear", args: []string{"order", "consult", "--clear"}, order: application.ConsultOrder(), cleared: true},
 		{
-			name: "a harness", args: []string{"agents", "for", "claude", "architect", "subagent"},
+			name: "a harness", args: []string{"order", "claude", "architect", "subagent"},
 			order: application.HarnessOrder("claude"), names: []string{"architect", "subagent"},
 		},
 		{
-			name: "a harness --clear", args: []string{"agents", "for", "claude", "--clear"},
+			name: "a harness --clear", args: []string{"order", "claude", "--clear"},
 			order: application.HarnessOrder("claude"), cleared: true,
 		},
 	} {
@@ -289,18 +289,18 @@ func TestOrderCommandsHandOverTheOrder(t *testing.T) {
 	}
 }
 
-// An order command is told either the agents or --clear, never both and never neither, and the
-// harness command is told a harness first. A refusal here never reaches the use case.
-func TestOrderCommandsRefuseTheWrongArguments(t *testing.T) {
+// The order command is told a target first, then either the agents or --clear, never both and never
+// neither. A refusal here never reaches the use case.
+func TestOrderCommandRefusesTheWrongArguments(t *testing.T) {
 	for _, tc := range []struct {
 		name string
 		args []string
 		want string
 	}{
-		{name: "review with nothing", args: []string{"review", "agents"}, want: "name at least one agent, or pass --clear"},
-		{name: "consult with both", args: []string{"consult", "agents", "subagent", "--clear"}, want: "--clear takes no agent names"},
-		{name: "a harness with nothing", args: []string{"agents", "for"}, want: "name a harness first"},
-		{name: "a harness with no agents", args: []string{"agents", "for", "claude"}, want: "name at least one agent, or pass --clear"},
+		{name: "review with nothing", args: []string{"order", "review"}, want: "name at least one agent, or pass --clear"},
+		{name: "consult with both", args: []string{"order", "consult", "subagent", "--clear"}, want: "--clear takes no agent names"},
+		{name: "no target", args: []string{"order"}, want: "name what the order is for first"},
+		{name: "a harness with no agents", args: []string{"order", "claude"}, want: "name at least one agent, or pass --clear"},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			config := &fakeConfig{}
@@ -346,5 +346,28 @@ func TestPersonaWithAValueWritesItAndPrintsEachWrite(t *testing.T) {
 	want := "✓ wrote .codefall/user.json (persona: product-manager)\n✓ added .codefall/user.json to .gitignore\n"
 	if out != want {
 		t.Errorf("output = %q, want %q", out, want)
+	}
+}
+
+// The bare command with no terminal to draw on prints what show prints and says where the editor
+// is, so a script or a pipe gets the facts and a person learns the way in.
+func TestBareCommandWithoutATerminalPrintsTheConfigurationAndAHint(t *testing.T) {
+	stdoutIsTerminal = func() bool { return false }
+	t.Cleanup(func() { stdoutIsTerminal = func() bool { return false } })
+
+	config := &fakeConfig{shown: domain.Configuration{
+		Agents:  []settings.Agent{subagent},
+		Persona: domain.Persona{Name: "engineer"},
+	}}
+
+	out, err := run(t, config)
+	if err != nil {
+		t.Fatalf("Execute: %v", err)
+	}
+
+	for _, want := range []string{"agents:", "1. subagent (current)", "persona: engineer (default)", "Run codefall config in a terminal"} {
+		if !strings.Contains(out, want) {
+			t.Errorf("output = %q, want it to hold %q", out, want)
+		}
 	}
 }

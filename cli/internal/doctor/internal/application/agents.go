@@ -136,13 +136,14 @@ func currentRemedy(without []string) string {
 }
 
 // orderCommand is the `codefall config` command that sets or clears one narrower order, given the
-// path doctor reports it by: review.agents, consult.agents, or agentsByHarness.<harness>.
+// path doctor reports it by: review.agents, consult.agents, or agentsByHarness.<harness>. The
+// command's target is the use, or the harness.
 func orderCommand(order string) string {
 	if name, ok := strings.CutPrefix(order, settings.FieldAgentsByHarness+"."); ok {
-		return "codefall config agents for " + name
+		return "codefall config order " + name
 	}
 
 	use, _, _ := strings.Cut(order, ".")
 
-	return "codefall config " + use + " agents"
+	return "codefall config order " + use
 }

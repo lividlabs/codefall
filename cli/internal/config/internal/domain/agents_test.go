@@ -111,3 +111,22 @@ func TestCheckSubset(t *testing.T) {
 		t.Errorf("CheckSubset error = %q, want no complaint about agents left out", err)
 	}
 }
+
+// The refusal to remove a named agent is two sentences whatever the count: the orders, joined as a
+// sentence joins them, and where to change them.
+func TestStillNamed(t *testing.T) {
+	for _, tc := range []struct {
+		referrers []string
+		want      string
+	}{
+		{[]string{"review.agents"}, "architect is named in review.agents. Change that order first, in codefall config, then remove it"},
+		{[]string{"review.agents", "agentsByHarness.claude"},
+			"architect is named in review.agents and agentsByHarness.claude. Change those orders first, in codefall config, then remove it"},
+		{[]string{"review.agents", "consult.agents", "agentsByHarness.claude"},
+			"architect is named in review.agents, consult.agents, and agentsByHarness.claude. Change those orders first, in codefall config, then remove it"},
+	} {
+		if got := StillNamed("architect", tc.referrers).Error(); got != tc.want {
+			t.Errorf("StillNamed(%q) = %q, want %q", tc.referrers, got, tc.want)
+		}
+	}
+}
