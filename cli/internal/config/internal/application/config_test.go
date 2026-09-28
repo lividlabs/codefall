@@ -336,7 +336,8 @@ func TestRemoveAgentRefuses(t *testing.T) {
 			name:     "an agent an order still names",
 			settings: referencedSettings,
 			agent:    "architect",
-			want:     `agent "architect" is still named by review.agents, agentsByHarness.claude; remove it there first`,
+			want: `agent "architect" is still named by review.agents, agentsByHarness.claude; change each order first: ` +
+				`codefall config review agents subagent (or --clear), codefall config agents for claude --clear`,
 		},
 		{
 			name:     "an agent the list does not hold",

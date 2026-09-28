@@ -4,6 +4,7 @@
 package presentation
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"maps"
@@ -16,6 +17,7 @@ import (
 
 	"github.com/lividlabs/codefall-cli/cli/internal/config/internal/application"
 	"github.com/lividlabs/codefall-cli/cli/internal/config/internal/domain"
+	"github.com/lividlabs/codefall-cli/cli/internal/shared/harness"
 	"github.com/lividlabs/codefall-cli/cli/internal/shared/settings"
 	"github.com/lividlabs/codefall-cli/cli/internal/shared/ui"
 	"github.com/lividlabs/codefall-cli/cli/internal/shared/userfile"
@@ -28,6 +30,8 @@ type ConfigUseCase interface {
 	AddAgent(dir string, agent application.NewAgent) (domain.Write, error)
 	RemoveAgent(dir, name string) (domain.Write, error)
 	OrderAgents(dir string, order []string) (domain.Write, error)
+	SetOrder(dir string, order application.Order, names []string) (domain.Write, error)
+	ClearOrder(dir string, order application.Order) (domain.Write, error)
 	Persona(dir string) (domain.Persona, error)
 	SetPersona(dir, name string) ([]domain.Write, error)
 }
@@ -37,15 +41,22 @@ func NewConfigCommand(config ConfigUseCase) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "config",
 		Short: "Show and change this project's agents and your persona",
-		Long: "Reads and writes the settings a person would otherwise edit by hand: the agents list in " +
-			".codefall/settings.json, which is checked in, and the persona in " + userfile.Name +
+		Long: "Reads and writes the settings a person would otherwise edit by hand: the agents list and " +
+			"the orders review, consult, and each harness walk in .codefall/settings.json, which is " +
+			"checked in, and the persona in " + userfile.Name +
 			", which is yours alone and kept out of git. Nothing prompts; every value is an argument, " +
 			"so a script can run it. A write the settings would not accept is refused and the file is " +
 			"left as it was.",
 		Args: cobra.NoArgs,
 	}
 
-	cmd.AddCommand(newShowCommand(config), newAgentsCommand(config), newPersonaCommand(config))
+	cmd.AddCommand(
+		newShowCommand(config),
+		newAgentsCommand(config),
+		newUseCommand(config, settings.BlockReview, application.ReviewOrder()),
+		newUseCommand(config, settings.BlockConsult, application.ConsultOrder()),
+		newPersonaCommand(config),
+	)
 
 	return cmd
 }
@@ -106,7 +117,7 @@ const settingsName = ".codefall/settings.json"
 func newAgentsCommand(config ConfigUseCase) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "agents",
-		Short: "List, add, remove, and order the agents in " + settingsName,
+		Short: "List, add, remove, and order the agents in " + settingsName + ", and set a harness's order",
 		Args:  cobra.NoArgs,
 	}
 
@@ -115,6 +126,7 @@ func newAgentsCommand(config ConfigUseCase) *cobra.Command {
 		newAgentsAddCommand(config),
 		newAgentsRemoveCommand(config),
 		newAgentsOrderCommand(config),
+		newAgentsForCommand(config),
 	)
 
 	return cmd
@@ -236,6 +248,103 @@ func newAgentsOrderCommand(config ConfigUseCase) *cobra.Command {
 			return writeResults(cmd.OutOrStdout(), write)
 		},
 	}
+}
+
+// newUseCommand builds `codefall config review` or `codefall config consult`, which holds the command
+// that sets that use's own order.
+func newUseCommand(config ConfigUseCase, use string, order application.Order) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   use,
+		Short: "Set the order " + use + " walks, in " + settingsName,
+		Args:  cobra.NoArgs,
+	}
+
+	var clear bool
+
+	agents := &cobra.Command{
+		Use:   "agents <name>...",
+		Short: "Set the order " + use + " walks, or --clear it so the wider order applies",
+		Long: "Sets " + use + ".agents in " + settingsName + " to the agents named, in that order. Each " +
+			"must be an agent the list defines, and each is named once; the order need not name every " +
+			"agent. --clear removes the key, so " + use + " walks the per-harness order or the top-level one.",
+		Args: orderArgs(&clear, 0),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return runOrder(cmd, config, order, clear, args)
+		},
+	}
+
+	agents.Flags().BoolVar(&clear, "clear", false, "remove the order, so the wider one applies")
+	cmd.AddCommand(agents)
+
+	return cmd
+}
+
+// newAgentsForCommand builds `codefall config agents for <harness>`, which sets the order a session
+// running in that harness walks.
+func newAgentsForCommand(config ConfigUseCase) *cobra.Command {
+	var clear bool
+
+	cmd := &cobra.Command{
+		Use:   "for <harness> <name>...",
+		Short: "Set the order a session in one harness walks, or --clear it",
+		Long: "Sets " + settings.FieldAgentsByHarness + ".<harness> in " + settingsName + " to the agents " +
+			"named, in that order, for a session running in that harness (" +
+			strings.Join(harness.All(), ", ") + "). Each must be an agent the list defines, and each is " +
+			"named once. --clear removes the harness's order, and " + settings.FieldAgentsByHarness +
+			" with its last one, so the session walks each use's own order or the top-level one.",
+		Args:      orderArgs(&clear, 1),
+		ValidArgs: harness.All(),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return runOrder(cmd, config, application.HarnessOrder(args[0]), clear, args[1:])
+		},
+	}
+
+	cmd.Flags().BoolVar(&clear, "clear", false, "remove this harness's order, so the wider one applies")
+
+	return cmd
+}
+
+// orderArgs checks an order command's arguments: the fixed ones first, then at least one agent name
+// to set the order, or none with --clear.
+func orderArgs(clear *bool, fixed int) cobra.PositionalArgs {
+	return func(_ *cobra.Command, args []string) error {
+		if len(args) < fixed {
+			return fmt.Errorf("name a harness first (%s)", strings.Join(harness.All(), ", "))
+		}
+
+		names := len(args) - fixed
+
+		switch {
+		case *clear && names > 0:
+			return errors.New("--clear takes no agent names")
+		case !*clear && names == 0:
+			return errors.New("name at least one agent, or pass --clear")
+		}
+
+		return nil
+	}
+}
+
+// runOrder sets or clears one order and prints what that did.
+func runOrder(cmd *cobra.Command, config ConfigUseCase, order application.Order, clear bool, names []string) error {
+	dir, err := os.Getwd()
+	if err != nil {
+		return fmt.Errorf("config: %w", err)
+	}
+
+	var write domain.Write
+
+	if clear {
+		write, err = config.ClearOrder(dir, order)
+	} else {
+		write, err = config.SetOrder(dir, order, names)
+	}
+
+	if err != nil {
+		return err
+	}
+
+	return writeResults(cmd.OutOrStdout(), write)
 }
 
 func newPersonaCommand(config ConfigUseCase) *cobra.Command {

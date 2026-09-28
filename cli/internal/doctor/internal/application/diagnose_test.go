@@ -51,7 +51,7 @@ var (
 	personaRemoveRemedy = "remove " + userfile.Name + " to use the engineer persona, then run " +
 		"codefall config persona <engineer|product-manager> to choose another"
 	// The remedies for an order that names no agent on current: the list is fixed by a command, and a
-	// narrower order by naming an agent in the settings.
+	// narrower order by the command that sets or clears it.
 	addCurrentRemedy = "run codefall config agents add <name> --harness current, " +
 		"so a run always has a reader it can start"
 	mergeRemedy = "add " + settings.InteractionsAttribute + " to " + settings.GitAttributesName +
@@ -827,8 +827,9 @@ func TestDiagnoseRun(t *testing.T) {
 			want:       outcomes(map[string]domain.Status{domain.AgentsCurrent.ID: domain.StatusWarn}),
 			target:     domain.AgentsCurrent.ID,
 			wantDetail: "review.agents, agentsByHarness.claude names no agent on current",
-			wantRemedy: mo.Some("name an agent on current in review.agents, agentsByHarness.claude in " +
-				".codefall/settings.json, so a run always has a reader it can start"),
+			wantRemedy: mo.Some("name an agent on current with codefall config review agents <name>... and " +
+				"codefall config agents for claude <name>..., or clear each order with --clear, " +
+				"so a run always has a reader it can start"),
 		},
 		{
 			// The consult block's own order is checked like review's.
@@ -842,8 +843,8 @@ func TestDiagnoseRun(t *testing.T) {
 			want:       outcomes(map[string]domain.Status{domain.AgentsCurrent.ID: domain.StatusWarn}),
 			target:     domain.AgentsCurrent.ID,
 			wantDetail: "consult.agents names no agent on current",
-			wantRemedy: mo.Some("name an agent on current in consult.agents in .codefall/settings.json, " +
-				"so a run always has a reader it can start"),
+			wantRemedy: mo.Some("name an agent on current with codefall config consult agents <name>..., " +
+				"or clear the order with --clear, so a run always has a reader it can start"),
 		},
 		{
 			name: "the top-level order itself has no agent on current",
@@ -867,8 +868,8 @@ func TestDiagnoseRun(t *testing.T) {
 			want:       outcomes(map[string]domain.Status{domain.AgentsCurrent.ID: domain.StatusWarn}),
 			target:     domain.AgentsCurrent.ID,
 			wantDetail: "agents, review.agents names no agent on current",
-			wantRemedy: mo.Some("run codefall config agents add <name> --harness current, and name that agent " +
-				"in review.agents in .codefall/settings.json, so a run always has a reader it can start"),
+			wantRemedy: mo.Some("run codefall config agents add <name> --harness current, then name that agent " +
+				"with codefall config review agents <name>..., so a run always has a reader it can start"),
 		},
 		{
 			// What the list may hold is the format's to say, so a bad entry is the settings-complete

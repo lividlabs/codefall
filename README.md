@@ -125,8 +125,13 @@ walks it for its reviewer, and `implement` and `design` walk it for a consult wh
 settle a question on its own; a `review` or `consult` block may carry its own order.
 `codefall config agents add <name> --harness <harness|current> [--model <model>]` adds an agent,
 last or `--before`/`--after` another, `codefall config agents remove <name>` takes one out unless an
-order still names it, and `codefall config agents order <name>...` sets the order; `codefall config
-show` prints the list and every order. [ADR-009](docs/adrs/ADR-009-agents.md) records the shape.
+order still names it, and `codefall config agents order <name>...` sets the order. The narrower
+orders have commands of their own: `codefall config review agents <name>...` sets `review.agents`,
+`codefall config consult agents <name>...` sets `consult.agents`, and `codefall config agents for
+<harness> <name>...` sets the order a session in that harness walks, `agentsByHarness.<harness>`.
+Each names agents from the list, each once, and `--clear` in place of the names removes the order so
+the wider one applies. `codefall config show` prints the list and every order.
+[ADR-009](docs/adrs/ADR-009-agents.md) records the shape.
 
 `.codefall/user.json` sits beside `settings.json` and describes the person at the keyboard rather
 than the project, so it is yours and is never checked in: `init` adds it to `.gitignore`. Its one
@@ -191,7 +196,7 @@ what to delete.
 | `codefall create <dir>` | Makes the directory and its git repository, commits a README and a `.gitignore`, runs `init` there, and offers the push |
 | `codefall init` | Sets a directory up for codefall, once: settings, the extension for each harness, Beads, hooks, the `AGENTS.md` sections, the testing tree, and the manifest that records the run |
 | `codefall upgrade` | Brings an installed project level with the binary, for the harnesses the settings record: warns about the breaking changes in between, reinstalls, removes what it no longer ships, and touches nothing it did not write |
-| `codefall config` | Shows the effective agents, their orders, and your persona (`show`), changes the agents list (`agents list`, `add`, `remove`, `order`), and prints or sets the persona (`persona`); never prompts, and refuses a write the settings would not accept |
+| `codefall config` | Shows the effective agents, their orders, and your persona (`show`), changes the agents list (`agents list`, `add`, `remove`, `order`), sets or clears the review, consult, and per-harness orders (`review agents`, `consult agents`, `agents for <harness>`), and prints or sets the persona (`persona`); never prompts, and refuses a write the settings would not accept |
 | `codefall doctor` | Reports whether a project has what codefall needs, with a remedy per unmet check, and repairs nothing |
 
 [ADR-010](docs/adrs/ADR-010-upgrade.md) records why `init` runs once and `upgrade` is its own command.

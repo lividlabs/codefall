@@ -1,5 +1,5 @@
 // Package config is the facade for `codefall config`, the command that shows the effective
-// configuration and changes the agents list in .codefall/settings.json and the persona in
+// configuration and changes the agents list and its orders in .codefall/settings.json and the persona in
 // .codefall/user.json one command at a time, without prompting, so a script can run it.
 //
 // Exported identifiers here are the component's whole public API. Its layers live under this

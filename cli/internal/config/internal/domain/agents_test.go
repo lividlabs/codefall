@@ -86,3 +86,28 @@ func TestReferrers(t *testing.T) {
 		t.Errorf("Referrers(second) = %q, want none", got)
 	}
 }
+
+// A narrower order may leave agents out, but every name it gives is defined and given once, and
+// every problem is named at once.
+func TestCheckSubset(t *testing.T) {
+	defined := []string{"subagent", "architect", "second"}
+
+	if err := CheckSubset(defined, []string{"architect"}); err != nil {
+		t.Errorf("CheckSubset of one agent = %v, want nil", err)
+	}
+
+	err := CheckSubset(defined, []string{"architect", "reviewer", "architect"})
+	if err == nil {
+		t.Fatal("CheckSubset = nil, want the problems")
+	}
+
+	for _, want := range []string{"(agents: subagent, architect, second)", "not in the list: reviewer", "named twice: architect"} {
+		if !strings.Contains(err.Error(), want) {
+			t.Errorf("CheckSubset error = %q, want it to say %q", err, want)
+		}
+	}
+
+	if strings.Contains(err.Error(), "missing") {
+		t.Errorf("CheckSubset error = %q, want no complaint about agents left out", err)
+	}
+}
