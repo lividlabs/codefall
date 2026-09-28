@@ -133,6 +133,25 @@ yours can run and which lists never fall back to `current`.
 ]
 ```
 
+How a harness is started when a list names it — the flag its model goes in, the provider it reaches
+the model through, extra arguments, and a command that has to run first — is `harnessConfig`, keyed
+by the name a list item uses as its harness. A harness-named key configures that harness; any other
+key is a variant whose `harness` field names the binary, so `codex-direct` can call codex a second
+way. The model string is whatever the harness accepts for that provider, and the way to get it
+right is to run `/codefall-equip agents` inside the harness: it reads the model and provider its own
+session is using, writes the block, adds the agent to the lists you choose, and proves it by running
+it once.
+
+```json
+"harnessConfig": {
+  "codex": {
+    "provider": "amazon-bedrock-runtime",
+    "args": ["-c", "model_reasoning_effort=high"],
+    "env": "aws configure export-credentials --format env"
+  }
+}
+```
+
 `codefall config` in a terminal opens an editor over it: a menu of Agents, Reviews, and Persona.
 Agents lists the active agents, `default` first and then each harness; open one and its Review and
 Consult lists are there to reorder with shift and the arrows, add to with `a`, trim with `d`, hand
@@ -141,8 +160,10 @@ to the pull request. Esc goes back, `q` quits, and every write is reported once 
 in the same line a subcommand prints. The subcommands are for scripts:
 `codefall config agents muse review claude codex:gpt-5-codex` sets one list, `--clear` in place of
 the agents removes it, `codefall config agents` prints them all, and `codefall config review posting
-on|off` sets posting. `codefall config show` prints all of it, and so does the bare command when
-there is no terminal to draw on. [ADR-009.2](docs/adrs/ADR-009.2-agents.md) records the shape.
+on|off` sets posting, and `codefall config harness codex --provider amazon-bedrock-runtime --env
+"aws configure export-credentials --format env"` sets a block (`--clear` removes it). `codefall config
+show` prints all of it, and so does the bare command when there is no terminal to draw on.
+[ADR-009.3](docs/adrs/ADR-009.3-agents.md) records the shape.
 
 `.codefall/user.json` sits beside `settings.json` and describes the person at the keyboard rather
 than the project, so it is yours and is never checked in: `init` adds it to `.gitignore`. Its one
@@ -207,7 +228,7 @@ what to delete.
 | `codefall create <dir>` | Makes the directory and its git repository, commits a README and a `.gitignore`, runs `init` there, and offers the push |
 | `codefall init` | Sets a directory up for codefall, once: settings, the extension for each harness, Beads, hooks, the `AGENTS.md` sections, the testing tree, and the manifest that records the run |
 | `codefall upgrade` | Brings an installed project level with the binary, for the harnesses the settings record: warns about the breaking changes in between, reinstalls, removes what it no longer ships, and touches nothing it did not write |
-| `codefall config` | Opens an editor over the agents, reviews, and your persona in a terminal; for scripts, shows the effective configuration (`show`), sets or clears who reviews or consults for sessions in one harness (`agents <activeAgent> <review\|consult> <harness[:model]>...`, `--clear`), turns posting on or off (`review posting`), and prints or sets the persona (`persona`), and refuses a write the settings would not accept, in the editor and the subcommands alike |
+| `codefall config` | Opens an editor over the agents, reviews, and your persona in a terminal; for scripts, shows the effective configuration (`show`), sets or clears who reviews or consults for sessions in one harness (`agents <activeAgent> <review\|consult> <harness[:model]>...`, `--clear`), sets or clears how a harness is called (`harness <key> --provider ... --env ...`), turns posting on or off (`review posting`), and prints or sets the persona (`persona`), and refuses a write the settings would not accept, in the editor and the subcommands alike |
 | `codefall doctor` | Reports whether a project has what codefall needs, with a remedy per unmet check, and repairs nothing |
 
 [ADR-010](docs/adrs/ADR-010-upgrade.md) records why `init` runs once and `upgrade` is its own command.
@@ -227,7 +248,7 @@ TODO: rename the skill names to the actual
 | [`implement`](extensions/skills/codefall-implement/SKILL.md) | Execute the graph: claim ready beads, build each in an isolated worker worktree with tests as part of done, write the test case a bead's criteria name before the code, verify against acceptance criteria, open PRs, and walk the waves until the frontier is empty. Never merges to `main`, and never sets a test harness up. | in progress |
 | [`review`](extensions/skills/codefall-review/SKILL.md) | Review something and fix what the user accepts: uncommitted work, a branch, an open pull request, a commit range, a path, a document, or a description of what to look at. A subagent or another harness reviews, the session triages with you and applies what you take, and every finding is committed under `.codefall/reviews/`. | in progress |
 | [`test`](extensions/skills/codefall-test/SKILL.md) | Run what the project declares: every suite, the subset your changed files reach, a named subset, or one test case in its `spec` or `agentic` modality. A spec case runs through the project's own runner; an agentic case is driven step by step through a browser or the shell and judged against the case's criteria. Every run is reported under `.codefall/tests/`. | in progress |
-| [`equip`](extensions/skills/codefall-equip/SKILL.md) | Equip a project with what the other verbs need it to have: the local-environment scripts `refresh` runs — `start`, which brings its services up, and `update`, which makes the local environment match the checkout — and the test harness `test` runs cases through, a spec runner per surface pointed at the testing root. Finds what the project already has or drafts it from what the repository shows, then declares it in `.codefall/settings.json`. | in progress |
+| [`equip`](extensions/skills/codefall-equip/SKILL.md) | Equip a project with what the other verbs need it to have: the local-environment scripts `refresh` runs — `start`, which brings its services up, and `update`, which makes the local environment match the checkout — the test harness `test` runs cases through, a spec runner per surface pointed at the testing root, and the agents `review` and every consult reach for, set up from inside the harness that knows its own model strings. Finds what the project already has or drafts it from what the repository or the session shows, then declares it in `.codefall/settings.json`. | in progress |
 | [`refresh`](extensions/skills/codefall-refresh/SKILL.md) | Bring the checkout, the beads, and the local environment current: fetch, fast-forward `main` when that is safe, sync the Beads database with its Dolt remote, run the declared `start` and `update`, record the commit the environment now matches, and turn a failure into a sentence that says what to do. The routine before starting new work. | in progress |
 
 ### Visions
