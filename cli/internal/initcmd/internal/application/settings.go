@@ -234,17 +234,24 @@ type settingsDocument struct {
 	Version   int                       `json:"version"`
 	Tracker   string                    `json:"tracker"`
 	Harnesses []string                  `json:"harnesses"`
-	Agents    []agentDocument           `json:"agents"`
+	Agents    []entryDocument           `json:"agents"`
 	Beads     mo.Option[beadsDocument]  `json:"beads,omitzero"`
 	GitHub    mo.Option[gitHubDocument] `json:"github,omitzero"`
 	Review    reviewDocument            `json:"review"`
 }
 
-// agentDocument is one entry of the agents list. A new project gets the format's default written
-// out rather than left absent, for the reason the review block is always written: a file that
-// states the setting shows there is something to change (ADR-009). init asks nothing about it.
+// entryDocument is one entry of the agents list: who a session in the active agent's harness
+// reaches for, per feature. A new project gets the format's default written out rather than left
+// absent, for the reason the review block is always written: a file that states the setting shows
+// there is something to change (ADR-009.2). init asks nothing about it.
+type entryDocument struct {
+	ActiveAgent string                     `json:"activeAgent"`
+	Review      mo.Option[[]agentDocument] `json:"review,omitzero"`
+	Consult     mo.Option[[]agentDocument] `json:"consult,omitzero"`
+}
+
+// agentDocument is one agent in an entry's list.
 type agentDocument struct {
-	Name    string            `json:"name"`
 	Harness string            `json:"harness"`
 	Model   mo.Option[string] `json:"model,omitzero"`
 }
@@ -314,13 +321,32 @@ func encodeSettings(chosen domain.Settings) ([]byte, error) {
 }
 
 // defaultAgents is the format's default list in the file's shape.
-func defaultAgents() []agentDocument {
-	agents := settings.DefaultAgents()
-	documents := make([]agentDocument, 0, len(agents))
+func defaultAgents() []entryDocument {
+	entries := settings.DefaultAgents()
+	documents := make([]entryDocument, 0, len(entries))
 
-	for _, agent := range agents {
-		documents = append(documents, agentDocument{Name: agent.Name, Harness: agent.Harness, Model: agent.Model})
+	for _, entry := range entries {
+		documents = append(documents, entryDocument{
+			ActiveAgent: entry.ActiveAgent,
+			Review:      agentDocuments(entry.Review),
+			Consult:     agentDocuments(entry.Consult),
+		})
 	}
 
 	return documents
+}
+
+// agentDocuments is one list in the file's shape, absent when the entry has none.
+func agentDocuments(agents mo.Option[[]settings.Agent]) mo.Option[[]agentDocument] {
+	list, ok := agents.Get()
+	if !ok {
+		return mo.None[[]agentDocument]()
+	}
+
+	documents := make([]agentDocument, 0, len(list))
+	for _, agent := range list {
+		documents = append(documents, agentDocument{Harness: agent.Harness, Model: agent.Model})
+	}
+
+	return mo.Some(documents)
 }

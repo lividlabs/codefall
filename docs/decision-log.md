@@ -1593,6 +1593,26 @@ Decided at scaffold, 2026-08-16.
   drawing from contracts (widens every facade). The depguard rule was re-proven against a Bubble Tea
   import from config's `application/`: it compiled and failed lint.
 
+- **Agents are configured per active agent, 2026-09-28.** The agents configuration from ADR-009 had
+  grown four keys and a precedence rule: a project-wide list of named agents, `review.agents` and
+  `consult.agents` as orders picked from it, and `agentsByHarness` as an override on top. It came from
+  a misreading of the user's two sketches, which were two spellings of one design, agents keyed by
+  the harness the session is running in; the editor's "none set; every harness walks the wider
+  order" was where the cost showed. Nothing had shipped, so the shape changed with no migration:
+  `agents` is an array of entries, each for one `activeAgent` (a harness name or `default`), each
+  holding a `review` list and a `consult` list of `{harness, model?}` tried in order; one rule
+  resolves it (your harness's entry, else `default`; the feature's list; a missing list means the
+  default's, a missing default means `current`); `postToPullRequest` stays under top-level `review`;
+  the definitions list, the agent names, the two per-feature orders, and the override are gone, and
+  `via=` takes `harness[:model]` alone. `doctor` warns per list that lacks `current`; `codefall
+  config` edits by active agent and feature, in an editor whose menu is Agents, Reviews, Persona, and
+  as `config agents <activeAgent> <review|consult> <harness[:model]>...` with `--clear`. ADR-009.2 is
+  the edition; ADR-009's status flipped and nothing else in it moved. Seen and not taken: keeping the
+  flat list (expressible, unreadable); dropping the harness dimension (a session in Muse having Claude
+  review is the case the design exists for); a map keyed by harness (a lookup, less readable than a
+  list of "when I am in X" entries, and validation covers the duplicate); agent names (one more thing
+  to define, saying nothing `harness:model` does not).
+
 ## Open
 
 - (nothing open; the last item graduated to ADR-012 on 2026-09-27)

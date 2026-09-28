@@ -11,8 +11,8 @@ first component and the reference for the rules below; `internal/initcmd/` (`cod
 `codefall upgrade`, one use case behind two commands, exported through `Commands`) is the second, and
 follows it; `internal/create/` (`codefall create`) is the third, and runs init's command in the
 directory it makes; `internal/config/` (`codefall config`, an interactive editor in a terminal and
-subcommands for scripts, over one use case) is the fourth, and reads and writes the agents list, its
-review, consult, and per-harness orders, and the persona. `internal/shared/ui/` holds the palette,
+subcommands for scripts, over one use case) is the fourth, and reads and writes the agents list, one
+entry per active agent with its review and consult lists, whether review posts, and the persona. `internal/shared/ui/` holds the palette,
 the marks, the colour-profile writer, the spinner runner, and the reusable Bubble Tea models that are
 generic over their data (`OrderList`); `internal/shared/process/` holds the command runner and the file
 system; `internal/shared/buildinfo/` holds the version the binary reports, for `--version` and for

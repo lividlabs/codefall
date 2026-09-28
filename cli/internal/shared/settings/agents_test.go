@@ -1,40 +1,115 @@
 package settings
 
 import (
+	"reflect"
 	"slices"
 	"testing"
 
 	"github.com/samber/mo"
 )
 
-// twoAgents is a list that reaches for Codex first and this harness's own subagent after.
-func twoAgents() []any {
-	return []any{
-		map[string]any{"name": "architect", "harness": "codex", "model": "gpt-5-codex"},
-		map[string]any{"name": "subagent", "harness": "current"},
+// museEntry is an entry for a session running in Muse: Claude reviews, then Codex on a chosen
+// model, and consult is left to the default entry.
+func museEntry() map[string]any {
+	return map[string]any{
+		"activeAgent": "muse",
+		"review": []any{
+			map[string]any{"harness": "claude"},
+			map[string]any{"harness": "codex", "model": "gpt-5-codex"},
+		},
+	}
+}
+
+// defaultEntry is the default entry written the way init writes it.
+func defaultEntry() map[string]any {
+	return map[string]any{
+		"activeAgent": "default",
+		"review":      []any{map[string]any{"harness": "current"}},
+		"consult":     []any{map[string]any{"harness": "current"}},
 	}
 }
 
 func TestDefaultAgents(t *testing.T) {
 	got := DefaultAgents()
 
-	want := []Agent{{Name: DefaultAgentName, Harness: HarnessCurrent, Model: mo.None[string]()}}
-	if !slices.Equal(got, want) {
+	want := []Entry{{
+		ActiveAgent: ActiveDefault,
+		Review:      mo.Some([]Agent{{Harness: HarnessCurrent, Model: mo.None[string]()}}),
+		Consult:     mo.Some([]Agent{{Harness: HarnessCurrent, Model: mo.None[string]()}}),
+	}}
+	if !reflect.DeepEqual(got, want) {
 		t.Errorf("DefaultAgents() = %+v, want %+v", got, want)
 	}
 
 	// The default is valid settings, or init would write a file doctor rejects.
-	if problems := Validate(with(complete(), FieldAgents, []any{
-		map[string]any{"name": DefaultAgentName, "harness": HarnessCurrent},
-	})); len(problems) != 0 {
+	if problems := Validate(with(complete(), FieldAgents, []any{defaultEntry()})); len(problems) != 0 {
 		t.Errorf("Validate(default agents) = %q, want none", problems)
 	}
 }
 
-func TestAgentHarnesses(t *testing.T) {
-	want := []string{"agy", "claude", "codex", "current", "muse", "opencode"}
-	if got := AgentHarnesses(); !slices.Equal(got, want) {
+func TestActiveAgentsAndAgentHarnesses(t *testing.T) {
+	if got, want := ActiveAgents(), []string{"agy", "claude", "codex", "default", "muse", "opencode"}; !slices.Equal(got, want) {
+		t.Errorf("ActiveAgents() = %q, want %q", got, want)
+	}
+
+	if got, want := AgentHarnesses(), []string{"agy", "claude", "codex", "current", "muse", "opencode"}; !slices.Equal(got, want) {
 		t.Errorf("AgentHarnesses() = %q, want %q", got, want)
+	}
+}
+
+func TestParseActiveAgent(t *testing.T) {
+	for _, tc := range []struct {
+		in, want string
+		wantErr  bool
+	}{
+		{in: "default", want: "default"},
+		{in: "muse", want: "muse"},
+		{in: "claude-code", want: "claude"},
+		{in: "current", wantErr: true},
+		{in: "cursor", wantErr: true},
+	} {
+		got, err := ParseActiveAgent(tc.in)
+		if (err != nil) != tc.wantErr {
+			t.Errorf("ParseActiveAgent(%q) error = %v, wantErr %v", tc.in, err, tc.wantErr)
+		}
+
+		if got != tc.want {
+			t.Errorf("ParseActiveAgent(%q) = %q, want %q", tc.in, got, tc.want)
+		}
+	}
+}
+
+func TestParseAgent(t *testing.T) {
+	for _, tc := range []struct {
+		in      string
+		want    Agent
+		wantErr string
+	}{
+		{in: "codex", want: Agent{Harness: "codex", Model: mo.None[string]()}},
+		{in: "codex:gpt-5-codex", want: Agent{Harness: "codex", Model: mo.Some("gpt-5-codex")}},
+		{in: "current", want: Agent{Harness: "current", Model: mo.None[string]()}},
+		{in: "claude-code:opus", want: Agent{Harness: "claude", Model: mo.Some("opus")}},
+		{in: "codex:", wantErr: `agent "codex:" names an empty model`},
+		{in: "cursor", wantErr: `agent "cursor": harness unknown value "cursor" ` +
+			`(expected "agy", "claude", "codex", "current", "muse", "opencode")`},
+	} {
+		got, err := ParseAgent(tc.in)
+
+		if tc.wantErr != "" {
+			if err == nil || err.Error() != tc.wantErr {
+				t.Errorf("ParseAgent(%q) error = %v, want %q", tc.in, err, tc.wantErr)
+			}
+
+			continue
+		}
+
+		if err != nil {
+			t.Errorf("ParseAgent(%q) error = %v", tc.in, err)
+		}
+
+		if got != tc.want {
+			t.Errorf("ParseAgent(%q) = %+v, want %+v", tc.in, got, tc.want)
+		}
 	}
 }
 
@@ -42,7 +117,7 @@ func TestAgents(t *testing.T) {
 	for _, tc := range []struct {
 		name string
 		doc  Document
-		want []Agent
+		want []Entry
 	}{
 		{
 			name: "absent means the default",
@@ -55,149 +130,100 @@ func TestAgents(t *testing.T) {
 			want: DefaultAgents(),
 		},
 		{
-			name: "the list as written, in order",
-			doc:  with(complete(), FieldAgents, twoAgents()),
-			want: []Agent{
-				{Name: "architect", Harness: "codex", Model: mo.Some("gpt-5-codex")},
-				{Name: "subagent", Harness: "current", Model: mo.None[string]()},
+			name: "the entries as written, in order, with a list left out read as absent",
+			doc:  with(complete(), FieldAgents, []any{defaultEntry(), museEntry()}),
+			want: []Entry{
+				DefaultAgents()[0],
+				{
+					ActiveAgent: "muse",
+					Review: mo.Some([]Agent{
+						{Harness: "claude", Model: mo.None[string]()},
+						{Harness: "codex", Model: mo.Some("gpt-5-codex")},
+					}),
+					Consult: mo.None[[]Agent](),
+				},
 			},
 		},
 		{
-			// The caller has already been told what is wrong with it by Validate.
-			name: "a list Validate rejects reads as absent",
-			doc:  with(complete(), FieldAgents, []any{map[string]any{"name": "x", "harness": "cursor"}}),
+			name: "a list Validate refuses reads as the default",
+			doc:  with(complete(), FieldAgents, []any{map[string]any{"activeAgent": "cursor"}}),
 			want: DefaultAgents(),
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			if got := Agents(tc.doc); !slices.Equal(got, tc.want) {
+			if got := Agents(tc.doc); !reflect.DeepEqual(got, tc.want) {
 				t.Errorf("Agents() = %+v, want %+v", got, tc.want)
 			}
 		})
 	}
 }
 
-func TestAgentNamesAndDescriptions(t *testing.T) {
-	agents := Agents(with(complete(), FieldAgents, twoAgents()))
-
-	if got, want := AgentNames(agents), []string{"architect", "subagent"}; !slices.Equal(got, want) {
-		t.Errorf("AgentNames() = %q, want %q", got, want)
-	}
-
-	if got, want := DescribeAgents(agents), "architect (codex, gpt-5-codex), subagent (current)"; got != want {
-		t.Errorf("DescribeAgents() = %q, want %q", got, want)
-	}
-}
-
-func TestReviewAgents(t *testing.T) {
-	for _, tc := range []struct {
-		name string
-		doc  Document
-		want mo.Option[[]string]
-	}{
-		{
-			name: "no review block",
-			doc:  complete(),
-			want: mo.None[[]string](),
+func TestOrderResolvesTheActiveAgentThenTheDefaultThenCurrent(t *testing.T) {
+	doc := with(complete(), FieldAgents, []any{
+		map[string]any{
+			"activeAgent": "default",
+			"consult":     []any{map[string]any{"harness": "codex"}, map[string]any{"harness": "current"}},
 		},
-		{
-			name: "a review block with no order of its own",
-			doc:  with(complete(), BlockReview, map[string]any{"postToPullRequest": true}),
-			want: mo.None[[]string](),
-		},
-		{
-			name: "review's own order",
-			doc: with(with(complete(), FieldAgents, twoAgents()), BlockReview,
-				map[string]any{"postToPullRequest": true, "agents": []any{"subagent", "architect"}}),
-			want: mo.Some([]string{"subagent", "architect"}),
-		},
-		{
-			name: "an order that is not a list of names reads as none",
-			doc:  with(complete(), BlockReview, map[string]any{"postToPullRequest": true, "agents": "subagent"}),
-			want: mo.None[[]string](),
-		},
-	} {
-		t.Run(tc.name, func(t *testing.T) {
-			got := ReviewAgents(tc.doc)
-
-			if got.IsPresent() != tc.want.IsPresent() || !slices.Equal(got.OrEmpty(), tc.want.OrEmpty()) {
-				t.Errorf("ReviewAgents() = %v, want %v", got, tc.want)
-			}
-		})
-	}
-}
-
-func TestConsultAgents(t *testing.T) {
-	for _, tc := range []struct {
-		name string
-		doc  Document
-		want mo.Option[[]string]
-	}{
-		{
-			name: "no consult block",
-			doc:  complete(),
-			want: mo.None[[]string](),
-		},
-		{
-			name: "a consult block with no order of its own",
-			doc:  with(complete(), BlockConsult, map[string]any{}),
-			want: mo.None[[]string](),
-		},
-		{
-			name: "consult's own order",
-			doc: with(with(complete(), FieldAgents, twoAgents()), BlockConsult,
-				map[string]any{"agents": []any{"architect", "subagent"}}),
-			want: mo.Some([]string{"architect", "subagent"}),
-		},
-	} {
-		t.Run(tc.name, func(t *testing.T) {
-			got := ConsultAgents(tc.doc)
-
-			if got.IsPresent() != tc.want.IsPresent() || !slices.Equal(got.OrEmpty(), tc.want.OrEmpty()) {
-				t.Errorf("ConsultAgents() = %v, want %v", got, tc.want)
-			}
-		})
-	}
-}
-
-func TestAgentsByHarness(t *testing.T) {
-	doc := with(with(complete(), FieldAgents, twoAgents()), FieldAgentsByHarness, map[string]any{
-		"claude": []any{"architect", "subagent"},
-		"codex":  []any{"subagent"},
+		museEntry(),
 	})
 
-	got := AgentsByHarness(doc)
+	claude := Agent{Harness: "claude", Model: mo.None[string]()}
+	codex := Agent{Harness: "codex", Model: mo.None[string]()}
 
-	if len(got) != 2 {
-		t.Fatalf("AgentsByHarness() = %v, want two harnesses", got)
+	for _, tc := range []struct {
+		active, feature string
+		want            []Agent
+	}{
+		// Muse has its own review list.
+		{"muse", FeatureReview, []Agent{claude, {Harness: "codex", Model: mo.Some("gpt-5-codex")}}},
+		// Muse has no consult list, so the default entry's applies.
+		{"muse", FeatureConsult, []Agent{codex, CurrentAgent()}},
+		// Nobody wrote a review list for default, so current alone.
+		{"claude", FeatureReview, []Agent{CurrentAgent()}},
+		{"claude", FeatureConsult, []Agent{codex, CurrentAgent()}},
+		{"default", FeatureReview, []Agent{CurrentAgent()}},
+	} {
+		if got := Order(doc, tc.active, tc.feature); !reflect.DeepEqual(got, tc.want) {
+			t.Errorf("Order(%s, %s) = %+v, want %+v", tc.active, tc.feature, got, tc.want)
+		}
 	}
 
-	if want := []string{"architect", "subagent"}; !slices.Equal(got["claude"], want) {
-		t.Errorf("AgentsByHarness()[claude] = %q, want %q", got["claude"], want)
-	}
-
-	if want := []string{"subagent"}; !slices.Equal(got["codex"], want) {
-		t.Errorf("AgentsByHarness()[codex] = %q, want %q", got["codex"], want)
-	}
-
-	if got := AgentsByHarness(complete()); len(got) != 0 {
-		t.Errorf("AgentsByHarness(no override) = %v, want none", got)
+	// Settings that carry no list at all resolve to the default entry's lists.
+	if got := Order(complete(), "codex", FeatureReview); !reflect.DeepEqual(got, []Agent{CurrentAgent()}) {
+		t.Errorf("Order(no agents) = %+v, want current alone", got)
 	}
 }
 
-func TestHasCurrent(t *testing.T) {
-	agents := Agents(with(complete(), FieldAgents, twoAgents()))
+func TestEntryFor(t *testing.T) {
+	doc := with(complete(), FieldAgents, []any{defaultEntry(), museEntry()})
 
-	if !HasCurrent(agents, []string{"architect", "subagent"}) {
-		t.Error("HasCurrent(both) = false, want true")
+	if entry, ok := EntryFor(doc, "muse").Get(); !ok || entry.ActiveAgent != "muse" {
+		t.Errorf("EntryFor(muse) = %+v, %v; want the muse entry", entry, ok)
 	}
 
-	if HasCurrent(agents, []string{"architect"}) {
-		t.Error("HasCurrent(architect alone) = true, want false")
+	if EntryFor(doc, "codex").IsPresent() {
+		t.Error("EntryFor(codex) is present, want none")
+	}
+}
+
+func TestHasCurrentAndDescriptions(t *testing.T) {
+	agents := Order(with(complete(), FieldAgents, []any{museEntry()}), "muse", FeatureReview)
+
+	if HasCurrent(agents) {
+		t.Error("HasCurrent(claude, codex) = true, want false")
 	}
 
-	if HasCurrent(agents, nil) {
-		t.Error("HasCurrent(empty order) = true, want false")
+	if !HasCurrent([]Agent{CurrentAgent()}) {
+		t.Error("HasCurrent(current) = false, want true")
+	}
+
+	if got, want := DescribeAgents(agents), "claude, codex:gpt-5-codex"; got != want {
+		t.Errorf("DescribeAgents() = %q, want %q", got, want)
+	}
+
+	if got, want := ActiveAgentNames(Agents(with(complete(), FieldAgents, []any{defaultEntry(), museEntry()}))),
+		[]string{"default", "muse"}; !slices.Equal(got, want) {
+		t.Errorf("ActiveAgentNames() = %q, want %q", got, want)
 	}
 }
 
@@ -208,141 +234,90 @@ func TestValidateAgents(t *testing.T) {
 		want []string
 	}{
 		{
-			name: "a complete list with review's order and a per-harness override",
-			doc: with(with(with(complete(), FieldAgents, twoAgents()),
-				BlockReview, map[string]any{"postToPullRequest": false, "agents": []any{"architect"}}),
-				FieldAgentsByHarness, map[string]any{"codex": []any{"subagent"}}),
+			name: "a default entry and one for muse",
+			doc:  with(complete(), FieldAgents, []any{defaultEntry(), museEntry()}),
 		},
 		{
 			name: "the list is not an array",
-			doc:  with(complete(), FieldAgents, "subagent"),
-			want: []string{"agents: must be an array of agents"},
+			doc:  with(complete(), FieldAgents, "current"),
+			want: []string{"agents: must be an array of entries, one per active agent"},
 		},
 		{
 			name: "an entry is not an object",
-			doc:  with(complete(), FieldAgents, []any{"subagent"}),
+			doc:  with(complete(), FieldAgents, []any{"current"}),
 			want: []string{"agents: [0]: must be an object"},
 		},
 		{
-			name: "an entry has no name",
-			doc:  with(complete(), FieldAgents, []any{map[string]any{"harness": "current"}}),
-			want: []string{"agents: [0].name: missing"},
+			name: "an entry names no active agent",
+			doc:  with(complete(), FieldAgents, []any{map[string]any{"review": []any{map[string]any{"harness": "current"}}}}),
+			want: []string{"agents: [0].activeAgent: missing"},
 		},
 		{
-			name: "a name is not a slug",
-			doc:  with(complete(), FieldAgents, []any{map[string]any{"name": "My Agent", "harness": "current"}}),
-			want: []string{"agents: [0].name: must match " + AgentNamePattern},
+			name: "an active agent codefall does not know",
+			doc:  with(complete(), FieldAgents, []any{map[string]any{"activeAgent": "cursor"}}),
+			want: []string{`agents: [0].activeAgent: unknown value "cursor" ` +
+				`(expected "agy", "claude", "codex", "default", "muse", "opencode")`},
 		},
 		{
-			name: "a name is used twice",
-			doc: with(complete(), FieldAgents, []any{
-				map[string]any{"name": "subagent", "harness": "current"},
-				map[string]any{"name": "subagent", "harness": "codex"},
-			}),
-			want: []string{`agents: names "subagent" twice`},
+			// current is what a list resolves to, never a harness a session runs in.
+			name: "current as an active agent",
+			doc:  with(complete(), FieldAgents, []any{map[string]any{"activeAgent": "current"}}),
+			want: []string{`agents: [0].activeAgent: unknown value "current" ` +
+				`(expected "agy", "claude", "codex", "default", "muse", "opencode")`},
 		},
 		{
-			name: "an entry has no harness",
-			doc:  with(complete(), FieldAgents, []any{map[string]any{"name": "subagent"}}),
-			want: []string{"agents: [0].harness: missing"},
+			name: "an active agent named twice",
+			doc:  with(complete(), FieldAgents, []any{defaultEntry(), defaultEntry()}),
+			want: []string{`agents: names activeAgent "default" twice`},
+		},
+		{
+			name: "a list is not an array",
+			doc:  with(complete(), FieldAgents, []any{map[string]any{"activeAgent": "muse", "review": "claude"}}),
+			want: []string{"agents: [0].review: must be an array of agents"},
+		},
+		{
+			name: "an empty list",
+			doc:  with(complete(), FieldAgents, []any{map[string]any{"activeAgent": "muse", "consult": []any{}}}),
+			want: []string{"agents: [0].consult: must name at least one agent; leave the key out to use the default entry's list"},
+		},
+		{
+			name: "an agent is not an object",
+			doc:  with(complete(), FieldAgents, []any{map[string]any{"activeAgent": "muse", "review": []any{"claude"}}}),
+			want: []string{"agents: [0].review[0]: must be an object"},
+		},
+		{
+			name: "an agent has no harness",
+			doc:  with(complete(), FieldAgents, []any{map[string]any{"activeAgent": "muse", "review": []any{map[string]any{"model": "x"}}}}),
+			want: []string{"agents: [0].review[0].harness: missing"},
 		},
 		{
 			name: "a harness codefall cannot start",
-			doc:  with(complete(), FieldAgents, []any{map[string]any{"name": "helper", "harness": "cursor"}}),
-			want: []string{`agents: [0].harness: unknown value "cursor" ` +
+			doc:  with(complete(), FieldAgents, []any{map[string]any{"activeAgent": "muse", "review": []any{map[string]any{"harness": "cursor"}}}}),
+			want: []string{`agents: [0].review[0].harness: unknown value "cursor" ` +
 				`(expected "agy", "claude", "codex", "current", "muse", "opencode")`},
 		},
 		{
 			// The list is newer than the rename, so nothing checked in can carry a former spelling,
 			// and one is refused rather than read as the name the harness has now.
 			name: "a harness under its former spelling",
-			doc:  with(complete(), FieldAgents, []any{map[string]any{"name": "helper", "harness": "claude-code"}}),
-			want: []string{`agents: [0].harness: unknown value "claude-code" ` +
+			doc:  with(complete(), FieldAgents, []any{map[string]any{"activeAgent": "muse", "review": []any{map[string]any{"harness": "claude-code"}}}}),
+			want: []string{`agents: [0].review[0].harness: unknown value "claude-code" ` +
 				`(expected "agy", "claude", "codex", "current", "muse", "opencode")`},
 		},
 		{
 			name: "a model that is not a string",
-			doc:  with(complete(), FieldAgents, []any{map[string]any{"name": "helper", "harness": "codex", "model": 5.0}}),
-			want: []string{"agents: [0].model: must be a string"},
+			doc: with(complete(), FieldAgents, []any{map[string]any{"activeAgent": "muse",
+				"consult": []any{map[string]any{"harness": "codex", "model": 5.0}}}}),
+			want: []string{"agents: [0].consult[0].model: must be a string"},
 		},
 		{
-			name: "review's order is not a list",
-			doc:  with(complete(), BlockReview, map[string]any{"postToPullRequest": false, "agents": "subagent"}),
-			want: []string{"review.agents: must be an array of agent names"},
-		},
-		{
-			name: "review's order names an agent twice",
-			doc:  with(complete(), BlockReview, map[string]any{"postToPullRequest": false, "agents": []any{"subagent", "subagent"}}),
-			want: []string{`review.agents: names "subagent" twice`},
-		},
-		{
-			// The default list defines subagent, so an order naming only that is fine without a list.
-			name: "review's order over the default list",
-			doc:  with(complete(), BlockReview, map[string]any{"postToPullRequest": false, "agents": []any{"subagent"}}),
-		},
-		{
-			name: "review's order names an agent the list does not define",
-			doc: with(with(complete(), FieldAgents, twoAgents()),
-				BlockReview, map[string]any{"postToPullRequest": false, "agents": []any{"architect", "reviewer"}}),
-			want: []string{`review.agents: names "reviewer", which agents does not define`},
-		},
-		{
-			name: "consult's order is not a list",
-			doc:  with(complete(), BlockConsult, map[string]any{"agents": "subagent"}),
-			want: []string{"consult.agents: must be an array of agent names"},
-		},
-		{
-			// The block has no required field, so an empty object is a complete consult block.
-			name: "an empty consult block",
-			doc:  with(complete(), BlockConsult, map[string]any{}),
-		},
-		{
-			name: "consult's order names an agent the list does not define",
-			doc: with(with(complete(), FieldAgents, twoAgents()),
-				BlockConsult, map[string]any{"agents": []any{"architect", "oracle"}}),
-			want: []string{`consult.agents: names "oracle", which agents does not define`},
-		},
-		{
-			name: "the override is not an object",
-			doc:  with(complete(), FieldAgentsByHarness, []any{"subagent"}),
-			want: []string{"agentsByHarness: must be an object"},
-		},
-		{
-			name: "the override is keyed by something that is not a harness",
-			doc:  with(complete(), FieldAgentsByHarness, map[string]any{"current": []any{"subagent"}}),
-			want: []string{`agentsByHarness.current: unknown value "current" ` +
-				`(expected "agy", "claude", "codex", "muse", "opencode")`},
-		},
-		{
-			name: "an override order is not a list",
-			doc:  with(complete(), FieldAgentsByHarness, map[string]any{"codex": "subagent"}),
-			want: []string{"agentsByHarness.codex: must be an array of agent names"},
-		},
-		{
-			name: "an override order names an agent the list does not define",
-			doc: with(with(complete(), FieldAgents, twoAgents()),
-				FieldAgentsByHarness, map[string]any{"claude": []any{"architect", "reviewer"}, "codex": []any{"nobody"}}),
-			want: []string{
-				`agentsByHarness.claude: names "reviewer", which agents does not define`,
-				`agentsByHarness.codex: names "nobody", which agents does not define`,
-			},
-		},
-		{
-			// An order checked against a list that was itself refused would say the same thing twice.
-			name: "a rejected list suppresses the order problems",
-			doc: with(with(complete(), FieldAgents, "nope"),
-				BlockReview, map[string]any{"postToPullRequest": false, "agents": []any{"reviewer"}}),
-			want: []string{"agents: must be an array of agents"},
+			// An entry with neither list is allowed: it says nothing, and the default applies.
+			name: "an entry with no lists",
+			doc:  with(complete(), FieldAgents, []any{map[string]any{"activeAgent": "codex"}}),
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			got := Validate(tc.doc)
-
-			if len(got) == 0 && len(tc.want) == 0 {
-				return
-			}
-
-			if !slices.Equal(got, tc.want) {
+			if got := Validate(tc.doc); !slices.Equal(got, tc.want) {
 				t.Errorf("Validate() = %q, want %q", got, tc.want)
 			}
 		})

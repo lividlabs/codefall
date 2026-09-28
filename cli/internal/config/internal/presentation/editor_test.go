@@ -24,11 +24,11 @@ var (
 	down   = press(tea.KeyDown, "", 0)
 )
 
-// twoAgents is the configuration every editor test starts from: two agents, no narrower orders, the
-// default persona.
-func twoAgents() domain.Configuration {
+// twoEntries is the configuration every editor test starts from: the default entry and one for Muse
+// whose review list reaches for Claude then Codex, posting off, the default persona.
+func twoEntries() domain.Configuration {
 	return domain.Configuration{
-		Agents:  []settings.Agent{subagent, architect},
+		Entries: []settings.Entry{defaultEntry, museEntry},
 		Persona: domain.Persona{Name: "engineer"},
 	}
 }
@@ -135,65 +135,53 @@ func TestEditorRefusesADirectoryItCannotRead(t *testing.T) {
 	}
 }
 
-func TestEditorOpensEachSectionAndComesBack(t *testing.T) {
-	config := &fakeConfig{shown: twoAgents()}
-	config.shown.ByHarness = map[string][]string{"claude": {"architect"}}
+func TestEditorOpensEachScreenAndComesBack(t *testing.T) {
+	e := newTestEditor(t, &fakeConfig{shown: twoEntries()})
 
-	e := newTestEditor(t, config)
-
-	// Agents is the first item.
+	// Agents is the first item: the active agents, default first.
 	e = send(t, e, enter)
-	if e.screen != screenAgents {
-		t.Fatalf("after enter on Agents: screen = %v, want agents", e.screen)
+	if e.screen != screenEntries {
+		t.Fatalf("after enter on Agents: screen = %v, want the entries", e.screen)
 	}
 
-	if got := e.agents.IDs(); !slices.Equal(got, []string{"subagent", "architect"}) {
-		t.Errorf("the agents screen lists %q, want the list in its order", got)
+	first, ok := e.entries.SelectedItem().(row)
+	if !ok || first.value != settings.ActiveDefault {
+		t.Fatalf("the first active agent is %+v, want default", first)
 	}
 
-	e = send(t, e, escape)
-	if e.screen != screenMenu {
-		t.Fatalf("after esc: screen = %v, want the menu", e.screen)
+	// The fourth row is muse (agy, claude, codex come before it), and it has an entry.
+	e = send(t, e, down, down, down, down, enter)
+	if e.screen != screenEntry || e.active != "muse" {
+		t.Fatalf("after enter on muse: screen = %v, active = %q", e.screen, e.active)
 	}
 
-	// Review order is the second.
+	// Its review list opens with Claude then Codex.
+	e = send(t, e, enter)
+	if e.screen != screenList || e.feature != settings.FeatureReview {
+		t.Fatalf("after enter on Review: screen = %v, feature = %q", e.screen, e.feature)
+	}
+
+	if got := e.orderedWorking(); !slices.Equal(got, []settings.Agent{claude, codex}) {
+		t.Errorf("the review list shows %+v, want claude then codex", got)
+	}
+
+	// Esc walks back one step at a time.
+	for _, want := range []screen{screenEntry, screenEntries, screenMenu} {
+		e = send(t, e, escape)
+		if e.screen != want {
+			t.Fatalf("after esc: screen = %v, want %v", e.screen, want)
+		}
+	}
+
+	// Reviews is the second item and opens the posting form.
 	e = send(t, e, down, enter)
-	if e.screen != screenOrder || e.orderPath != "review.agents" {
-		t.Fatalf("after enter on Review order: screen = %v, path = %q", e.screen, e.orderPath)
-	}
-
-	if got := e.order.IDs(); len(got) != 0 {
-		t.Errorf("an order that is not set has %q switched on, want none", got)
+	if e.screen != screenReviews || e.form == nil {
+		t.Fatalf("after enter on Reviews: screen = %v, form nil = %v", e.screen, e.form == nil)
 	}
 
 	e = send(t, e, escape)
 
-	// Per-harness orders is the fourth; agy is the first harness, claude the second.
-	e = send(t, e, down, down, enter)
-	if e.screen != screenHarness {
-		t.Fatalf("after enter on Per-harness orders: screen = %v, want the harness list", e.screen)
-	}
-
-	e = send(t, e, down, enter)
-	if e.screen != screenOrder || e.orderPath != "agentsByHarness.claude" {
-		t.Fatalf("after enter on claude: screen = %v, path = %q", e.screen, e.orderPath)
-	}
-
-	if got := e.order.IDs(); !slices.Equal(got, []string{"architect"}) {
-		t.Errorf("claude's order shows %q switched on, want architect", got)
-	}
-
-	e = send(t, e, escape)
-	if e.screen != screenHarness {
-		t.Fatalf("esc from a harness's order: screen = %v, want the harness list", e.screen)
-	}
-
-	e = send(t, e, escape)
-	if e.screen != screenMenu {
-		t.Fatalf("esc from the harness list: screen = %v, want the menu", e.screen)
-	}
-
-	// Persona is the fifth.
+	// Persona is the third.
 	e = send(t, e, down, enter)
 	if e.screen != screenPersona || e.form == nil {
 		t.Fatalf("after enter on Persona: screen = %v, form nil = %v", e.screen, e.form == nil)
@@ -205,12 +193,28 @@ func TestEditorOpensEachSectionAndComesBack(t *testing.T) {
 	}
 
 	if len(e.writes) != 0 {
-		t.Errorf("walking the sections wrote %d things, want none", len(e.writes))
+		t.Errorf("walking the screens wrote %d things, want none", len(e.writes))
+	}
+}
+
+// A list the entry leaves to the default opens showing what a run would use, the default's list, so
+// the person edits from there rather than from nothing.
+func TestEditorOpensAnAbsentListFromTheDefault(t *testing.T) {
+	e := newTestEditor(t, &fakeConfig{shown: twoEntries()})
+
+	// muse, then its consult list, which it leaves to the default.
+	e = send(t, e, enter, down, down, down, down, enter, down, enter)
+	if e.screen != screenList || e.feature != settings.FeatureConsult {
+		t.Fatalf("screen = %v, feature = %q, want muse's consult list", e.screen, e.feature)
+	}
+
+	if got := e.orderedWorking(); !slices.Equal(got, []settings.Agent{current}) {
+		t.Errorf("the consult list shows %+v, want the default's, current", got)
 	}
 }
 
 func TestEditorQuitsFromTheMenuWithoutWriting(t *testing.T) {
-	e := newTestEditor(t, &fakeConfig{shown: twoAgents()})
+	e := newTestEditor(t, &fakeConfig{shown: twoEntries()})
 
 	if !quits(e, press('q', "q", 0)) {
 		t.Error("q on the menu did not quit")
@@ -221,7 +225,7 @@ func TestEditorQuitsFromTheMenuWithoutWriting(t *testing.T) {
 	}
 
 	// Quit is the last item.
-	e = send(t, e, down, down, down, down, down)
+	e = send(t, e, down, down, down)
 	if !quits(e, enter) {
 		t.Error("enter on Quit did not quit")
 	}
@@ -231,125 +235,133 @@ func TestEditorQuitsFromTheMenuWithoutWriting(t *testing.T) {
 	}
 }
 
-func TestEditorReordersTheAgentsAndSavesOnEnter(t *testing.T) {
-	config := &fakeConfig{shown: twoAgents(), write: domain.Changed("ordered the agents in .codefall/settings.json: architect, subagent")}
+func TestEditorReordersAListAndSavesOnEnter(t *testing.T) {
+	config := &fakeConfig{shown: twoEntries(), write: domain.Changed("set muse review in .codefall/settings.json: codex:gpt-5-codex, claude")}
 	e := newTestEditor(t, config)
 
-	e = send(t, e, enter, press(tea.KeyDown, "", tea.ModShift))
-	if got := e.agents.IDs(); !slices.Equal(got, []string{"architect", "subagent"}) {
-		t.Fatalf("after moving subagent down: %q", got)
+	e = send(t, e, enter, down, down, down, down, enter, enter, press(tea.KeyDown, "", tea.ModShift))
+	if got := e.orderedWorking(); !slices.Equal(got, []settings.Agent{codex, claude}) {
+		t.Fatalf("after moving claude down: %+v", got)
 	}
 
-	if config.ordered != nil {
-		t.Fatal("moving an entry wrote before enter")
+	if config.agents != nil {
+		t.Fatal("moving an agent wrote before enter")
 	}
 
 	e = send(t, e, enter)
 
-	if !slices.Equal(config.ordered, []string{"architect", "subagent"}) {
-		t.Errorf("OrderAgents was given %q, want architect, subagent", config.ordered)
+	if config.active != "muse" || config.feature != "review" || !slices.Equal(config.agents, []settings.Agent{codex, claude}) {
+		t.Errorf("SetList was given %q %q %+v, want muse review codex, claude", config.active, config.feature, config.agents)
 	}
 
-	if e.screen != screenAgents || len(e.writes) != 1 || !strings.Contains(e.status, "ordered the agents") {
+	if e.screen != screenEntry || len(e.writes) != 1 || !strings.Contains(e.status, "set muse review") {
 		t.Errorf("after saving: screen = %v, writes = %d, status = %q", e.screen, len(e.writes), e.status)
 	}
 }
 
-func TestEditorSavesAnOrderFromTheSwitchedOnAgentsAndClearsWhenNoneAre(t *testing.T) {
-	config := &fakeConfig{shown: twoAgents(), write: domain.Changed("set review.agents")}
+func TestEditorRemovesAnAgentAndSavesAnEmptyListAsAClear(t *testing.T) {
+	config := &fakeConfig{shown: twoEntries(), write: domain.Changed("removed muse review from .codefall/settings.json")}
 	e := newTestEditor(t, config)
 
-	// Review order: switch architect on, then subagent, so the order reads architect, subagent.
-	e = send(t, e, down, enter, down, press(tea.KeySpace, " ", 0), press(tea.KeyUp, "", 0), press(tea.KeySpace, " ", 0))
-
-	if got := e.order.IDs(); !slices.Equal(got, []string{"subagent", "architect"}) {
-		t.Fatalf("switched on in the list's order: %q", got)
+	e = send(t, e, enter, down, down, down, down, enter, enter, press('d', "d", 0), press('d', "d", 0))
+	if got := e.orderedWorking(); len(got) != 0 {
+		t.Fatalf("after removing both agents: %+v, want none", got)
 	}
 
-	e = send(t, e, press(tea.KeyDown, "", tea.ModShift), enter)
+	send(t, e, enter)
 
-	if got, ok := config.order.Get(); !ok || got.Harness().IsPresent() || !slices.Equal(config.names, []string{"architect", "subagent"}) {
-		t.Errorf("SetOrder was given %+v with %q, want review's order with architect, subagent", config.order, config.names)
+	if !config.cleared || config.active != "muse" || config.feature != "review" {
+		t.Errorf("saving an empty list did not clear muse review: cleared = %v, %q %q", config.cleared, config.active, config.feature)
+	}
+}
+
+func TestEditorClearsAListWithC(t *testing.T) {
+	config := &fakeConfig{shown: twoEntries(), write: domain.Changed("removed muse review from .codefall/settings.json")}
+	e := newTestEditor(t, config)
+
+	e = send(t, e, enter, down, down, down, down, enter, enter, press('c', "c", 0))
+
+	if !config.cleared || config.active != "muse" || config.feature != "review" {
+		t.Errorf("c did not clear muse review: cleared = %v, %q %q", config.cleared, config.active, config.feature)
 	}
 
-	if e.screen != screenMenu {
-		t.Errorf("after saving review's order: screen = %v, want the menu", e.screen)
-	}
-
-	// Nothing switched on clears the order instead.
-	config.cleared = false
-	e = send(t, e, down, enter, enter)
-
-	if !config.cleared {
-		t.Error("saving an order with nothing switched on did not clear it")
+	if e.screen != screenEntry || len(e.writes) != 1 {
+		t.Errorf("after clearing: screen = %v, writes = %d", e.screen, len(e.writes))
 	}
 }
 
 func TestEditorShowsARefusalInlineAndStays(t *testing.T) {
-	config := &fakeConfig{shown: twoAgents()}
-	e := send(t, newTestEditor(t, config), enter)
+	config := &fakeConfig{shown: twoEntries()}
+	e := send(t, newTestEditor(t, config), enter, enter, enter)
 
-	// The fake answers every call with one error, so it is set once the editor has read the
-	// configuration and is on the agents screen.
-	config.err = domain.StillNamed("subagent", []string{"review.agents"})
+	// The fake answers every call with one error, so it is set once the editor is on the list.
+	config.err = errors.New("that change would leave .codefall/settings.json invalid, so nothing was changed")
 
-	e = send(t, e, press('d', "d", 0))
+	e = send(t, e, enter)
 
-	if config.removed != "subagent" {
-		t.Errorf("RemoveAgent was asked for %q, want the agent under the cursor", config.removed)
+	if e.status != config.err.Error() {
+		t.Errorf("status = %q, want the refusal", e.status)
 	}
 
-	want := "subagent is named in review.agents. Change that order first, in codefall config, then remove it"
-	if e.status != want {
-		t.Errorf("status = %q, want the refusal %q", e.status, want)
-	}
-
-	if e.screen != screenAgents || len(e.writes) != 0 {
-		t.Errorf("after a refusal: screen = %v, writes = %d, want the agents screen and nothing written", e.screen, len(e.writes))
+	if e.screen != screenEntry || len(e.writes) != 0 {
+		t.Errorf("after a refusal: screen = %v, writes = %d, want the entry screen and nothing written", e.screen, len(e.writes))
 	}
 }
 
+// An added agent joins the list on screen and is written with the rest on enter, not on its own.
 func TestEditorAddsAnAgentThroughTheForm(t *testing.T) {
-	config := &fakeConfig{shown: twoAgents(), write: domain.Changed("added agent reviewer (muse) to .codefall/settings.json")}
+	config := &fakeConfig{shown: twoEntries(), write: domain.Changed("set default review in .codefall/settings.json: current, codex")}
 	e := newTestEditor(t, config)
 
-	e = send(t, e, enter, press('a', "a", 0))
+	// default, review, add.
+	e = send(t, e, enter, enter, enter, press('a', "a", 0))
 	if e.screen != screenAdd || e.form == nil {
 		t.Fatalf("after a: screen = %v, form nil = %v", e.screen, e.form == nil)
 	}
 
-	// The name, then the harness (the default, current, is fine), then no model.
-	e = send(t, e, press('r', "r", 0), press('e', "e", 0), press('v', "v", 0), enter, enter, enter)
+	// The harness select opens on current; codex is the option above it (agy, claude, codex, current, ...).
+	e = send(t, e, press(tea.KeyUp, "", 0), enter, enter)
 
-	if config.added.Name != "rev" || config.added.Harness != settings.HarnessCurrent || config.added.Model.IsPresent() {
-		t.Errorf("AddAgent was given %+v, want rev on current with no model", config.added)
+	if e.screen != screenList || e.form != nil {
+		t.Fatalf("after the form: screen = %v, form nil = %v", e.screen, e.form == nil)
 	}
 
-	if e.screen != screenAgents || e.form != nil || len(e.writes) != 1 {
-		t.Errorf("after adding: screen = %v, form nil = %v, writes = %d", e.screen, e.form == nil, len(e.writes))
+	if got := e.orderedWorking(); !slices.Equal(got, []settings.Agent{current, {Harness: "codex", Model: mo.None[string]()}}) {
+		t.Fatalf("the list shows %+v, want current then codex", got)
+	}
+
+	if config.agents != nil {
+		t.Fatal("adding wrote before enter")
+	}
+
+	e = send(t, e, enter)
+
+	if config.active != "default" || config.feature != "review" || len(config.agents) != 2 || config.agents[1].Harness != "codex" {
+		t.Errorf("SetList was given %q %q %+v, want default review current, codex", config.active, config.feature, config.agents)
 	}
 }
 
-func TestEditorRefusesAnEmptyNameInTheForm(t *testing.T) {
-	config := &fakeConfig{shown: twoAgents()}
+func TestEditorSetsPosting(t *testing.T) {
+	config := &fakeConfig{shown: twoEntries(), write: domain.Changed("set posting on in .codefall/settings.json")}
 	e := newTestEditor(t, config)
 
-	e = send(t, e, enter, press('a', "a", 0), enter)
+	// Reviews, then the select opens on off; down is on.
+	e = send(t, e, down, enter, down, enter)
 
-	if e.screen != screenAdd {
-		t.Errorf("enter on an empty name left the form: screen = %v", e.screen)
+	if got, ok := config.posting.Get(); !ok || !got {
+		t.Errorf("SetPosting was given %v, want on", config.posting)
 	}
 
-	if config.added.Name != "" {
-		t.Errorf("AddAgent was asked for %q, want the form to hold the person at the name", config.added.Name)
+	if e.screen != screenMenu || len(e.writes) != 1 {
+		t.Errorf("after setting posting: screen = %v, writes = %d", e.screen, len(e.writes))
 	}
 }
 
 func TestEditorSetsThePersona(t *testing.T) {
-	config := &fakeConfig{shown: twoAgents(), writes: []domain.Write{domain.Changed("set persona to engineer in .codefall/user.json")}}
+	config := &fakeConfig{shown: twoEntries(), writes: []domain.Write{domain.Changed("set persona to engineer in .codefall/user.json")}}
 	e := newTestEditor(t, config)
 
-	e = send(t, e, down, down, down, down, enter, enter)
+	e = send(t, e, down, down, enter, enter)
 
 	if config.set != "engineer" {
 		t.Errorf("SetPersona was given %q, want the option under the cursor, engineer", config.set)
@@ -360,27 +372,32 @@ func TestEditorSetsThePersona(t *testing.T) {
 	}
 }
 
-func TestEditorViewNamesTheScreenAndItsKeys(t *testing.T) {
-	e := newTestEditor(t, &fakeConfig{shown: twoAgents()})
+// Every visible string is in plain words: nothing about walking or orders, and current is "this
+// harness".
+func TestEditorViewSpeaksPlainly(t *testing.T) {
+	e := newTestEditor(t, &fakeConfig{shown: twoEntries()})
 
 	if view := e.View().Content; !strings.Contains(view, "codefall config") || !strings.Contains(view, "q quit") {
 		t.Errorf("menu view = %q, want the heading and the quit key", view)
 	}
 
 	e = send(t, e, enter)
-	if view := e.View().Content; !strings.Contains(view, "a add") || !strings.Contains(view, "enter save order") {
-		t.Errorf("agents view = %q, want its keys", view)
+	if view := e.View().Content; !strings.Contains(view, "default (any harness without its own entry)") || !strings.Contains(view, "this harness") {
+		t.Errorf("entries view = %q, want the default row in plain words", view)
 	}
-}
 
-// The consult section's current order reaches the order screen the same way review's does.
-func TestEditorShowsTheConsultOrderSwitchedOn(t *testing.T) {
-	config := &fakeConfig{shown: twoAgents()}
-	config.shown.Consult = mo.Some([]string{"architect"})
+	e = send(t, e, down, down, down, down, enter, enter)
 
-	e := send(t, newTestEditor(t, config), down, down, enter)
+	view := e.View().Content
+	for _, want := range []string{"when running in muse", "who reviews", "a add an agent", "d remove", "c use the default instead", "enter save"} {
+		if !strings.Contains(view, want) {
+			t.Errorf("list view = %q, want it to hold %q", view, want)
+		}
+	}
 
-	if e.orderPath != "consult.agents" || !slices.Equal(e.order.IDs(), []string{"architect"}) {
-		t.Errorf("consult order: path = %q, on = %q", e.orderPath, e.order.IDs())
+	for _, banned := range []string{"walk", "wider", "resolved"} {
+		if strings.Contains(strings.ToLower(view), banned) {
+			t.Errorf("list view holds %q, want plain words", banned)
+		}
 	}
 }

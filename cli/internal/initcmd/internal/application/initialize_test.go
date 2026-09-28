@@ -395,8 +395,17 @@ func TestRunEncodesGitHubSettings(t *testing.T) {
   ],
   "agents": [
     {
-      "name": "subagent",
-      "harness": "current"
+      "activeAgent": "default",
+      "review": [
+        {
+          "harness": "current"
+        }
+      ],
+      "consult": [
+        {
+          "harness": "current"
+        }
+      ]
     }
   ],
   "github": {
@@ -439,8 +448,17 @@ func TestRunEncodesTheOptionalFieldsTheWayTheSchemaExpects(t *testing.T) {
   ],
   "agents": [
     {
-      "name": "subagent",
-      "harness": "current"
+      "activeAgent": "default",
+      "review": [
+        {
+          "harness": "current"
+        }
+      ],
+      "consult": [
+        {
+          "harness": "current"
+        }
+      ]
     }
   ],
   "github": {
@@ -464,8 +482,17 @@ func TestRunEncodesTheOptionalFieldsTheWayTheSchemaExpects(t *testing.T) {
   ],
   "agents": [
     {
-      "name": "subagent",
-      "harness": "current"
+      "activeAgent": "default",
+      "review": [
+        {
+          "harness": "current"
+        }
+      ],
+      "consult": [
+        {
+          "harness": "current"
+        }
+      ]
     }
   ],
   "beads": {},

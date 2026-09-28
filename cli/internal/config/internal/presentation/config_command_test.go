@@ -3,64 +3,50 @@ package presentation
 import (
 	"bytes"
 	"errors"
+	"slices"
 	"strings"
 	"testing"
 
 	"github.com/samber/mo"
 
-	"github.com/lividlabs/codefall-cli/cli/internal/config/internal/application"
 	"github.com/lividlabs/codefall-cli/cli/internal/config/internal/domain"
 	"github.com/lividlabs/codefall-cli/cli/internal/shared/settings"
 )
 
 type fakeConfig struct {
 	shown   domain.Configuration
-	agents  []settings.Agent
+	entries []settings.Entry
 	persona domain.Persona
 	write   domain.Write
 	writes  []domain.Write
 	err     error
 
-	added   application.NewAgent
-	removed string
-	ordered []string
-	set     string
-
-	order   mo.Option[application.Order]
-	names   []string
-	cleared bool
-}
-
-func (f *fakeConfig) SetOrder(_ string, order application.Order, names []string) (domain.Write, error) {
-	f.order, f.names = mo.Some(order), names
-
-	return f.write, f.err
-}
-
-func (f *fakeConfig) ClearOrder(_ string, order application.Order) (domain.Write, error) {
-	f.order, f.cleared = mo.Some(order), true
-
-	return f.write, f.err
+	// What the last write was asked for.
+	active, feature string
+	agents          []settings.Agent
+	cleared         bool
+	posting         mo.Option[bool]
+	set             string
 }
 
 func (f *fakeConfig) Show(string) (domain.Configuration, error) { return f.shown, f.err }
 
-func (f *fakeConfig) Agents(string) ([]settings.Agent, error) { return f.agents, f.err }
+func (f *fakeConfig) Agents(string) ([]settings.Entry, error) { return f.entries, f.err }
 
-func (f *fakeConfig) AddAgent(_ string, agent application.NewAgent) (domain.Write, error) {
-	f.added = agent
-
-	return f.write, f.err
-}
-
-func (f *fakeConfig) RemoveAgent(_, name string) (domain.Write, error) {
-	f.removed = name
+func (f *fakeConfig) SetList(_, active, feature string, agents []settings.Agent) (domain.Write, error) {
+	f.active, f.feature, f.agents = active, feature, agents
 
 	return f.write, f.err
 }
 
-func (f *fakeConfig) OrderAgents(_ string, order []string) (domain.Write, error) {
-	f.ordered = order
+func (f *fakeConfig) ClearList(_, active, feature string) (domain.Write, error) {
+	f.active, f.feature, f.cleared = active, feature, true
+
+	return f.write, f.err
+}
+
+func (f *fakeConfig) SetPosting(_ string, on bool) (domain.Write, error) {
+	f.posting = mo.Some(on)
 
 	return f.write, f.err
 }
@@ -96,17 +82,27 @@ func run(t *testing.T, config ConfigUseCase, args ...string) (string, error) {
 }
 
 var (
-	subagent  = settings.Agent{Name: "subagent", Harness: "current", Model: mo.None[string]()}
-	architect = settings.Agent{Name: "architect", Harness: "codex", Model: mo.Some("gpt-5-codex")}
+	current = settings.Agent{Harness: "current", Model: mo.None[string]()}
+	claude  = settings.Agent{Harness: "claude", Model: mo.None[string]()}
+	codex   = settings.Agent{Harness: "codex", Model: mo.Some("gpt-5-codex")}
+
+	defaultEntry = settings.Entry{
+		ActiveAgent: "default",
+		Review:      mo.Some([]settings.Agent{current}),
+		Consult:     mo.Some([]settings.Agent{current}),
+	}
+	museEntry = settings.Entry{
+		ActiveAgent: "muse",
+		Review:      mo.Some([]settings.Agent{claude, codex}),
+		Consult:     mo.None[[]settings.Agent](),
+	}
 )
 
 func TestShowPrintsTheEffectiveConfiguration(t *testing.T) {
 	config := &fakeConfig{shown: domain.Configuration{
-		Agents:    []settings.Agent{architect, subagent},
-		Review:    mo.Some([]string{"architect", "subagent"}),
-		Consult:   mo.None[[]string](),
-		ByHarness: map[string][]string{"codex": {"subagent"}, "claude": {"architect"}},
-		Persona:   domain.Persona{Name: "product-manager", FromFile: true},
+		Entries: []settings.Entry{defaultEntry, museEntry},
+		Posting: true,
+		Persona: domain.Persona{Name: "product-manager", FromFile: true},
 	}}
 
 	out, err := run(t, config, "show")
@@ -115,11 +111,13 @@ func TestShowPrintsTheEffectiveConfiguration(t *testing.T) {
 	}
 
 	want := "agents:\n" +
-		"  1. architect (codex, gpt-5-codex)\n" +
-		"  2. subagent (current)\n" +
-		"review.agents: architect, subagent\n" +
-		"agentsByHarness.claude: architect\n" +
-		"agentsByHarness.codex: subagent\n" +
+		"  default (any harness without its own entry):\n" +
+		"    review: this harness\n" +
+		"    consult: this harness\n" +
+		"  when running in muse:\n" +
+		"    review: claude, then codex:gpt-5-codex\n" +
+		"    consult: same as default\n" +
+		"review posting: on\n" +
 		"persona: product-manager (from .codefall/user.json)\n"
 	if out != want {
 		t.Errorf("output =\n%q\nwant\n%q", out, want)
@@ -128,7 +126,7 @@ func TestShowPrintsTheEffectiveConfiguration(t *testing.T) {
 
 func TestShowSaysWhenTheListIsTheDefault(t *testing.T) {
 	config := &fakeConfig{shown: domain.Configuration{
-		Agents:  []settings.Agent{subagent},
+		Entries: []settings.Entry{defaultEntry},
 		Default: true,
 		Persona: domain.Persona{Name: "engineer"},
 	}}
@@ -138,182 +136,127 @@ func TestShowSaysWhenTheListIsTheDefault(t *testing.T) {
 		t.Fatalf("Execute: %v", err)
 	}
 
-	want := "agents (the default; .codefall/settings.json lists none):\n" +
-		"  1. subagent (current)\n" +
+	want := "agents (the built-in default; .codefall/settings.json sets none):\n" +
+		"  default (any harness without its own entry):\n" +
+		"    review: this harness\n" +
+		"    consult: this harness\n" +
+		"review posting: off\n" +
 		"persona: engineer (default)\n"
 	if out != want {
 		t.Errorf("output =\n%q\nwant\n%q", out, want)
 	}
 }
 
-func TestAgentsListPrintsOneAgentPerLine(t *testing.T) {
-	out, err := run(t, &fakeConfig{agents: []settings.Agent{architect, subagent}}, "agents", "list")
+// `agents` alone and `agents list` print the same thing.
+func TestAgentsPrintsTheEntries(t *testing.T) {
+	config := &fakeConfig{entries: []settings.Entry{museEntry}}
+
+	want := "  when running in muse:\n    review: claude, then codex:gpt-5-codex\n    consult: same as default\n"
+
+	for _, args := range [][]string{{"agents"}, {"agents", "list"}} {
+		out, err := run(t, config, args...)
+		if err != nil {
+			t.Fatalf("Execute %q: %v", args, err)
+		}
+
+		if out != want {
+			t.Errorf("output of %q = %q, want %q", args, out, want)
+		}
+	}
+}
+
+// Every agent reaches the use case parsed, in the order given, with a model when one was typed.
+func TestAgentsSetsAListAndPrintsTheWrite(t *testing.T) {
+	config := &fakeConfig{write: domain.Changed("set muse review in .codefall/settings.json: claude, codex:gpt-5-codex")}
+
+	out, err := run(t, config, "agents", "muse", "review", "claude", "codex:gpt-5-codex")
 	if err != nil {
 		t.Fatalf("Execute: %v", err)
 	}
 
-	if want := "architect (codex, gpt-5-codex)\nsubagent (current)\n"; out != want {
+	if config.active != "muse" || config.feature != "review" || !slices.Equal(config.agents, []settings.Agent{claude, codex}) {
+		t.Errorf("SetList was given %q %q %+v, want muse review claude, codex:gpt-5-codex", config.active, config.feature, config.agents)
+	}
+
+	if want := "✓ set muse review in .codefall/settings.json: claude, codex:gpt-5-codex\n"; out != want {
 		t.Errorf("output = %q, want %q", out, want)
 	}
 }
 
-// Every flag reaches the use case, and one left out arrives as None rather than as an empty string.
-func TestAgentsAddHandsOverTheAgentAndPrintsTheWrite(t *testing.T) {
-	config := &fakeConfig{write: domain.Changed("added agent second (muse) to .codefall/settings.json, before architect")}
+func TestAgentsClearsAList(t *testing.T) {
+	config := &fakeConfig{write: domain.Changed("removed muse consult from .codefall/settings.json")}
 
-	out, err := run(t, config, "agents", "add", "second", "--harness", "muse", "--before", "architect")
-	if err != nil {
+	if _, err := run(t, config, "agents", "muse", "consult", "--clear"); err != nil {
 		t.Fatalf("Execute: %v", err)
 	}
 
-	want := application.NewAgent{
-		Name: "second", Harness: "muse",
-		Model: mo.None[string](), Before: mo.Some("architect"), After: mo.None[string](),
-	}
-	if config.added != want {
-		t.Errorf("added = %+v, want %+v", config.added, want)
-	}
-
-	if want := "✓ added agent second (muse) to .codefall/settings.json, before architect\n"; out != want {
-		t.Errorf("output = %q, want %q", out, want)
+	if !config.cleared || config.active != "muse" || config.feature != "consult" {
+		t.Errorf("ClearList was given %q %q, cleared = %v; want muse consult cleared", config.active, config.feature, config.cleared)
 	}
 }
 
-// A command that never prompts has to be told everything it needs: a missing --harness is refused by
-// name, and so is being told two places at once.
-func TestAgentsAddRefusesMissingOrConflictingFlags(t *testing.T) {
+// The command refuses what it can see is wrong before the use case is reached, and hands a bad agent
+// back in the settings module's words.
+func TestAgentsRefusesTheWrongArguments(t *testing.T) {
 	for _, tc := range []struct {
 		name string
 		args []string
 		want string
 	}{
-		{name: "no harness", args: []string{"agents", "add", "second"}, want: `"harness" not set`},
-		{
-			name: "before and after",
-			args: []string{"agents", "add", "second", "--harness", "muse", "--before", "a", "--after", "b"},
-			want: "[after before] were all set",
-		},
-		{name: "no name", args: []string{"agents", "add", "--harness", "muse"}, want: "accepts 1 arg"},
+		{name: "an active agent alone", args: []string{"agents", "muse"}, want: "name the list too"},
+		{name: "no agents and no --clear", args: []string{"agents", "muse", "review"}, want: "name at least one agent"},
+		{name: "agents with --clear", args: []string{"agents", "muse", "review", "claude", "--clear"}, want: "--clear takes no agents"},
+		{name: "a harness codefall cannot start", args: []string{"agents", "muse", "review", "cursor"}, want: `agent "cursor": harness unknown value "cursor"`},
+		{name: "an empty model", args: []string{"agents", "muse", "review", "codex:"}, want: "names an empty model"},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			config := &fakeConfig{}
 
 			_, err := run(t, config, tc.args...)
 			if err == nil || !strings.Contains(err.Error(), tc.want) {
-				t.Fatalf("Execute error = %v, want it to say %q", err, tc.want)
+				t.Fatalf("error = %v, want it to say %q", err, tc.want)
 			}
 
-			if config.added.Name != "" {
-				t.Error("the use case was asked, want the command to stop at the flags")
+			if config.agents != nil || config.cleared {
+				t.Error("the use case was reached with arguments the command should have refused")
 			}
 		})
 	}
 }
 
-// A refusal is the use case's own sentence, returned as it is so Fang renders it without a prefix.
-func TestAgentsRemoveReturnsTheRefusalAsItIs(t *testing.T) {
-	refusal := errors.New(`agent "architect" is still named by review.agents; remove it there first`)
+// A refusal from the use case is returned as it is, so the settings module's words reach the person.
+func TestAgentsReturnsTheRefusalAsItIs(t *testing.T) {
+	refusal := errors.New(`.codefall/settings.json is not valid, so nothing was changed: tracker: missing`)
 
-	_, err := run(t, &fakeConfig{err: refusal}, "agents", "remove", "architect")
-	if !errors.Is(err, refusal) || err.Error() != refusal.Error() {
-		t.Errorf("Execute error = %v, want %v as it is", err, refusal)
+	_, err := run(t, &fakeConfig{err: refusal}, "agents", "default", "review", "current")
+	if !errors.Is(err, refusal) {
+		t.Errorf("error = %v, want %v", err, refusal)
 	}
 }
 
-func TestAgentsOrderHandsOverEveryName(t *testing.T) {
-	config := &fakeConfig{write: domain.Unchanged(".codefall/settings.json already lists the agents in that order")}
-
-	out, err := run(t, config, "agents", "order", "second", "architect", "subagent")
-	if err != nil {
-		t.Fatalf("Execute: %v", err)
-	}
-
-	if got := strings.Join(config.ordered, " "); got != "second architect subagent" {
-		t.Errorf("ordered = %q, want every name in the order given", got)
-	}
-
-	if want := "- .codefall/settings.json already lists the agents in that order\n"; out != want {
-		t.Errorf("output = %q, want %q", out, want)
-	}
-}
-
-// The order command hands the use case the order its target names and the agents in the order
-// given, or asks it to clear the order, and prints the one line that comes back.
-func TestOrderCommandHandsOverTheOrder(t *testing.T) {
+func TestReviewPostingHandsOverOnOrOff(t *testing.T) {
 	for _, tc := range []struct {
-		name    string
-		args    []string
-		order   application.Order
-		names   []string
-		cleared bool
-	}{
-		{
-			name: "review", args: []string{"order", "review", "architect", "subagent"},
-			order: application.ReviewOrder(), names: []string{"architect", "subagent"},
-		},
-		{name: "review --clear", args: []string{"order", "review", "--clear"}, order: application.ReviewOrder(), cleared: true},
-		{
-			name: "consult", args: []string{"order", "consult", "subagent"},
-			order: application.ConsultOrder(), names: []string{"subagent"},
-		},
-		{name: "consult --clear", args: []string{"order", "consult", "--clear"}, order: application.ConsultOrder(), cleared: true},
-		{
-			name: "a harness", args: []string{"order", "claude", "architect", "subagent"},
-			order: application.HarnessOrder("claude"), names: []string{"architect", "subagent"},
-		},
-		{
-			name: "a harness --clear", args: []string{"order", "claude", "--clear"},
-			order: application.HarnessOrder("claude"), cleared: true,
-		},
-	} {
-		t.Run(tc.name, func(t *testing.T) {
-			config := &fakeConfig{write: domain.Changed("set the order")}
+		arg  string
+		want bool
+	}{{"on", true}, {"off", false}} {
+		config := &fakeConfig{write: domain.Changed("set posting " + tc.arg + " in .codefall/settings.json")}
 
-			out, err := run(t, config, tc.args...)
-			if err != nil {
-				t.Fatalf("Execute: %v", err)
-			}
+		out, err := run(t, config, "review", "posting", tc.arg)
+		if err != nil {
+			t.Fatalf("Execute %s: %v", tc.arg, err)
+		}
 
-			if got, ok := config.order.Get(); !ok || got != tc.order {
-				t.Errorf("order = %+v, want %+v", config.order, tc.order)
-			}
+		if got, ok := config.posting.Get(); !ok || got != tc.want {
+			t.Errorf("SetPosting was given %v, want %v", config.posting, tc.want)
+		}
 
-			if strings.Join(config.names, " ") != strings.Join(tc.names, " ") || config.cleared != tc.cleared {
-				t.Errorf("names = %q, cleared = %v, want %q, %v", config.names, config.cleared, tc.names, tc.cleared)
-			}
-
-			if want := "✓ set the order\n"; out != want {
-				t.Errorf("output = %q, want %q", out, want)
-			}
-		})
+		if want := "✓ set posting " + tc.arg + " in .codefall/settings.json\n"; out != want {
+			t.Errorf("output = %q, want %q", out, want)
+		}
 	}
-}
 
-// The order command is told a target first, then either the agents or --clear, never both and never
-// neither. A refusal here never reaches the use case.
-func TestOrderCommandRefusesTheWrongArguments(t *testing.T) {
-	for _, tc := range []struct {
-		name string
-		args []string
-		want string
-	}{
-		{name: "review with nothing", args: []string{"order", "review"}, want: "name at least one agent, or pass --clear"},
-		{name: "consult with both", args: []string{"order", "consult", "subagent", "--clear"}, want: "--clear takes no agent names"},
-		{name: "no target", args: []string{"order"}, want: "name what the order is for first"},
-		{name: "a harness with no agents", args: []string{"order", "claude"}, want: "name at least one agent, or pass --clear"},
-	} {
-		t.Run(tc.name, func(t *testing.T) {
-			config := &fakeConfig{}
-
-			_, err := run(t, config, tc.args...)
-			if err == nil || !strings.Contains(err.Error(), tc.want) {
-				t.Fatalf("Execute error = %v, want it to say %q", err, tc.want)
-			}
-
-			if config.order.IsPresent() {
-				t.Error("the use case was asked, want the command to stop at the arguments")
-			}
-		})
+	if _, err := run(t, &fakeConfig{}, "review", "posting", "maybe"); err == nil {
+		t.Error("posting maybe was accepted, want a refusal")
 	}
 }
 
@@ -356,7 +299,7 @@ func TestBareCommandWithoutATerminalPrintsTheConfigurationAndAHint(t *testing.T)
 	t.Cleanup(func() { stdoutIsTerminal = func() bool { return false } })
 
 	config := &fakeConfig{shown: domain.Configuration{
-		Agents:  []settings.Agent{subagent},
+		Entries: []settings.Entry{defaultEntry},
 		Persona: domain.Persona{Name: "engineer"},
 	}}
 
@@ -365,7 +308,7 @@ func TestBareCommandWithoutATerminalPrintsTheConfigurationAndAHint(t *testing.T)
 		t.Fatalf("Execute: %v", err)
 	}
 
-	for _, want := range []string{"agents:", "1. subagent (current)", "persona: engineer (default)", "Run codefall config in a terminal"} {
+	for _, want := range []string{"agents:", "review: this harness", "persona: engineer (default)", "Run codefall config in a terminal"} {
 		if !strings.Contains(out, want) {
 			t.Errorf("output = %q, want it to hold %q", out, want)
 		}

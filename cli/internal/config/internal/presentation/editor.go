@@ -5,8 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"maps"
 	"slices"
+	"strconv"
 	"strings"
 
 	"charm.land/bubbles/v2/key"
@@ -15,63 +15,55 @@ import (
 	"charm.land/huh/v2"
 	"github.com/samber/mo"
 
-	"github.com/lividlabs/codefall-cli/cli/internal/config/internal/application"
 	"github.com/lividlabs/codefall-cli/cli/internal/config/internal/domain"
-	"github.com/lividlabs/codefall-cli/cli/internal/shared/harness"
 	"github.com/lividlabs/codefall-cli/cli/internal/shared/settings"
 	"github.com/lividlabs/codefall-cli/cli/internal/shared/ui"
 	"github.com/lividlabs/codefall-cli/cli/internal/shared/userfile"
 )
 
-// The editor is `codefall config` with no arguments in a terminal: a menu over the sections of the
-// two files, each section showing its current value and offering its edits, and Esc bringing the
-// person back to the menu. It is the shell that owns arrangement and navigation for this component
-// (ADR-012). It decides nothing the scripted subcommands do not: every edit goes through the same
-// use case, and the one line each write earns is printed after the program has left the screen.
+// The editor is `codefall config` with no arguments in a terminal: a menu over what a person
+// configures, Agents, Reviews, and Persona, each screen showing its current value and offering its
+// edits, and Esc bringing the person back a step. It is the shell that owns arrangement and
+// navigation for this component (ADR-012). It decides nothing the scripted subcommands do not: every
+// edit goes through the same use case, and the one line each write earns is printed after the program
+// has left the screen.
 
 // screen is which part of the editor has the keyboard.
 type screen int
 
 const (
 	screenMenu screen = iota
-	screenAgents
+	// screenEntries lists the active agents: default, then each harness, with or without an entry.
+	screenEntries
+	// screenEntry is one active agent's two lists, Review and Consult.
+	screenEntry
+	// screenList is one list being edited: reorder, add, remove, clear, save.
+	screenList
+	// screenAdd is the form that adds an agent to the list on screen.
 	screenAdd
-	screenOrder
-	screenHarness
+	// screenReviews holds the review settings that do not vary by harness: posting.
+	screenReviews
 	screenPersona
 	// screenQuit is the menu's last item rather than a screen: choosing it ends the program.
 	screenQuit
 )
 
-// section is one item of the menu: where it leads, the current value shown under its title, and,
-// for a section that is one narrower order, which order and where it sits.
-type section struct {
+// row is one item of a Bubbles list in this editor: what it says, what it leads to, and the value it
+// stands for, an active agent or a feature, when it stands for one.
+type row struct {
 	title  string
 	detail string
 	leads  screen
-	order  mo.Option[application.Order]
-	path   string
-	// current reads the order as the configuration holds it, for the sections that are an order.
-	current func(domain.Configuration) mo.Option[[]string]
+	value  string
 }
 
-func (s section) Title() string       { return s.title }
-func (s section) Description() string { return s.detail }
-func (s section) FilterValue() string { return s.title }
-
-// harnessItem is one item of the per-harness list: a harness name, and the order it carries.
-type harnessItem struct {
-	name   string
-	detail string
-}
-
-func (h harnessItem) Title() string       { return h.name }
-func (h harnessItem) Description() string { return h.detail }
-func (h harnessItem) FilterValue() string { return h.name }
+func (r row) Title() string       { return r.title }
+func (r row) Description() string { return r.detail }
+func (r row) FilterValue() string { return r.title }
 
 // editorKeys is what the editor answers to beside what its lists and forms answer to themselves.
 type editorKeys struct {
-	Back, Select, Quit, Add, Remove, Save key.Binding
+	Back, Select, Quit, Add, Remove, Clear, Save key.Binding
 }
 
 func defaultEditorKeys() editorKeys {
@@ -79,8 +71,9 @@ func defaultEditorKeys() editorKeys {
 		Back:   key.NewBinding(key.WithKeys("esc"), key.WithHelp("esc", "back")),
 		Select: key.NewBinding(key.WithKeys("enter"), key.WithHelp("enter", "open")),
 		Quit:   key.NewBinding(key.WithKeys("q", "ctrl+c"), key.WithHelp("q", "quit")),
-		Add:    key.NewBinding(key.WithKeys("a"), key.WithHelp("a", "add")),
+		Add:    key.NewBinding(key.WithKeys("a"), key.WithHelp("a", "add an agent")),
 		Remove: key.NewBinding(key.WithKeys("d", "delete"), key.WithHelp("d", "remove")),
+		Clear:  key.NewBinding(key.WithKeys("c"), key.WithHelp("c", "use the default instead")),
 		Save:   key.NewBinding(key.WithKeys("enter"), key.WithHelp("enter", "save")),
 	}
 }
@@ -95,16 +88,19 @@ type editor struct {
 	shown  domain.Configuration
 	screen screen
 
-	menu      list.Model
-	agents    ui.OrderList
-	order     ui.OrderList
-	orderName application.Order
-	orderPath string
-	harnesses list.Model
-	form      *huh.Form
+	menu    list.Model
+	entries list.Model
+	entry   list.Model
+	// active and feature name the list on screen; working is that list as the person has it so far,
+	// in the order of the list model, saved only on enter.
+	active  string
+	feature string
+	working []settings.Agent
+	agents  ui.OrderList
+	form    *huh.Form
 	// fields is where the form on screen writes. It is a pointer because the editor is held by
 	// value and copied on every update, and the form binds to an address once, when it is built.
-	fields *addFields
+	fields *formFields
 
 	status     string
 	statusTone ui.Tone
@@ -113,11 +109,12 @@ type editor struct {
 	width, height int
 }
 
-// addFields is where a form writes what the person typed or chose: the add-agent form's three
-// fields, or the persona form's one.
-type addFields struct {
-	name, harness, model string
-	persona              string
+// formFields is where a form writes what the person typed or chose: the add-agent form's two fields,
+// the posting form's one, or the persona form's one.
+type formFields struct {
+	harness, model string
+	posting        bool
+	persona        string
 }
 
 // runEditor opens the editor, and, once it has left the screen, prints the writes the session made
@@ -162,7 +159,12 @@ func newEditor(config ConfigUseCase, dir string) (editor, error) {
 
 	e.shown = shown
 	e.menu = newMenu(shown)
-	e.harnesses = newHarnessList(shown)
+	e.entries = newEntriesList(shown)
+	// Every list is built before the program starts, because the first window-size message resizes
+	// them all and a Bubbles list that was never built cannot be resized.
+	e.active = settings.ActiveDefault
+	e.entry = newEntryList(shown, e.active)
+	e.agents = newAgentsList(nil)
 
 	return e, nil
 }
@@ -172,12 +174,13 @@ func (e editor) Init() tea.Cmd {
 }
 
 // Update routes each message to the screen that has the keyboard. Quitting and going back are the
-// editor's own; everything else is the section's.
+// editor's own; everything else is the screen's.
 func (e editor) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	if size, ok := msg.(tea.WindowSizeMsg); ok {
 		e.width, e.height = size.Width, size.Height
 		e.menu.SetSize(size.Width, e.listHeight())
-		e.harnesses.SetSize(size.Width, e.listHeight())
+		e.entries.SetSize(size.Width, e.listHeight())
+		e.entry.SetSize(size.Width, e.listHeight())
 
 		if e.form != nil {
 			e.form = e.form.WithWidth(min(size.Width, 72))
@@ -187,14 +190,14 @@ func (e editor) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch e.screen {
 	case screenMenu:
 		return e.updateMenu(msg)
-	case screenAgents:
-		return e.updateAgents(msg)
-	case screenAdd, screenPersona:
+	case screenEntries:
+		return e.updateEntries(msg)
+	case screenEntry:
+		return e.updateEntry(msg)
+	case screenList:
+		return e.updateList(msg)
+	case screenAdd, screenReviews, screenPersona:
 		return e.updateForm(msg)
-	case screenOrder:
-		return e.updateOrder(msg)
-	case screenHarness:
-		return e.updateHarness(msg)
 	}
 
 	return e, nil
@@ -206,13 +209,9 @@ func (e editor) updateMenu(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case key.Matches(press, e.keys.Quit):
 			return e, tea.Quit
 		case key.Matches(press, e.keys.Select):
-			chosen, ok := e.menu.SelectedItem().(section)
+			chosen, ok := e.menu.SelectedItem().(row)
 			if !ok {
 				return e, nil
-			}
-
-			if order, isOrder := chosen.order.Get(); isOrder {
-				return e.openOrder(order, chosen.path, chosen.current(e.shown))
 			}
 
 			return e.open(chosen.leads)
@@ -225,7 +224,7 @@ func (e editor) updateMenu(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return e, cmd
 }
 
-// open moves the keyboard to a section, building the model behind it from the configuration as it
+// open moves the keyboard to a screen, building the model behind it from the configuration as it
 // stands now.
 func (e editor) open(to screen) (tea.Model, tea.Cmd) {
 	e.status = ""
@@ -233,12 +232,17 @@ func (e editor) open(to screen) (tea.Model, tea.Cmd) {
 	switch to {
 	case screenQuit:
 		return e, tea.Quit
-	case screenAgents:
-		e.agents = ui.NewOrderList(agentEntries(e.shown.Agents), false)
-	case screenHarness:
-		e.harnesses = newHarnessList(e.shown)
+	case screenEntries:
+		e.entries = newEntriesList(e.shown)
+		e.entries.SetSize(e.width, e.listHeight())
+	case screenReviews:
+		e.fields = &formFields{posting: e.shown.Posting}
+		e.form = e.postingForm()
+		e.screen = to
+
+		return e, e.form.Init()
 	case screenPersona:
-		e.fields = &addFields{persona: e.shown.Persona.Name}
+		e.fields = &formFields{persona: e.shown.Persona.Name}
 		e.form = e.personaForm()
 		e.screen = to
 
@@ -250,18 +254,90 @@ func (e editor) open(to screen) (tea.Model, tea.Cmd) {
 	return e, nil
 }
 
-// openOrder moves the keyboard to one narrower order: every agent in the list, the ones the order
-// names switched on and in the order's own sequence first.
-func (e editor) openOrder(order application.Order, path string, current mo.Option[[]string]) (tea.Model, tea.Cmd) {
-	e.orderName, e.orderPath = order, path
-	e.order = ui.NewOrderList(orderEntries(e.shown.Agents, current), true)
-	e.screen = screenOrder
+func (e editor) updateEntries(msg tea.Msg) (tea.Model, tea.Cmd) {
+	if press, ok := msg.(tea.KeyPressMsg); ok {
+		switch {
+		case key.Matches(press, e.keys.Back):
+			return e.back()
+		case key.Matches(press, e.keys.Select):
+			chosen, ok := e.entries.SelectedItem().(row)
+			if !ok {
+				return e, nil
+			}
+
+			e.active = chosen.value
+			e.entry = newEntryList(e.shown, e.active)
+			e.entry.SetSize(e.width, e.listHeight())
+			e.screen = screenEntry
+			e.status = ""
+
+			return e, nil
+		}
+	}
+
+	var cmd tea.Cmd
+	e.entries, cmd = e.entries.Update(msg)
+
+	return e, cmd
+}
+
+func (e editor) updateEntry(msg tea.Msg) (tea.Model, tea.Cmd) {
+	if press, ok := msg.(tea.KeyPressMsg); ok {
+		switch {
+		case key.Matches(press, e.keys.Back):
+			return e.back()
+		case key.Matches(press, e.keys.Select):
+			chosen, ok := e.entry.SelectedItem().(row)
+			if !ok {
+				return e, nil
+			}
+
+			return e.openList(chosen.value)
+		}
+	}
+
+	var cmd tea.Cmd
+	e.entry, cmd = e.entry.Update(msg)
+
+	return e, cmd
+}
+
+// openList moves the keyboard to one list: the agents it names, in order, ready to reorder, add to,
+// remove from, clear, or save. A list the entry leaves to the default starts from the default's, so
+// a person edits what a run would use rather than an empty screen.
+func (e editor) openList(feature string) (tea.Model, tea.Cmd) {
+	e.feature = feature
+	e.working = e.currentList()
+	e.agents = newAgentsList(e.working)
+	e.screen = screenList
 	e.status = ""
 
 	return e, nil
 }
 
-func (e editor) updateAgents(msg tea.Msg) (tea.Model, tea.Cmd) {
+// currentList is the list on screen as the file has it: the entry's own, else what the entry resolves
+// to through the default.
+func (e editor) currentList() []settings.Agent {
+	for _, entry := range e.shown.Entries {
+		if entry.ActiveAgent == e.active {
+			if agents, has := entry.List(e.feature).Get(); has {
+				return slices.Clone(agents)
+			}
+		}
+	}
+
+	for _, entry := range e.shown.Entries {
+		if entry.ActiveAgent == settings.ActiveDefault {
+			if agents, has := entry.List(e.feature).Get(); has {
+				return slices.Clone(agents)
+			}
+		}
+	}
+
+	return []settings.Agent{settings.CurrentAgent()}
+}
+
+func (e editor) updateList(msg tea.Msg) (tea.Model, tea.Cmd) {
 	press, ok := msg.(tea.KeyPressMsg)
 	if !ok {
 		return e, nil
@@ -271,7 +347,7 @@ func (e editor) updateAgents(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case key.Matches(press, e.keys.Back):
 		return e.back()
 	case key.Matches(press, e.keys.Add):
-		e.fields = &addFields{harness: settings.HarnessCurrent}
+		e.fields = &formFields{harness: settings.HarnessCurrent}
 		e.form = e.addForm()
 		e.screen = screenAdd
 
@@ -282,38 +358,22 @@ func (e editor) updateAgents(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return e, nil
 		}
 
-		return e.apply(func() ([]domain.Write, error) {
-			write, err := e.config.RemoveAgent(e.dir, selected.ID)
+		e.working = e.orderedWorking()
+		at, _ := strconv.Atoi(selected.ID)
+		e.working = slices.Delete(e.working, at, at+1)
+		e.agents = newAgentsList(e.working)
 
-			return []domain.Write{write}, err
-		}, screenAgents)
-	case key.Matches(press, e.keys.Save):
-		ids := e.agents.IDs()
-
-		return e.apply(func() ([]domain.Write, error) {
-			write, err := e.config.OrderAgents(e.dir, ids)
-
-			return []domain.Write{write}, err
-		}, screenAgents)
-	}
-
-	e.agents = e.agents.Update(msg)
-
-	return e, nil
-}
-
-func (e editor) updateOrder(msg tea.Msg) (tea.Model, tea.Cmd) {
-	press, ok := msg.(tea.KeyPressMsg)
-	if !ok {
 		return e, nil
-	}
+	case key.Matches(press, e.keys.Clear):
+		active, feature := e.active, e.feature
 
-	switch {
-	case key.Matches(press, e.keys.Back):
-		return e.back()
+		return e.apply(func() ([]domain.Write, error) {
+			write, err := e.config.ClearList(e.dir, active, feature)
+
+			return []domain.Write{write}, err
+		}, screenEntry)
 	case key.Matches(press, e.keys.Save):
-		ids := e.order.IDs()
-		order := e.orderName
+		active, feature, agents := e.active, e.feature, e.orderedWorking()
 
 		return e.apply(func() ([]domain.Write, error) {
 			var (
@@ -321,55 +381,32 @@ func (e editor) updateOrder(msg tea.Msg) (tea.Model, tea.Cmd) {
 				err   error
 			)
 
-			if len(ids) == 0 {
-				write, err = e.config.ClearOrder(e.dir, order)
+			if len(agents) == 0 {
+				write, err = e.config.ClearList(e.dir, active, feature)
 			} else {
-				write, err = e.config.SetOrder(e.dir, order, ids)
+				write, err = e.config.SetList(e.dir, active, feature, agents)
 			}
 
 			return []domain.Write{write}, err
-		}, e.after(order))
+		}, screenEntry)
 	}
 
-	e.order = e.order.Update(msg)
+	e.agents = e.agents.Update(msg)
 
 	return e, nil
 }
 
-// after is where the keyboard goes once an order is saved: back to the per-harness list for a
-// harness's order, and to the menu for review's or consult's.
-func (e editor) after(order application.Order) screen {
-	if _, isHarness := order.Harness().Get(); isHarness {
-		return screenHarness
+// orderedWorking is the list on screen in the order the person has put it.
+func (e editor) orderedWorking() []settings.Agent {
+	ids := e.agents.IDs()
+	ordered := make([]settings.Agent, 0, len(ids))
+
+	for _, id := range ids {
+		at, _ := strconv.Atoi(id)
+		ordered = append(ordered, e.working[at])
 	}
 
-	return screenMenu
-}
-
-func (e editor) updateHarness(msg tea.Msg) (tea.Model, tea.Cmd) {
-	if press, ok := msg.(tea.KeyPressMsg); ok {
-		switch {
-		case key.Matches(press, e.keys.Back):
-			return e.back()
-		case key.Matches(press, e.keys.Select):
-			chosen, ok := e.harnesses.SelectedItem().(harnessItem)
-			if !ok {
-				return e, nil
-			}
-
-			current := mo.None[[]string]()
-			if order, has := e.shown.ByHarness[chosen.name]; has {
-				current = mo.Some(order)
-			}
-
-			return e.openOrder(application.HarnessOrder(chosen.name), settings.FieldAgentsByHarness+"."+chosen.name, current)
-		}
-	}
-
-	var cmd tea.Cmd
-	e.harnesses, cmd = e.harnesses.Update(msg)
-
-	return e, cmd
+	return ordered
 }
 
 // updateForm drives the Huh form on screen and acts on it once the person has finished or backed out
@@ -377,12 +414,6 @@ func (e editor) updateHarness(msg tea.Msg) (tea.Model, tea.Cmd) {
 func (e editor) updateForm(msg tea.Msg) (tea.Model, tea.Cmd) {
 	if press, ok := msg.(tea.KeyPressMsg); ok && key.Matches(press, e.keys.Back) {
 		e.form = nil
-
-		if e.screen == screenAdd {
-			e.screen = screenAgents
-
-			return e, nil
-		}
 
 		return e.back()
 	}
@@ -404,28 +435,39 @@ func (e editor) updateForm(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case huh.StateCompleted:
 		e.form = nil
 
-		if e.screen == screenAdd {
-			agent := application.NewAgent{
-				Name:    strings.TrimSpace(e.fields.name),
-				Harness: e.fields.harness,
-				Model:   given(e.fields.model),
-			}
+		return e.completeForm()
+	}
 
-			return e.apply(func() ([]domain.Write, error) {
-				write, err := e.config.AddAgent(e.dir, agent)
+	return e, cmd
+}
 
-				return []domain.Write{write}, err
-			}, screenAgents)
-		}
+// completeForm acts on a finished form: an added agent joins the list on screen, unsaved; posting
+// and the persona are written at once, since each is one value.
+func (e editor) completeForm() (tea.Model, tea.Cmd) {
+	switch e.screen {
+	case screenAdd:
+		e.working = append(e.orderedWorking(), settings.Agent{
+			Harness: e.fields.harness, Model: given(e.fields.model),
+		})
+		e.agents = newAgentsList(e.working)
+		e.screen = screenList
 
+		return e, nil
+	case screenReviews:
+		on := e.fields.posting
+
+		return e.apply(func() ([]domain.Write, error) {
+			write, err := e.config.SetPosting(e.dir, on)
+
+			return []domain.Write{write}, err
+		}, screenMenu)
+	default:
 		persona := e.fields.persona
 
 		return e.apply(func() ([]domain.Write, error) {
 			return e.config.SetPersona(e.dir, persona)
 		}, screenMenu)
 	}
-
-	return e, cmd
 }
 
 // apply runs one write through the use case and shows what it said: the write's own line on
@@ -470,28 +512,30 @@ func (e editor) refresh() editor {
 	e.shown = shown
 	e.menu = newMenu(shown)
 	e.menu.SetSize(e.width, e.listHeight())
-	e.harnesses = newHarnessList(shown)
-	e.harnesses.SetSize(e.width, e.listHeight())
+	e.entries = newEntriesList(shown)
+	e.entries.SetSize(e.width, e.listHeight())
 
-	if e.screen == screenAgents {
-		e.agents = ui.NewOrderList(agentEntries(shown.Agents), false)
+	if e.active != "" {
+		e.entry = newEntryList(shown, e.active)
+		e.entry.SetSize(e.width, e.listHeight())
 	}
 
 	return e
 }
 
-// back returns the keyboard to the menu from any section, with the menu showing the file as it now
-// stands. From a harness's order it returns to the harness list instead.
+// back returns the keyboard one step: from a list to its entry, from an entry to the entries, from
+// an add form to its list, and from anywhere else to the menu.
 func (e editor) back() (tea.Model, tea.Cmd) {
-	if e.screen == screenOrder {
-		if _, isHarness := e.orderName.Harness().Get(); isHarness {
-			e.screen = screenHarness
-
-			return e, nil
-		}
+	switch e.screen {
+	case screenAdd:
+		e.screen = screenList
+	case screenList:
+		e.screen = screenEntry
+	case screenEntry:
+		e.screen = screenEntries
+	default:
+		e.screen = screenMenu
 	}
-
-	e.screen = screenMenu
 
 	return e, nil
 }
@@ -507,18 +551,16 @@ func (e editor) View() tea.View {
 	switch e.screen {
 	case screenMenu:
 		body.WriteString(e.menu.View())
-	case screenAgents:
-		body.WriteString(ui.Style(ui.TonePrimary).Render("Agents") + "\n")
-		body.WriteString(ui.Style(ui.ToneFaint).Render("The list every use walks, in order.") + "\n\n")
-		body.WriteString(e.agents.View())
-	case screenOrder:
-		body.WriteString(ui.Style(ui.TonePrimary).Render(e.orderPath) + "\n")
+	case screenEntries:
+		body.WriteString(e.entries.View())
+	case screenEntry:
+		body.WriteString(e.entry.View())
+	case screenList:
+		body.WriteString(ui.Style(ui.TonePrimary).Render(listTitle(e.active, e.feature)) + "\n")
 		body.WriteString(ui.Style(ui.ToneFaint).Render(
-			"Switch on the agents this order walks, in sequence. None switched on clears the order.") + "\n\n")
-		body.WriteString(e.order.View())
-	case screenHarness:
-		body.WriteString(e.harnesses.View())
-	case screenAdd, screenPersona:
+			"Tried in this order until one answers. Move an agent with shift and the arrows; enter saves.") + "\n\n")
+		body.WriteString(e.agents.View())
+	case screenAdd, screenReviews, screenPersona:
 		if e.form != nil {
 			body.WriteString(e.form.View())
 		}
@@ -540,12 +582,10 @@ func (e editor) help() string {
 	switch e.screen {
 	case screenMenu:
 		return "↑/↓ move · enter open · q quit"
-	case screenAgents:
-		return e.agents.Help() + " · a add · d remove · enter save order · esc back"
-	case screenOrder:
-		return e.order.Help() + " · enter save · esc back"
-	case screenHarness:
+	case screenEntries, screenEntry:
 		return "↑/↓ move · enter open · esc back"
+	case screenList:
+		return e.agents.Help() + " · a add an agent · d remove · c use the default instead · enter save · esc back"
 	default:
 		return "enter next · esc back"
 	}
@@ -556,8 +596,8 @@ func (e editor) listHeight() int {
 	return max(e.height-8, 6)
 }
 
-// addForm is the form that adds an agent: its name, the harness that runs it, and optionally the
-// model that harness is asked for.
+// addForm is the form that adds an agent to the list on screen: the harness that runs it, and
+// optionally the model that harness is asked for.
 func (e editor) addForm() *huh.Form {
 	harnesses := settings.AgentHarnesses()
 	options := make([]huh.Option[string], 0, len(harnesses))
@@ -565,24 +605,25 @@ func (e editor) addForm() *huh.Form {
 	for _, name := range harnesses {
 		label := name
 		if name == settings.HarnessCurrent {
-			label = name + " (whichever harness is running the session)"
+			label = "this harness (a subagent of whichever harness you are running in)"
 		}
 
 		options = append(options, huh.NewOption(label, name))
 	}
 
 	return huh.NewForm(huh.NewGroup(
-		huh.NewInput().Title("Name").Description("A short lower-case name a person types after via=").
-			Value(&e.fields.name).Validate(func(name string) error {
-			if strings.TrimSpace(name) == "" {
-				return errors.New("an agent needs a name")
-			}
-
-			return nil
-		}),
-		huh.NewSelect[string]().Title("Harness").Options(options...).Value(&e.fields.harness),
+		huh.NewSelect[string]().Title("Which harness runs it?").Options(options...).Value(&e.fields.harness),
 		huh.NewInput().Title("Model").Description("Optional; passed to the harness as written").
 			Value(&e.fields.model),
+	)).WithShowHelp(true).WithWidth(min(e.width, 72))
+}
+
+// postingForm is the form that turns posting review findings to the pull request on or off.
+func (e editor) postingForm() *huh.Form {
+	return huh.NewForm(huh.NewGroup(
+		huh.NewSelect[bool]().Title("Post review findings to the pull request?").
+			Description("On, review comments its findings on the pull request it reviewed. Off, they stay in the findings file.").
+			Options(huh.NewOption("off", false), huh.NewOption("on", true)).Value(&e.fields.posting),
 	)).WithShowHelp(true).WithWidth(min(e.width, 72))
 }
 
@@ -595,48 +636,119 @@ func (e editor) personaForm() *huh.Form {
 
 	return huh.NewForm(huh.NewGroup(
 		huh.NewSelect[string]().Title("Persona").
-			Description("Who you work as; it changes how the verbs talk to you, never what they may do.").
+			Description("Who you are to the skills. It changes how they talk to you, never what they may do.").
 			Options(options...).Value(&e.fields.persona),
 	)).WithShowHelp(true).WithWidth(min(e.width, 72))
 }
 
-// newMenu builds the menu over the sections, each showing its current value.
+// newMenu builds the menu over what a person configures, each item showing its current value.
 func newMenu(shown domain.Configuration) list.Model {
-	items := []list.Item{
-		section{title: "Agents", detail: agentsDetail(shown), leads: screenAgents},
-		section{
-			title: "Review order", detail: orderDetail(shown.Review), leads: screenOrder,
-			order: mo.Some(application.ReviewOrder()), path: settings.BlockReview + "." + settings.FieldReviewAgents,
-			current: func(c domain.Configuration) mo.Option[[]string] { return c.Review },
-		},
-		section{
-			title: "Consult order", detail: orderDetail(shown.Consult), leads: screenOrder,
-			order: mo.Some(application.ConsultOrder()), path: settings.BlockConsult + "." + settings.FieldConsultAgents,
-			current: func(c domain.Configuration) mo.Option[[]string] { return c.Consult },
-		},
-		section{title: "Per-harness orders", detail: byHarnessDetail(shown.ByHarness), leads: screenHarness},
-		section{title: "Persona", detail: personaLine(shown.Persona), leads: screenPersona},
-		section{title: "Quit", detail: "Leave the editor", leads: screenQuit},
+	posting := "off"
+	if shown.Posting {
+		posting = "on"
 	}
 
-	return newList(items, "Sections")
+	items := []list.Item{
+		row{title: "Agents", detail: "Who reviews and consults, by the harness you run codefall in", leads: screenEntries},
+		row{title: "Reviews", detail: "Posting findings to the pull request: " + posting, leads: screenReviews},
+		row{title: "Persona", detail: personaLine(shown.Persona), leads: screenPersona},
+		row{title: "Quit", detail: "Leave the editor", leads: screenQuit},
+	}
+
+	return newList(items, "")
 }
 
-// newHarnessList builds the list of harnesses a per-harness order may be set for.
-func newHarnessList(shown domain.Configuration) list.Model {
-	names := harness.All()
+// newEntriesList builds the list of active agents: default first, then every harness, each saying
+// what it has or that it uses the default.
+func newEntriesList(shown domain.Configuration) list.Model {
+	names := append([]string{settings.ActiveDefault}, harnessNames()...)
 	items := make([]list.Item, 0, len(names))
 
 	for _, name := range names {
-		detail := "walks the wider order"
-		if order, has := shown.ByHarness[name]; has {
-			detail = strings.Join(order, ", ")
-		}
-
-		items = append(items, harnessItem{name: name, detail: detail})
+		items = append(items, row{title: activeAgentLabel(name), detail: entryDetail(shown, name), value: name})
 	}
 
-	return newList(items, "Per-harness orders")
+	return newList(items, "Agents")
+}
+
+// harnessNames is every active agent but default, sorted.
+func harnessNames() []string {
+	return slices.DeleteFunc(settings.ActiveAgents(), func(name string) bool { return name == settings.ActiveDefault })
+}
+
+// entryDetail is one active agent's row: its two lists, or that it has no entry of its own.
+func entryDetail(shown domain.Configuration, active string) string {
+	for _, entry := range shown.Entries {
+		if entry.ActiveAgent != active {
+			continue
+		}
+
+		parts := make([]string, 0, 2)
+		for _, feature := range settings.Features() {
+			parts = append(parts, feature+": "+listLabel(entry.List(feature)))
+		}
+
+		return strings.Join(parts, " · ")
+	}
+
+	if active == settings.ActiveDefault {
+		return "review: this harness · consult: this harness (built in; nothing set)"
+	}
+
+	return "no entry of its own; uses the default"
+}
+
+// newEntryList builds one active agent's screen: a row per list.
+func newEntryList(shown domain.Configuration, active string) list.Model {
+	items := make([]list.Item, 0, len(settings.Features()))
+
+	for _, feature := range settings.Features() {
+		items = append(items, row{title: featureTitle(feature), detail: featureDetail(shown, active, feature), value: feature})
+	}
+
+	return newList(items, activeAgentLabel(active))
+}
+
+// featureTitle is what a list is for, as a person reads it.
+func featureTitle(feature string) string {
+	if feature == settings.FeatureReview {
+		return "Review: who reviews"
+	}
+
+	return "Consult: who is asked when a run is stuck"
+}
+
+// featureDetail is one list's row: the agents in order, or what it falls back to.
+func featureDetail(shown domain.Configuration, active, feature string) string {
+	for _, entry := range shown.Entries {
+		if entry.ActiveAgent == active {
+			if agents, has := entry.List(feature).Get(); has {
+				return listLabel(mo.Some(agents))
+			}
+		}
+	}
+
+	if active == settings.ActiveDefault {
+		return "this harness (built in; nothing set)"
+	}
+
+	return "same as default"
+}
+
+// listTitle names the list on screen.
+func listTitle(active, feature string) string {
+	return activeAgentLabel(active) + " · " + featureTitle(feature)
+}
+
+// newAgentsList is the list on screen as an order list, each agent labelled as a person reads it and
+// identified by its position, since two agents may share a harness.
+func newAgentsList(agents []settings.Agent) ui.OrderList {
+	entries := make([]ui.OrderEntry, 0, len(agents))
+	for at, agent := range agents {
+		entries = append(entries, ui.OrderEntry{ID: strconv.Itoa(at), Label: agentLabel(agent)})
+	}
+
+	return ui.NewOrderList(entries, false)
 }
 
 // newList is a Bubbles list with what this editor does not want switched off: filtering, the status
@@ -646,6 +758,7 @@ func newList(items []list.Item, title string) list.Model {
 
 	l := list.New(items, delegate, 80, 16)
 	l.Title = title
+	l.SetShowTitle(title != "")
 	l.SetFilteringEnabled(false)
 	l.SetShowStatusBar(false)
 	l.SetShowHelp(false)
@@ -653,72 +766,4 @@ func newList(items []list.Item, title string) list.Model {
 	l.DisableQuitKeybindings()
 
 	return l
-}
-
-// agentEntries is the agents list as order entries, each labelled the way show describes it.
-func agentEntries(agents []settings.Agent) []ui.OrderEntry {
-	entries := make([]ui.OrderEntry, 0, len(agents))
-	for _, agent := range agents {
-		entries = append(entries, ui.OrderEntry{ID: agent.Name, Label: settings.DescribeAgent(agent)})
-	}
-
-	return entries
-}
-
-// orderEntries is every agent as a toggling entry: the ones a narrower order names first, in that
-// order and switched on, then the rest switched off.
-func orderEntries(agents []settings.Agent, current mo.Option[[]string]) []ui.OrderEntry {
-	byName := map[string]settings.Agent{}
-	for _, agent := range agents {
-		byName[agent.Name] = agent
-	}
-
-	named := current.OrElse(nil)
-	entries := make([]ui.OrderEntry, 0, len(agents))
-
-	for _, name := range named {
-		if agent, ok := byName[name]; ok {
-			entries = append(entries, ui.OrderEntry{ID: name, Label: settings.DescribeAgent(agent), On: true})
-		}
-	}
-
-	for _, agent := range agents {
-		if !slices.Contains(named, agent.Name) {
-			entries = append(entries, ui.OrderEntry{ID: agent.Name, Label: settings.DescribeAgent(agent)})
-		}
-	}
-
-	return entries
-}
-
-func agentsDetail(shown domain.Configuration) string {
-	names := settings.AgentNames(shown.Agents)
-	detail := strings.Join(names, ", ")
-
-	if shown.Default {
-		detail += " (the default; the settings list none)"
-	}
-
-	return detail
-}
-
-func orderDetail(order mo.Option[[]string]) string {
-	if names, ok := order.Get(); ok {
-		return strings.Join(names, ", ")
-	}
-
-	return "not set; walks the wider order"
-}
-
-func byHarnessDetail(byHarness map[string][]string) string {
-	if len(byHarness) == 0 {
-		return "none set; every harness walks the wider order"
-	}
-
-	parts := make([]string, 0, len(byHarness))
-	for _, name := range slices.Sorted(maps.Keys(byHarness)) {
-		parts = append(parts, name+": "+strings.Join(byHarness[name], ", "))
-	}
-
-	return strings.Join(parts, "; ")
 }

@@ -107,11 +107,11 @@ signals do not name, a script whose effect cannot be read from its body — cons
 question, per *Consulting* in `../../../../.codefall/shared/running-agents.md`. Render `../../../../.codefall/shared/consult-prompt.md`:
 `QUESTION` is what stayed ambiguous; `FILES` are the candidates and the signals they act on;
 `CONTEXT` is [the contract](../SKILL.md#the-contract) in a sentence and what was found; `OPTIONS`
-are the candidates, and "draft new"; `SCHEMA` is `../../../../.codefall/shared/consult.schema.json`. Run the `consult`
-order with `../../../../.codefall/shared/run-agent.sh`.
+are the candidates, and "draft new"; `SCHEMA` is `../../../../.codefall/shared/consult.schema.json`. Run the entry's
+`consult` list with `../../../../.codefall/shared/run-agent.sh`.
 
 The answer is folded into the one question as the proposed option — "I found `make dev-up` and
-`scripts/up.sh`; both keep the contract, and consulting `architect` reads `up.sh` as the one CI
+`scripts/up.sh`; both keep the contract, and consulting `codex` reads `up.sh` as the one CI
 runs, so I'd declare that. Declare it, or draft new?" — and the user still chooses. `low`,
 `cannotSettle`, or no answer asks the question as it would have been asked. A consult never
 declares a script and never judges the contract: a candidate that drops, resets, or deletes is

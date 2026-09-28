@@ -2,8 +2,6 @@ package settings
 
 import (
 	"fmt"
-	"maps"
-	"regexp"
 	"slices"
 	"strings"
 
@@ -13,51 +11,84 @@ import (
 )
 
 // The agents a project reaches for when a verb needs another reader: a reviewer, or a second
-// opinion on a decision the run cannot settle (ADR-009). The top-level list defines them and their
-// default order; a use may carry an `agents` key of its own holding an ordered subset of the names,
-// and the per-harness override does the same for the harness a session is running in.
+// opinion on a decision the run cannot settle (ADR-009.2). The list is keyed by the harness the
+// session is running in, the active agent, because which agent to reach for is a question asked
+// from inside a harness: a session in Muse may want Claude to review, a session in Claude Code may
+// want Codex. Each entry holds one ordered list per feature, review and consult.
 const (
-	// FieldAgents is the top-level list: each entry a name, a harness, and optionally a model.
+	// FieldAgents is the top-level array of entries, one per active agent.
 	FieldAgents = "agents"
-	// FieldAgentsByHarness is the per-harness override, keyed by the harness running the session and
-	// holding an ordered subset of the names above. A session that cannot say which harness it is in
-	// falls through to the top-level order.
-	FieldAgentsByHarness = "agentsByHarness"
-	// FieldReviewAgents is the review block's own order, an ordered subset of the names above. The
-	// same word means the same thing wherever it appears.
-	FieldReviewAgents = "agents"
-	// FieldConsultAgents is the consult block's own order, the same shape under the same word.
-	FieldConsultAgents = "agents"
-	// The three fields of one agent.
-	FieldAgentName    = "name"
+	// FieldActiveAgent is the harness an entry is for: one of the five harness names, or default,
+	// which covers every harness without an entry of its own.
+	FieldActiveAgent = "activeAgent"
+	// FeatureReview and FeatureConsult are the two lists an entry holds, under the feature's name.
+	FeatureReview  = "review"
+	FeatureConsult = "consult"
+	// The two fields of one agent in a list.
 	FieldAgentHarness = "harness"
 	FieldAgentModel   = "model"
-	// HarnessCurrent names the harness running the session, whatever it is, so one checked-in entry
-	// means Claude Code's subagent in one person's session and Muse's in another's. It is always
-	// runnable, which is what makes it the floor of an order.
+	// ActiveDefault is the entry every active agent falls back to.
+	ActiveDefault = "default"
+	// HarnessCurrent, in a list, names the harness running the session, whatever it is, so one
+	// checked-in entry means Claude Code's subagent in one person's session and Muse's in another's.
+	// It is always runnable, which is what makes it the floor of a list.
 	HarnessCurrent = "current"
-	// DefaultAgentName is the one agent a project has when it has chosen none.
-	DefaultAgentName = "subagent"
-	// AgentNamePattern is how an agent may be named: a lower-case slug, because the name is typed
-	// after `via=` and read back in a report.
-	AgentNamePattern = `^[a-z0-9][a-z0-9-]*$`
 )
 
-var agentNameRegexp = regexp.MustCompile(AgentNamePattern)
-
-// Agent is one entry of the list: the name a verb or a person refers to it by, the harness that
-// runs it, and the model to ask that harness for, when the project has chosen one.
+// Agent is one agent in a list: the harness that runs it, and the model to ask that harness for,
+// when the project has chosen one.
 type Agent struct {
-	Name    string
 	Harness string
 	Model   mo.Option[string]
 }
 
-// DefaultAgents is the list a project has when settings carry none: this harness's own subagent,
-// under the name the review skill has always used for it. init writes it explicitly into a new
-// project's settings, and every reader takes it when the field is absent, so the two agree.
-func DefaultAgents() []Agent {
-	return []Agent{{Name: DefaultAgentName, Harness: HarnessCurrent, Model: mo.None[string]()}}
+// Entry is what one active agent reaches for: its review list and its consult list, each absent
+// when the entry leaves that feature to the default entry.
+type Entry struct {
+	ActiveAgent string
+	Review      mo.Option[[]Agent]
+	Consult     mo.Option[[]Agent]
+}
+
+// List returns the entry's list for a feature, absent when the entry has none.
+func (e Entry) List(feature string) mo.Option[[]Agent] {
+	switch feature {
+	case FeatureReview:
+		return e.Review
+	case FeatureConsult:
+		return e.Consult
+	}
+
+	return mo.None[[]Agent]()
+}
+
+// Features returns the two features an entry holds a list for, in the order the file writes them.
+func Features() []string {
+	return []string{FeatureReview, FeatureConsult}
+}
+
+// CurrentAgent is the one agent every list falls back to: a subagent of the harness running the
+// session.
+func CurrentAgent() Agent {
+	return Agent{Harness: HarnessCurrent, Model: mo.None[string]()}
+}
+
+// DefaultAgents is the list a project has when settings carry none: one default entry whose two
+// lists each hold the current harness's own subagent, which is what every verb did before the list
+// existed. init writes it explicitly into a new project's settings, and every reader takes it when
+// the field is absent, so the two agree.
+func DefaultAgents() []Entry {
+	return []Entry{{
+		ActiveAgent: ActiveDefault,
+		Review:      mo.Some([]Agent{CurrentAgent()}),
+		Consult:     mo.Some([]Agent{CurrentAgent()}),
+	}}
+}
+
+// ActiveAgents returns every value the activeAgent field accepts, sorted: the harnesses codefall
+// can set up, and default.
+func ActiveAgents() []string {
+	return slices.Sorted(slices.Values(append(harness.All(), ActiveDefault)))
 }
 
 // AgentHarnesses returns every value an agent's harness field accepts, sorted: the harnesses
@@ -66,28 +97,153 @@ func AgentHarnesses() []string {
 	return slices.Sorted(slices.Values(append(harness.All(), HarnessCurrent)))
 }
 
-// Agents returns the agents a document defines, in the order it defines them, and the default when
+// ParseActiveAgent returns the active agent name when it is one the format knows, and an error
+// naming the ones it does when it is not. A former spelling of a harness resolves to its current
+// name, as the harness module has it.
+func ParseActiveAgent(name string) (string, error) {
+	if name == ActiveDefault {
+		return name, nil
+	}
+
+	if parsed, err := harness.Parse(name); err == nil {
+		return parsed, nil
+	}
+
+	return "", fmt.Errorf("active agent %q is not one codefall knows (known: %s)", name, strings.Join(ActiveAgents(), ", "))
+}
+
+// ParseAgent reads an agent from the form a person types, `harness` or `harness:model`: the form
+// `via=` takes, and the form a report writes back. A former spelling of a harness resolves to its
+// current name.
+func ParseAgent(text string) (Agent, error) {
+	name, model, hasModel := strings.Cut(text, ":")
+
+	if name == HarnessCurrent {
+		if hasModel && model == "" {
+			return Agent{}, fmt.Errorf("agent %q names an empty model", text)
+		}
+
+		return Agent{Harness: name, Model: modelOf(model, hasModel)}, nil
+	}
+
+	parsed, err := harness.Parse(name)
+	if err != nil {
+		return Agent{}, fmt.Errorf("agent %q: harness %s", text, unknownValue(name, AgentHarnesses()))
+	}
+
+	if hasModel && model == "" {
+		return Agent{}, fmt.Errorf("agent %q names an empty model", text)
+	}
+
+	return Agent{Harness: parsed, Model: modelOf(model, hasModel)}, nil
+}
+
+func modelOf(model string, has bool) mo.Option[string] {
+	if !has {
+		return mo.None[string]()
+	}
+
+	return mo.Some(model)
+}
+
+// Agents returns the entries a document defines, in the order it defines them, and the default when
 // the field is absent or empty. A list Validate would reject is read as absent too: the caller has
 // already been told what is wrong with it, and a list nothing can act on is no list.
-func Agents(doc Document) []Agent {
+func Agents(doc Document) []Entry {
 	value, present := lookup(doc, FieldAgents)
 	if !present || isAgents(value) != "" {
 		return DefaultAgents()
 	}
 
-	entries, _ := value.([]any)
-	if len(entries) == 0 {
+	items, _ := value.([]any)
+	if len(items) == 0 {
 		return DefaultAgents()
 	}
 
-	agents := make([]Agent, 0, len(entries))
+	entries := make([]Entry, 0, len(items))
 
+	for _, item := range items {
+		fields, _ := item.(map[string]any)
+		active, _ := fields[FieldActiveAgent].(string)
+
+		entry := Entry{ActiveAgent: active, Review: mo.None[[]Agent](), Consult: mo.None[[]Agent]()}
+
+		if value, ok := lookup(fields, FeatureReview); ok {
+			entry.Review = mo.Some(agentList(value))
+		}
+
+		if value, ok := lookup(fields, FeatureConsult); ok {
+			entry.Consult = mo.Some(agentList(value))
+		}
+
+		entries = append(entries, entry)
+	}
+
+	return entries
+}
+
+// EntryFor returns the entry for an active agent, and None when the document has none for it.
+func EntryFor(doc Document, active string) mo.Option[Entry] {
+	for _, entry := range Agents(doc) {
+		if entry.ActiveAgent == active {
+			return mo.Some(entry)
+		}
+	}
+
+	return mo.None[Entry]()
+}
+
+// Order resolves the list a session running in the active agent walks for a feature: the active
+// agent's own list, else the default entry's list, else the current harness's subagent alone. It
+// never comes back empty.
+func Order(doc Document, active, feature string) []Agent {
+	if entry, ok := EntryFor(doc, active).Get(); ok {
+		if agents, has := entry.List(feature).Get(); has {
+			return agents
+		}
+	}
+
+	if entry, ok := EntryFor(doc, ActiveDefault).Get(); ok {
+		if agents, has := entry.List(feature).Get(); has {
+			return agents
+		}
+	}
+
+	return []Agent{CurrentAgent()}
+}
+
+// HasCurrent reports whether a list names the current harness, which is what makes the list end
+// somewhere a run can always start.
+func HasCurrent(agents []Agent) bool {
+	for _, agent := range agents {
+		if agent.Harness == HarnessCurrent {
+			return true
+		}
+	}
+
+	return false
+}
+
+// ActiveAgentNames returns the active agents a list of entries is for, in order.
+func ActiveAgentNames(entries []Entry) []string {
+	names := make([]string, 0, len(entries))
 	for _, entry := range entries {
-		fields, _ := entry.(map[string]any)
-		name, _ := fields[FieldAgentName].(string)
+		names = append(names, entry.ActiveAgent)
+	}
+
+	return names
+}
+
+// agentList reads a list Validate has accepted.
+func agentList(value any) []Agent {
+	items, _ := value.([]any)
+	agents := make([]Agent, 0, len(items))
+
+	for _, item := range items {
+		fields, _ := item.(map[string]any)
 		runs, _ := fields[FieldAgentHarness].(string)
 
-		agent := Agent{Name: name, Harness: runs, Model: mo.None[string]()}
+		agent := Agent{Harness: runs, Model: mo.None[string]()}
 
 		if model, ok := lookup(fields, FieldAgentModel); ok {
 			text, _ := model.(string)
@@ -100,110 +256,78 @@ func Agents(doc Document) []Agent {
 	return agents
 }
 
-// AgentNames returns the names of a list of agents, in order.
-func AgentNames(agents []Agent) []string {
-	names := make([]string, 0, len(agents))
-	for _, agent := range agents {
-		names = append(names, agent.Name)
-	}
-
-	return names
-}
-
-// ReviewAgents returns the review block's own order when the document carries one that Validate
-// accepts, and None when it does not, which means the top-level order applies.
-func ReviewAgents(doc Document) mo.Option[[]string] {
-	return useOrder(doc, BlockReview, FieldReviewAgents)
-}
-
-// ConsultAgents is ReviewAgents for the consult block.
-func ConsultAgents(doc Document) mo.Option[[]string] {
-	return useOrder(doc, BlockConsult, FieldConsultAgents)
-}
-
-// useOrder reads one use's own order out of its block: present and acceptable, or None.
-func useOrder(doc Document, block, field string) mo.Option[[]string] {
-	object, ok := lookupObject(doc, block)
-	if !ok {
-		return mo.None[[]string]()
-	}
-
-	value, present := lookup(object, field)
-	if !present || isNameList(value) != "" {
-		return mo.None[[]string]()
-	}
-
-	return mo.Some(nameList(value))
-}
-
-// AgentsByHarness returns the per-harness override, keyed by harness, with only the entries
-// Validate would accept. A document without the field yields an empty map.
-func AgentsByHarness(doc Document) map[string][]string {
-	orders := map[string][]string{}
-
-	block, ok := lookupObject(doc, FieldAgentsByHarness)
-	if !ok {
-		return orders
-	}
-
-	for name, value := range block {
-		if harness.SkillsDir(name).IsAbsent() || isNameList(value) != "" {
-			continue
-		}
-
-		orders[name] = nameList(value)
-	}
-
-	return orders
-}
-
-// HasCurrent reports whether an order names an agent that runs on the current harness, which is
-// what makes the order end somewhere a run can always start.
-func HasCurrent(agents []Agent, order []string) bool {
-	for _, name := range order {
-		for _, agent := range agents {
-			if agent.Name == name && agent.Harness == HarnessCurrent {
-				return true
-			}
-		}
-	}
-
-	return false
-}
-
-// isAgents accepts the top-level list: any number of agents, each an object naming an agent by a
-// slug nobody else in the list uses and a harness codefall can start or current, with a model when
-// the project has chosen one. An empty list is accepted and means the default, the same as an
-// absent one.
+// isAgents accepts the top-level array: any number of entries, each an object naming an active
+// agent nobody else in the array names, with a review list, a consult list, or both, each a
+// non-empty array of agents on a harness codefall can start or current. An empty array is accepted
+// and means the default, the same as an absent one.
 func isAgents(v any) string {
-	entries, ok := v.([]any)
+	items, ok := v.([]any)
 	if !ok {
-		return "must be an array of agents"
+		return "must be an array of entries, one per active agent"
 	}
 
 	seen := map[string]bool{}
 
-	for i, entry := range entries {
-		fields, ok := entry.(map[string]any)
+	for i, item := range items {
+		fields, ok := item.(map[string]any)
 		if !ok {
 			return fmt.Sprintf("[%d]: must be an object", i)
 		}
 
-		name, present := lookup(fields, FieldAgentName)
+		active, present := lookup(fields, FieldActiveAgent)
 		if !present {
-			return fmt.Sprintf("[%d].%s: missing", i, FieldAgentName)
+			return fmt.Sprintf("[%d].%s: missing", i, FieldActiveAgent)
 		}
 
-		text, isText := name.(string)
-		if !isText || !agentNameRegexp.MatchString(text) {
-			return fmt.Sprintf("[%d].%s: must match %s", i, FieldAgentName, AgentNamePattern)
+		name, isText := active.(string)
+		if !isText {
+			return fmt.Sprintf("[%d].%s: must be a string", i, FieldActiveAgent)
 		}
 
-		if seen[text] {
-			return fmt.Sprintf("names %q twice", text)
+		if name != ActiveDefault && harness.SkillsDir(name).IsAbsent() {
+			return fmt.Sprintf("[%d].%s: %s", i, FieldActiveAgent, unknownValue(name, ActiveAgents()))
 		}
 
-		seen[text] = true
+		if seen[name] {
+			return fmt.Sprintf("names %s %q twice", FieldActiveAgent, name)
+		}
+
+		seen[name] = true
+
+		for _, feature := range Features() {
+			value, present := lookup(fields, feature)
+			if !present {
+				continue
+			}
+
+			if reason := isAgentList(value); reason != "" {
+				return fmt.Sprintf("[%d].%s%s", i, feature, reason)
+			}
+		}
+	}
+
+	return ""
+}
+
+// isAgentList accepts one feature's list: at least one agent, each an object with a harness codefall
+// can start or current, and a model when the project has chosen one. An empty list is refused
+// rather than read as absent: leaving the key out is how an entry defers to the default, and an
+// empty list would say the same thing a second way.
+func isAgentList(v any) string {
+	items, ok := v.([]any)
+	if !ok {
+		return ": must be an array of agents"
+	}
+
+	if len(items) == 0 {
+		return ": must name at least one agent; leave the key out to use the default entry's list"
+	}
+
+	for i, item := range items {
+		fields, ok := item.(map[string]any)
+		if !ok {
+			return fmt.Sprintf("[%d]: must be an object", i)
+		}
 
 		runs, present := lookup(fields, FieldAgentHarness)
 		if !present {
@@ -240,131 +364,17 @@ func isAgentHarness(v any) string {
 	return unknownValue(name, AgentHarnesses())
 }
 
-// isNameList accepts an order: agent names, each once. Whether each names an agent the list
-// defines is checked across the document by agentReferences, because a field's own check sees
-// only its value.
-func isNameList(v any) string {
-	values, ok := v.([]any)
-	if !ok {
-		return "must be an array of agent names"
-	}
-
-	seen := map[string]bool{}
-
-	for _, value := range values {
-		name, ok := value.(string)
-		if !ok {
-			return "must be an array of agent names"
-		}
-
-		if seen[name] {
-			return fmt.Sprintf("names %q twice", name)
-		}
-
-		seen[name] = true
-	}
-
-	return ""
-}
-
-func nameList(v any) []string {
-	values, _ := v.([]any)
-	names := make([]string, 0, len(values))
-
-	for _, value := range values {
-		name, _ := value.(string)
-		names = append(names, name)
-	}
-
-	return names
-}
-
-// agentReferences checks what no single field can: that every order names agents the top-level
-// list defines, and that the per-harness override is keyed by harnesses codefall knows. It runs
-// only when the top-level list was acceptable, because an order checked against a list that was
-// itself refused would say the same thing twice.
-func agentReferences(doc Document, rejected map[string]bool) []string {
-	if rejected[FieldAgents] {
-		return nil
-	}
-
-	defined := AgentNames(Agents(doc))
-
-	var problems []string
-
-	for _, use := range []struct{ block, field string }{
-		{BlockReview, FieldReviewAgents},
-		{BlockConsult, FieldConsultAgents},
-	} {
-		if block, ok := lookupObject(doc, use.block); ok && !rejected[use.block] {
-			if value, present := lookup(block, use.field); present && isNameList(value) == "" {
-				problems = append(problems, undefinedNames(use.block+"."+use.field, nameList(value), defined)...)
-			}
-		}
-	}
-
-	block, ok := lookupObject(doc, FieldAgentsByHarness)
-	if !ok || rejected[FieldAgentsByHarness] {
-		return problems
-	}
-
-	for _, key := range slices.Sorted(maps.Keys(block)) {
-		path := FieldAgentsByHarness + "." + key
-
-		if harness.SkillsDir(key).IsAbsent() {
-			problems = append(problems, path+": "+unknownValue(key, harness.All()))
-
-			continue
-		}
-
-		if reason := isNameList(block[key]); reason != "" {
-			problems = append(problems, path+": "+reason)
-
-			continue
-		}
-
-		problems = append(problems, undefinedNames(path, nameList(block[key]), defined)...)
-	}
-
-	return problems
-}
-
-// undefinedNames is one problem per name an order uses that the list does not define.
-func undefinedNames(path string, order, defined []string) []string {
-	var problems []string
-
-	for _, name := range order {
-		if !slices.Contains(defined, name) {
-			problems = append(problems, fmt.Sprintf("%s: names %q, which %s does not define", path, name, FieldAgents))
-		}
-	}
-
-	return problems
-}
-
-// lookupObject is lookup for a key that has to hold an object.
-func lookupObject(doc map[string]any, name string) (map[string]any, bool) {
-	value, present := lookup(doc, name)
-	if !present {
-		return nil, false
-	}
-
-	block, ok := value.(map[string]any)
-
-	return block, ok
-}
-
-// DescribeAgent is "architect (codex, gpt-5-codex)" or "subagent (current)": how a report names an
-// agent so a reader can match it to the settings.
+// DescribeAgent is the form a person types and a report reads back: "codex:gpt-5-codex", or
+// "current" for the harness running the session.
 func DescribeAgent(agent Agent) string {
 	if model, ok := agent.Model.Get(); ok {
-		return fmt.Sprintf("%s (%s, %s)", agent.Name, agent.Harness, model)
+		return agent.Harness + ":" + model
 	}
 
-	return fmt.Sprintf("%s (%s)", agent.Name, agent.Harness)
+	return agent.Harness
 }
 
-// DescribeAgents is the list, comma separated, in order.
+// DescribeAgents is a list, comma separated, in order.
 func DescribeAgents(agents []Agent) string {
 	parts := make([]string, 0, len(agents))
 	for _, agent := range agents {

@@ -82,10 +82,6 @@
       ],
       "additionalProperties": false,
       "properties": {
-        "name": {
-          "type": "string",
-          "description": "The configured agent that answered, from the agents list in .codefall/settings.json. Absent for a raw via= form, for this session, and for the unconfigured default."
-        },
         "harness": {
           "type": "string",
           "description": "subagent, session, or the external CLI that ran: claude, codex, muse, opencode, agy."
@@ -104,9 +100,6 @@
             ],
             "additionalProperties": false,
             "properties": {
-              "name": {
-                "type": "string"
-              },
               "harness": {
                 "type": "string"
               },
@@ -227,7 +220,7 @@
           },
           "consult": {
             "type": "string",
-            "description": "Present when the finding was promoted from notChecked after a consult: the agent's name and one sentence of what it found. The session verified the cited lines before promoting; the consult never sets a status."
+            "description": "Present when the finding was promoted from notChecked after a consult: the agent's harness and model and one sentence of what it found. The session verified the cited lines before promoting; the consult never sets a status."
           }
         },
         "if": {

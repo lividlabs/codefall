@@ -92,8 +92,8 @@ courses the root can see — a different approach the design allows, a missing p
 a task that is cut wrong and belongs back with `codefall-design`; `PRIOR` is the failure of an
 earlier agent in the order, or empty. `SCHEMA` is `../../../../.codefall/shared/consult.schema.json`.
 
-**The order** is `consult.agents`, resolved and walked as `running-agents.md` says, with
-`../../../../.codefall/shared/run-agent.sh`. With nothing configured it is one entry on `current`,
+**The order** is the entry's `consult` list, resolved and walked as `running-agents.md` says, with
+`../../../../.codefall/shared/run-agent.sh`. With nothing configured it is one `current` agent,
 and the root runs the consult as a subagent: a fresh context reading the same files, which is why
 the default run consults too. The go gate names the resolved order.
 

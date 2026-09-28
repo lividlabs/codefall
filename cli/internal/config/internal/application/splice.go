@@ -146,23 +146,6 @@ func withoutField(data []byte, key string) ([]byte, error) {
 	}
 }
 
-// withoutNestedField is withoutField for a key inside the object a top-level key holds, and reports
-// whether that object is empty afterwards.
-func withoutNestedField(data []byte, block, key string) ([]byte, bool, error) {
-	for {
-		inner, err := nestedObject(data, block)
-		if err != nil {
-			return nil, false, err
-		}
-
-		if _, ok := inner.last(key); !ok {
-			return data, len(inner.members) == 0, nil
-		}
-
-		data = removeMember(data, inner, key)
-	}
-}
-
 // nestedObject reads the object a top-level key holds, with offsets into the whole text.
 func nestedObject(data []byte, block string) (object, error) {
 	top, err := parseObject(data, 0, len(data))

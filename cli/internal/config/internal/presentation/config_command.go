@@ -8,17 +8,13 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"maps"
 	"os"
-	"slices"
 	"strings"
 
 	"github.com/samber/mo"
 	"github.com/spf13/cobra"
 
-	"github.com/lividlabs/codefall-cli/cli/internal/config/internal/application"
 	"github.com/lividlabs/codefall-cli/cli/internal/config/internal/domain"
-	"github.com/lividlabs/codefall-cli/cli/internal/shared/harness"
 	"github.com/lividlabs/codefall-cli/cli/internal/shared/settings"
 	"github.com/lividlabs/codefall-cli/cli/internal/shared/ui"
 	"github.com/lividlabs/codefall-cli/cli/internal/shared/userfile"
@@ -27,12 +23,10 @@ import (
 // ConfigUseCase is what the commands need from the application layer, declared by their consumer.
 type ConfigUseCase interface {
 	Show(dir string) (domain.Configuration, error)
-	Agents(dir string) ([]settings.Agent, error)
-	AddAgent(dir string, agent application.NewAgent) (domain.Write, error)
-	RemoveAgent(dir, name string) (domain.Write, error)
-	OrderAgents(dir string, order []string) (domain.Write, error)
-	SetOrder(dir string, order application.Order, names []string) (domain.Write, error)
-	ClearOrder(dir string, order application.Order) (domain.Write, error)
+	Agents(dir string) ([]settings.Entry, error)
+	SetList(dir, active, feature string, agents []settings.Agent) (domain.Write, error)
+	ClearList(dir, active, feature string) (domain.Write, error)
+	SetPosting(dir string, on bool) (domain.Write, error)
 	Persona(dir string) (domain.Persona, error)
 	SetPersona(dir, name string) ([]domain.Write, error)
 }
@@ -41,20 +35,23 @@ type ConfigUseCase interface {
 // tests can take the path a script takes; nothing else reassigns it.
 var stdoutIsTerminal = ui.StdoutIsTerminal
 
+// settingsName is the settings file as a person reads its path.
+const settingsName = ".codefall/settings.json"
+
 // NewConfigCommand builds `codefall config`. With no arguments in a terminal it opens the editor;
 // anywhere else it prints what `show` prints and says where the editor is. The subcommands are for
 // scripts, and for anyone who knows exactly what to change.
 func NewConfigCommand(config ConfigUseCase) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "config",
-		Short: "Edit this project's agents and your persona",
-		Long: "With no arguments in a terminal, opens an editor over the agents list, the orders review, " +
-			"consult, and each harness walk, and your persona. The agents and their orders live in " +
-			settingsName + ", which is checked in; the persona lives in " + userfile.Name +
-			", which is yours alone and kept out of version control. The subcommands change one value " +
-			"each, take every value as an argument, and never prompt, so a script can run them. A write " +
-			"the settings would not accept is refused, in the editor and the subcommands alike, and the " +
-			"file is left as it was.",
+		Short: "Edit who reviews and consults for this project, and your persona",
+		Long: "With no arguments in a terminal, opens an editor over the agents, reviews, and your persona. " +
+			"The agents are who codefall asks to review or for a second opinion, chosen by the harness you " +
+			"are running in; they and the review settings live in " + settingsName + ", which is checked in. " +
+			"The persona lives in " + userfile.Name + ", which is yours alone and kept out of version " +
+			"control. The subcommands change one value each, take every value as an argument, and never " +
+			"prompt, so a script can run them. A write the settings would not accept is refused, in the " +
+			"editor and the subcommands alike, and the file is left as it was.",
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			dir, err := os.Getwd()
@@ -81,7 +78,7 @@ func NewConfigCommand(config ConfigUseCase) *cobra.Command {
 	cmd.AddCommand(
 		newShowCommand(config),
 		newAgentsCommand(config),
-		newOrderCommand(config),
+		newReviewCommand(config),
 		newPersonaCommand(config),
 	)
 
@@ -91,7 +88,7 @@ func NewConfigCommand(config ConfigUseCase) *cobra.Command {
 func newShowCommand(config ConfigUseCase) *cobra.Command {
 	return &cobra.Command{
 		Use:   "show",
-		Short: "Print the effective agents, their orders, and your persona",
+		Short: "Print who reviews and consults, whether review posts, and your persona",
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			dir, err := os.Getwd()
@@ -114,54 +111,120 @@ func newShowCommand(config ConfigUseCase) *cobra.Command {
 func configurationLines(shown domain.Configuration) []string {
 	heading := "agents:"
 	if shown.Default {
-		heading = "agents (the default; " + settingsName + " lists none):"
+		heading = "agents (the built-in default; " + settingsName + " sets none):"
 	}
 
-	lines := []string{heading}
+	lines := append([]string{heading}, entryLines(shown.Entries)...)
 
-	for at, agent := range shown.Agents {
-		lines = append(lines, fmt.Sprintf("  %d. %s", at+1, settings.DescribeAgent(agent)))
+	posting := "off"
+	if shown.Posting {
+		posting = "on"
 	}
 
-	if order, ok := shown.Review.Get(); ok {
-		lines = append(lines, settings.BlockReview+"."+settings.FieldReviewAgents+": "+strings.Join(order, ", "))
-	}
-
-	if order, ok := shown.Consult.Get(); ok {
-		lines = append(lines, settings.BlockConsult+"."+settings.FieldConsultAgents+": "+strings.Join(order, ", "))
-	}
-
-	for _, key := range slices.Sorted(maps.Keys(shown.ByHarness)) {
-		lines = append(lines, settings.FieldAgentsByHarness+"."+key+": "+strings.Join(shown.ByHarness[key], ", "))
-	}
+	lines = append(lines, "review posting: "+posting)
 
 	return append(lines, "persona: "+personaLine(shown.Persona))
 }
 
-// settingsName is the settings file as a person reads its path.
-const settingsName = ".codefall/settings.json"
+// entryLines is the agents list, one active agent per heading and one list per line under it.
+func entryLines(entries []settings.Entry) []string {
+	var lines []string
 
-func newAgentsCommand(config ConfigUseCase) *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "agents",
-		Short: "List, add, remove, and order the agents in " + settingsName,
-		Args:  cobra.NoArgs,
+	for _, entry := range entries {
+		lines = append(lines, "  "+activeAgentLabel(entry.ActiveAgent)+":")
+
+		for _, feature := range settings.Features() {
+			lines = append(lines, "    "+feature+": "+listLabel(entry.List(feature)))
+		}
 	}
 
-	cmd.AddCommand(
-		newAgentsListCommand(config),
-		newAgentsAddCommand(config),
-		newAgentsRemoveCommand(config),
-		newAgentsOrderCommand(config),
-	)
-
-	return cmd
+	return lines
 }
 
-func newAgentsListCommand(config ConfigUseCase) *cobra.Command {
-	return &cobra.Command{
+// activeAgentLabel is an active agent as a person reads it.
+func activeAgentLabel(active string) string {
+	if active == settings.ActiveDefault {
+		return "default (any harness without its own entry)"
+	}
+
+	return "when running in " + active
+}
+
+// listLabel is one list as a person reads it: the agents in order, or what an absent list means.
+func listLabel(agents mo.Option[[]settings.Agent]) string {
+	list, ok := agents.Get()
+	if !ok {
+		return "same as default"
+	}
+
+	parts := make([]string, 0, len(list))
+	for _, agent := range list {
+		parts = append(parts, agentLabel(agent))
+	}
+
+	return strings.Join(parts, ", then ")
+}
+
+// agentLabel is one agent as a person reads it: the harness and its model, with current spelled out.
+func agentLabel(agent settings.Agent) string {
+	if agent.Harness == settings.HarnessCurrent {
+		return "this harness"
+	}
+
+	return settings.DescribeAgent(agent)
+}
+
+func newAgentsCommand(config ConfigUseCase) *cobra.Command {
+	var clear bool
+
+	cmd := &cobra.Command{
+		Use: "agents [<" + strings.Join(settings.ActiveAgents(), "|") + "> <" +
+			strings.Join(settings.Features(), "|") + "> <harness[:model]>...]",
+		Short: "Print the agents, or set who reviews or consults for sessions in one harness",
+		Long: "With no arguments, prints the agents list. With arguments, sets one list in " + settingsName +
+			": the active agent is the harness you run codefall in (" + strings.Join(settings.ActiveAgents(), ", ") +
+			"; default covers every harness without an entry of its own), the feature is " +
+			strings.Join(settings.Features(), " or ") + ", and each agent is a harness (" +
+			strings.Join(settings.AgentHarnesses(), ", ") + ") with an optional model after a colon; " +
+			settings.HarnessCurrent + " is a subagent of the harness you are running in. Agents are tried in the order " +
+			"given. --clear in place of the agents removes the list, so the default entry's applies.",
+		Args: agentsArgs(&clear),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			dir, err := os.Getwd()
+			if err != nil {
+				return fmt.Errorf("config: %w", err)
+			}
+
+			if len(args) == 0 {
+				return runAgentsList(cmd, config, dir)
+			}
+
+			var write domain.Write
+
+			if clear {
+				write, err = config.ClearList(dir, args[0], args[1])
+			} else {
+				agents, parseErr := domain.ParseAgents(args[2:])
+				if parseErr != nil {
+					return parseErr
+				}
+
+				write, err = config.SetList(dir, args[0], args[1], agents)
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return writeResults(cmd.OutOrStdout(), write)
+		},
+	}
+
+	cmd.Flags().BoolVar(&clear, "clear", false, "remove the list, so the default entry's applies")
+
+	cmd.AddCommand(&cobra.Command{
 		Use:   "list",
-		Short: "Print the agents in order, one per line",
+		Short: "Print the agents, one active agent at a time",
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			dir, err := os.Getwd()
@@ -169,200 +232,80 @@ func newAgentsListCommand(config ConfigUseCase) *cobra.Command {
 				return fmt.Errorf("config: %w", err)
 			}
 
-			agents, err := config.Agents(dir)
-			if err != nil {
-				return err
-			}
-
-			lines := make([]string, 0, len(agents))
-			for _, agent := range agents {
-				lines = append(lines, settings.DescribeAgent(agent))
-			}
-
-			return writeLines(cmd.OutOrStdout(), lines)
+			return runAgentsList(cmd, config, dir)
 		},
-	}
-}
-
-// addFlags is what `agents add` can be told beside the name.
-type addFlags struct {
-	harness string
-	model   string
-	before  string
-	after   string
-}
-
-func newAgentsAddCommand(config ConfigUseCase) *cobra.Command {
-	flags := &addFlags{}
-
-	cmd := &cobra.Command{
-		Use:   "add <name>",
-		Short: "Add an agent to the list, last unless --before or --after says where",
-		Args:  cobra.ExactArgs(1),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			dir, err := os.Getwd()
-			if err != nil {
-				return fmt.Errorf("config: %w", err)
-			}
-
-			write, err := config.AddAgent(dir, application.NewAgent{
-				Name:    args[0],
-				Harness: flags.harness,
-				Model:   given(flags.model),
-				Before:  given(flags.before),
-				After:   given(flags.after),
-			})
-			if err != nil {
-				return err
-			}
-
-			return writeResults(cmd.OutOrStdout(), write)
-		},
-	}
-
-	cmd.Flags().StringVar(&flags.harness, "harness", "",
-		"the harness that runs the agent ("+strings.Join(settings.AgentHarnesses(), ", ")+"); "+
-			settings.HarnessCurrent+" is whichever harness is running the session")
-	cmd.Flags().StringVar(&flags.model, "model", "", "the model to ask that harness for, passed to it as written")
-	cmd.Flags().StringVar(&flags.before, "before", "", "put the agent straight before this one")
-	cmd.Flags().StringVar(&flags.after, "after", "", "put the agent straight after this one")
-
-	_ = cmd.MarkFlagRequired("harness")
-
-	cmd.MarkFlagsMutuallyExclusive("before", "after")
+	})
 
 	return cmd
 }
 
-func newAgentsRemoveCommand(config ConfigUseCase) *cobra.Command {
-	return &cobra.Command{
-		Use:   "remove <name>",
-		Short: "Remove an agent from the list, unless an order still names it",
-		Args:  cobra.ExactArgs(1),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			dir, err := os.Getwd()
-			if err != nil {
-				return fmt.Errorf("config: %w", err)
-			}
-
-			write, err := config.RemoveAgent(dir, args[0])
-			if err != nil {
-				return err
-			}
-
-			return writeResults(cmd.OutOrStdout(), write)
-		},
-	}
-}
-
-func newAgentsOrderCommand(config ConfigUseCase) *cobra.Command {
-	return &cobra.Command{
-		Use:   "order <name>...",
-		Short: "Replace the list's order; every agent is named exactly once",
-		Args:  cobra.MinimumNArgs(1),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			dir, err := os.Getwd()
-			if err != nil {
-				return fmt.Errorf("config: %w", err)
-			}
-
-			write, err := config.OrderAgents(dir, args)
-			if err != nil {
-				return err
-			}
-
-			return writeResults(cmd.OutOrStdout(), write)
-		},
-	}
-}
-
-// newOrderCommand builds `codefall config order <target> <name>...`, which sets one narrower order:
-// review's own, consult's own, or the one a session in a harness walks. One command for the three,
-// because they are one shape — an ordered subset of the agents — that differs only in where it sits.
-func newOrderCommand(config ConfigUseCase) *cobra.Command {
-	var clear bool
-
-	cmd := &cobra.Command{
-		Use:   "order <" + strings.Join(orderTargets(), "|") + "> <name>...",
-		Short: "Set the order review, consult, or a harness walks, or --clear it",
-		Long: "Sets one narrower order in " + settingsName + ": " + settings.BlockReview + "." +
-			settings.FieldReviewAgents + " when the target is " + settings.BlockReview + ", " +
-			settings.BlockConsult + "." + settings.FieldConsultAgents + " when it is " + settings.BlockConsult +
-			", and " + settings.FieldAgentsByHarness + ".<harness> when it is a harness (" +
-			strings.Join(harness.All(), ", ") + "). Each name must be an agent the list defines, and each " +
-			"is named once; the order need not name every agent. --clear removes the order, so the " +
-			"wider one applies; a harness's block goes with its last order.",
-		Args:      orderArgs(&clear),
-		ValidArgs: orderTargets(),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			return runOrder(cmd, config, orderFor(args[0]), clear, args[1:])
-		},
-	}
-
-	cmd.Flags().BoolVar(&clear, "clear", false, "remove the order, so the wider one applies")
-
-	return cmd
-}
-
-// orderTargets is what `order` takes first: the two uses, then the harnesses.
-func orderTargets() []string {
-	return append([]string{settings.BlockReview, settings.BlockConsult}, harness.All()...)
-}
-
-// orderFor is the order a target names. A harness the harness module refuses is refused by the use
-// case in that module's words, so nothing is checked here.
-func orderFor(target string) application.Order {
-	switch target {
-	case settings.BlockReview:
-		return application.ReviewOrder()
-	case settings.BlockConsult:
-		return application.ConsultOrder()
-	}
-
-	return application.HarnessOrder(target)
-}
-
-// orderArgs checks the order command's arguments: a target first, then at least one agent name to
-// set the order, or none with --clear.
-func orderArgs(clear *bool) cobra.PositionalArgs {
+// agentsArgs checks the agents command's arguments: nothing, to list; or an active agent, a feature,
+// and at least one agent to set, or none with --clear.
+func agentsArgs(clear *bool) cobra.PositionalArgs {
 	return func(_ *cobra.Command, args []string) error {
-		if len(args) < 1 {
-			return fmt.Errorf("name what the order is for first (%s)", strings.Join(orderTargets(), ", "))
-		}
-
-		names := len(args) - 1
-
 		switch {
-		case *clear && names > 0:
-			return errors.New("--clear takes no agent names")
-		case !*clear && names == 0:
-			return errors.New("name at least one agent, or pass --clear")
+		case len(args) == 0:
+			return nil
+		case len(args) == 1:
+			return fmt.Errorf("name the list too: %s", strings.Join(settings.Features(), " or "))
+		case *clear && len(args) > 2:
+			return errors.New("--clear takes no agents")
+		case !*clear && len(args) == 2:
+			return errors.New("name at least one agent as harness[:model], or pass --clear")
 		}
 
 		return nil
 	}
 }
 
-// runOrder sets or clears one order and prints what that did.
-func runOrder(cmd *cobra.Command, config ConfigUseCase, order application.Order, clear bool, names []string) error {
-	dir, err := os.Getwd()
-	if err != nil {
-		return fmt.Errorf("config: %w", err)
-	}
-
-	var write domain.Write
-
-	if clear {
-		write, err = config.ClearOrder(dir, order)
-	} else {
-		write, err = config.SetOrder(dir, order, names)
-	}
-
+func runAgentsList(cmd *cobra.Command, config ConfigUseCase, dir string) error {
+	entries, err := config.Agents(dir)
 	if err != nil {
 		return err
 	}
 
-	return writeResults(cmd.OutOrStdout(), write)
+	return writeLines(cmd.OutOrStdout(), entryLines(entries))
+}
+
+func newReviewCommand(config ConfigUseCase) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "review",
+		Short: "Change how review behaves: whether it posts its findings to the pull request",
+		Args:  cobra.NoArgs,
+	}
+
+	cmd.AddCommand(&cobra.Command{
+		Use:       "posting <on|off>",
+		Short:     "Let review post its findings to the pull request, or not",
+		Args:      cobra.ExactArgs(1),
+		ValidArgs: []string{"on", "off"},
+		RunE: func(cmd *cobra.Command, args []string) error {
+			dir, err := os.Getwd()
+			if err != nil {
+				return fmt.Errorf("config: %w", err)
+			}
+
+			var on bool
+
+			switch args[0] {
+			case "on":
+				on = true
+			case "off":
+				on = false
+			default:
+				return fmt.Errorf("posting is on or off, not %q", args[0])
+			}
+
+			write, err := config.SetPosting(dir, on)
+			if err != nil {
+				return err
+			}
+
+			return writeResults(cmd.OutOrStdout(), write)
+		},
+	})
+
+	return cmd
 }
 
 func newPersonaCommand(config ConfigUseCase) *cobra.Command {
@@ -408,15 +351,6 @@ func personaLine(persona domain.Persona) string {
 	return persona.Name + " (default)"
 }
 
-// given is a flag's value as an option: a flag left empty was not given.
-func given(value string) mo.Option[string] {
-	if strings.TrimSpace(value) == "" {
-		return mo.None[string]()
-	}
-
-	return mo.Some(value)
-}
-
 // writeLines prints plain lines through the colour-profile writer.
 func writeLines(w io.Writer, lines []string) error {
 	out := ui.NewWriter(w)
@@ -447,4 +381,13 @@ func writeResults(w io.Writer, writes ...domain.Write) error {
 	}
 
 	return nil
+}
+
+// given is a form field's value as an option: a field left empty was not given.
+func given(value string) mo.Option[string] {
+	if strings.TrimSpace(value) == "" {
+		return mo.None[string]()
+	}
+
+	return mo.Some(value)
 }

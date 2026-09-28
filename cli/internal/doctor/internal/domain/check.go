@@ -129,14 +129,14 @@ var (
 	// records for a harness the settings no longer name.
 	HarnessesLeftOver = Check{ID: "harnesses-leftover",
 		Title: "no install is left over from a dropped harness", Category: CategoryHarnesses}
-	// AgentsRunnable is whether every agent the settings define runs on a harness this machine can
-	// start (ADR-009). A run skips one it cannot, so this warns.
+	// AgentsRunnable is whether every agent the settings name runs on a harness this machine can
+	// start (ADR-009.2). A run skips one it cannot, so this warns.
 	AgentsRunnable = Check{ID: "agents-runnable",
 		Title: "every agent runs on a harness this machine can start", Category: CategoryAgents}
-	// AgentsCurrent is whether every order of agents names one on current, the harness running the
+	// AgentsCurrent is whether every list of agents names one on current, the harness running the
 	// session, so a run always has a reader it can start.
 	AgentsCurrent = Check{ID: "agents-current",
-		Title: "every agent order names one on the current harness", Category: CategoryAgents}
+		Title: "every agent list names one on the current harness", Category: CategoryAgents}
 	// LocalDeclared is whether the settings name the project's start and update commands (ADR-005).
 	LocalDeclared = Check{ID: "local-declared",
 		Title: "the local start and update commands are declared", Category: CategoryLocal}
