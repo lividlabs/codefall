@@ -25,7 +25,7 @@ const addCurrentCommand = "codefall config agents add <name> --harness current"
 // currentReason is what an order with an agent on current buys, and ends every remedy for one without.
 const currentReason = ", so a run always has a reader it can start"
 
-// agents runs checks 14 and 15: every agent the settings define runs on a harness this machine can
+// agents runs checks 15 and 16: every agent the settings define runs on a harness this machine can
 // start, and every order ends somewhere a run can always start (ADR-009).
 //
 // It reads the same settings the settings group validated, so whatever skipped those checks skips
@@ -49,7 +49,7 @@ func (d *Diagnose) agents(_ context.Context, dir string, results []domain.Result
 	return append(results, agentsEndAtCurrent(doc, defined))
 }
 
-// agentsRunnable is check 14: each agent's harness is on PATH, or is current, which is always
+// agentsRunnable is check 15: each agent's harness is on PATH, or is current, which is always
 // runnable because it is the harness running the session.
 //
 // It warns rather than fails. An agent this machine cannot start is skipped by every run, which is
@@ -73,7 +73,7 @@ func (d *Diagnose) agentsRunnable(defined []settings.Agent) domain.Result {
 	return domain.AgentsRunnable.Warn(strings.Join(missing, "; "), mo.Some(agentsRemedy))
 }
 
-// agentsEndAtCurrent is check 15: the top-level order, the review and consult blocks' own orders
+// agentsEndAtCurrent is check 16: the top-level order, the review and consult blocks' own orders
 // when they have one, and each per-harness order name at least one agent on current. An order without one can end
 // with nothing to run when every external harness is missing or fails, and a project that wants
 // exactly that stop is told what it has chosen.

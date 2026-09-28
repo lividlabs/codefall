@@ -31,7 +31,7 @@ func (s Status) String() string {
 }
 
 // Category is the part of a project's setup a check belongs to. The report groups by category, so a
-// healthy project is seven lines rather than twenty-five.
+// healthy project is seven lines rather than twenty-six.
 type Category struct {
 	ID    string
 	Title string
@@ -91,7 +91,7 @@ func (c Check) Fail(detail string, remedy mo.Option[string]) Result {
 	return Result{Check: c, Status: StatusFail, Detail: mo.Some(detail), Remedy: remedy}
 }
 
-// The twenty-five checks doctor runs, in the order it runs them.
+// The twenty-six checks doctor runs, in the order it runs them.
 var (
 	CodefallDir      = Check{ID: "codefall-dir", Title: ".codefall/ exists", Category: CategorySettings}
 	SettingsFile     = Check{ID: "settings-file", Title: ".codefall/settings.json exists", Category: CategorySettings}
@@ -120,8 +120,13 @@ var (
 	// record would read it.
 	HarnessesInstalled = Check{ID: "harnesses-installed",
 		Title: "codefall is installed for every harness", Category: CategoryHarnesses}
-	// HarnessesLeftOver is the other direction: an install the manifest records for a harness the
-	// settings no longer name.
+	// SharedInstalled is whether the files a finished run wrote once into .codefall/ — the scripts
+	// every harness's hooks run and the files the skills read, all reached by a path — are still
+	// there (ADR-006). They belong to no harness, so the check above does not look at them.
+	SharedInstalled = Check{ID: "shared-installed",
+		Title: "codefall's shared files are in .codefall/", Category: CategoryHarnesses}
+	// HarnessesLeftOver is the other direction from HarnessesInstalled: an install the manifest
+	// records for a harness the settings no longer name.
 	HarnessesLeftOver = Check{ID: "harnesses-leftover",
 		Title: "no install is left over from a dropped harness", Category: CategoryHarnesses}
 	// AgentsRunnable is whether every agent the settings define runs on a harness this machine can

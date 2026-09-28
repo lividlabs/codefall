@@ -85,6 +85,7 @@ func TestDoctorCommandListsHarnessesAndAgentsOnSeparateLines(t *testing.T) {
 	diagnose := &fakeDiagnose{report: domain.NewReport(
 		domain.HarnessNames.Pass(),
 		domain.HarnessesInstalled.PassWithDetail("claude"),
+		domain.SharedInstalled.PassWithDetail("5 shared files"),
 		domain.HarnessesLeftOver.Pass(),
 		domain.AgentsRunnable.PassWithDetail("architect (codex, gpt-5-codex), subagent (current)"),
 		domain.AgentsCurrent.Pass(),
@@ -96,7 +97,7 @@ func TestDoctorCommandListsHarnessesAndAgentsOnSeparateLines(t *testing.T) {
 	}
 
 	want := headingLines +
-		"[✓] Harnesses (claude)\n" +
+		"[✓] Harnesses (claude, 5 shared files)\n" +
 		"[✓] Agents (architect (codex, gpt-5-codex), subagent (current))\n" +
 		"• No issues found.\n"
 	if out != want {
