@@ -81,10 +81,9 @@ harnesses have one); `args` are appended as given; `env` is a shell command whos
 evaluated before the harness starts, which is how a run gets credentials an interactive shell would
 have exported. A harness name with no block runs bare.
 
-The model string is whatever the harness accepts for the provider in use, and the surest way to
-get it right is to let the harness say: run `/codefall-equip agents` inside the harness, and it
-reads the model and provider its own session is using, writes the block, and adds the agent to the
-lists you choose.
+The model string is whatever the harness accepts for the provider in use, and the easiest way to
+get it right is to run `/codefall-equip agents` from any harness: it finds the model and provider
+the harness uses, writes the block, and adds the agent to the lists you choose.
 
 ## Walking the list
 

@@ -81,9 +81,8 @@ Four verbs sit beside the chain rather than in it:
   commands recorded in the testing root's `AGENTS.md`
   ([ADR-007](https://github.com/lividlabs/codefall-cli/blob/main/docs/adrs/ADR-007-test-cases.md)).
   The third is the agents: how another harness is called, under `harnessConfig`, and who reviews
-  and consults, in the `agents` lists, set up from inside the harness being configured, which is
-  the one that knows its own model strings
-  ([ADR-009.3](https://github.com/lividlabs/codefall-cli/blob/main/docs/adrs/ADR-009.3-agents.md)).
+  and consults, in the `agents` lists, set up from any harness
+  ([ADR-009.4](https://github.com/lividlabs/codefall-cli/blob/main/docs/adrs/ADR-009.4-agents.md)).
   One run equips one track, and each lands as its own pull request. What a search leaves ambiguous
   is consulted on once before the one question.
 - **`refresh`** is what to run instead of pulling by hand: fetch, fast-forward `main` when safe,
