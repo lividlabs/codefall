@@ -10,9 +10,11 @@ A Go command-line tool. One surface, one app, one module.
 first component and the reference for the rules below; `internal/initcmd/` (`codefall init` and
 `codefall upgrade`, one use case behind two commands, exported through `Commands`) is the second, and
 follows it; `internal/create/` (`codefall create`) is the third, and runs init's command in the
-directory it makes; `internal/config/` (`codefall config`, one command with subcommands) is the
-fourth, and reads and writes the agents list, its review, consult, and per-harness orders, and the persona. `internal/shared/ui/` holds the palette, the marks, the colour-profile
-writer, and the spinner runner; `internal/shared/process/` holds the command runner and the file
+directory it makes; `internal/config/` (`codefall config`, an interactive editor in a terminal and
+subcommands for scripts, over one use case) is the fourth, and reads and writes the agents list, its
+review, consult, and per-harness orders, and the persona. `internal/shared/ui/` holds the palette,
+the marks, the colour-profile writer, the spinner runner, and the reusable Bubble Tea models that are
+generic over their data (`OrderList`); `internal/shared/process/` holds the command runner and the file
 system; `internal/shared/buildinfo/` holds the version the binary reports, for `--version` and for
 the manifest init writes. `internal/shared/harness/` holds the harnesses codefall can set up and where each one reads
 skills, `internal/shared/manifest/` the `.codefall/manifest.json` format,
@@ -121,10 +123,15 @@ The why lives in the ADRs. This file is the operative rules only — never resta
   naming the flag — never block on input. Run with `RunWithContext`; `WithAccessible` follows the
   `ACCESSIBLE` environment variable.
 - Charm's v2 generation only. Nothing that imports the v1 paths
-  (`github.com/charmbracelet/{lipgloss,bubbletea,bubbles,huh}`) is added. A TUI, if ever needed, is
-  Bubble Tea (`charm.land/bubbletea/v2`), already in the graph through the shared spinner — no new
-  ADR for the library. Bubble Tea appears in `internal/shared/ui/` only; a slow job runs under
-  `ui.RunWithSpinner`, which handles the no-terminal case too, rather than under a model of its own.
+  (`github.com/charmbracelet/{lipgloss,bubbletea,bubbles,huh}`) is added. A screen is a Bubble Tea
+  program written in the component's own `presentation/`, with Huh v2 fields embedded for entry and
+  Bubbles for lists and keys (ADR-012). A model goes into `internal/shared/ui/` only when it knows
+  nothing about what it shows; `presentation/` binds the data. Bubble Tea appears in `presentation/`
+  and `internal/shared/ui/`, never inward. A slow job runs under `ui.RunWithSpinner`, which handles
+  the no-terminal case too, rather than under a model of its own. A command that opens a screen
+  prints its plain output instead when stdout is not a terminal, and never blocks on one.
+- A facade exports no view or model type, and no alias to one (ADR-012). A component's screen is
+  opened by its own command.
 
 ## Enforcement
 

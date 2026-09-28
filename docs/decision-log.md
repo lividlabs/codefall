@@ -1572,18 +1572,30 @@ Decided at scaffold, 2026-08-16.
   a separate check that compares the manifest's file list with the disk before deciding to copy,
   which would miss an edited file and duplicate what the copy already does.
 
+- **UI composition, and `codefall config` opens an editor, 2026-09-27.** The open item below this
+  list since **Shared modules, 2026-08-27** graduates to ADR-012 with the first component that has a
+  screen. `codefall config` with no arguments in a terminal opens a Bubble Tea program: a menu over
+  the agents, the review, consult, and per-harness orders, and the persona, each section showing its
+  value and offering its edits, Esc returning to the menu. Bubble Tea, Bubbles, and Lip Gloss v2 are
+  the stack, with Huh v2 fields embedded for entry so the survey and the editor share input code. A
+  reusable model lives in `internal/shared/ui/` only when it is generic over its data — `ui.OrderList`
+  is the first, holding IDs and labels and never a component's type — and the shell that owns
+  navigation is the component's own `presentation/`, with `main` still mounting commands alone; no
+  facade exports a view. The editor and the subcommands share one use case, so the editor can do
+  nothing a script cannot. The scripted tree collapsed with it: `config review agents`, `config
+  consult agents`, and `config agents for <harness>`, which followed the settings keys and which the
+  user found confusing, became one `config order <review|consult|harness> <name>...` with `--clear`;
+  none had shipped, so nothing broke. `postToPullRequest` became optional, absent meaning false, so a
+  `review` block may hold only an order and `config order review` creates one when missing. The
+  `remove` refusal is two plain sentences naming the orders that still name the agent. Seen and not
+  taken: Huh forms in a loop (a questionnaire with no way back and no reordering); every model in the
+  shared module (breaks rule 4 on the first component type); a shell in `main` or `internal/tui/`
+  drawing from contracts (widens every facade). The depguard rule was re-proven against a Bubble Tea
+  import from config's `application/`: it compiled and failed lint.
+
 ## Open
 
-- **UI composition.** Half settled by **Shared modules, 2026-08-27** above: the theme, the styles,
-  the colour-profile writer, and the spinner runner now live in `internal/shared/ui/`, and rule 4
-  holds there — proven, not assumed. What is still open is the other half: reusable Bubble Tea
-  models (list, table, status bar) generic over the data they show, with each component's
-  `presentation/` binding its own data, and a shell owning arrangement and navigation (`main` for
-  the command tree; `main` or an `internal/tui/` component for a TUI — unsettled). A facade
-  re-exports a view type by alias when the shell must name it. Alternatives seen and not taken: one
-  shared module holding all presentation (breaks rule 4); a shell rendering generic widgets from
-  contracts alone (widens every facade). Graduates to a later ADR with the first component that has a
-  view, or a committed TUI, whichever comes first.
+- (nothing open; the last item graduated to ADR-012 on 2026-09-27)
 
 ## Parking lot
 

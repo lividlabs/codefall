@@ -148,6 +148,34 @@ func Referrers(doc settings.Document, name string) []string {
 	return paths
 }
 
+// StillNamed is the refusal to remove an agent an order still names: one sentence naming the orders,
+// one saying where to change them. Nothing in it is computed beyond the names, so it reads the same
+// whether one order or five still point at the agent. The second sentence ends without a full stop
+// because the command's error renderer adds one.
+func StillNamed(name string, referrers []string) error {
+	orders := "that order"
+	if len(referrers) > 1 {
+		orders = "those orders"
+	}
+
+	return fmt.Errorf("%s is named in %s. Change %s first, in codefall config, then remove it",
+		name, joinAnd(referrers), orders)
+}
+
+// joinAnd joins names the way a sentence does: "a", "a and b", "a, b, and c".
+func joinAnd(names []string) string {
+	switch len(names) {
+	case 0:
+		return ""
+	case 1:
+		return names[0]
+	case 2:
+		return names[0] + " and " + names[1]
+	default:
+		return strings.Join(names[:len(names)-1], ", ") + ", and " + names[len(names)-1]
+	}
+}
+
 // NotInList is the error for a name the list does not hold, with the names it does.
 func NotInList(name string, order []string) error {
 	return fmt.Errorf("no agent named %q in the list (agents: %s)", name, strings.Join(order, ", "))

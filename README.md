@@ -123,14 +123,20 @@ checked-in list serves every machine, and `doctor` reports which entries yours c
 one entry, `subagent` on `current`, which is what every verb did before the list existed. `review`
 walks it for its reviewer, and `implement` and `design` walk it for a consult when a run cannot
 settle a question on its own; a `review` or `consult` block may carry its own order.
-`codefall config agents add <name> --harness <harness|current> [--model <model>]` adds an agent,
-last or `--before`/`--after` another, `codefall config agents remove <name>` takes one out unless an
-order still names it, and `codefall config agents order <name>...` sets the order. The narrower
-orders have commands of their own: `codefall config review agents <name>...` sets `review.agents`,
-`codefall config consult agents <name>...` sets `consult.agents`, and `codefall config agents for
-<harness> <name>...` sets the order a session in that harness walks, `agentsByHarness.<harness>`.
-Each names agents from the list, each once, and `--clear` in place of the names removes the order so
-the wider one applies. `codefall config show` prints the list and every order.
+`codefall config` in a terminal opens an editor over all of it: a menu of the agents, the review
+order, the consult order, the per-harness orders, and your persona, each showing its current value.
+In the agents section you move an entry with shift and the arrows, add one with `a`, remove one with
+`d`, and save the order with enter; in an order section you switch agents on and off with space,
+move them the same way, and save, where nothing switched on clears the order. Esc goes back, `q`
+quits, and every write is reported once the editor closes, in the same line a subcommand prints.
+The subcommands are for scripts: `codefall config agents add <name> --harness <harness|current>
+[--model <model>]` adds an agent, last or `--before`/`--after` another, `codefall config agents
+remove <name>` takes one out unless an order still names it, and `codefall config agents order
+<name>...` sets the order. `codefall config order <review|consult|harness> <name>...` sets the
+narrower order the target names, `review.agents`, `consult.agents`, or `agentsByHarness.<harness>`,
+from agents in the list, each once, and `--clear` in place of the names removes it so the wider
+order applies. `codefall config show` prints the list and every order, and so does the bare command
+when there is no terminal to draw on.
 [ADR-009](docs/adrs/ADR-009-agents.md) records the shape.
 
 `.codefall/user.json` sits beside `settings.json` and describes the person at the keyboard rather
@@ -196,7 +202,7 @@ what to delete.
 | `codefall create <dir>` | Makes the directory and its git repository, commits a README and a `.gitignore`, runs `init` there, and offers the push |
 | `codefall init` | Sets a directory up for codefall, once: settings, the extension for each harness, Beads, hooks, the `AGENTS.md` sections, the testing tree, and the manifest that records the run |
 | `codefall upgrade` | Brings an installed project level with the binary, for the harnesses the settings record: warns about the breaking changes in between, reinstalls, removes what it no longer ships, and touches nothing it did not write |
-| `codefall config` | Shows the effective agents, their orders, and your persona (`show`), changes the agents list (`agents list`, `add`, `remove`, `order`), sets or clears the review, consult, and per-harness orders (`review agents`, `consult agents`, `agents for <harness>`), and prints or sets the persona (`persona`); never prompts, and refuses a write the settings would not accept |
+| `codefall config` | Opens an editor over the agents, their orders, and your persona in a terminal; for scripts, shows the effective configuration (`show`), changes the agents list (`agents list`, `add`, `remove`, `order`), sets or clears the review, consult, and per-harness orders (`order <review\|consult\|harness>`), and prints or sets the persona (`persona`), and refuses a write the settings would not accept, in the editor and the subcommands alike |
 | `codefall doctor` | Reports whether a project has what codefall needs, with a remedy per unmet check, and repairs nothing |
 
 [ADR-010](docs/adrs/ADR-010-upgrade.md) records why `init` runs once and `upgrade` is its own command.

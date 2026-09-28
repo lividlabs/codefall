@@ -827,8 +827,8 @@ func TestDiagnoseRun(t *testing.T) {
 			want:       outcomes(map[string]domain.Status{domain.AgentsCurrent.ID: domain.StatusWarn}),
 			target:     domain.AgentsCurrent.ID,
 			wantDetail: "review.agents, agentsByHarness.claude names no agent on current",
-			wantRemedy: mo.Some("name an agent on current with codefall config review agents <name>... and " +
-				"codefall config agents for claude <name>..., or clear each order with --clear, " +
+			wantRemedy: mo.Some("name an agent on current with codefall config order review <name>... and " +
+				"codefall config order claude <name>..., or clear each order with --clear, " +
 				"so a run always has a reader it can start"),
 		},
 		{
@@ -843,7 +843,7 @@ func TestDiagnoseRun(t *testing.T) {
 			want:       outcomes(map[string]domain.Status{domain.AgentsCurrent.ID: domain.StatusWarn}),
 			target:     domain.AgentsCurrent.ID,
 			wantDetail: "consult.agents names no agent on current",
-			wantRemedy: mo.Some("name an agent on current with codefall config consult agents <name>..., " +
+			wantRemedy: mo.Some("name an agent on current with codefall config order consult <name>..., " +
 				"or clear the order with --clear, so a run always has a reader it can start"),
 		},
 		{
@@ -869,7 +869,7 @@ func TestDiagnoseRun(t *testing.T) {
 			target:     domain.AgentsCurrent.ID,
 			wantDetail: "agents, review.agents names no agent on current",
 			wantRemedy: mo.Some("run codefall config agents add <name> --harness current, then name that agent " +
-				"with codefall config review agents <name>..., so a run always has a reader it can start"),
+				"with codefall config order review <name>..., so a run always has a reader it can start"),
 		},
 		{
 			// What the list may hold is the format's to say, so a bad entry is the settings-complete

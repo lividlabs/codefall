@@ -1,6 +1,7 @@
-// Package presentation builds `codefall config` and its subcommands. They are thin: each reads the
-// working directory and its arguments, calls the use case, and prints what came back. Nothing here
-// prompts — every value is an argument or a flag — so the command runs the same under a script.
+// Package presentation builds `codefall config`: the interactive editor a person opens with no
+// arguments in a terminal, and the subcommands a script runs. Both are thin over the one use case:
+// the subcommands read their arguments, call it, and print what came back, and the editor collects
+// the same calls from key presses and prints the same lines once it has left the screen (ADR-012).
 package presentation
 
 import (
@@ -36,25 +37,51 @@ type ConfigUseCase interface {
 	SetPersona(dir, name string) ([]domain.Write, error)
 }
 
-// NewConfigCommand builds `codefall config`, which holds the subcommands and does nothing itself.
+// stdoutIsTerminal reports whether there is a screen to draw the editor on. It is a variable so the
+// tests can take the path a script takes; nothing else reassigns it.
+var stdoutIsTerminal = ui.StdoutIsTerminal
+
+// NewConfigCommand builds `codefall config`. With no arguments in a terminal it opens the editor;
+// anywhere else it prints what `show` prints and says where the editor is. The subcommands are for
+// scripts, and for anyone who knows exactly what to change.
 func NewConfigCommand(config ConfigUseCase) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "config",
-		Short: "Show and change this project's agents and your persona",
-		Long: "Reads and writes the settings a person would otherwise edit by hand: the agents list and " +
-			"the orders review, consult, and each harness walk in .codefall/settings.json, which is " +
-			"checked in, and the persona in " + userfile.Name +
-			", which is yours alone and kept out of git. Nothing prompts; every value is an argument, " +
-			"so a script can run it. A write the settings would not accept is refused and the file is " +
-			"left as it was.",
+		Short: "Edit this project's agents and your persona",
+		Long: "With no arguments in a terminal, opens an editor over the agents list, the orders review, " +
+			"consult, and each harness walk, and your persona. The agents and their orders live in " +
+			settingsName + ", which is checked in; the persona lives in " + userfile.Name +
+			", which is yours alone and kept out of version control. The subcommands change one value " +
+			"each, take every value as an argument, and never prompt, so a script can run them. A write " +
+			"the settings would not accept is refused, in the editor and the subcommands alike, and the " +
+			"file is left as it was.",
 		Args: cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			dir, err := os.Getwd()
+			if err != nil {
+				return fmt.Errorf("config: %w", err)
+			}
+
+			if stdoutIsTerminal() {
+				return runEditor(cmd.Context(), config, dir, cmd.OutOrStdout())
+			}
+
+			shown, err := config.Show(dir)
+			if err != nil {
+				return err
+			}
+
+			lines := append(configurationLines(shown), "",
+				"Run codefall config in a terminal to edit these, or use its subcommands; codefall config --help lists them.")
+
+			return writeLines(cmd.OutOrStdout(), lines)
+		},
 	}
 
 	cmd.AddCommand(
 		newShowCommand(config),
 		newAgentsCommand(config),
-		newUseCommand(config, settings.BlockReview, application.ReviewOrder()),
-		newUseCommand(config, settings.BlockConsult, application.ConsultOrder()),
+		newOrderCommand(config),
 		newPersonaCommand(config),
 	)
 
@@ -117,7 +144,7 @@ const settingsName = ".codefall/settings.json"
 func newAgentsCommand(config ConfigUseCase) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "agents",
-		Short: "List, add, remove, and order the agents in " + settingsName + ", and set a harness's order",
+		Short: "List, add, remove, and order the agents in " + settingsName,
 		Args:  cobra.NoArgs,
 	}
 
@@ -126,7 +153,6 @@ func newAgentsCommand(config ConfigUseCase) *cobra.Command {
 		newAgentsAddCommand(config),
 		newAgentsRemoveCommand(config),
 		newAgentsOrderCommand(config),
-		newAgentsForCommand(config),
 	)
 
 	return cmd
@@ -250,69 +276,61 @@ func newAgentsOrderCommand(config ConfigUseCase) *cobra.Command {
 	}
 }
 
-// newUseCommand builds `codefall config review` or `codefall config consult`, which holds the command
-// that sets that use's own order.
-func newUseCommand(config ConfigUseCase, use string, order application.Order) *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   use,
-		Short: "Set the order " + use + " walks, in " + settingsName,
-		Args:  cobra.NoArgs,
-	}
-
+// newOrderCommand builds `codefall config order <target> <name>...`, which sets one narrower order:
+// review's own, consult's own, or the one a session in a harness walks. One command for the three,
+// because they are one shape — an ordered subset of the agents — that differs only in where it sits.
+func newOrderCommand(config ConfigUseCase) *cobra.Command {
 	var clear bool
 
-	agents := &cobra.Command{
-		Use:   "agents <name>...",
-		Short: "Set the order " + use + " walks, or --clear it so the wider order applies",
-		Long: "Sets " + use + ".agents in " + settingsName + " to the agents named, in that order. Each " +
-			"must be an agent the list defines, and each is named once; the order need not name every " +
-			"agent. --clear removes the key, so " + use + " walks the per-harness order or the top-level one.",
-		Args: orderArgs(&clear, 0),
+	cmd := &cobra.Command{
+		Use:   "order <" + strings.Join(orderTargets(), "|") + "> <name>...",
+		Short: "Set the order review, consult, or a harness walks, or --clear it",
+		Long: "Sets one narrower order in " + settingsName + ": " + settings.BlockReview + "." +
+			settings.FieldReviewAgents + " when the target is " + settings.BlockReview + ", " +
+			settings.BlockConsult + "." + settings.FieldConsultAgents + " when it is " + settings.BlockConsult +
+			", and " + settings.FieldAgentsByHarness + ".<harness> when it is a harness (" +
+			strings.Join(harness.All(), ", ") + "). Each name must be an agent the list defines, and each " +
+			"is named once; the order need not name every agent. --clear removes the order, so the " +
+			"wider one applies; a harness's block goes with its last order.",
+		Args:      orderArgs(&clear),
+		ValidArgs: orderTargets(),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return runOrder(cmd, config, order, clear, args)
+			return runOrder(cmd, config, orderFor(args[0]), clear, args[1:])
 		},
 	}
 
-	agents.Flags().BoolVar(&clear, "clear", false, "remove the order, so the wider one applies")
-	cmd.AddCommand(agents)
+	cmd.Flags().BoolVar(&clear, "clear", false, "remove the order, so the wider one applies")
 
 	return cmd
 }
 
-// newAgentsForCommand builds `codefall config agents for <harness>`, which sets the order a session
-// running in that harness walks.
-func newAgentsForCommand(config ConfigUseCase) *cobra.Command {
-	var clear bool
-
-	cmd := &cobra.Command{
-		Use:   "for <harness> <name>...",
-		Short: "Set the order a session in one harness walks, or --clear it",
-		Long: "Sets " + settings.FieldAgentsByHarness + ".<harness> in " + settingsName + " to the agents " +
-			"named, in that order, for a session running in that harness (" +
-			strings.Join(harness.All(), ", ") + "). Each must be an agent the list defines, and each is " +
-			"named once. --clear removes the harness's order, and " + settings.FieldAgentsByHarness +
-			" with its last one, so the session walks each use's own order or the top-level one.",
-		Args:      orderArgs(&clear, 1),
-		ValidArgs: harness.All(),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			return runOrder(cmd, config, application.HarnessOrder(args[0]), clear, args[1:])
-		},
-	}
-
-	cmd.Flags().BoolVar(&clear, "clear", false, "remove this harness's order, so the wider one applies")
-
-	return cmd
+// orderTargets is what `order` takes first: the two uses, then the harnesses.
+func orderTargets() []string {
+	return append([]string{settings.BlockReview, settings.BlockConsult}, harness.All()...)
 }
 
-// orderArgs checks an order command's arguments: the fixed ones first, then at least one agent name
-// to set the order, or none with --clear.
-func orderArgs(clear *bool, fixed int) cobra.PositionalArgs {
+// orderFor is the order a target names. A harness the harness module refuses is refused by the use
+// case in that module's words, so nothing is checked here.
+func orderFor(target string) application.Order {
+	switch target {
+	case settings.BlockReview:
+		return application.ReviewOrder()
+	case settings.BlockConsult:
+		return application.ConsultOrder()
+	}
+
+	return application.HarnessOrder(target)
+}
+
+// orderArgs checks the order command's arguments: a target first, then at least one agent name to
+// set the order, or none with --clear.
+func orderArgs(clear *bool) cobra.PositionalArgs {
 	return func(_ *cobra.Command, args []string) error {
-		if len(args) < fixed {
-			return fmt.Errorf("name a harness first (%s)", strings.Join(harness.All(), ", "))
+		if len(args) < 1 {
+			return fmt.Errorf("name what the order is for first (%s)", strings.Join(orderTargets(), ", "))
 		}
 
-		names := len(args) - fixed
+		names := len(args) - 1
 
 		switch {
 		case *clear && names > 0:

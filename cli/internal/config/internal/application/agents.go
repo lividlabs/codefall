@@ -93,9 +93,9 @@ func (c *Config) AddAgent(dir string, agent NewAgent) (domain.Write, error) {
 }
 
 // RemoveAgent takes an agent out of the list. It refuses while an order still names the agent, and
-// says which and the command that changes each, because removing it would leave that order pointing
-// at nothing and which order loses a reader is the team's decision; and it refuses to
-// remove the last agent, because an empty list means the default rather than no agents.
+// says which, because removing it would leave that order pointing at nothing and which order loses a
+// reader is the team's decision; and it refuses to remove the last agent, because an empty list
+// means the default rather than no agents.
 func (c *Config) RemoveAgent(dir, name string) (domain.Write, error) {
 	project, list, err := c.startAgents(dir)
 	if err != nil {
@@ -108,8 +108,7 @@ func (c *Config) RemoveAgent(dir, name string) (domain.Write, error) {
 	}
 
 	if referrers := domain.Referrers(project.doc, name); len(referrers) > 0 {
-		return domain.Write{}, fmt.Errorf("agent %q is still named by %s; change each order first: %s",
-			name, strings.Join(referrers, ", "), strings.Join(changeOrders(project.doc, name, referrers), ", "))
+		return domain.Write{}, domain.StillNamed(name, referrers)
 	}
 
 	if len(list.entries) == 1 {
