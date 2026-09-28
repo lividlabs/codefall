@@ -1,6 +1,6 @@
 ---
 name: codefall-equip
-description: Equip a project with the three things it has to have before the other verbs work. The local environment — start, which brings the services the project develops against up, and update, which makes the local environment match the checkout — declared under local in .codefall/settings.json and run by codefall-refresh. The test harness — a spec runner per surface, its configuration pointed at the testing root, its name declared in test.runners and its commands recorded in the testing root's AGENTS.md — which codefall-test runs cases through. The agents — how another harness is called, declared under harnessConfig, and who reviews and consults, in the agents lists — set up from inside the harness, which knows its own model strings. Each finds what the project already has, or drafts it from what the repository or the session shows, confirms, writes, and declares. Builds and rebuilds; codefall-scaffold and codefall-implement follow the local-scripts procedure.
+description: Equip a project with the three things it has to have before the other verbs work. The local environment — start, which brings the services the project develops against up, and update, which makes the local environment match the checkout — declared under local in .codefall/settings.json and run by codefall-refresh. The test harness — a spec runner per surface, its configuration pointed at the testing root, its name declared in test.runners and its commands recorded in the testing root's AGENTS.md — which codefall-test runs cases through. The agents — how another harness is called, declared under harnessConfig, and who reviews and consults, in the agents lists — set up from any harness, with the parameters read from where each harness keeps them. Each finds what the project already has, or drafts it from what the repository or the session shows, confirms, writes, and declares. Builds and rebuilds; codefall-scaffold and codefall-implement follow the local-scripts procedure.
 argument-hint: "[local | test | agents] [path]"
 disable-model-invocation: true
 allowed-tools:
@@ -298,24 +298,24 @@ case is written by `/codefall-implement` when a bead names one.
 
 ## Process — the agents
 
-`reference/agents.md` carries this track in full. Read it at step 1 and follow it. It runs inside
-the harness being set up, which knows its own model string. Every reply fits on one screen:
-the configuration, one question, one change.
+`reference/agents.md` carries this track in full. Read it at step 1 and follow it. Any harness
+can be set up from any other; the track finds the parameters. Every reply fits on one screen: the
+configuration, one question, one change.
 
 1. **Read** `harnesses`, `harnessConfig`, and `agents`; no settings file means `codefall init`
-   comes first. Answer which harness this is per `../../../.codefall/shared/running-agents.md`;
-   `unknown` stops here.
-2. **Show the configuration** in the reference's shape, then **ask what to change**: set up this
+   comes first. Answer which harness this is per
+   `../../../.codefall/shared/running-agents.md`.
+2. **Show the configuration** in the reference's shape, then **ask what to change**: set up a
    harness, change the lists, or nothing. A file `codefall doctor` says does not match the schema
    is not shown: say so in one line and rebuild it.
 3. **Do the one thing chosen**, showing what will be written and asking `Write this?`. Nothing
    stops.
-4. **Write** on `equip/agents`, through `codefall config` when the CLI is on `PATH`, else the JSON
-   directly, keeping the file's formatting.
+4. **Write** on `equip/agents` through `codefall config`; no CLI means stop and say to install it.
+   A file out of date with the schema is written directly, then checked by `codefall doctor`.
 5. **Prove it**: one run through `../../../.codefall/shared/run-agent.sh`, exit `0` and a
-   non-empty out-file, reported in one line; then `codefall doctor`.
+   non-empty out-file; then `codefall doctor`.
 6. **Report** the configuration as it now stands, land it as its own pull request, and end with what
-   the user does next: merge, and run this track inside each other harness.
+   the user does next: merge, and rerun it for any harness not yet set up.
 
 ## Rules
 
@@ -343,5 +343,5 @@ the configuration, one question, one change.
   `/codefall-implement`.
 - **Refresh, test, and review are not this skill.** Say so and stop when the user wants the
   environment brought current, a suite run, or a review done, rather than equipped.
-- **The agents track runs inside the harness it sets up.** What the session's own record says is
-  what is written, once the user confirms it.
+- **The agents track sets up any harness from any harness.** Parameters come from that harness's
+  own records and config, and are written once the user confirms them.
