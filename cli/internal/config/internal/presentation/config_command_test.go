@@ -206,7 +206,7 @@ func TestAgentsRefusesTheWrongArguments(t *testing.T) {
 		{name: "an active agent alone", args: []string{"agents", "muse"}, want: "name the list too"},
 		{name: "no agents and no --clear", args: []string{"agents", "muse", "review"}, want: "name at least one agent"},
 		{name: "agents with --clear", args: []string{"agents", "muse", "review", "claude", "--clear"}, want: "--clear takes no agents"},
-		{name: "a harness codefall cannot start", args: []string{"agents", "muse", "review", "cursor"}, want: `agent "cursor": harness unknown value "cursor"`},
+		{name: "a harness written no way codefall reads", args: []string{"agents", "muse", "review", "Cursor"}, want: `agent "Cursor": harness "Cursor" is not a harness`},
 		{name: "an empty model", args: []string{"agents", "muse", "review", "codex:"}, want: "names an empty model"},
 	} {
 		t.Run(tc.name, func(t *testing.T) {

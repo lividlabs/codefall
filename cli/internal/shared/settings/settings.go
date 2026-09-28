@@ -223,13 +223,17 @@ type fieldSpec struct {
 //
 // The review, local, and test blocks are optional at the top level and complete when they are there:
 // a project set up before a block existed is still valid settings, and one that carries it carries
-// every field. The agents list is optional too, and absent means the default (ADR-009.2).
+// every field. The agents list is optional too, and absent means the default (ADR-009.2), and so is
+// the harnessConfig object, whose absence means every harness runs bare. Each of those two has a
+// second check in Validate that reads the whole document: a list item's harness may be a
+// harnessConfig key, which no single field's check can see.
 var topLevelFields = []fieldSpec{
 	{"$schema", false, isString},
 	{"version", true, isVersion},
 	{"tracker", true, isTracker},
 	{FieldHarnesses, true, isHarnesses},
 	{FieldAgents, false, isAgents},
+	{FieldHarnessConfig, false, isObject},
 	{BlockReview, false, isObject},
 	{BlockLocal, false, isObject},
 	{BlockTest, false, isObject},
@@ -533,6 +537,18 @@ func Validate(doc Document) []string {
 		}
 	}
 
+	// The harnessConfig blocks are checked before the agents' harness names, because a name that is
+	// not a harness is accepted only as the key of a block that passed.
+	if _, present := lookup(doc, FieldHarnessConfig); present && !rejected[FieldHarnessConfig] {
+		problems = append(problems, harnessConfigProblems(doc)...)
+	}
+
+	if _, present := lookup(doc, FieldAgents); present && !rejected[FieldAgents] {
+		if reason := agentHarnessProblem(doc); reason != "" {
+			problems = append(problems, FieldAgents+": "+reason)
+		}
+	}
+
 	// The review, local, and test blocks are independent of the tracker, so they are checked before
 	// the tracker's own block decides whether there is anything further to say.
 	for _, block := range []struct {
@@ -768,12 +784,7 @@ func isRunners(v any) string {
 // unknownValue is how both closed sets of names report a value that is not one of them: the value it
 // read, and the ones that would have been accepted, because that is what the reader needs next.
 func unknownValue(name string, expected []string) string {
-	quoted := make([]string, 0, len(expected))
-	for _, value := range expected {
-		quoted = append(quoted, fmt.Sprintf("%q", value))
-	}
-
-	return fmt.Sprintf("unknown value %q (expected %s)", name, strings.Join(quoted, ", "))
+	return fmt.Sprintf("unknown value %q (expected %s)", name, quotedList(expected))
 }
 
 func isPositiveInteger(v any) string {

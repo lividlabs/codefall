@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"slices"
+	"strings"
 	"testing"
 
 	"github.com/lividlabs/codefall-cli/cli/internal/shared/harness"
@@ -165,12 +166,86 @@ func TestSchemaMatchesTheFieldTables(t *testing.T) {
 
 	agentProperties := schemaObject(t, agent, "properties")
 
-	if got, want := schemaList(t, schemaObject(t, agentProperties, FieldAgentHarness), "enum"), AgentHarnesses(); !slices.Equal(got, want) {
-		t.Errorf("$defs.agent.properties.%s.enum = %q, want %q", FieldAgentHarness, got, want)
+	// An agent's harness is a harness name, current, or a harnessConfig key, and a key is any slug,
+	// so the schema pins the shape rather than a closed list, and its description names the three
+	// forms for whoever reads the schema instead of this module.
+	agentHarness := schemaObject(t, agentProperties, FieldAgentHarness)
+
+	if _, closed := agentHarness["enum"]; closed {
+		t.Errorf("$defs.agent.properties.%s.enum is set, want none: a %s key is accepted too", FieldAgentHarness, FieldHarnessConfig)
+	}
+
+	if got := schemaText(t, agentHarness, "pattern"); got != HarnessKeyPattern {
+		t.Errorf("$defs.agent.properties.%s.pattern = %q, want %q", FieldAgentHarness, got, HarnessKeyPattern)
+	}
+
+	description := schemaText(t, agentHarness, "description")
+	for _, form := range append(harness.All(), HarnessCurrent, FieldHarnessConfig) {
+		if !strings.Contains(description, form) {
+			t.Errorf("$defs.agent.properties.%s.description = %q, want it to name %q", FieldAgentHarness, description, form)
+		}
 	}
 
 	if got := schemaText(t, schemaObject(t, agentProperties, FieldAgentModel), "type"); got != "string" {
 		t.Errorf("$defs.agent.properties.%s.type = %q, want string", FieldAgentModel, got)
+	}
+
+	// The harnessConfig object is keyed by slug, and each block carries the five fields, typed, with
+	// the harness field closed to the five names: a variant names a binary, never current.
+	harnessConfig := schemaObject(t, properties, FieldHarnessConfig)
+
+	if got := schemaText(t, harnessConfig, "type"); got != "object" {
+		t.Errorf("properties.%s.type = %q, want object", FieldHarnessConfig, got)
+	}
+
+	if schemaBool(t, harnessConfig, "additionalProperties") {
+		t.Errorf("properties.%s.additionalProperties is true, want false: a key must match the slug pattern", FieldHarnessConfig)
+	}
+
+	patterns := schemaObject(t, harnessConfig, "patternProperties")
+
+	if got, want := slices.Sorted(maps.Keys(patterns)), []string{HarnessKeyPattern}; !slices.Equal(got, want) {
+		t.Fatalf("properties.%s.patternProperties keys = %q, want %q", FieldHarnessConfig, got, want)
+	}
+
+	configBlock := schemaObject(t, patterns, HarnessKeyPattern)
+
+	if got := schemaText(t, configBlock, "type"); got != "object" {
+		t.Errorf("properties.%s block type = %q, want object", FieldHarnessConfig, got)
+	}
+
+	if !schemaBool(t, configBlock, "additionalProperties") {
+		t.Errorf("properties.%s block additionalProperties is false, want true", FieldHarnessConfig)
+	}
+
+	blockFields := schemaObject(t, configBlock, "properties")
+
+	if got, want := slices.Sorted(maps.Keys(blockFields)), slices.Sorted(slices.Values(HarnessConfigFields())); !slices.Equal(got, want) {
+		t.Errorf("properties.%s block properties keys = %q, want %q", FieldHarnessConfig, got, want)
+	}
+
+	if got, want := schemaList(t, schemaObject(t, blockFields, FieldConfigHarness), "enum"), harness.All(); !slices.Equal(got, want) {
+		t.Errorf("properties.%s block %s.enum = %q, want %q", FieldHarnessConfig, FieldConfigHarness, got, want)
+	}
+
+	for _, field := range []string{FieldConfigHarness, FieldModelFlag, FieldProvider, FieldEnv} {
+		if got := schemaText(t, schemaObject(t, blockFields, field), "type"); got != "string" {
+			t.Errorf("properties.%s block %s.type = %q, want string", FieldHarnessConfig, field, got)
+		}
+	}
+
+	args := schemaObject(t, blockFields, FieldArgs)
+
+	if got := schemaText(t, args, "type"); got != "array" {
+		t.Errorf("properties.%s block %s.type = %q, want array", FieldHarnessConfig, FieldArgs, got)
+	}
+
+	if got := schemaText(t, schemaObject(t, args, "items"), "type"); got != "string" {
+		t.Errorf("properties.%s block %s.items.type = %q, want string", FieldHarnessConfig, FieldArgs, got)
+	}
+
+	if slices.Contains(schemaList(t, schema, "required"), FieldHarnessConfig) {
+		t.Errorf("required contains %q, want it to stay optional", FieldHarnessConfig)
 	}
 
 	if slices.Contains(schemaList(t, schema, "required"), FieldAgents) {

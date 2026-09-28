@@ -962,7 +962,7 @@ func TestDiagnoseRun(t *testing.T) {
 				afterSettingsDone...),
 			target: domain.SettingsComplete.ID,
 			wantDetail: `settings.json is incomplete: agents: [0].review[0].harness: unknown value "cursor" ` +
-				`(expected "agy", "claude", "codex", "current", "muse", "opencode")`,
+				`(expected "agy", "claude", "codex", "current", "muse", "opencode", or a harnessConfig key)`,
 			wantRemedy: mo.Some(fixRemedy),
 		},
 		{

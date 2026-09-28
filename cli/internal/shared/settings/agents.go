@@ -114,28 +114,31 @@ func ParseActiveAgent(name string) (string, error) {
 
 // ParseAgent reads an agent from the form a person types, `harness` or `harness:model`: the form
 // `via=` takes, and the form a report writes back. A former spelling of a harness resolves to its
-// current name.
+// current name. A name that is not a harness is accepted when it is written the way a harnessConfig
+// key is, since whether the document holds that key is the document's check to make; a name written
+// any other way can be nothing, and is refused here.
 func ParseAgent(text string) (Agent, error) {
 	name, model, hasModel := strings.Cut(text, ":")
-
-	if name == HarnessCurrent {
-		if hasModel && model == "" {
-			return Agent{}, fmt.Errorf("agent %q names an empty model", text)
-		}
-
-		return Agent{Harness: name, Model: modelOf(model, hasModel)}, nil
-	}
-
-	parsed, err := harness.Parse(name)
-	if err != nil {
-		return Agent{}, fmt.Errorf("agent %q: harness %s", text, unknownValue(name, AgentHarnesses()))
-	}
 
 	if hasModel && model == "" {
 		return Agent{}, fmt.Errorf("agent %q names an empty model", text)
 	}
 
-	return Agent{Harness: parsed, Model: modelOf(model, hasModel)}, nil
+	if name == HarnessCurrent {
+		return Agent{Harness: name, Model: modelOf(model, hasModel)}, nil
+	}
+
+	if parsed, err := harness.Parse(name); err == nil {
+		return Agent{Harness: parsed, Model: modelOf(model, hasModel)}, nil
+	}
+
+	if !harnessKeyRegexp.MatchString(name) {
+		return Agent{}, fmt.Errorf("agent %q: harness %q is not a harness (%s), %s, or a %s key, "+
+			"which is lowercase letters and digits joined by hyphens",
+			text, name, strings.Join(harness.All(), ", "), HarnessCurrent, FieldHarnessConfig)
+	}
+
+	return Agent{Harness: name, Model: modelOf(model, hasModel)}, nil
 }
 
 func modelOf(model string, has bool) mo.Option[string] {
@@ -151,7 +154,7 @@ func modelOf(model string, has bool) mo.Option[string] {
 // already been told what is wrong with it, and a list nothing can act on is no list.
 func Agents(doc Document) []Entry {
 	value, present := lookup(doc, FieldAgents)
-	if !present || isAgents(value) != "" {
+	if !present || isAgents(value) != "" || agentHarnessProblem(doc) != "" {
 		return DefaultAgents()
 	}
 
@@ -258,8 +261,9 @@ func agentList(value any) []Agent {
 
 // isAgents accepts the top-level array: any number of entries, each an object naming an active
 // agent nobody else in the array names, with a review list, a consult list, or both, each a
-// non-empty array of agents on a harness codefall can start or current. An empty array is accepted
-// and means the default, the same as an absent one.
+// non-empty array of agents whose harness is written. An empty array is accepted and means the
+// default, the same as an absent one. What a harness may name is checked against the whole document
+// afterwards, by agentHarnessProblem, because a harnessConfig key is one of the answers.
 func isAgents(v any) string {
 	items, ok := v.([]any)
 	if !ok {
@@ -309,10 +313,10 @@ func isAgents(v any) string {
 	return ""
 }
 
-// isAgentList accepts one feature's list: at least one agent, each an object with a harness codefall
-// can start or current, and a model when the project has chosen one. An empty list is refused
-// rather than read as absent: leaving the key out is how an entry defers to the default, and an
-// empty list would say the same thing a second way.
+// isAgentList accepts one feature's list: at least one agent, each an object with a harness written
+// as a string, and a model when the project has chosen one. An empty list is refused rather than
+// read as absent: leaving the key out is how an entry defers to the default, and an empty list
+// would say the same thing a second way.
 func isAgentList(v any) string {
 	items, ok := v.([]any)
 	if !ok {
@@ -334,8 +338,8 @@ func isAgentList(v any) string {
 			return fmt.Sprintf("[%d].%s: missing", i, FieldAgentHarness)
 		}
 
-		if reason := isAgentHarness(runs); reason != "" {
-			return fmt.Sprintf("[%d].%s: %s", i, FieldAgentHarness, reason)
+		if _, isText := runs.(string); !isText {
+			return fmt.Sprintf("[%d].%s: must be a string", i, FieldAgentHarness)
 		}
 
 		if model, present := lookup(fields, FieldAgentModel); present {
@@ -346,22 +350,6 @@ func isAgentList(v any) string {
 	}
 
 	return ""
-}
-
-// isAgentHarness accepts what runs an agent: a harness under the name it has now, or current. A
-// former spelling is refused here, unlike in the harnesses field: the agents list is newer than
-// the rename, so nothing checked in can carry one.
-func isAgentHarness(v any) string {
-	name, ok := v.(string)
-	if !ok {
-		return "must be a string"
-	}
-
-	if name == HarnessCurrent || harness.SkillsDir(name).IsPresent() {
-		return ""
-	}
-
-	return unknownValue(name, AgentHarnesses())
 }
 
 // DescribeAgent is the form a person types and a report reads back: "codex:gpt-5-codex", or
