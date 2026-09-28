@@ -115,29 +115,34 @@ A skill names a shared file `../../../.codefall/shared/<file>`, which is the sam
 skills directory. Nothing installed is a symlink, and no maintainer document from this repository is
 installed into your project. [ADR-006](docs/adrs/ADR-006-install-layout.md) records why.
 
-`settings.json` also carries an `agents` list: the readers a verb reaches for when it needs one other
-than the session, such as a reviewer, in the order to try them. Each entry has a name, the harness
-that runs it, named for its binary or `current` for whichever harness the session is in, and
-optionally a model. A run skips an agent this machine cannot start and moves to the next, so one
-checked-in list serves every machine, and `doctor` reports which entries yours can run. `init` writes
-one entry, `subagent` on `current`, which is what every verb did before the list existed. `review`
-walks it for its reviewer, and `implement` and `design` walk it for a consult when a run cannot
-settle a question on its own; a `review` or `consult` block may carry its own order.
-`codefall config` in a terminal opens an editor over all of it: a menu of the agents, the review
-order, the consult order, the per-harness orders, and your persona, each showing its current value.
-In the agents section you move an entry with shift and the arrows, add one with `a`, remove one with
-`d`, and save the order with enter; in an order section you switch agents on and off with space,
-move them the same way, and save, where nothing switched on clears the order. Esc goes back, `q`
-quits, and every write is reported once the editor closes, in the same line a subcommand prints.
-The subcommands are for scripts: `codefall config agents add <name> --harness <harness|current>
-[--model <model>]` adds an agent, last or `--before`/`--after` another, `codefall config agents
-remove <name>` takes one out unless an order still names it, and `codefall config agents order
-<name>...` sets the order. `codefall config order <review|consult|harness> <name>...` sets the
-narrower order the target names, `review.agents`, `consult.agents`, or `agentsByHarness.<harness>`,
-from agents in the list, each once, and `--clear` in place of the names removes it so the wider
-order applies. `codefall config show` prints the list and every order, and so does the bare command
-when there is no terminal to draw on.
-[ADR-009](docs/adrs/ADR-009-agents.md) records the shape.
+`settings.json` also carries an `agents` list: who codefall asks when a verb needs another reader,
+a reviewer for `review` or a second opinion for a run that cannot settle a question, chosen by the
+harness you are running codefall in. Each entry is for one **active agent**, a harness name or
+`default`, and holds a `review` list and a `consult` list of agents to try in order, each a harness
+named for its binary, or `current` for a subagent of whichever harness you are in, with an optional
+model. A session reads the entry for its own harness, else `default`; a list left out means the
+default's; and a run skips an agent this machine cannot start and moves to the next, so one
+checked-in file serves every machine. `init` writes one `default` entry whose lists each hold
+`current`, which is what every verb did before the list existed, and `doctor` reports which harnesses
+yours can run and which lists never fall back to `current`.
+
+```json
+"agents": [
+  { "activeAgent": "default", "review": [{ "harness": "current" }], "consult": [{ "harness": "current" }] },
+  { "activeAgent": "muse", "review": [{ "harness": "claude" }, { "harness": "codex", "model": "gpt-5-codex" }] }
+]
+```
+
+`codefall config` in a terminal opens an editor over it: a menu of Agents, Reviews, and Persona.
+Agents lists the active agents, `default` first and then each harness; open one and its Review and
+Consult lists are there to reorder with shift and the arrows, add to with `a`, trim with `d`, hand
+back to the default with `c`, and save with enter. Reviews holds whether review posts its findings
+to the pull request. Esc goes back, `q` quits, and every write is reported once the editor closes,
+in the same line a subcommand prints. The subcommands are for scripts:
+`codefall config agents muse review claude codex:gpt-5-codex` sets one list, `--clear` in place of
+the agents removes it, `codefall config agents` prints them all, and `codefall config review posting
+on|off` sets posting. `codefall config show` prints all of it, and so does the bare command when
+there is no terminal to draw on. [ADR-009.2](docs/adrs/ADR-009.2-agents.md) records the shape.
 
 `.codefall/user.json` sits beside `settings.json` and describes the person at the keyboard rather
 than the project, so it is yours and is never checked in: `init` adds it to `.gitignore`. Its one
@@ -202,7 +207,7 @@ what to delete.
 | `codefall create <dir>` | Makes the directory and its git repository, commits a README and a `.gitignore`, runs `init` there, and offers the push |
 | `codefall init` | Sets a directory up for codefall, once: settings, the extension for each harness, Beads, hooks, the `AGENTS.md` sections, the testing tree, and the manifest that records the run |
 | `codefall upgrade` | Brings an installed project level with the binary, for the harnesses the settings record: warns about the breaking changes in between, reinstalls, removes what it no longer ships, and touches nothing it did not write |
-| `codefall config` | Opens an editor over the agents, their orders, and your persona in a terminal; for scripts, shows the effective configuration (`show`), changes the agents list (`agents list`, `add`, `remove`, `order`), sets or clears the review, consult, and per-harness orders (`order <review\|consult\|harness>`), and prints or sets the persona (`persona`), and refuses a write the settings would not accept, in the editor and the subcommands alike |
+| `codefall config` | Opens an editor over the agents, reviews, and your persona in a terminal; for scripts, shows the effective configuration (`show`), sets or clears who reviews or consults for sessions in one harness (`agents <activeAgent> <review\|consult> <harness[:model]>...`, `--clear`), turns posting on or off (`review posting`), and prints or sets the persona (`persona`), and refuses a write the settings would not accept, in the editor and the subcommands alike |
 | `codefall doctor` | Reports whether a project has what codefall needs, with a remedy per unmet check, and repairs nothing |
 
 [ADR-010](docs/adrs/ADR-010-upgrade.md) records why `init` runs once and `upgrade` is its own command.
@@ -544,9 +549,10 @@ handle flight fulfillment" — and it searches, shows you the files it found, an
 a line of them.
 
 **The context that finds a problem is never the one that fixes it.** The review runs in the first
-agent of your project's `agents` order that this machine can run — a subagent of the current
-harness when nothing is configured, otherwise whichever reader the team settled on, each in its own
-read-only mode — and `via=` names one agent or a raw `harness[:model]` for a single run. An agent
+agent this machine can run from the review list of your project's entry for the harness you are in,
+else its `default` entry — a subagent of the current harness when nothing is configured, otherwise
+whichever reader the team settled on, each in its own read-only mode — and `via=` names a
+`harness[:model]` for a single run. An agent
 that is not installed here is skipped, one that fails hands the prompt to the next, and the report
 names every one tried. Then you triage, and this session applies what you took. A model that both
 finds and fixes grades its own work on the next pass, and the second reading goes through the same

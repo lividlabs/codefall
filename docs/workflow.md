@@ -33,7 +33,7 @@ installs for each:
   the file does not already name it.
 
 `codefall doctor` checks that all of it is present and runnable. [ADR-006](adrs/ADR-006-install-layout.md)
-records the layout. `codefall config` changes the agents list in `settings.json` and the persona in
+records the layout. `codefall config` changes who reviews and consults in `settings.json` and the persona in
 `user.json` afterwards, one command at a time and without prompting.
 
 ## The chain
@@ -126,14 +126,15 @@ dependency, a migration, or generated code changes `start` or `update` in the sa
   before its first file, commits what it wrote by path, and offers the push and the pull request;
   a document never sits uncommitted on `main`. `implement` does this per task; the document verbs,
   `scaffold`, `equip`, and `upgrade` follow the shared `landing.md` beside this file's installed copy.
-- **The context that finds a problem never fixes it.** `review` runs in the first agent of the
-  project's configured order that this machine can run, a subagent of the current harness with
-  nothing configured, and `via=` overrides that for one run. Wherever it runs, that context reviews
+- **The context that finds a problem never fixes it.** `review` runs in the first agent this machine
+  can run from the review list of the project's entry for the harness the session is in, else its
+  `default` entry, a subagent of the current harness with nothing configured, and `via=` overrides
+  that for one run. Wherever it runs, that context reviews
   and this session triages and applies. A test criterion is never written from the
   implementation it verifies, and never edited to make a run pass.
 - **A skill refuses only what it cannot do.** A missing runner, tool, or tracker profile is an exit;
   disagreement about size or fit is said aloud and then the user's call is followed.
 - **A consult proposes; the session decides.** A run that cannot settle a technical question puts it
-  once to the project's `consult` order of agents, a subagent of the current harness when nothing is
-  configured, and reads the answer as analysis: never a write, never an ADR, never a stand-in for a
+  once to the consult list of the project's entry for the harness the session is in, else its
+  `default` entry, a subagent of the current harness when nothing is configured, and reads the answer as analysis: never a write, never an ADR, never a stand-in for a
   preference the user has stated, and every consult named in the report.
