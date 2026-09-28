@@ -6,24 +6,18 @@ import (
 	"fmt"
 	"io/fs"
 	"path/filepath"
-	"strings"
+
+	"github.com/samber/mo"
 
 	"github.com/lividlabs/codefall-cli/cli/internal/initcmd/internal/domain"
 	"github.com/lividlabs/codefall-cli/cli/internal/shared/settings"
 	"github.com/lividlabs/codefall-cli/cli/internal/shared/userfile"
 )
 
-// ignoreEntry is one line codefall needs in an ignore file: the entry, and the comment that says why
-// it is there for whoever finds the file later.
-type ignoreEntry struct {
-	entry   string
-	comment string
-}
-
-// ignoreFile is one file and every entry codefall needs in it, in the order the step writes them.
+// ignoreFile is one file and every line codefall needs in it, in the order the step writes them.
 type ignoreFile struct {
-	file    string
-	entries []ignoreEntry
+	file  string
+	lines []settings.IgnoreLine
 }
 
 // ignoreFiles is what the step writes. The .ignore entries keep what codefall commits and nobody
@@ -38,17 +32,17 @@ type ignoreFile struct {
 // chose.
 func ignoreFiles(root string) []ignoreFile {
 	return []ignoreFile{
-		{file: settings.IgnoreName, entries: []ignoreEntry{
-			{entry: settings.IgnoreEntry, comment: settings.IgnoreComment},
-			{entry: settings.IgnoreEntryTests, comment: settings.IgnoreTestsComment},
+		{file: settings.IgnoreName, lines: []settings.IgnoreLine{
+			{Entry: settings.IgnoreEntry, Comment: settings.IgnoreComment},
+			{Entry: settings.IgnoreEntryTests, Comment: settings.IgnoreTestsComment},
 		}},
-		{file: settings.GitIgnoreName, entries: []ignoreEntry{
-			{entry: settings.RefreshStamp, comment: settings.GitIgnoreComment},
-			{entry: userfile.Name, comment: userfile.GitIgnoreComment},
-			{entry: settings.TestArtifacts(root), comment: settings.TestArtifactsComment},
+		{file: settings.GitIgnoreName, lines: []settings.IgnoreLine{
+			{Entry: settings.RefreshStamp, Comment: settings.GitIgnoreComment},
+			{Entry: userfile.Name, Comment: userfile.GitIgnoreComment},
+			{Entry: settings.TestArtifacts(root), Comment: settings.TestArtifactsComment},
 		}},
-		{file: settings.GitAttributesName, entries: []ignoreEntry{
-			{entry: settings.InteractionsAttribute, comment: settings.GitAttributesComment},
+		{file: settings.GitAttributesName, lines: []settings.IgnoreLine{
+			{Entry: settings.InteractionsAttribute, Comment: settings.GitAttributesComment},
 		}},
 	}
 }
@@ -88,9 +82,9 @@ func alreadyNamed(files []ignoreFile) []string {
 	clauses := make([]string, 0, len(files))
 
 	for _, file := range files {
-		entries := make([]string, 0, len(file.entries))
-		for _, entry := range file.entries {
-			entries = append(entries, entry.entry)
+		entries := make([]string, 0, len(file.lines))
+		for _, line := range file.lines {
+			entries = append(entries, line.Entry)
 		}
 
 		clauses = append(clauses, file.file+" already names "+sentenceList(entries))
@@ -100,58 +94,33 @@ func alreadyNamed(files []ignoreFile) []string {
 }
 
 // ensureIgnored puts every entry one file is missing into it, in one read and one write, and says
-// what that took — or "" when the file already had all of them.
+// what that took — or "" when the file already had all of them. What the file's new contents are is
+// the settings module's answer, which `codefall config persona` reaches for too.
 func (i *Initialize) ensureIgnored(dir string, file ignoreFile) (string, error) {
 	path := filepath.Join(dir, file.file)
 
-	existing, err := i.files.ReadFile(path)
+	existing := mo.None[string]()
+
+	data, err := i.files.ReadFile(path)
 
 	switch {
-	case errors.Is(err, fs.ErrNotExist):
-		var body strings.Builder
-
-		for at, entry := range file.entries {
-			if at > 0 {
-				body.WriteString("\n")
-			}
-
-			body.WriteString(entry.comment + "\n" + entry.entry + "\n")
-		}
-
-		if err := i.files.WriteFile(path, []byte(body.String())); err != nil {
-			return "", fmt.Errorf("write %s: %w", file.file, err)
-		}
-
-		return "wrote " + file.file, nil
-
-	case err != nil:
+	case err == nil:
+		existing = mo.Some(string(data))
+	case !errors.Is(err, fs.ErrNotExist):
 		return "", fmt.Errorf("read %s: %w", file.file, err)
 	}
 
-	body := string(existing)
-
-	var added []string
-
-	for _, entry := range file.entries {
-		if settings.NamesEntry(body, entry.entry) {
-			continue
-		}
-
-		// A file that does not end in a newline would otherwise have its last entry joined to ours.
-		if !strings.HasSuffix(body, "\n") {
-			body += "\n"
-		}
-
-		body += "\n" + entry.comment + "\n" + entry.entry + "\n"
-		added = append(added, entry.entry)
-	}
-
+	body, added := settings.WithIgnoreLines(existing, file.lines)
 	if len(added) == 0 {
 		return "", nil
 	}
 
 	if err := i.files.WriteFile(path, []byte(body)); err != nil {
 		return "", fmt.Errorf("write %s: %w", file.file, err)
+	}
+
+	if existing.IsAbsent() {
+		return "wrote " + file.file, nil
 	}
 
 	return fmt.Sprintf("added %s to %s", sentenceList(added), file.file), nil

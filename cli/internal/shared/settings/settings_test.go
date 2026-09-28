@@ -5,6 +5,8 @@ import (
 	"slices"
 	"strings"
 	"testing"
+
+	"github.com/samber/mo"
 )
 
 // complete returns the settings from the schema's example, which every case here mutates.
@@ -566,6 +568,53 @@ func TestNamesEntry(t *testing.T) {
 				if got := NamesEntry(body, entry); got != tc.names {
 					t.Errorf("NamesEntry(%q, %q) = %v, want %v", body, entry, got, tc.names)
 				}
+			}
+		})
+	}
+}
+
+// One file's contents with the lines it lacks appended, each under its comment, and the entries that
+// took. A missing file gets every line, and a file that already names them all is left as it was.
+func TestWithIgnoreLines(t *testing.T) {
+	lines := []IgnoreLine{
+		{Entry: RefreshStamp, Comment: GitIgnoreComment},
+		{Entry: ".codefall/user.json", Comment: "# user"},
+	}
+
+	for _, tc := range []struct {
+		name      string
+		existing  mo.Option[string]
+		wantBody  string
+		wantAdded []string
+	}{
+		{
+			name:      "a missing file",
+			existing:  mo.None[string](),
+			wantBody:  GitIgnoreComment + "\n" + RefreshStamp + "\n\n# user\n.codefall/user.json\n",
+			wantAdded: []string{RefreshStamp, ".codefall/user.json"},
+		},
+		{
+			name:      "a file missing one line, without a trailing newline",
+			existing:  mo.Some("vendor/\n" + RefreshStamp),
+			wantBody:  "vendor/\n" + RefreshStamp + "\n\n# user\n.codefall/user.json\n",
+			wantAdded: []string{".codefall/user.json"},
+		},
+		{
+			name:      "a file that names every line",
+			existing:  mo.Some(RefreshStamp + "\n  .codefall/user.json\n"),
+			wantBody:  RefreshStamp + "\n  .codefall/user.json\n",
+			wantAdded: nil,
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			body, added := WithIgnoreLines(tc.existing, lines)
+
+			if body != tc.wantBody {
+				t.Errorf("body = %q, want %q", body, tc.wantBody)
+			}
+
+			if !slices.Equal(added, tc.wantAdded) {
+				t.Errorf("added = %q, want %q", added, tc.wantAdded)
 			}
 		})
 	}
