@@ -192,7 +192,7 @@ func TestUpgradeCommandIsCurrentOnlyForTheHarnessItInstalled(t *testing.T) {
 			}
 
 			// Every case runs the use case; what differs is whether it is told the install is current
-			// and so copies nothing.
+			// and so skips Beads and prints only what changed.
 			if !initialize.ran {
 				t.Fatalf("ran = false, want every upgrade to run\n%s", out)
 			}
@@ -232,8 +232,8 @@ func TestUpgradeCommandReportsWhatARunOverACurrentInstallRepaired(t *testing.T) 
 	}
 }
 
-// A current install whose repair steps all found their work done is up to date, and that is the
-// whole of what the run says.
+// A current install whose steps all found their work done, the extension copy included, is up to
+// date, and that is the whole of what the run says.
 func TestUpgradeCommandSaysACurrentInstallWithNothingMissingIsUpToDate(t *testing.T) {
 	initialize := newFakeInitialize()
 	initialize.exists = true

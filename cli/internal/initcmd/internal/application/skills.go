@@ -13,26 +13,27 @@ import (
 )
 
 // fetchSkills copies the skills into one skills directory, minus the maintainer documents a project
-// has no reader for, and hands back what it wrote relative to that directory.
-func (i *Initialize) fetchSkills(ctx context.Context, dir, dest string) ([]string, error) {
-	written, err := i.source.Fetch(ctx, filepath.Join(dir, dest), []string{skillsSource}, maintainerDocs)
+// has no reader for, and hands back what it installed and what it changed, relative to that
+// directory.
+func (i *Initialize) fetchSkills(ctx context.Context, dir, dest string) (Fetched, error) {
+	fetched, err := i.source.Fetch(ctx, filepath.Join(dir, dest), []string{skillsSource}, maintainerDocs)
 	if err != nil {
-		return nil, fmt.Errorf("install the embedded extension: %w", err)
+		return Fetched{}, fmt.Errorf("install the embedded extension: %w", err)
 	}
 
-	return written, nil
+	return fetched, nil
 }
 
 // fetchShared copies the files a path reaches into .codefall/: the scripts every harness's hooks
 // run, and the files the skills read. It runs once per install rather than once per harness, because
 // one copy is what every path codefall writes points at.
-func (i *Initialize) fetchShared(ctx context.Context, dir string) ([]string, error) {
-	written, err := i.source.Fetch(ctx, filepath.Join(dir, codefallDir), []string{hooksSource, sharedSource}, nil)
+func (i *Initialize) fetchShared(ctx context.Context, dir string) (Fetched, error) {
+	fetched, err := i.source.Fetch(ctx, filepath.Join(dir, codefallDir), []string{hooksSource, sharedSource}, nil)
 	if err != nil {
-		return nil, fmt.Errorf("install codefall's shared files: %w", err)
+		return Fetched{}, fmt.Errorf("install codefall's shared files: %w", err)
 	}
 
-	return written, nil
+	return fetched, nil
 }
 
 // Installation is what finished runs recorded, as presentation reads it back: the version each

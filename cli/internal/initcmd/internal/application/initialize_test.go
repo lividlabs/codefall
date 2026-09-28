@@ -217,6 +217,9 @@ type fakeExtensionSource struct {
 	// while the copy into a skills directory succeeds.
 	failOn string
 	data   map[string][]byte
+	// files, when set, is the file system the fake copies into, so a test can delete or edit a copied
+	// file and watch the next run put it back.
+	files *fakeFileSystem
 }
 
 // newFakeExtensionSource answers with the hook definitions and the documents under agents/: the two
@@ -237,21 +240,43 @@ var fetched = map[string]string{
 	"shared":       "shared/preflight.sh",
 }
 
+// shippedBytes is what the fake's tree holds at a path, for a fake bound to a file system.
+func shippedBytes(path string) []byte {
+	return []byte("shipped " + path + "\n")
+}
+
 func (f *fakeExtensionSource) Fetch(
 	_ context.Context, destDir string, sources, exclude []string,
-) ([]string, error) {
+) (Fetched, error) {
 	f.calls = append(f.calls, fetchCall{dir: destDir, sources: sources, exclude: exclude})
 
-	written := make([]string, 0, len(sources))
+	var result Fetched
+
 	for _, source := range sources {
-		written = append(written, fetched[source])
+		path := fetched[source]
+		result.Files = append(result.Files, path)
+
+		// Unbound, the fake writes nothing and reports every file as written, which is what a first
+		// install onto an empty directory does. Bound, it does what the real copy does: writes a file
+		// that is missing or holds other bytes, and reports only those.
+		if f.files == nil {
+			result.Changed = append(result.Changed, path)
+
+			continue
+		}
+
+		target := filepath.Join(destDir, path)
+		if existing, ok := f.files.files[target]; !ok || !slices.Equal(existing, shippedBytes(path)) {
+			f.files.files[target] = shippedBytes(path)
+			result.Changed = append(result.Changed, path)
+		}
 	}
 
 	if f.err != nil && (f.failOn == "" || slices.Contains(sources, f.failOn)) {
-		return written, f.err
+		return result, f.err
 	}
 
-	return written, nil
+	return result, nil
 }
 
 func (f *fakeExtensionSource) Read(path string) ([]byte, error) {
@@ -630,9 +655,63 @@ func installedProject(t *testing.T) *fakeFileSystem {
 	request := beadsRequest()
 	request.CLIVersion = "v1.2.3"
 
-	runFor(t, files, newFakeExtensionSource(), request)
+	runFor(t, files, boundSource(files), request)
 
 	return files
+}
+
+// boundSource is an extension source that copies into files, so what a test deletes or edits there
+// is what the next copy finds.
+func boundSource(files *fakeFileSystem) *fakeExtensionSource {
+	source := newFakeExtensionSource()
+	source.files = files
+
+	return source
+}
+
+// runCurrent runs the use case over a current install the way upgrade does, with no bd on PATH
+// because a current install has no Beads step.
+func runCurrent(t *testing.T, files *fakeFileSystem) domain.Report {
+	t.Helper()
+
+	runner := toolsInstalled()
+	delete(runner.paths, "bd")
+
+	report, err := NewInitialize(files, runner, boundSource(files), noChanges()).Run(t.Context(), currentRequest(), nil)
+	if err != nil {
+		t.Fatalf("Run: %v", err)
+	}
+
+	return report
+}
+
+// resultOf is one step's result in a report, or a failure naming the steps the report holds.
+func resultOf(t *testing.T, report domain.Report, step domain.Step) domain.StepResult {
+	t.Helper()
+
+	for _, result := range report.Results() {
+		if result.Step.ID == step.ID {
+			return result
+		}
+	}
+
+	t.Fatalf("Results() = %+v, want a %s step", report.Results(), step.ID)
+
+	return domain.StepResult{}
+}
+
+// changedSteps is the steps in a report that changed something, which are the ones upgrade prints
+// over a current install.
+func changedSteps(report domain.Report) []string {
+	var ids []string
+
+	for _, result := range report.Results() {
+		if result.Outcome == domain.OutcomeDone {
+			ids = append(ids, result.Step.ID)
+		}
+	}
+
+	return ids
 }
 
 // currentRequest is the request upgrade builds for a project the manifest records at this version.
@@ -645,9 +724,10 @@ func currentRequest() Request {
 	return request
 }
 
-// A current install copies nothing out of the binary, cleans nothing up, and leaves Beads and the
-// manifest alone, but the steps that repair a project's own files still run: an ignore line a person
-// removed since the last run is put back and reported, which is what doctor's remedy promised.
+// A current install runs every step but Beads, and the steps that repair a project's own files put
+// back what a person removed since the last run: an ignore line is put back and reported, which is
+// what doctor's remedy promised. The copy out of the binary finds nothing to write and says so, and
+// the manifest comes out byte for byte as it went in.
 func TestRunOverACurrentInstallRepairsAMissingIgnoreLine(t *testing.T) {
 	files := installedProject(t)
 	manifestBefore := slices.Clone(files.files[manifestFull])
@@ -655,73 +735,158 @@ func TestRunOverACurrentInstallRepairsAMissingIgnoreLine(t *testing.T) {
 	gitignore := filepath.Join(workingDir, settings.GitIgnoreName)
 	files.files[gitignore] = []byte(strings.ReplaceAll(string(files.files[gitignore]), ".codefall/user.json\n", ""))
 
-	source := newFakeExtensionSource()
-	runner := toolsInstalled()
-	// A current install has no Beads step, so bd need not be on PATH.
-	delete(runner.paths, "bd")
-
-	report, err := NewInitialize(files, runner, source, noChanges()).Run(t.Context(), currentRequest(), nil)
-	if err != nil {
-		t.Fatalf("Run: %v", err)
-	}
+	report := runCurrent(t, files)
 
 	var ids []string
-
 	for _, result := range report.Results() {
 		ids = append(ids, result.Step.ID)
-
-		switch {
-		case result.Step.ID == domain.IgnoreStep.ID && result.Outcome != domain.OutcomeDone:
-			t.Errorf("ignore step = %+v, want it to have put the line back", result)
-		case result.Step.ID != domain.IgnoreStep.ID && result.Outcome != domain.OutcomeSkipped:
-			t.Errorf("%s step = %+v, want it to have found its work done", result.Step.ID, result)
-		}
 	}
 
 	want := []string{
-		domain.SettingsStep.ID, domain.HookStep.ID, domain.AgentsStep.ID, domain.TestingStep.ID, domain.IgnoreStep.ID,
+		domain.SettingsStep.ID, domain.ExtensionStep.ID, domain.CleanupStep.ID, domain.HookStep.ID,
+		domain.AgentsStep.ID, domain.TestingStep.ID, domain.IgnoreStep.ID,
 	}
 	if !slices.Equal(ids, want) {
 		t.Errorf("steps = %q, want %q", ids, want)
 	}
 
-	if last := report.Results()[len(report.Results())-1]; last.Detail != "added .codefall/user.json to .gitignore" {
-		t.Errorf("ignore detail = %q, want it to name the line it put back", last.Detail)
+	if got := changedSteps(report); !slices.Equal(got, []string{domain.IgnoreStep.ID}) {
+		t.Errorf("steps that changed something = %q, want the ignore step alone", got)
+	}
+
+	if detail := resultOf(t, report, domain.IgnoreStep).Detail; detail != "added .codefall/user.json to .gitignore" {
+		t.Errorf("ignore detail = %q, want it to name the line it put back", detail)
 	}
 
 	if !settings.NamesEntry(string(files.files[gitignore]), ".codefall/user.json") {
 		t.Errorf(".gitignore =\n%s\nwant it to name .codefall/user.json again", files.files[gitignore])
 	}
 
-	if len(source.calls) != 0 {
-		t.Errorf("fetched %+v, want nothing copied out of the binary", source.calls)
-	}
-
 	if !slices.Equal(files.files[manifestFull], manifestBefore) {
-		t.Errorf("manifest =\n%s\nwant it left as the full run wrote it:\n%s", files.files[manifestFull], manifestBefore)
+		t.Errorf("manifest =\n%s\nwant it as the full run wrote it:\n%s", files.files[manifestFull], manifestBefore)
+	}
+}
+
+// A skill or shared file deleted or edited by hand is put back by the copy out of the binary, which
+// runs on a current install too, and the step names what it wrote. doctor names `codefall upgrade`
+// as the remedy for a missing skill or shared file, so the run it sends a person to has to do this.
+func TestRunOverACurrentInstallRestoresACopiedFile(t *testing.T) {
+	skill := filepath.Join(workingDir, ".claude/skills/design/SKILL.md")
+	shared := filepath.Join(workingDir, ".codefall/shared/preflight.sh")
+
+	for _, tc := range []struct {
+		name   string
+		change func(files *fakeFileSystem)
+		want   string
+		target string
+		tree   string
+	}{
+		{
+			name:   "a deleted skill file",
+			change: func(files *fakeFileSystem) { delete(files.files, skill) },
+			want:   ".claude/skills/design/SKILL.md",
+			target: skill,
+			tree:   "skills/design/SKILL.md",
+		},
+		{
+			name:   "an edited skill file",
+			change: func(files *fakeFileSystem) { files.files[skill] = []byte("my own notes\n") },
+			want:   ".claude/skills/design/SKILL.md",
+			target: skill,
+			tree:   "skills/design/SKILL.md",
+		},
+		{
+			name:   "a deleted shared file",
+			change: func(files *fakeFileSystem) { delete(files.files, shared) },
+			want:   ".codefall/shared/preflight.sh",
+			target: shared,
+			tree:   "shared/preflight.sh",
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			files := installedProject(t)
+			manifestBefore := slices.Clone(files.files[manifestFull])
+
+			tc.change(files)
+
+			report := runCurrent(t, files)
+
+			if got := changedSteps(report); !slices.Equal(got, []string{domain.ExtensionStep.ID}) {
+				t.Errorf("steps that changed something = %q, want the extension step alone", got)
+			}
+
+			want := "installed codefall's skills into .claude/ and its shared files into .codefall/; wrote " +
+				tc.want + ", which was missing or differed"
+			if detail := resultOf(t, report, domain.ExtensionStep).Detail; detail != want {
+				t.Errorf("extension detail = %q, want %q", detail, want)
+			}
+
+			if got := files.files[tc.target]; !slices.Equal(got, shippedBytes(tc.tree)) {
+				t.Errorf("%s = %q, want the shipped bytes back", tc.target, got)
+			}
+
+			if !slices.Equal(files.files[manifestFull], manifestBefore) {
+				t.Errorf("manifest =\n%s\nwant it unchanged:\n%s", files.files[manifestFull], manifestBefore)
+			}
+		})
 	}
 }
 
 // A current install with nothing missing finds every step's work done, which is what lets the
-// command say it is up to date.
+// command say it is up to date, and the manifest it writes is the one it read.
 func TestRunOverACurrentInstallWithNothingMissingChangesNothing(t *testing.T) {
 	files := installedProject(t)
 	before := maps.Clone(files.files)
 
-	report, err := NewInitialize(files, toolsInstalled(), newFakeExtensionSource(), noChanges()).Run(
-		t.Context(), currentRequest(), nil)
-	if err != nil {
-		t.Fatalf("Run: %v", err)
+	report := runCurrent(t, files)
+
+	if got := changedSteps(report); len(got) != 0 {
+		t.Errorf("steps that changed something = %q, want none", got)
 	}
 
-	for _, result := range report.Results() {
-		if result.Outcome != domain.OutcomeSkipped {
-			t.Errorf("%s step = %+v, want it to have found its work done", result.Step.ID, result)
-		}
+	if detail := resultOf(t, report, domain.ExtensionStep).Detail; detail !=
+		"codefall's skills in .claude/ and its shared files in .codefall/ already match this version" {
+		t.Errorf("extension detail = %q, want it to say the copy matched", detail)
 	}
 
 	if !maps.EqualFunc(files.files, before, slices.Equal) {
 		t.Errorf("files changed on a current install with nothing missing: %q", keysOf(files))
+	}
+}
+
+// A manifest that lists a file this version no longer ships is cleaned on a current install too: the
+// cleanup follows the copy on every upgrade, removes the file, and the manifest written after it no
+// longer lists it.
+func TestRunOverACurrentInstallRemovesAFileNoLongerShipped(t *testing.T) {
+	files := installedProject(t)
+
+	const retired = ".claude/skills/old/SKILL.md"
+
+	stale := strings.Replace(string(files.files[manifestFull]),
+		`".claude/skills/design/SKILL.md"`, `".claude/skills/design/SKILL.md", "`+retired+`"`, 1)
+	if stale == string(files.files[manifestFull]) {
+		t.Fatalf("manifest =\n%s\nwant a claude file list to add to", files.files[manifestFull])
+	}
+
+	files.files[manifestFull] = []byte(stale)
+	files.files[filepath.Join(workingDir, retired)] = []byte("…")
+
+	report := runCurrent(t, files)
+
+	if got := changedSteps(report); !slices.Equal(got, []string{domain.CleanupStep.ID}) {
+		t.Errorf("steps that changed something = %q, want the cleanup step alone", got)
+	}
+
+	if detail := resultOf(t, report, domain.CleanupStep).Detail; detail != "removed .claude/skills/old/ (no longer shipped)" {
+		t.Errorf("cleanup detail = %q, want it to name the skill it removed", detail)
+	}
+
+	if _, still := files.files[filepath.Join(workingDir, retired)]; still {
+		t.Errorf("%s is still there, want it removed", retired)
+	}
+
+	if strings.Contains(string(files.files[manifestFull]), retired) {
+		t.Errorf("manifest =\n%s\nwant it to list %s no longer", files.files[manifestFull], retired)
 	}
 }
 

@@ -2,6 +2,7 @@ package application
 
 import (
 	"errors"
+	"fmt"
 	"path/filepath"
 	"slices"
 	"strings"
@@ -131,6 +132,53 @@ func TestExtensionStepStopsTheRunWhenTheSharedCopyFails(t *testing.T) {
 		!strings.HasPrefix(err.Error(), domain.ExtensionStep.ID+": ") ||
 		!strings.Contains(err.Error(), "install codefall's shared files: disk full") {
 		t.Errorf("Run error = %v, want it to name the extension step and the copy that failed", err)
+	}
+}
+
+// The step says what the copy wrote in proportion to how much it was: nothing is a skip, everything
+// is a fresh install, a few files are named, and more than the limit are counted.
+func TestExtensionResultSaysWhatTheCopyWrote(t *testing.T) {
+	many := make([]string, changedLimit+1)
+	for n := range many {
+		many[n] = fmt.Sprintf(".claude/skills/s%d/SKILL.md", n)
+	}
+
+	const installed = "installed codefall's skills into .claude/ and its shared files into .codefall/"
+
+	for _, tc := range []struct {
+		name    string
+		changed []string
+		total   int
+		outcome domain.Outcome
+		want    string
+	}{
+		{
+			name: "nothing", total: 3, outcome: domain.OutcomeSkipped,
+			want: "codefall's skills in .claude/ and its shared files in .codefall/ already match this version",
+		},
+		{
+			name: "everything", changed: []string{"a", "b", "c"}, total: 3, outcome: domain.OutcomeDone,
+			want: installed,
+		},
+		{
+			name: "one file", changed: []string{"a"}, total: 3, outcome: domain.OutcomeDone,
+			want: installed + "; wrote a, which was missing or differed",
+		},
+		{
+			name: "two files", changed: []string{"a", "b"}, total: 3, outcome: domain.OutcomeDone,
+			want: installed + "; wrote a and b, which were missing or differed",
+		},
+		{
+			name: "past the limit", changed: many, total: 100, outcome: domain.OutcomeDone,
+			want: installed + fmt.Sprintf("; wrote %d files that were missing or differed", len(many)),
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			result := extensionResult(".claude/", tc.changed, tc.total)
+			if result.Outcome != tc.outcome || result.Detail != tc.want {
+				t.Errorf("extensionResult = %v %q, want %v %q", result.Outcome, result.Detail, tc.outcome, tc.want)
+			}
+		})
 	}
 }
 
