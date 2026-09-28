@@ -6,6 +6,13 @@ below were written by hand, before that was wired up.
 Tags are bare version numbers (`0.1.2`), not `v`-prefixed, so they match the `ref` the marketplace
 pins. A `v0.1.1` tag also exists from before that convention was settled.
 
+## [0.23.0](https://github.com/lividlabs/codefall-cli/compare/v0.22.0...v0.23.0) (2026-09-28)
+
+
+### Features
+
+* **skills:** equip agents sets up any harness from any harness ([#155](https://github.com/lividlabs/codefall-cli/issues/155)) ([39c2e27](https://github.com/lividlabs/codefall-cli/commit/39c2e2793bbfacaf4542c55a061e54b4f0d56924))
+
 ## [0.22.0](https://github.com/lividlabs/codefall-cli/compare/v0.21.0...v0.22.0) (2026-09-28)
 
 
