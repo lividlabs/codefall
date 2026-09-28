@@ -3,14 +3,14 @@
 Shared procedure. Every verb that hands a question to another agent — `codefall-review` for its
 reviewer, and the verbs that consult when a run cannot settle something on its own — follows it, so
 the rules about which agent runs, in what order, and what its answer is allowed to do are stated
-once. [ADR-009](https://github.com/lividlabs/codefall-cli/blob/main/docs/adrs/ADR-009-agents.md)
+once. [ADR-009.2](https://github.com/lividlabs/codefall-cli/blob/main/docs/adrs/ADR-009.2-agents.md)
 holds the reasoning.
 
 ## Contents
 
 - Which harness this is
-- Resolving the order
-- Walking the order
+- Resolving the list
+- Walking the list
 - `via=` overrides for one run
 - An agent proposes
 - Consulting
@@ -22,26 +22,40 @@ Answer, from what your own prompt tells you, exactly one of `claude`, `codex`, `
 `claude`; one under `.agents/skills/` is one of the other four. An answer the directory contradicts,
 or no answer, is `unknown`. Nothing is detected from the environment or the process tree.
 
-## Resolving the order
+## Resolving the list
 
-`.codefall/settings.json` defines the agents in a top-level `agents` list — each a `name`, a
-`harness` (one of the five above, or `current`, meaning this harness's own subagent), and an
-optional `model`. Absent or empty, the list is one entry: `subagent` on `current`.
+`.codefall/settings.json` holds a top-level `agents` array of entries, one per harness a session
+may run in:
 
-Take the first of these that is present, in this order:
+```json
+"agents": [
+  {
+    "activeAgent": "default",
+    "review":  [ { "harness": "current" } ],
+    "consult": [ { "harness": "current" } ]
+  },
+  {
+    "activeAgent": "muse",
+    "review":  [ { "harness": "claude" }, { "harness": "codex", "model": "gpt-5-codex" } ]
+  }
+]
+```
 
-1. `agentsByHarness.<harness>`, for the harness answered above; skipped when the answer is `unknown`.
-2. The use's own `agents` key — `review.agents`, `consult.agents`.
-3. The top-level `agents` list, in its own order.
+`activeAgent` is the harness the session is running in, one of the five above, or `default`. Each
+entry has a `review` list and a `consult` list, and each item names a `harness`, one of the five or
+`current`, meaning a subagent of this harness, with an optional `model`.
 
-Each is an ordered list of names, and the order is the order to try.
+Take the entry whose `activeAgent` is the harness answered above, else the `default` entry; an
+`unknown` answer takes the `default` entry. Within it, take the feature's list: `review` for a
+review, `consult` for a consult. A list the entry does not have is the `default` entry's list, and
+with no `default` entry it is one `current` agent. The list's order is the order to try.
 
-## Walking the order
+## Walking the list
 
-Run each entry, from the first, with the script beside this file:
+Run each agent, from the first, with the script beside this file:
 
 ```
-../../../.codefall/shared/run-agent.sh <name> <prompt-file> <schema-file> <out-file>
+../../../.codefall/shared/run-agent.sh <harness>[:<model>] <prompt-file> <schema-file> <out-file>
 ```
 
 Read its exit code and act on it:
@@ -49,15 +63,15 @@ Read its exit code and act on it:
 | Exit | Meaning | Do |
 | --- | --- | --- |
 | `0` | The agent answered; the out-file holds it | Stop walking; read the answer |
-| `70` | The entry is on `current` | Run a subagent of this harness with the same prompt yourself |
-| `69`, `64` | Not runnable here: the harness is not on PATH, or the name is unknown | Skip to the next entry |
-| `73`, `75`, `76` | Ran and failed: wrote nothing, timed out, or exited non-zero | Advance to the next entry, with the failure folded into its prompt |
+| `70` | The agent is on `current` | Run a subagent of this harness with the same prompt yourself |
+| `69`, `64` | Not runnable here: the harness is not on PATH, or is unknown | Skip to the next agent |
+| `73`, `75`, `76` | Ran and failed: wrote nothing, timed out, or exited non-zero | Advance to the next agent, with the failure folded into its prompt |
 
 An answer that parses but says the agent cannot settle the question advances the walk the same way
 a failure does. An answer the verb disagrees with does not: that agent answered.
 
-Each entry is tried once, and the walk ends at the end of the order. No second pass because the
-first was inconclusive. When no entry answered, say so and stop, exactly as when the one reviewer
+Each agent is tried once, and the walk ends at the end of the list. No second pass because the
+first was inconclusive. When no agent answered, say so and stop, exactly as when the one reviewer
 failed before there was an order.
 
 **The report names every agent tried**, in order, with why each was skipped or failed, and which
@@ -66,10 +80,9 @@ that is reported this way is not a silent fallback.
 
 ## `via=` overrides for one run
 
-An invocation may name its agent directly: `via=<name>` for an entry in the list, or
-`via=<harness>[:<model>]` to run a harness with no entry at all. The override replaces the resolved
-order for that run with that one agent, and writes nothing. A configured name wins when the two
-forms collide, so `via=codex` runs the project's `codex` entry when it has one.
+An invocation may name its agent directly: `via=<harness>[:<model>]`, one of the five harnesses or
+`current`, with an optional model. The override replaces the resolved list for that run with that
+one agent, and writes nothing.
 
 ## An agent proposes
 
@@ -82,11 +95,11 @@ once; never a second round because the first was inconclusive.
 
 ## Consulting
 
-A consult is one question a run cannot settle on its own, put to the order under `consult.agents`
+A consult is one question a run cannot settle on its own, put to the entry's `consult` list
 (resolved as above) with the files that bear on it and the options the run sees. The prompt is the consult prompt
 beside this file (consult-prompt.md), rendered once, and the answer follows the consult schema
 beside it (consult.schema.json): an `answer`, a `confidence` of `high`, `medium`, or `low`, the `reasoning` with the files
-that decided it, whether the answer is `reversible`, and `cannotSettle`. Walk the order as above; an
+that decided it, whether the answer is `reversible`, and `cannotSettle`. Walk the list as above; an
 answer with `cannotSettle` true or `confidence` low advances the walk the way a failure does, and
 the first answer that does neither ends it. One pass, one question, first answer wins.
 
@@ -97,7 +110,7 @@ writes an ADR, and is never asked about a preference the user has stated. The re
 agent consulted, what each said, and what the session did with it; where the answer reaches a
 document or a bead, the line that records the decision names the consult that informed it.
 
-The order's default is one entry on `current`, so a project that has configured nothing still
+The list's default is one `current` agent, so a project that has configured nothing still
 consults its own harness's subagent: a fresh context reading the same files, which is worth having
 at no configuration cost. What configuration adds is a second model.
 

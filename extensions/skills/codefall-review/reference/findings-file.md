@@ -29,8 +29,9 @@ is no subject at all. In full:
 The `.json` is the record; the `.md` is the same review written to be read. Both hold what was
 reviewed and at which revision, who reviewed it and which agents were tried before it, which lenses
 ran, what could not be checked, and every finding with its status. `../findings.schema.json` is the
-shape of the JSON: `reviewer.name` is the configured agent when one answered, and `reviewer.tried`
-the agents walked before it, each `skipped` or `failed` with the reason.
+shape of the JSON: `reviewer.harness` and `reviewer.model` identify the agent that answered, and
+`reviewer.tried` the agents walked before it, by harness and model, each `skipped` or `failed` with
+the reason.
 
 **The files are written three times** — after the review, after triage, after the fixes. An
 interrupted session resumes from them rather than starting over.
@@ -40,8 +41,8 @@ interrupted session resumes from them rather than starting over.
 ```markdown
 # Review: <target-key>
 
-**Reviewed:** <timestamp> · **Reviewer:** [<name> ]<harness>[/<model>] · **Revision:** <revision>
-**Tried:** <name or harness> (skipped: not on PATH), <name> (failed: exited 76) — only when an agent was walked before the reviewer
+**Reviewed:** <timestamp> · **Reviewer:** <harness>[:<model>] · **Revision:** <revision>
+**Tried:** <harness>[:<model>] (skipped: not on PATH), <harness>[:<model>] (failed: exited 76) — only when an agent was walked before the reviewer
 **Lenses:** <the lenses that ran>
 
 ## Findings
@@ -62,7 +63,7 @@ Findings are ordered most severe first, matching the triage list. A review with 
 the heading rather than dropping it. A deferred finding filed as a revision bead carries the bead's
 ID after its status — `deferred · booking-design-007-stagestore` — and the JSON carries it as
 `bead`. A finding promoted from `notChecked` after a consult carries a line after its location —
-*consulted `architect` (codex): the retry loop re-reads the offset it just committed* — and the
+*consulted `codex:gpt-5-codex`: the retry loop re-reads the offset it just committed* — and the
 JSON carries it as `consult`; an entry a consult left in `notChecked` carries the consult's view
 appended to its text.
 

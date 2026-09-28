@@ -1,35 +1,31 @@
 #!/usr/bin/env bash
 #
-# Run one configured agent in another harness, headless and read-only.
+# Run one agent in another harness, headless and read-only.
 #
 # A verb writes the prompt — the question, the material, the calibration rules,
 # and the shape the answer takes. The agent runs inside the repository and reads
-# the files itself, so nothing is copied for it. This script resolves which
-# harness and model the agent means, starts that harness, and puts its final
-# message in a file. It parses nothing and decides nothing: what the agent said
-# is the verb's to read, and which agent to try next is the verb's to decide.
-# The walk over an order lives in `running-agents.md` beside this file; this script runs
-# exactly one entry of it.
+# the files itself, so nothing is copied for it. This script starts the harness
+# the agent names, with its model when it names one, and puts its final message
+# in a file. It parses nothing and decides nothing: what the agent said is the
+# verb's to read, and which agent to try next is the verb's to decide. Which
+# list to walk, and the walk itself, live in `running-agents.md` beside this
+# file; this script runs exactly one entry of a list.
 #
 # Every harness runs in its own read-only mode. An agent run this way proposes;
 # a subprocess that edited would bypass the host's PreToolUse hooks and its
 # checkpoints, so nothing it did would be guarded or reversible.
 #
-# Usage: run-agent.sh [--settings <path>] <agent> <prompt-file> <schema-file> <out-file>
+# Usage: run-agent.sh <agent> <prompt-file> <schema-file> <out-file>
 #
-#   --settings   the project's settings file (default .codefall/settings.json)
-#   agent        a name from the settings file's `agents` list, or the raw form
-#                <harness>[:<model>] — codex, claude, opencode, muse, agy
+#   agent        <harness>[:<model>] — codex, claude, opencode, muse, agy, or
+#                current; one entry of a `review` or `consult` list, or a
+#                `via=` value
 #   prompt-file  the prompt, already written
 #   schema-file  the JSON schema the answer follows, when the harness can take one
 #   out-file     where the harness's final message is written
 #
-# A name is looked up first: when the settings file has an `agents` entry by that
-# name, its harness and model are used, and a model on the entry is passed to the
-# harness untouched. A name the file does not define is read as the raw form. The
-# raw form needs no settings file and no jq, which is what `via=codex:gpt-5-codex`
-# relies on. An absent or empty `agents` list means the one default entry,
-# `subagent` on `current`.
+# The script reads no settings. A model is passed to the harness untouched, and
+# no model means the harness's own default.
 #
 # `current` is the harness running the session, and its agent is that harness's
 # own subagent. This script cannot start one: it exits 70 and the caller runs the
@@ -44,19 +40,18 @@
 # Environment
 #   CODEFALL_REVIEW_TIMEOUT   seconds before the run is killed (default 900)
 #
-# Exit codes — the caller walking an order reads them as three outcomes
+# Exit codes — the caller walking a list reads them as three outcomes
 #   0    the agent ran and out-file holds its final message         answered
 #   70   the agent is on `current`: run a subagent of this harness    yours to run
 #   69   the harness is not on PATH                                  not runnable here → skip
-#   64   the arguments are wrong, the agent is unknown, or a name
-#        needs jq and jq is missing                                  not runnable here → skip
+#   64   the arguments are wrong, or the harness is unknown          not runnable here → skip
 #   73   out-file could not be written, or the harness wrote nothing  ran and failed → advance
 #   75   the harness was still running at the timeout and was killed ran and failed → advance
 #   76   the harness exited non-zero; stderr carries its code         ran and failed → advance
 
 set -uo pipefail
 
-readonly USAGE="usage: run-agent.sh [--settings <path>] <agent> <prompt> <schema> <out>"
+readonly USAGE="usage: run-agent.sh <harness>[:<model>] <prompt> <schema> <out>"
 readonly HARNESSES="codex claude opencode muse agy"
 
 fail() {
@@ -65,32 +60,6 @@ fail() {
   printf 'run-agent: %s\n' "$*" >&2
   exit "$code"
 }
-
-settings=.codefall/settings.json
-
-while [ "$#" -gt 0 ]; do
-  case $1 in
-    --settings)
-      [ "$#" -ge 2 ] || fail 64 "--settings needs a value ($USAGE)"
-      settings=$2
-      shift 2
-      ;;
-    --settings=*)
-      settings=${1#--settings=}
-      shift
-      ;;
-    --)
-      shift
-      break
-      ;;
-    -*)
-      fail 64 "unknown flag \"$1\" ($USAGE)"
-      ;;
-    *)
-      break
-      ;;
-  esac
-done
 
 if [ "$#" -ne 4 ]; then
   fail 64 "$USAGE"
@@ -112,60 +81,15 @@ is_harness() {
   return 1
 }
 
-# --- resolve the agent -----------------------------------------------------------------------
+# --- read the agent --------------------------------------------------------------------------
 
-# A configured name wins over the raw form, so a project that names an agent `codex` gets that
-# entry's model when someone types `via=codex`. The lookup needs jq; without it a name cannot be
-# read, and the raw form is the way through.
-harness=""
+harness=${agent%%:*}
 model=""
+case $agent in
+  *:*) model=${agent#*:} ;;
+esac
 
-lookup_name() {
-  local name=$1 found
-
-  if [ ! -f "$settings" ]; then
-    if [ "$name" = subagent ]; then
-      harness=current
-      return 0
-    fi
-    return 1
-  fi
-
-  if ! command -v jq >/dev/null 2>&1; then
-    # Without jq the default entry is still known, because it is the same in every project.
-    if [ "$name" = subagent ] && ! grep -q '"agents"[[:space:]]*:' "$settings" 2>/dev/null; then
-      harness=current
-      return 0
-    fi
-    fail 64 "jq is needed to read an agent by name from $settings; pass <harness>[:<model>] instead"
-  fi
-
-  found=$(jq -r --arg name "$name" '
-    (if ((.agents // []) | length) == 0 then [{name: "subagent", harness: "current"}] else .agents end)
-    | map(select(.name == $name)) | first // empty
-    | [.harness, (.model // "")] | @tsv' "$settings" 2>/dev/null) || return 1
-
-  [ -n "$found" ] || return 1
-
-  harness=${found%%	*}
-  model=${found#*	}
-  [ "$model" = "$harness" ] && model=""
-  return 0
-}
-
-if ! lookup_name "$agent"; then
-  case $agent in
-    *:*)
-      harness=${agent%%:*}
-      model=${agent#*:}
-      ;;
-    *)
-      harness=$agent
-      ;;
-  esac
-fi
-
-is_harness "$harness" || fail 64 "unknown agent \"$agent\": not a name in $settings and not one of $HARNESSES"
+is_harness "$harness" || fail 64 "unknown harness \"$harness\": not one of $HARNESSES current"
 
 if [ "$harness" = current ]; then
   fail 70 "agent \"$agent\" is on current: run a subagent of this harness"
