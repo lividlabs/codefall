@@ -32,7 +32,7 @@ func TestRegisterProvidesEverythingCommandNeeds(t *testing.T) {
 		names = append(names, sub.Name())
 	}
 
-	if want := []string{"agents", "persona", "show"}; !slices.Equal(names, want) {
+	if want := []string{"agents", "consult", "persona", "review", "show"}; !slices.Equal(names, want) {
 		t.Errorf("subcommands = %q, want %q", names, want)
 	}
 }

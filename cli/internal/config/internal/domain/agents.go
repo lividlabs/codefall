@@ -54,24 +54,7 @@ func CheckOrder(current, proposed []string) error {
 		problems = append(problems, "missing "+strings.Join(missing, ", "))
 	}
 
-	var unknown, repeated []string
-
-	seen := map[string]bool{}
-
-	for _, name := range proposed {
-		switch {
-		case !slices.Contains(current, name):
-			if !slices.Contains(unknown, name) {
-				unknown = append(unknown, name)
-			}
-		case seen[name]:
-			if !slices.Contains(repeated, name) {
-				repeated = append(repeated, name)
-			}
-		}
-
-		seen[name] = true
-	}
+	unknown, repeated := misnamed(current, proposed)
 
 	if len(unknown) > 0 {
 		problems = append(problems, "not in the list: "+strings.Join(unknown, ", "))
@@ -87,6 +70,53 @@ func CheckOrder(current, proposed []string) error {
 
 	return fmt.Errorf("the order must name every agent exactly once (agents: %s): %s",
 		strings.Join(current, ", "), strings.Join(problems, "; "))
+}
+
+// CheckSubset refuses a proposed narrower order unless every name in it is an agent the list defines
+// and none is given twice. It need not name every agent: a use's own order, or a harness's, is the
+// subset it walks. Every problem is named at once, as CheckOrder does.
+func CheckSubset(defined, proposed []string) error {
+	unknown, repeated := misnamed(defined, proposed)
+
+	var problems []string
+
+	if len(unknown) > 0 {
+		problems = append(problems, "not in the list: "+strings.Join(unknown, ", "))
+	}
+
+	if len(repeated) > 0 {
+		problems = append(problems, "named twice: "+strings.Join(repeated, ", "))
+	}
+
+	if len(problems) == 0 {
+		return nil
+	}
+
+	return fmt.Errorf("the order must name agents from the list, each once (agents: %s): %s",
+		strings.Join(defined, ", "), strings.Join(problems, "; "))
+}
+
+// misnamed is what a proposed order gets wrong beside what it leaves out: the names the list does
+// not define, and the names given twice, each reported once in the order first seen.
+func misnamed(defined, proposed []string) (unknown, repeated []string) {
+	seen := map[string]bool{}
+
+	for _, name := range proposed {
+		switch {
+		case !slices.Contains(defined, name):
+			if !slices.Contains(unknown, name) {
+				unknown = append(unknown, name)
+			}
+		case seen[name]:
+			if !slices.Contains(repeated, name) {
+				repeated = append(repeated, name)
+			}
+		}
+
+		seen[name] = true
+	}
+
+	return unknown, repeated
 }
 
 // Referrers is every order in a settings document that names an agent, as the path a person would

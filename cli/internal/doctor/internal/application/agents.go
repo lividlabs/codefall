@@ -107,22 +107,42 @@ func agentsEndAtCurrent(doc settings.Document, defined []settings.Agent) domain.
 		fmt.Sprintf("%s names no agent on current", strings.Join(without, ", ")), mo.Some(currentRemedy(without)))
 }
 
-// currentRemedy is what to do about the orders that name no agent on current. `codefall config agents`
-// edits the agents list and nothing else, so the list is fixed by a command and a narrower order by
-// naming an agent in settings.json.
+// currentRemedy is what to do about the orders that name no agent on current. The list is fixed by
+// adding an agent on current, and a narrower order by naming one in it, or by clearing it so the
+// wider order applies; `codefall config` has a command for each.
 func currentRemedy(without []string) string {
 	narrower := slices.DeleteFunc(slices.Clone(without), func(order string) bool {
 		return order == settings.FieldAgents
 	})
 	listed := len(narrower) < len(without)
 
+	commands := make([]string, 0, len(narrower))
+	for _, order := range narrower {
+		commands = append(commands, orderCommand(order)+" <name>...")
+	}
+
+	named := strings.Join(commands, " and ")
+
 	switch {
 	case listed && len(narrower) == 0:
 		return "run " + addCurrentCommand + currentReason
 	case listed:
-		return "run " + addCurrentCommand + ", and name that agent in " + strings.Join(narrower, ", ") +
-			" in " + settingsName + currentReason
+		return "run " + addCurrentCommand + ", then name that agent with " + named + currentReason
+	case len(narrower) == 1:
+		return "name an agent on current with " + named + ", or clear the order with --clear" + currentReason
 	default:
-		return "name an agent on current in " + strings.Join(narrower, ", ") + " in " + settingsName + currentReason
+		return "name an agent on current with " + named + ", or clear each order with --clear" + currentReason
 	}
+}
+
+// orderCommand is the `codefall config` command that sets or clears one narrower order, given the
+// path doctor reports it by: review.agents, consult.agents, or agentsByHarness.<harness>.
+func orderCommand(order string) string {
+	if name, ok := strings.CutPrefix(order, settings.FieldAgentsByHarness+"."); ok {
+		return "codefall config agents for " + name
+	}
+
+	use, _, _ := strings.Cut(order, ".")
+
+	return "codefall config " + use + " agents"
 }

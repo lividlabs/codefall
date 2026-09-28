@@ -1,7 +1,7 @@
 // Package application holds `codefall config`'s one use case: read the effective configuration, and
-// change the agents list or the persona one command at a time. It owns the gateway interface it needs
-// and depends on nothing but the standard library, mo, config's own domain, and the pure shared
-// modules that define the two files' formats.
+// change the agents list, its narrower orders, or the persona one command at a time. It owns the
+// gateway interface it needs and depends on nothing but the standard library, mo, config's own
+// domain, and the pure shared modules that define the two files' formats.
 package application
 
 import (
@@ -98,6 +98,25 @@ func validSettings(doc settings.Document, what string) error {
 	}
 
 	return fmt.Errorf("%s: %s", what, strings.Join(problems, "; "))
+}
+
+// writeSettings writes a settings file's new text, only when it is settings the module accepts. A
+// result it would refuse leaves the file exactly as it was and says why in the module's words.
+func (c *Config) writeSettings(dir string, body []byte) error {
+	doc, err := decodeSettings(body)
+	if err != nil {
+		return err
+	}
+
+	if err := validSettings(doc, "that change would leave "+settingsName+" invalid, so nothing was changed"); err != nil {
+		return err
+	}
+
+	if err := c.files.WriteFile(settingsPath(dir), body); err != nil {
+		return fmt.Errorf("write %s: %w", settingsName, err)
+	}
+
+	return nil
 }
 
 // readUserFile reads and decodes .codefall/user.json, or None when there is none.

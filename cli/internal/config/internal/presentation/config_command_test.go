@@ -25,6 +25,22 @@ type fakeConfig struct {
 	removed string
 	ordered []string
 	set     string
+
+	order   mo.Option[application.Order]
+	names   []string
+	cleared bool
+}
+
+func (f *fakeConfig) SetOrder(_ string, order application.Order, names []string) (domain.Write, error) {
+	f.order, f.names = mo.Some(order), names
+
+	return f.write, f.err
+}
+
+func (f *fakeConfig) ClearOrder(_ string, order application.Order) (domain.Write, error) {
+	f.order, f.cleared = mo.Some(order), true
+
+	return f.write, f.err
 }
 
 func (f *fakeConfig) Show(string) (domain.Configuration, error) { return f.shown, f.err }
@@ -218,6 +234,86 @@ func TestAgentsOrderHandsOverEveryName(t *testing.T) {
 
 	if want := "- .codefall/settings.json already lists the agents in that order\n"; out != want {
 		t.Errorf("output = %q, want %q", out, want)
+	}
+}
+
+// Each of the three order commands hands the use case the order it names and the agents in the
+// order given, or asks it to clear the order, and prints the one line that comes back.
+func TestOrderCommandsHandOverTheOrder(t *testing.T) {
+	for _, tc := range []struct {
+		name    string
+		args    []string
+		order   application.Order
+		names   []string
+		cleared bool
+	}{
+		{
+			name: "review", args: []string{"review", "agents", "architect", "subagent"},
+			order: application.ReviewOrder(), names: []string{"architect", "subagent"},
+		},
+		{name: "review --clear", args: []string{"review", "agents", "--clear"}, order: application.ReviewOrder(), cleared: true},
+		{
+			name: "consult", args: []string{"consult", "agents", "subagent"},
+			order: application.ConsultOrder(), names: []string{"subagent"},
+		},
+		{name: "consult --clear", args: []string{"consult", "agents", "--clear"}, order: application.ConsultOrder(), cleared: true},
+		{
+			name: "a harness", args: []string{"agents", "for", "claude", "architect", "subagent"},
+			order: application.HarnessOrder("claude"), names: []string{"architect", "subagent"},
+		},
+		{
+			name: "a harness --clear", args: []string{"agents", "for", "claude", "--clear"},
+			order: application.HarnessOrder("claude"), cleared: true,
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			config := &fakeConfig{write: domain.Changed("set the order")}
+
+			out, err := run(t, config, tc.args...)
+			if err != nil {
+				t.Fatalf("Execute: %v", err)
+			}
+
+			if got, ok := config.order.Get(); !ok || got != tc.order {
+				t.Errorf("order = %+v, want %+v", config.order, tc.order)
+			}
+
+			if strings.Join(config.names, " ") != strings.Join(tc.names, " ") || config.cleared != tc.cleared {
+				t.Errorf("names = %q, cleared = %v, want %q, %v", config.names, config.cleared, tc.names, tc.cleared)
+			}
+
+			if want := "✓ set the order\n"; out != want {
+				t.Errorf("output = %q, want %q", out, want)
+			}
+		})
+	}
+}
+
+// An order command is told either the agents or --clear, never both and never neither, and the
+// harness command is told a harness first. A refusal here never reaches the use case.
+func TestOrderCommandsRefuseTheWrongArguments(t *testing.T) {
+	for _, tc := range []struct {
+		name string
+		args []string
+		want string
+	}{
+		{name: "review with nothing", args: []string{"review", "agents"}, want: "name at least one agent, or pass --clear"},
+		{name: "consult with both", args: []string{"consult", "agents", "subagent", "--clear"}, want: "--clear takes no agent names"},
+		{name: "a harness with nothing", args: []string{"agents", "for"}, want: "name a harness first"},
+		{name: "a harness with no agents", args: []string{"agents", "for", "claude"}, want: "name at least one agent, or pass --clear"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			config := &fakeConfig{}
+
+			_, err := run(t, config, tc.args...)
+			if err == nil || !strings.Contains(err.Error(), tc.want) {
+				t.Fatalf("Execute error = %v, want it to say %q", err, tc.want)
+			}
+
+			if config.order.IsPresent() {
+				t.Error("the use case was asked, want the command to stop at the arguments")
+			}
+		})
 	}
 }
 
