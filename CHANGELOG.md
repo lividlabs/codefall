@@ -6,6 +6,43 @@ below were written by hand, before that was wired up.
 Tags are bare version numbers (`0.1.2`), not `v`-prefixed, so they match the `ref` the marketplace
 pins. A `v0.1.1` tag also exists from before that convention was settled.
 
+## [0.20.0](https://github.com/lividlabs/codefall-cli/compare/v0.19.0...v0.20.0) (2026-09-28)
+
+
+### ⚠ BREAKING CHANGES
+
+* **skills:** gemini is no longer a harness run-agent.sh accepts, so via=gemini and via=gemini:<model> now exit 64 and are skipped; name another harness. The .codefall/scaffold.json key lastGraft is renamed to lastUpgrade; codefall-upgrade renames it on its next run, and anything else that reads the key has to read lastUpgrade.
+* **skills:** /codefall-graft is now /codefall-upgrade. Running codefall upgrade removes the installed codefall-graft skill directory and reports it as renamed to codefall-upgrade.
+* **cli:** rerunning `codefall init` on a project that has `.codefall/manifest.json` now refuses and names `codefall upgrade`, which replaces it. `init --force` and the `upgrade` alias of `init` are removed; `--yes` moves to `upgrade`. A project set up before the manifest existed runs `init` once more, which writes the manifest.
+* **cli:** the harness value claude-code is now claude and antigravity is now agy, in .codefall/settings.json, the manifest, and the --harness flag. The old spellings are still read, and codefall init rewrites them to the new names on its next run.
+
+### Features
+
+* **cli:** a per-user .codefall/user.json carrying the persona ([#137](https://github.com/lividlabs/codefall-cli/issues/137)) ([9d34b9b](https://github.com/lividlabs/codefall-cli/commit/9d34b9be353504e63d7b3b317d02b5c3d02766b4))
+* **cli:** codefall config opens an interactive editor; postToPullRequest is optional ([#144](https://github.com/lividlabs/codefall-cli/issues/144)) ([aa33ca6](https://github.com/lividlabs/codefall-cli/commit/aa33ca66523e823e001d46a6ced7c8d0098d7674))
+* **cli:** codefall config reads and writes agents and the persona ([#139](https://github.com/lividlabs/codefall-cli/issues/139)) ([fee6d9e](https://github.com/lividlabs/codefall-cli/commit/fee6d9e30654001ec4b0837c6a319dd803476566))
+* **cli:** codefall upgrade takes over the rerun path, init runs once ([#131](https://github.com/lividlabs/codefall-cli/issues/131)) ([5c83e56](https://github.com/lividlabs/codefall-cli/commit/5c83e563a7844d74f88388d06df4e9c37fd0862f))
+* **cli:** config sets the review, consult, and per-harness agent orders ([#143](https://github.com/lividlabs/codefall-cli/issues/143)) ([3b7c46b](https://github.com/lividlabs/codefall-cli/commit/3b7c46b4f286b185ed3f7382a4e8ea1a9b2ac94e))
+* **cli:** configure review and consult agents in settings ([#123](https://github.com/lividlabs/codefall-cli/issues/123)) ([7756510](https://github.com/lividlabs/codefall-cli/commit/77565101b54dcd19e02eaf7e6cd401867433d6ed))
+* **cli:** name harnesses for their binaries ([#122](https://github.com/lividlabs/codefall-cli/issues/122)) ([ece8e6b](https://github.com/lividlabs/codefall-cli/commit/ece8e6bfa068271ee53e6d472b18862268bc2c19))
+* **cli:** upgrade removes what it no longer ships and warns about breaking changes ([#132](https://github.com/lividlabs/codefall-cli/issues/132)) ([2b29afb](https://github.com/lividlabs/codefall-cli/commit/2b29afb5db4cdcf8d0631f3be9dc737054ab144c))
+* **extension:** run configured agents through one shared script ([#124](https://github.com/lividlabs/codefall-cli/issues/124)) ([b604b59](https://github.com/lividlabs/codefall-cli/commit/b604b59c5cbc2cb571a245ac4229a33404d77028))
+* **skills:** a product-manager persona, and design parks what the person cannot settle ([#138](https://github.com/lividlabs/codefall-cli/issues/138)) ([e7847c0](https://github.com/lividlabs/codefall-cli/commit/e7847c036f274171eecfcd729203d47ea6807ad9))
+* **skills:** graft becomes upgrade, and offers codefall upgrade first ([#133](https://github.com/lividlabs/codefall-cli/issues/133)) ([3c13b41](https://github.com/lividlabs/codefall-cli/commit/3c13b41fda531fb6c552b5af0dd95c19d4cc9317))
+* **skills:** implement and design consult the configured agents when stuck ([#126](https://github.com/lividlabs/codefall-cli/issues/126)) ([6678421](https://github.com/lividlabs/codefall-cli/commit/66784212e4cac41ce72ef6c4575283aca72809a7))
+* **skills:** let an agent invoke design, implement, test, and review ([#130](https://github.com/lividlabs/codefall-cli/issues/130)) ([0748cef](https://github.com/lividlabs/codefall-cli/commit/0748cefb32edb3fcdad3bc1f94757ef75f989615))
+* **skills:** review runs the configured agent order, via= overrides it ([#125](https://github.com/lividlabs/codefall-cli/issues/125)) ([59ccbfc](https://github.com/lividlabs/codefall-cli/commit/59ccbfca7508a703d14894eae2c96f0e829e0f5d))
+* **skills:** review, specify, scaffold, and equip consult when stuck ([#127](https://github.com/lividlabs/codefall-cli/issues/127)) ([f760213](https://github.com/lividlabs/codefall-cli/commit/f76021341a07eef9f475e578a90e349d9501072c))
+
+
+### Bug Fixes
+
+* **cli:** doctor remedies name codefall config ([#141](https://github.com/lividlabs/codefall-cli/issues/141)) ([c94f8ab](https://github.com/lividlabs/codefall-cli/commit/c94f8abe5d922914f40c492b31035153eee72c52))
+* **cli:** doctor reports a missing shared file ([#145](https://github.com/lividlabs/codefall-cli/issues/145)) ([c05590a](https://github.com/lividlabs/codefall-cli/commit/c05590a66c96eff3fa1d7d62844317ad6335cf23))
+* **cli:** upgrade drops a former harness spelling the file already lists under its new name ([#136](https://github.com/lividlabs/codefall-cli/issues/136)) ([45be8c3](https://github.com/lividlabs/codefall-cli/commit/45be8c35fb00dd48a0f2ecc05bc0dab2974805a0))
+* **cli:** upgrade reinstalls the extension on every run ([#142](https://github.com/lividlabs/codefall-cli/issues/142)) ([d235090](https://github.com/lividlabs/codefall-cli/commit/d23509064ff7b44da84fb10a1c2c68c336165f47))
+* **skills:** drop gemini as a reviewer and rename lastGraft to lastUpgrade ([#135](https://github.com/lividlabs/codefall-cli/issues/135)) ([76f5b2c](https://github.com/lividlabs/codefall-cli/commit/76f5b2cbb350d0d81992a014113d81dfc4ba5c5b))
+
 ## [0.19.0](https://github.com/lividlabs/codefall-cli/compare/v0.18.0...v0.19.0) (2026-09-24)
 
 
