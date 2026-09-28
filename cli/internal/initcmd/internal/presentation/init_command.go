@@ -113,7 +113,7 @@ func runInit(cmd *cobra.Command, initialize InitializeUseCase, flags *initFlags)
 
 	// New settings carry the default agents entry, every list on this harness's own subagent. The
 	// one thing a person is likely to want next is another harness reviewing, and the entry for
-	// that is written from inside the harness, so the line says where to go.
+	// that is written by the equip skill, so the line says where to go.
 	if fresh {
 		if err := ui.WriteLine(out, ui.Style(ui.ToneFaint).Render(equipAgentsHint)); err != nil {
 			return err
@@ -124,8 +124,8 @@ func runInit(cmd *cobra.Command, initialize InitializeUseCase, flags *initFlags)
 }
 
 // equipAgentsHint follows a run that wrote new settings, and names the skill that adds a harness
-// to the agents list from inside that harness.
-const equipAgentsHint = "To add another harness as a reviewer, run /codefall-equip agents inside it."
+// to the agents list.
+const equipAgentsHint = "To add another harness as a reviewer, run /codefall-equip agents."
 
 // buildRequest turns the flags into the use case's contract, asking for whatever they left out. The
 // second result reports whether the run writes new settings, as opposed to finishing a project whose

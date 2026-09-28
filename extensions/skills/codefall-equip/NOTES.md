@@ -57,6 +57,19 @@ extension ships, with provenance. The scripts have no template behind them once 
 the project's — and this skill is already the verb that revises them, so upgrade would be a second
 owner.
 
+**A catalog of model strings per harness and provider, shipped by codefall.** Stale within a
+release, and five harnesses' worth of it. The agents track reads the strings from where each harness
+already keeps them instead.
+
+**Composing a model string from a family name by prefix rules.** Most of the matrix is mechanical,
+and the part that is not, Anthropic's ids on Bedrock, would have needed the catalog anyway.
+
+**Setting a harness up only from inside it.** ADR-009.3 required it, on the grounds that the
+running session's record holds the exact string. It meant opening every harness to write a few lines
+of settings, and it left a Claude Code session unable to set codex up. The running session's record
+is now the first place the track looks for that harness, and each other harness's own config and
+recent sessions are read from outside. ADR-009.4 dropped the requirement.
+
 ## Why the rules are shaped this way
 
 **Never destructive.** A script that resets to reach a known state is not idempotent; it is

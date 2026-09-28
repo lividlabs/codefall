@@ -1,6 +1,6 @@
 ---
 name: codefall-equip
-description: Equip a project with the three things it has to have before the other verbs work. The local environment — start, which brings the services the project develops against up, and update, which makes the local environment match the checkout — declared under local in .codefall/settings.json and run by codefall-refresh. The test harness — a spec runner per surface, its configuration pointed at the testing root, its name declared in test.runners and its commands recorded in the testing root's AGENTS.md — which codefall-test runs cases through. The agents — how another harness is called, declared under harnessConfig, and who reviews and consults, in the agents lists — set up from inside the harness, which knows its own model strings. Each finds what the project already has, or drafts it from what the repository or the session shows, confirms, writes, and declares. Builds and rebuilds; codefall-scaffold and codefall-implement follow the local-scripts procedure.
+description: Equip a project with the three things it has to have before the other verbs work. The local environment — start, which brings the services the project develops against up, and update, which makes the local environment match the checkout — declared under local in .codefall/settings.json and run by codefall-refresh. The test harness — a spec runner per surface, its configuration pointed at the testing root, its name declared in test.runners and its commands recorded in the testing root's AGENTS.md — which codefall-test runs cases through. The agents — how another harness is called, declared under harnessConfig, and who reviews and consults, in the agents lists — set up from any harness, with the parameters read from where each harness keeps them. Each finds what the project already has, or drafts it from what the repository or the session shows, confirms, writes, and declares. Builds and rebuilds; codefall-scaffold and codefall-implement follow the local-scripts procedure.
 argument-hint: "[local | test | agents] [path]"
 disable-model-invocation: true
 allowed-tools:
@@ -59,8 +59,8 @@ Read each when its step says to; none is loaded up front.
 - `reference/testing.md` — the whole testing procedure: what to search for, the runner each surface
   takes, what installing each one means, the exact shape of every write, and how the result is
   proven. Read at step 1 of the testing track.
-- `reference/agents.md` — the whole agents procedure: where each harness records its session's
-  model and provider, the one question, the writes, the proof. Read at step 1 of the agents track.
+- `reference/agents.md` — the whole agents procedure: the display, the one question, the writes,
+  the proof. Read at step 1 of the agents track.
 - `reference/contract.md` — what `start` and `update` promise, in full. Read at step 2 of the
   local track.
 - `../../../.codefall/shared/landing.md` — the shared procedure for the branch, the commit, and the
@@ -298,22 +298,24 @@ case is written by `/codefall-implement` when a bead names one.
 
 ## Process — the agents
 
-`reference/agents.md` carries this track in full. Read it at step 1 and follow it. It runs inside
-the harness being set up, whose own session record holds the exact model string and provider.
+`reference/agents.md` carries this track in full. Read it at step 1 and follow it. Any harness
+can be set up from any other; the track finds the parameters. Every reply fits on one screen: the
+configuration, one question, one change.
 
-1. **Read the declaration**: `harnessConfig` and the `agents` lists; no settings file means
-   `codefall init` comes first. Answer which harness this is per
-   `../../../.codefall/shared/running-agents.md`; `unknown` stops here.
-2. **Read this session's record** for the model and provider, and show it. A record that cannot be
-   read means asking for the model string, and saying why.
-3. **Ask the one question**: the block's key and fields, and which active agents' lists gain
-   `<key>:<model>`, each with a proposed answer.
-4. **Write** on `equip/agents`, through `codefall config harness` and `codefall config agents` when
-   the CLI is on `PATH`, else the JSON directly, keeping the file's formatting.
-5. **Prove it**: run the agent once through `../../../.codefall/shared/run-agent.sh` with a
-   one-line prompt; exit `0` and a non-empty out-file. Then `codefall doctor` when it is on `PATH`.
-6. **Report**, land it as its own pull request, and end with what the user does next: merge, and
-   run this track inside each other harness the project wants set up.
+1. **Read** `harnesses`, `harnessConfig`, and `agents`; no settings file means `codefall init`
+   comes first. Answer which harness this is per
+   `../../../.codefall/shared/running-agents.md`.
+2. **Show the configuration** in the reference's shape, then **ask what to change**: set up a
+   harness, change the lists, or nothing. A file `codefall doctor` says does not match the schema
+   is not shown: say so in one line and rebuild it.
+3. **Do the one thing chosen**, showing what will be written and asking `Write this?`. Nothing
+   stops.
+4. **Write** on `equip/agents` through `codefall config`; no CLI means stop and say to install it.
+   A file out of date with the schema is written directly, then checked by `codefall doctor`.
+5. **Prove it**: one run through `../../../.codefall/shared/run-agent.sh`, exit `0` and a
+   non-empty out-file; then `codefall doctor`.
+6. **Report** the configuration as it now stands, land it as its own pull request, and end with what
+   the user does next: merge, and rerun it for any harness not yet set up.
 
 ## Rules
 
@@ -341,5 +343,5 @@ the harness being set up, whose own session record holds the exact model string 
   `/codefall-implement`.
 - **Refresh, test, and review are not this skill.** Say so and stop when the user wants the
   environment brought current, a suite run, or a review done, rather than equipped.
-- **The agents track runs inside the harness it sets up.** What the session's own record says is
-  what is written, once the user confirms it.
+- **The agents track sets up any harness from any harness.** Parameters come from that harness's
+  own records and config, and are written once the user confirms them.
