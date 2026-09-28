@@ -128,17 +128,45 @@ var ignoredEntries = []struct {
 // Each check is independent of the ones beside it, so all five run whatever any of them found.
 func (d *Diagnose) ignored(dir string, results []domain.Result) []domain.Result {
 	for _, want := range ignoredEntries {
-		results = append(results, d.entryIgnored(dir, want.check, want.file, want.entry))
+		remedy := "add " + want.entry + " to " + want.file + ", or run " + d.setupCommand(dir)
+		if want.check.ID == domain.UserIgnored.ID {
+			remedy = d.userIgnoredRemedy(dir)
+		}
+
+		results = append(results, d.entryIgnored(dir, want.check, want.file, want.entry, mo.Some(remedy)))
 	}
 
 	return results
 }
 
+// userIgnoredRemedy is what puts the user file's line back: `codefall config persona` writes it
+// whenever it is missing, and is given the persona the person already has so that nothing else
+// changes, or the setup command writes it with everything else codefall installs.
+func (d *Diagnose) userIgnoredRemedy(dir string) string {
+	return "run codefall config persona " + d.currentPersona(dir) + ", which adds the line, or run " +
+		d.setupCommand(dir)
+}
+
+// currentPersona is the persona the skills use for this person: the user file's, when the file is
+// there and valid, and the default otherwise, which is what the preflight script falls back to.
+func (d *Diagnose) currentPersona(dir string) string {
+	data, err := d.files.ReadFile(filepath.Join(dir, userfile.Name))
+	if err != nil {
+		return userfile.DefaultPersona
+	}
+
+	var doc userfile.Document
+	if err := json.Unmarshal(data, &doc); err != nil || len(userfile.Validate(doc)) > 0 {
+		return userfile.DefaultPersona
+	}
+
+	return userfile.Persona(doc)
+}
+
 // entryIgnored is one of those checks: the file names the entry, or it says which file is missing
 // which line.
-func (d *Diagnose) entryIgnored(dir string, check domain.Check, file, entry string) domain.Result {
-	remedy := mo.Some("add " + entry + " to " + file + ", or run " + d.setupCommand(dir))
-
+func (d *Diagnose) entryIgnored(dir string, check domain.Check, file, entry string,
+	remedy mo.Option[string]) domain.Result {
 	data, err := d.files.ReadFile(filepath.Join(dir, file))
 
 	switch {
@@ -160,10 +188,15 @@ func (d *Diagnose) entryIgnored(dir string, check domain.Check, file, entry stri
 // It fails rather than warns. The skills read the persona through the shared preflight script, which
 // falls back to the default on a file it cannot read, so a person who wrote the file to change how
 // the skills talk to them would get the default without being told. The file is one person's and is
-// never checked in, so the remedy is theirs: fix it, or remove it.
+// never checked in, so the remedy is theirs: set the persona with `codefall config persona`, or remove
+// the file. The command rewrites a file it can parse and refuses one it cannot, so a file that is not
+// a JSON object is removed first.
 func (d *Diagnose) persona(dir string) domain.Result {
-	fixRemedy := mo.Some("edit " + userfile.Name + ", or remove it to use the " + userfile.DefaultPersona +
-		" persona; schema: " + userfile.SchemaID)
+	choices := "codefall config persona <" + strings.Join(userfile.Personas(), "|") + ">"
+	fixRemedy := mo.Some("run " + choices + ", or remove " + userfile.Name + " to use the " +
+		userfile.DefaultPersona + " persona")
+	removeRemedy := mo.Some("remove " + userfile.Name + " to use the " + userfile.DefaultPersona +
+		" persona, then run " + choices + " to choose another")
 
 	data, err := d.files.ReadFile(filepath.Join(dir, userfile.Name))
 
@@ -180,10 +213,10 @@ func (d *Diagnose) persona(dir string) domain.Result {
 	if err := json.Unmarshal(data, &doc); err != nil {
 		var typeErr *json.UnmarshalTypeError
 		if errors.As(err, &typeErr) {
-			return domain.Persona.Fail(userfile.Name+"'s top level must be a JSON object", fixRemedy)
+			return domain.Persona.Fail(userfile.Name+"'s top level must be a JSON object", removeRemedy)
 		}
 
-		return domain.Persona.Fail(fmt.Sprintf("%s is not valid JSON: %v", userfile.Name, err), fixRemedy)
+		return domain.Persona.Fail(fmt.Sprintf("%s is not valid JSON: %v", userfile.Name, err), removeRemedy)
 	}
 
 	if problems := userfile.Validate(doc); len(problems) > 0 {

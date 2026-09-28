@@ -15,11 +15,15 @@ import (
 
 // agentsRemedy is what to do about an agent this machine cannot start. A run skips one it cannot
 // start and moves to the next in the order (ADR-009), so nothing is broken; the person may want the
-// binary anyway, or may want the order to say what this machine can do.
-const agentsRemedy = "install the missing binary, or leave it: a run skips an agent it cannot start here"
+// binary anyway, may want the agent gone from the list, or may leave it.
+const agentsRemedy = "install the missing binary, run codefall config agents remove <name> to drop the agent, " +
+	"or leave it: a run skips an agent it cannot start here"
 
-// currentRemedy is what to do about an order with nothing this harness can always run.
-const currentRemedy = "add an agent whose harness is current to the order, so a run always has a reader it can start"
+// addCurrentCommand is the command that puts an agent on current into the agents list.
+const addCurrentCommand = "codefall config agents add <name> --harness current"
+
+// currentReason is what an order with an agent on current buys, and ends every remedy for one without.
+const currentReason = ", so a run always has a reader it can start"
 
 // agents runs checks 14 and 15: every agent the settings define runs on a harness this machine can
 // start, and every order ends somewhere a run can always start (ADR-009).
@@ -100,5 +104,25 @@ func agentsEndAtCurrent(doc settings.Document, defined []settings.Agent) domain.
 	}
 
 	return domain.AgentsCurrent.Warn(
-		fmt.Sprintf("%s names no agent on current", strings.Join(without, ", ")), mo.Some(currentRemedy))
+		fmt.Sprintf("%s names no agent on current", strings.Join(without, ", ")), mo.Some(currentRemedy(without)))
+}
+
+// currentRemedy is what to do about the orders that name no agent on current. `codefall config agents`
+// edits the agents list and nothing else, so the list is fixed by a command and a narrower order by
+// naming an agent in settings.json.
+func currentRemedy(without []string) string {
+	narrower := slices.DeleteFunc(slices.Clone(without), func(order string) bool {
+		return order == settings.FieldAgents
+	})
+	listed := len(narrower) < len(without)
+
+	switch {
+	case listed && len(narrower) == 0:
+		return "run " + addCurrentCommand + currentReason
+	case listed:
+		return "run " + addCurrentCommand + ", and name that agent in " + strings.Join(narrower, ", ") +
+			" in " + settingsName + currentReason
+	default:
+		return "name an agent on current in " + strings.Join(narrower, ", ") + " in " + settingsName + currentReason
+	}
 }
