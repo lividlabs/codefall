@@ -421,8 +421,10 @@ func TestInitCommandPrintsALineForEachFinishedStepAndWhatToRunNext(t *testing.T)
 		t.Fatalf("Execute: %v", err)
 	}
 
+	// New settings carry the default agents entry, so the run says where another harness is added.
 	want := "✓ wrote .codefall/settings.json (tracker: beads)\n" +
 		"- the codefall marketplace is declared and codefall@codefall enabled in .claude/settings.json\n" +
+		"To add another harness as a reviewer, run /codefall-equip agents inside it.\n" +
 		nextStep + "\n"
 	if out != want {
 		t.Errorf("output =\n%q\nwant\n%q", out, want)

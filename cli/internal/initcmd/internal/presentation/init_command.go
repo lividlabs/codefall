@@ -99,7 +99,7 @@ func runInit(cmd *cobra.Command, initialize InitializeUseCase, flags *initFlags)
 
 	// A bad flag, an unanswerable question, or a project that is already set up is the user's own
 	// message; it is returned as it is so Fang renders that sentence and not a prefix in front of it.
-	request, err := buildRequest(cmd, initialize, flags, dir)
+	request, fresh, err := buildRequest(cmd, initialize, flags, dir)
 	if err != nil {
 		return err
 	}
@@ -111,23 +111,38 @@ func runInit(cmd *cobra.Command, initialize InitializeUseCase, flags *initFlags)
 		return initKind.wrap(err)
 	}
 
+	// New settings carry the default agents entry, every list on this harness's own subagent. The
+	// one thing a person is likely to want next is another harness reviewing, and the entry for
+	// that is written from inside the harness, so the line says where to go.
+	if fresh {
+		if err := ui.WriteLine(out, ui.Style(ui.ToneFaint).Render(equipAgentsHint)); err != nil {
+			return err
+		}
+	}
+
 	return ui.WriteLine(out, ui.Style(ui.ToneFaint).Render(nextStep))
 }
 
-// buildRequest turns the flags into the use case's contract, asking for whatever they left out.
+// equipAgentsHint follows a run that wrote new settings, and names the skill that adds a harness
+// to the agents list from inside that harness.
+const equipAgentsHint = "To add another harness as a reviewer, run /codefall-equip agents inside it."
+
+// buildRequest turns the flags into the use case's contract, asking for whatever they left out. The
+// second result reports whether the run writes new settings, as opposed to finishing a project whose
+// settings were already on record.
 func buildRequest(
 	cmd *cobra.Command, initialize InitializeUseCase, flags *initFlags, dir string,
-) (application.Request, error) {
+) (application.Request, bool, error) {
 	chosen, err := parseHarnesses(flags.harnesses)
 	if err != nil {
-		return application.Request{}, err
+		return application.Request{}, false, err
 	}
 
 	// Where the run installs comes before everything else, because every other question — whether
 	// there is a manifest, whether settings exist — is a question about that directory.
 	dir, err = chooseLocation(cmd.Context(), initKind, initialize, flags.location, dir)
 	if err != nil {
-		return application.Request{}, err
+		return application.Request{}, false, err
 	}
 
 	request := application.Request{Dir: dir, Harnesses: chosen, CLIVersion: buildinfo.Version()}
@@ -135,7 +150,7 @@ func buildRequest(
 	if flags.tracker != "" {
 		tracker, err := settings.ParseTracker(flags.tracker)
 		if err != nil {
-			return application.Request{}, err
+			return application.Request{}, false, err
 		}
 
 		request.Tracker = tracker
@@ -143,7 +158,7 @@ func buildRequest(
 
 	if flags.issuesRepo != "" {
 		if err := settings.ValidateRepo(flags.issuesRepo); err != nil {
-			return application.Request{}, err
+			return application.Request{}, false, err
 		}
 
 		request.IssuesRepo = mo.Some(flags.issuesRepo)
@@ -151,7 +166,7 @@ func buildRequest(
 
 	if flags.testDir != "" {
 		if err := settings.ValidateTestDir(flags.testDir); err != nil {
-			return application.Request{}, err
+			return application.Request{}, false, err
 		}
 
 		request.TestDir = flags.testDir
@@ -169,7 +184,7 @@ func buildRequest(
 		if flags.issuesProject < 1 {
 			// The flag name is never the message's first word: Fang title-cases it before
 			// rendering, which would turn --issues-project into --Issues-Project.
-			return application.Request{}, fmt.Errorf(
+			return application.Request{}, false, fmt.Errorf(
 				"the --issues-project flag must be a positive integer, not %d", flags.issuesProject)
 		}
 
@@ -180,11 +195,11 @@ func buildRequest(
 	// is upgrade's, which reads the manifest this command would otherwise have to guess around.
 	recorded, err := initialize.ManifestExists(dir)
 	if err != nil {
-		return application.Request{}, initKind.wrap(err)
+		return application.Request{}, false, initKind.wrap(err)
 	}
 
 	if recorded {
-		return application.Request{}, errors.New(
+		return application.Request{}, false, errors.New(
 			"codefall is already set up here; run codefall upgrade to bring the install current")
 	}
 
@@ -193,19 +208,19 @@ func buildRequest(
 	// the run finishes by writing the manifest that sends every later run to upgrade.
 	settled, err := initialize.SettingsExist(dir)
 	if err != nil {
-		return application.Request{}, initKind.wrap(err)
+		return application.Request{}, false, initKind.wrap(err)
 	}
 
 	if settled {
 		if len(request.Harnesses) == 0 {
 			recorded, err := initialize.ChosenHarnesses(dir)
 			if err != nil {
-				return application.Request{}, initKind.wrap(err)
+				return application.Request{}, false, initKind.wrap(err)
 			}
 
 			names, ok := recorded.Get()
 			if !ok {
-				return application.Request{}, errors.New(
+				return application.Request{}, false, errors.New(
 					"the settings here record no harnesses; pass --harness")
 			}
 
@@ -217,7 +232,7 @@ func buildRequest(
 		if request.TestDir == "" {
 			declared, err := initialize.DeclaredTestDir(dir)
 			if err != nil {
-				return application.Request{}, initKind.wrap(err)
+				return application.Request{}, false, initKind.wrap(err)
 			}
 
 			request.TestDir = declared.OrEmpty()
@@ -225,17 +240,17 @@ func buildRequest(
 	} else {
 		request, err = collect(cmd.Context(), initialize, request)
 		if err != nil {
-			return application.Request{}, err
+			return application.Request{}, false, err
 		}
 	}
 
 	// The tracker is settled by now, whether a flag or the survey chose it, so this is the last
 	// place the two answers can be held against each other.
 	if err := rejectGitHubFlags(cmd, request.Tracker); err != nil {
-		return application.Request{}, err
+		return application.Request{}, false, err
 	}
 
-	return request, nil
+	return request, !settled, nil
 }
 
 // rejectGitHubFlags refuses the GitHub flags on a tracker that does not use them, in the terms the
