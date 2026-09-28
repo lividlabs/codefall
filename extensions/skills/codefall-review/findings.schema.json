@@ -212,7 +212,7 @@
           },
           "reason": {
             "type": "string",
-            "description": "Why the user dismissed or deferred it. Required for dismissed."
+            "description": "Why the user dismissed or deferred it. Every dismissed finding carries one; triage checks it, because a conditional rule saying so here is rejected by Bedrock's structured output and by Muse's schema flag."
           },
           "bead": {
             "type": "string",
@@ -222,21 +222,6 @@
             "type": "string",
             "description": "Present when the finding was promoted from notChecked after a consult: the agent's harness and model and one sentence of what it found. The session verified the cited lines before promoting; the consult never sets a status."
           }
-        },
-        "if": {
-          "properties": {
-            "status": {
-              "const": "dismissed"
-            }
-          },
-          "required": [
-            "status"
-          ]
-        },
-        "then": {
-          "required": [
-            "reason"
-          ]
         }
       }
     }

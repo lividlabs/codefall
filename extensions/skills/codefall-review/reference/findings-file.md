@@ -31,7 +31,8 @@ reviewed and at which revision, who reviewed it and which agents were tried befo
 ran, what could not be checked, and every finding with its status. `../findings.schema.json` is the
 shape of the JSON: `reviewer.harness` and `reviewer.model` identify the agent that answered, and
 `reviewer.tried` the agents walked before it, by harness and model, each `skipped` or `failed` with
-the reason.
+the reason. Every dismissed finding carries a `reason`; the schema does not say so, because a
+conditional rule is rejected by some harnesses' schema flags, and triage checks it instead.
 
 **The files are written three times** — after the review, after triage, after the fixes. An
 interrupted session resumes from them rather than starting over.

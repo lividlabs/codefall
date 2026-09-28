@@ -163,10 +163,12 @@ run_opencode() {
 # one: --disable-write refuses the workspace file tools, --disable-web-tools the
 # network, and --approval-mode never keeps a run with nobody at the terminal from
 # waiting on a prompt; the OS sandbox stays on by default and covers the shell.
-# Muse has an --output-schema flag like codex's, and it is not used: the API
-# behind it rejects the `if`/`then` clause that makes `reason` required on a
-# dismissed finding, and the run fails before the model reads a file. The copy
-# in the prompt is what it gets. Muse has been seen to print its final object
+# Muse has an --output-schema flag like codex's, and it is not used yet: the API
+# behind it rejected an `if`/`then` clause the findings schema used to carry,
+# and the run failed before the model read a file. The clause is gone (it made
+# `reason` required on a dismissed finding, which the review skill now checks
+# itself, since Bedrock's structured output rejected it too), and the flag has
+# not been tried since. The copy in the prompt is what Muse gets. Muse has been seen to print its final object
 # twice in a row; the skill's parse retry covers that, and this script does not.
 run_muse() {
   muse exec \
