@@ -10,6 +10,7 @@ holds the reasoning.
 
 - Which harness this is
 - Resolving the list
+- How a harness is called
 - Walking the list
 - `via=` overrides for one run
 - An agent proposes
@@ -50,6 +51,41 @@ Take the entry whose `activeAgent` is the harness answered above, else the `defa
 review, `consult` for a consult. A list the entry does not have is the `default` entry's list, and
 with no `default` entry it is one `current` agent. The list's order is the order to try.
 
+## How a harness is called
+
+A list item says which harness and which model. How that harness is started — the flag its model
+goes in, the provider it reaches the model through, extra arguments, and a command that has to run
+first — is stated once per harness, in a top-level `harnessConfig` object keyed by name:
+
+```json
+"harnessConfig": {
+  "codex": {
+    "modelFlag": "--model",
+    "provider": "amazon-bedrock-runtime",
+    "args": ["-c", "model_reasoning_effort=high"],
+    "env": "aws configure export-credentials --format env"
+  },
+  "codex-direct": {
+    "harness": "codex",
+    "args": ["-c", "model_reasoning_effort=high"]
+  }
+}
+```
+
+A list item's `harness` is the lookup key. A key that is one of the five harness names configures
+that harness. Any other key is a variant whose `harness` field names the binary, so
+`{ "harness": "codex-direct", "model": "gpt-6-astra" }` runs codex the second way, and
+`via=codex-direct:gpt-6-astra` does the same for one run. Every field is optional: `modelFlag`
+defaults to `--model`; `provider` becomes the harness's own switch (the script header says which
+harnesses have one); `args` are appended as given; `env` is a shell command whose output is
+evaluated before the harness starts, which is how a run gets credentials an interactive shell would
+have exported. A harness name with no block runs bare.
+
+The model string is whatever the harness accepts for the provider in use, and the surest way to
+get it right is to let the harness say: run `/codefall-equip agents` inside the harness, and it
+reads the model and provider its own session is using, writes the block, and adds the agent to the
+lists you choose.
+
 ## Walking the list
 
 Run each agent, from the first, with the script beside this file:
@@ -80,9 +116,9 @@ that is reported this way is not a silent fallback.
 
 ## `via=` overrides for one run
 
-An invocation may name its agent directly: `via=<harness>[:<model>]`, one of the five harnesses or
-`current`, with an optional model. The override replaces the resolved list for that run with that
-one agent, and writes nothing.
+An invocation may name its agent directly: `via=<harness>[:<model>]`, one of the five harnesses,
+`current`, or a `harnessConfig` key, with an optional model. The override replaces the resolved
+list for that run with that one agent, and writes nothing.
 
 ## An agent proposes
 

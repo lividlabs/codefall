@@ -39,7 +39,7 @@ Branch names carry the verb and the identifier:
 | `mock-up` | `mockup/<slug>` |
 | `design` | `design/DESIGN-NNN-slug` |
 | `scaffold` | `scaffold/<project-or-surface>` |
-| `equip` | `equip/local` or `equip/test-harness` |
+| `equip` | `equip/local`, `equip/test-harness`, or `equip/agents` |
 | `upgrade` | `upgrade/<YYYY-MM-DD>` |
 
 A dirty tree does not stop the branch: `git switch -c` carries uncommitted changes along untouched.
