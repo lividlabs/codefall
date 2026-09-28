@@ -1513,6 +1513,19 @@ Decided at scaffold, 2026-08-16.
   way. Seen and not taken: a `set <path> <value>` command over any settings field, which would
   bypass every rule a field-specific command can state in its refusal.
 
+- **`codefall config` sets the narrower agent orders, 2026-09-27.** `review.agents`,
+  `consult.agents`, and `agentsByHarness.<harness>` each got a subcommand: `config review agents`,
+  `config consult agents`, and `config agents for <harness>`, each taking the names in order or
+  `--clear`. Until now `agents remove` refused while one of them named the agent and the only way to
+  change them was to edit `settings.json` by hand, which `doctor`'s remedy also said. The names follow
+  the settings keys, so the path a refusal or a `doctor` finding reports reads as the command that
+  changes it. `remove` still refuses rather than taking the agent out of those orders itself, for the
+  reason the entry above gives, and its refusal now names the command for each order, with the rest
+  of that order's names or `--clear`. A cleared consult order leaves `"consult": {}`, which the
+  schema accepts; `agentsByHarness` goes with its last entry. `config review agents` refuses when
+  there is no review block rather than creating one, because the block requires
+  `postToPullRequest` and that is a choice the project makes.
+
 - **Upgrade repairs a current install, 2026-09-27.** `codefall upgrade` used to print "already up
   to date" and run no step whenever the manifest recorded every harness at the binary's version, so
   `doctor`'s remedy "run `codefall upgrade`" did nothing when a `.gitignore` line or an `AGENTS.md`

@@ -11,7 +11,7 @@ first component and the reference for the rules below; `internal/initcmd/` (`cod
 `codefall upgrade`, one use case behind two commands, exported through `Commands`) is the second, and
 follows it; `internal/create/` (`codefall create`) is the third, and runs init's command in the
 directory it makes; `internal/config/` (`codefall config`, one command with subcommands) is the
-fourth, and reads and writes the agents list and the persona. `internal/shared/ui/` holds the palette, the marks, the colour-profile
+fourth, and reads and writes the agents list, its review, consult, and per-harness orders, and the persona. `internal/shared/ui/` holds the palette, the marks, the colour-profile
 writer, and the spinner runner; `internal/shared/process/` holds the command runner and the file
 system; `internal/shared/buildinfo/` holds the version the binary reports, for `--version` and for
 the manifest init writes. `internal/shared/harness/` holds the harnesses codefall can set up and where each one reads
