@@ -173,9 +173,12 @@ skip old run reports. `codefall init` writes it and `codefall doctor` warns when
 On yes, append it — never replace the file. On no, carry on and say nothing further. Say nothing at
 all when the line is already there.
 
-## Project customizations
+## Project customizations and persona
 
-Follow `../../../.codefall/shared/customizations.md` for this verb.
+Follow `../../../.codefall/shared/customizations.md` for this verb. Read the `persona=` line of the
+preflight report, or `persona` in `.codefall/user.json` when this verb runs no preflight; when it is
+not `engineer`, follow that persona's section in `../../../.codefall/shared/personas.md` for this
+run, and say so.
 
 ## Process
 

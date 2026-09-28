@@ -21,7 +21,7 @@ Scaffold's minimum output is **documentation** — the ADRs that fix the archite
 `AGENTS.md` files that make them operative. Code is optional and additive on top of that.
 
 Scaffolding is not implementing. Once the decisions are recorded and the project is green and empty,
-stop. Features go through `codefall-specify` → `codefall-design` → `codefall-implement`.
+stop.
 
 Paths that start with `templates/`, `reference/`, or `../` are relative to this skill's directory,
 not the user's project.
@@ -84,6 +84,11 @@ Vocabulary is deliberate. Say **gateway**, not "port" or "adapter". Interfaces a
 The inherited ADRs ship **Accepted** with a real date. Amend one only when the interview requires
 it, and say what you changed in the report. Project ADRs are a separate sequence starting at
 `ADR-001`.
+
+## Persona
+
+Read `persona` in `.codefall/user.json`; when it is not `engineer`, follow that persona's section in
+`../../../.codefall/shared/personas.md` for this run, and say so.
 
 ## Process
 
@@ -331,8 +336,7 @@ and every `AGENTS.md` link resolves.
 
 - **Nothing is designed here.** No entities, no schema, no feature behavior. Product detail goes to
   the decision log's Parking lot.
-- **Shape decides the architecture; names decide folder names.** Several separable capabilities is
-  package-by-component whether or not anyone has named them.
+- **Shape decides the architecture; names decide folder names.**
 - **Never show or improvise a profile that is not supported.** Planned profiles are exits, and
   ADRs for an unsupported language are never hand-authored.
 - **A consult proposes a profile; the user picks it.** Only when the description left it open.
@@ -345,4 +349,3 @@ and every `AGENTS.md` link resolves.
 - **A code tier equips the project**, per `codefall-equip`; docs-only output names it as owed.
 - **Verify what you emitted**, including that the boundary rules fail on a deliberate violation.
 - **The doc workflow this seeds: discuss → decision-log → ADR → scoped `AGENTS.md` → code.**
-  `codefall-design` picks up from here.

@@ -25,15 +25,13 @@ Three rules hold throughout. An existing project is never replaced: this verb ad
 supersedes within it. Application is per item, never wholesale. And where a revised template meets
 a project that amended its ancestor, the amendment wins.
 
-This skill is **only ever invoked explicitly**, and more firmly than the others: `codefall-scaffold` runs on
-an empty directory, but this verb runs on a project people depend on. Never suggest it, never fire it
-from a passing remark, never chain into it from another skill. Someone types `/codefall-upgrade` on
+This skill is **only ever invoked explicitly**: it runs on a project people depend on. Never suggest
+it, never fire it from a passing remark, never chain into it from another skill. Someone types `/codefall-upgrade` on
 purpose or it does not run.
 
 Template paths in this document are relative to `../codefall-scaffold/templates/`, resolved from
-this skill's directory — the one holding this `SKILL.md` — because this verb reasons about
-`codefall-scaffold`'s templates and has none of its own. Neither path is relative to the user's
-project.
+this skill's directory, because this verb reasons about `codefall-scaffold`'s templates and has none
+of its own. Neither path is relative to the user's project.
 
 ## Files beside this one
 
@@ -92,6 +90,11 @@ There is one narrow exception: a user who has seen the diff may explicitly say *
 version with the template's*. That is their call, and supersession keeps their version on the
 record — but their amendment stops governing, so say exactly that, require them to name the file,
 and only then land it like any other taken revision. Never offer this as the convenient path.
+
+## Persona
+
+Read `persona` in `.codefall/user.json`; when it is not `engineer`, follow that persona's section in
+`../../../.codefall/shared/personas.md` for this run, and say so.
 
 ## Process
 

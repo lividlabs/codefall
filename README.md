@@ -137,6 +137,17 @@ from. Editing the file by hand works too: `{"version": 1, "persona": "product-ma
 file it cannot read. The schema is
 [`cli/schemas/user.schema.json`](cli/schemas/user.schema.json).
 
+**The persona changes how the verbs talk to you, never what they may do.** `engineer` is the
+default and changes nothing. Under `product-manager`, every verb speaks in product vocabulary, the
+interviews in `envision` and `specify` get the room, and `design` parks every technical judgment you
+decline or cannot settle in a **Decisions needed** section instead of deciding it for you or reading
+your silence as a choice: the design stays `Draft`, creates no beads, and its report ends by handing
+it to an engineer's `design` run, which settles each decision and then creates the graph. The
+engineering verbs, `implement`, `equip`, `refresh`, `scaffold`, and `upgrade`, say so in one
+sentence and ask before running. Every rule a skill carries holds under any persona, and workers
+never see it. What each persona changes is one file, `.codefall/shared/personas.md`;
+[ADR-011](docs/adrs/ADR-011-personas.md) records the decision.
+
 Init also writes into the project's own files. The Beads database it initializes gets
 `audit.enabled: false` written into `.beads/config.yaml`, so bd's interaction log stays off until the
 project turns it on. `AGENTS.md` gains four marked sections — Codefall, Beads, Local environment,

@@ -65,9 +65,12 @@ written here and nowhere else, after a clean `update`, as one line. It is per ma
 git-ignored — `codefall init` adds the entry — and a stamp matching `HEAD` is what lets a session
 that starts three times on the same commit run `update` once.
 
-## Project customizations
+## Project customizations and persona
 
-Follow `../../../.codefall/shared/customizations.md` for this verb.
+Follow `../../../.codefall/shared/customizations.md` for this verb. Read the `persona=` line of the
+preflight report, or `persona` in `.codefall/user.json` when this verb runs no preflight; when it is
+not `engineer`, follow that persona's section in `../../../.codefall/shared/personas.md` for this
+run, and say so.
 
 ## Process
 

@@ -138,9 +138,12 @@ another verb's pull request.** When a task needs a case and no runner is declare
   keep the contract, and change the declaration only when an entry point moved. The change lands
   in the task's own pull request and is named in its body.
 
-## Project customizations
+## Project customizations and persona
 
-Follow `../../../.codefall/shared/customizations.md` for this verb.
+Follow `../../../.codefall/shared/customizations.md` for this verb. Read the `persona=` line of the
+preflight report, or `persona` in `.codefall/user.json` when this verb runs no preflight; when it is
+not `engineer`, follow that persona's section in `../../../.codefall/shared/personas.md` for this
+run, and say so.
 
 ## Process — the local scripts
 
