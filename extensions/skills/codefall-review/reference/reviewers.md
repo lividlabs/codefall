@@ -79,9 +79,9 @@ Runs the agent's harness in its headless read-only mode in the repository, so th
 the files itself. Leaving the model off takes the harness's own default — which is what
 `via=codex` with no model means. The prompt file is `../reviewer-prompt.md` rendered with every lens in scope. Codex and
 Claude Code also take the schema as a flag — `--output-schema` and `--json-schema` — which makes
-their output conform by construction. Muse has such a flag and the script does not pass it: its
-validator rejects the schema's `if`/`then` clause, so Muse reads the schema from the prompt like
-OpenCode and agy. The exit code decides the walk, per `running-agents.md`: `0` answered;
+their output conform by construction. Muse has such a flag and the script does not pass it yet: its
+validator rejected an `if`/`then` clause the schema used to carry, and the flag has not been tried
+since the clause came out, so Muse reads the schema from the prompt like OpenCode and agy. The exit code decides the walk, per `running-agents.md`: `0` answered;
 `70` the agent is `current`, run the subagents; `64` and `69` not runnable here, skip it; `73`,
 `75`, and `76` ran and failed, advance with the failure folded into the next prompt.
 

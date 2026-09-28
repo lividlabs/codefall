@@ -221,6 +221,10 @@ the conditions under which it matters. Then ask which to fix.
 | `dismissed` | The user rejected it, with a reason |
 | `deferred` | Real, but not now |
 
+A dismissed finding is written with its `reason`. The schema does not require it, because a
+conditional rule there is rejected by Bedrock's structured output and by Muse's schema flag, so
+this step is where the rule lives: a dismissal with no reason is asked for one before the write.
+
 Apply the accepted fixes with this session's tools, code and documents alike. A finding's proposed
 `patch` is a starting point, not a script — apply the intent, matching the surrounding code. Fixes
 are not re-reviewed here.
