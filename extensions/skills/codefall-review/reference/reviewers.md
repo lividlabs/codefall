@@ -12,22 +12,21 @@ Read at step 3, before the review starts.
 
 ## Who reviews
 
-The project's agent order, resolved at step 1 per `../../../../.codefall/shared/running-agents.md`
-— `agentsByHarness.<harness>`, else `review.agents`, else the top-level `agents`, else one entry,
-`subagent` on `current` — and walked at step 3. The first agent that answers is the reviewer. Two
-entries are special:
+The `review` list, resolved at step 1 per `../../../../.codefall/shared/running-agents.md` — the
+`agents` entry for the harness this session runs in, else the `default` entry; a `review` list the
+entry lacks is the `default` entry's; with no `default` entry, one `current` agent — and walked at
+step 3. The first agent that answers is the reviewer. Two agents are special:
 
 - **`current`** is a subagent of this harness: one per lens group, in parallel, merged here. With
-  nothing configured it is the whole order, so a project that has not chosen still reviews the way it
+  nothing configured it is the whole list, so a project that has not chosen still reviews the way it
   always did.
-- **This session** is never a config entry. It is a run-time choice, acceptable only when the work
+- **This session** is never in a list. It is a run-time choice, acceptable only when the work
   under review came from somewhere else, and the report says so.
 
-`via=` replaces the order for one run and takes a configured name or a raw harness with an optional
-model:
+`via=` replaces the list for one run and takes a harness with an optional model:
 
 ```
-via=architect        a name from the project's agents list
+via=current
 via=codex            via=codex:gpt-5-codex
 via=claude           via=claude:claude-opus-5
 via=muse             via=muse:muse-spark-1.3-contributor
@@ -35,9 +34,8 @@ via=opencode         via=opencode:anthropic/claude-sonnet-5
 via=agy              via=agy:<model>
 ```
 
-A configured name wins when the two forms collide. The five harness names are the ones a project may
-configure. The model strings are examples and will age — whatever the harness accepts is passed
-through untouched.
+The five harness names and `current` are the ones a project may configure. The model strings are
+examples and will age — whatever the harness accepts is passed through untouched.
 
 ## Lens groups
 
@@ -74,25 +72,24 @@ Each is prompted from `../reviewer-prompt.md`, rendered by substituting `{{TARGE
 ## Another agent
 
 ```
-../../../../.codefall/shared/run-agent.sh <name>|<harness>[:<model>] <prompt-file> <schema-file> <out-file>
+../../../../.codefall/shared/run-agent.sh <harness>[:<model>] <prompt-file> <schema-file> <out-file>
 ```
 
 Runs the agent's harness in its headless read-only mode in the repository, so the reviewer reads
-the files itself. A name is resolved from `.codefall/settings.json`; the raw form bypasses it.
-Leaving the model off takes the harness's own default — which is what `via=codex` with no model
-means. The prompt file is `../reviewer-prompt.md` rendered with every lens in scope. Codex and
+the files itself. Leaving the model off takes the harness's own default — which is what
+`via=codex` with no model means. The prompt file is `../reviewer-prompt.md` rendered with every lens in scope. Codex and
 Claude Code also take the schema as a flag — `--output-schema` and `--json-schema` — which makes
 their output conform by construction. Muse has such a flag and the script does not pass it: its
 validator rejects the schema's `if`/`then` clause, so Muse reads the schema from the prompt like
 OpenCode and agy. The exit code decides the walk, per `running-agents.md`: `0` answered;
-`70` the entry is `current`, run the subagents; `64` and `69` not runnable here, skip it; `73`,
+`70` the agent is `current`, run the subagents; `64` and `69` not runnable here, skip it; `73`,
 `75`, and `76` ran and failed, advance with the failure folded into the next prompt.
 
 - The external reviewer runs read-only. It proposes; it never edits.
 - **An unauthenticated harness is a failure, not a skip.** No harness reports it before the prompt
-  is sent, so it exits `76` with its own error, the order advances, and the report says so with the
-  harness's output. When the order ends with no answer, stop, report every agent tried, and offer
-  this session as the reviewer. Never fall back silently, and never past the end of the order.
+  is sent, so it exits `76` with its own error, the list advances, and the report says so with the
+  harness's output. When the list ends with no answer, stop, report every agent tried, and offer
+  this session as the reviewer. Never fall back silently, and never past the end of the list.
 
 ## Consulting on `notChecked`
 
@@ -107,16 +104,17 @@ reviewer's words; `FILES` are the files it names, or the target's changed files 
 `CONTEXT` is the target and its revision, and which lens raised it; `OPTIONS` are three — it is a
 defect, with the severity the run would give it; it is not a defect; the repository does not say.
 `PRIOR` is an earlier agent's failure, or empty. `SCHEMA` is `../../../../.codefall/shared/consult.schema.json`. Walk the
-`consult` order with `../../../../.codefall/shared/run-agent.sh`.
+entry's `consult` list with `../../../../.codefall/shared/run-agent.sh`.
 
 **What the answer does.** A consult never becomes a finding on its own. An answer of `high`
 confidence that names a defect and cites the file and line lets this session promote the entry to a
-finding — `open`, the severity the answer argued for, the consult's name and one sentence of its
-reasoning in the finding's `consult` field — after this session has read the cited lines and agrees.
+finding — `open`, the severity the answer argued for, the consult's harness and model and one
+sentence of its reasoning in the finding's `consult` field — after this session has read the cited
+lines and agrees.
 Any other answer leaves the entry in `notChecked`, with the consult's view appended: *consulted
-`architect` (codex): not a defect, the queue is single-consumer (`queue.go:41`)*. When no agent
+`codex:gpt-5-codex`: not a defect, the queue is single-consumer (`queue.go:41`)*. When no agent
 answered, the entry stays as the reviewer wrote it.
 
-One consult per entry, one pass over the order, and the report names every consult beside the
+One consult per entry, one pass over the list, and the report names every consult beside the
 reviewer. A promoted finding is triaged like every other one; the consult does not decide its
 status.

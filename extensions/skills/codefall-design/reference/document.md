@@ -83,7 +83,7 @@ One entry per decision:
 - **Options:** a signed payload — no store, every consumer verifies; a session lookup — one store,
   one place to expire, a network hop on every read
 - **Needs an ADR:** yes — other components will build on it
-- **Consulted:** architect (codex) preferred the signed payload; the reasoning is under Overview
+- **Consulted:** codex:gpt-5-codex preferred the signed payload; the reasoning is under Overview
 ```
 
 **A design with a non-empty Decisions needed section is `Draft`, never `Ready`, and creates no

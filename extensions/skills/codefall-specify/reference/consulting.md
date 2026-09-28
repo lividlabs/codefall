@@ -23,16 +23,16 @@ Render `../../../../.codefall/shared/consult-prompt.md`: `QUESTION` is the inter
 `FILES` are the artifacts the audit at step 6 found for the surface, and the vision when one frames
 the work; `CONTEXT` is the consumer and the capability so far, in a paragraph; `OPTIONS` are the
 answers the run can see, or the one line "none seen" when it cannot; `PRIOR` is an earlier agent's
-failure, or empty; `SCHEMA` is `../../../../.codefall/shared/consult.schema.json`. Run the order under `consult.agents`
-with `../../../../.codefall/shared/run-agent.sh`, as `running-agents.md` says. With nothing configured the order is one
-entry on `current`, a subagent of this harness reading the same files fresh.
+failure, or empty; `SCHEMA` is `../../../../.codefall/shared/consult.schema.json`. Run the entry's `consult` list
+with `../../../../.codefall/shared/run-agent.sh`, as `running-agents.md` says. With nothing configured the list is one
+`current` agent, a subagent of this harness reading the same files fresh.
 
 ## What the answer does
 
 The answer is offered in the interview as a proposal, naming the consult, and the user confirms or
 corrects it before it reaches the document:
 
-> Consulting `architect` (codex): the profile screen already blocks a delete while an export is
+> Consulting `codex:gpt-5-codex`: the profile screen already blocks a delete while an export is
 > running, in `profile/actions.ts:88`. So the failure path here is "the delete waits", not "the
 > delete fails". Does that match?
 

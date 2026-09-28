@@ -23,8 +23,8 @@ words the concern was raised in; `FILES` are the components the design touches a
 bind them; `CONTEXT` is the spec requirement the point serves and the approach so far, in a
 paragraph; `OPTIONS` are the approaches weighed, each with what the run thinks it costs; `PRIOR` is
 an earlier agent's failure, or empty; `SCHEMA` is `../../../../.codefall/shared/consult.schema.json`.
-Run the order under `consult.agents` with `../../../../.codefall/shared/run-agent.sh`, as
-`running-agents.md` says. With nothing configured the order is one entry on `current`, and the
+Run the entry's `consult` list with `../../../../.codefall/shared/run-agent.sh`, as
+`running-agents.md` says. With nothing configured the list is one `current` agent, and the
 consult is a subagent of this harness reading the same files fresh.
 
 ## What the answer does
@@ -41,6 +41,6 @@ Whatever the row, nothing is written without the user confirming it, as step 7 a
 ## The record
 
 Where a consult informed a decision that reaches the document, the sentence recording the decision
-names it: *chosen after consulting `architect` (codex), which found the session lookup already
+names it: *chosen after consulting `codex:gpt-5-codex`, which found the session lookup already
 serialises on the store.* The report at step 11 lists every consult: the point, who answered, who
 was skipped or failed, and which row above it took.
