@@ -6,6 +6,20 @@ below were written by hand, before that was wired up.
 Tags are bare version numbers (`0.1.2`), not `v`-prefixed, so they match the `ref` the marketplace
 pins. A `v0.1.1` tag also exists from before that convention was settled.
 
+## [0.22.0](https://github.com/lividlabs/codefall-cli/compare/v0.21.0...v0.22.0) (2026-09-28)
+
+
+### Features
+
+* **cli:** harnessConfig states how each harness is called ([#152](https://github.com/lividlabs/codefall-cli/issues/152)) ([47f99e4](https://github.com/lividlabs/codefall-cli/commit/47f99e49698ff30143f40e44d5f322078fd7e98f))
+* **extension:** run-agent.sh honours harnessConfig and turns hooks off ([#150](https://github.com/lividlabs/codefall-cli/issues/150)) ([11329fd](https://github.com/lividlabs/codefall-cli/commit/11329fd0d55596ea1b4c875b1f8f7fe3530b9aab))
+* **skills:** equip sets an agent up from inside its harness ([#151](https://github.com/lividlabs/codefall-cli/issues/151)) ([fabf3a6](https://github.com/lividlabs/codefall-cli/commit/fabf3a6e04f66ab2628fb4958e5a790167653a38))
+
+
+### Bug Fixes
+
+* **skills:** findings schema drops the if/then that Bedrock rejects ([#149](https://github.com/lividlabs/codefall-cli/issues/149)) ([e1c292d](https://github.com/lividlabs/codefall-cli/commit/e1c292d12b0bef4cd8a083bd3e8f1bea014d40e9))
+
 ## [0.21.0](https://github.com/lividlabs/codefall-cli/compare/v0.20.0...v0.21.0) (2026-09-28)
 
 
