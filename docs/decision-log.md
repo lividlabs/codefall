@@ -1497,6 +1497,35 @@ Decided at scaffold, 2026-08-16.
   Agents category of their own, because the Harnesses heading listed the installed harnesses and
   the configured agents in one parenthetical that read as a single list.
 
+- **`codefall config`, 2026-09-27.** A fourth component, `internal/config/`, owns one command with
+  subcommands: `show` prints the effective agents, their orders, and the persona with its source;
+  `agents list`, `add`, `remove`, and `order` change the list in `settings.json`; `persona` prints
+  or sets the persona in `user.json`, adding its `.gitignore` line when missing. Subcommands rather
+  than flags on one command, because each write has its own arguments and its own refusals. A write
+  changes only the value's own text, so a checked-in file keeps its key order and layout, and it is
+  refused in the settings or user file module's words when the result would not validate, or when
+  the file does not validate to begin with. `remove` refuses while `review.agents`,
+  `consult.agents`, or `agentsByHarness` still name the agent and lists where, rather than editing
+  those orders too, because which order loses a reader is the team's decision; it also refuses the
+  last agent, since an empty list means the default. Nothing prompts, so a script can run all of
+  it. The helper that appends a missing ignore line under its comment moved from initcmd to the
+  settings module as `WithIgnoreLines`, so `init` and `config persona` write the same line the same
+  way. Seen and not taken: a `set <path> <value>` command over any settings field, which would
+  bypass every rule a field-specific command can state in its refusal.
+
+- **Upgrade repairs a current install, 2026-09-27.** `codefall upgrade` used to print "already up
+  to date" and run no step whenever the manifest recorded every harness at the binary's version, so
+  `doctor`'s remedy "run `codefall upgrade`" did nothing when a `.gitignore` line or an `AGENTS.md`
+  section had been removed since. A current install now runs the steps that repair the project's
+  own files: the settings step's harness-spelling rewrite, the hook registrations, the `AGENTS.md`
+  sections, the testing tree, and the `.ignore`, `.gitignore`, and `.gitattributes` entries. It
+  still skips the extension copy, the cleanup that follows it, and Beads, and writes no manifest,
+  because the record already names this version and a run that copied nothing has no file lists to
+  put in it; `bd` is not needed for such a run. Only a step that changed something is printed, and
+  "already up to date" is said only when none did. A shared file or skill deleted from a current
+  install is still not restored, since that is the extension copy's work; `doctor` reports it with
+  the same remedy.
+
 ## Open
 
 - **UI composition.** Half settled by **Shared modules, 2026-08-27** above: the theme, the styles,

@@ -618,6 +618,113 @@ func TestRunStopsOnACancelledContext(t *testing.T) {
 	}
 }
 
+// --- a run over a current install ---------------------------------------------------------------
+
+// installedProject is a project a full run has just set up, and the file system it left behind: the
+// starting point of every run over a current install.
+func installedProject(t *testing.T) *fakeFileSystem {
+	t.Helper()
+
+	files := newFakeFileSystem()
+
+	request := beadsRequest()
+	request.CLIVersion = "v1.2.3"
+
+	runFor(t, files, newFakeExtensionSource(), request)
+
+	return files
+}
+
+// currentRequest is the request upgrade builds for a project the manifest records at this version.
+func currentRequest() Request {
+	request := beadsRequest()
+	request.CLIVersion = "v1.2.3"
+	request.TestDir = settings.DefaultTestDir
+	request.Current = true
+
+	return request
+}
+
+// A current install copies nothing out of the binary, cleans nothing up, and leaves Beads and the
+// manifest alone, but the steps that repair a project's own files still run: an ignore line a person
+// removed since the last run is put back and reported, which is what doctor's remedy promised.
+func TestRunOverACurrentInstallRepairsAMissingIgnoreLine(t *testing.T) {
+	files := installedProject(t)
+	manifestBefore := slices.Clone(files.files[manifestFull])
+
+	gitignore := filepath.Join(workingDir, settings.GitIgnoreName)
+	files.files[gitignore] = []byte(strings.ReplaceAll(string(files.files[gitignore]), ".codefall/user.json\n", ""))
+
+	source := newFakeExtensionSource()
+	runner := toolsInstalled()
+	// A current install has no Beads step, so bd need not be on PATH.
+	delete(runner.paths, "bd")
+
+	report, err := NewInitialize(files, runner, source, noChanges()).Run(t.Context(), currentRequest(), nil)
+	if err != nil {
+		t.Fatalf("Run: %v", err)
+	}
+
+	var ids []string
+
+	for _, result := range report.Results() {
+		ids = append(ids, result.Step.ID)
+
+		switch {
+		case result.Step.ID == domain.IgnoreStep.ID && result.Outcome != domain.OutcomeDone:
+			t.Errorf("ignore step = %+v, want it to have put the line back", result)
+		case result.Step.ID != domain.IgnoreStep.ID && result.Outcome != domain.OutcomeSkipped:
+			t.Errorf("%s step = %+v, want it to have found its work done", result.Step.ID, result)
+		}
+	}
+
+	want := []string{
+		domain.SettingsStep.ID, domain.HookStep.ID, domain.AgentsStep.ID, domain.TestingStep.ID, domain.IgnoreStep.ID,
+	}
+	if !slices.Equal(ids, want) {
+		t.Errorf("steps = %q, want %q", ids, want)
+	}
+
+	if last := report.Results()[len(report.Results())-1]; last.Detail != "added .codefall/user.json to .gitignore" {
+		t.Errorf("ignore detail = %q, want it to name the line it put back", last.Detail)
+	}
+
+	if !settings.NamesEntry(string(files.files[gitignore]), ".codefall/user.json") {
+		t.Errorf(".gitignore =\n%s\nwant it to name .codefall/user.json again", files.files[gitignore])
+	}
+
+	if len(source.calls) != 0 {
+		t.Errorf("fetched %+v, want nothing copied out of the binary", source.calls)
+	}
+
+	if !slices.Equal(files.files[manifestFull], manifestBefore) {
+		t.Errorf("manifest =\n%s\nwant it left as the full run wrote it:\n%s", files.files[manifestFull], manifestBefore)
+	}
+}
+
+// A current install with nothing missing finds every step's work done, which is what lets the
+// command say it is up to date.
+func TestRunOverACurrentInstallWithNothingMissingChangesNothing(t *testing.T) {
+	files := installedProject(t)
+	before := maps.Clone(files.files)
+
+	report, err := NewInitialize(files, toolsInstalled(), newFakeExtensionSource(), noChanges()).Run(
+		t.Context(), currentRequest(), nil)
+	if err != nil {
+		t.Fatalf("Run: %v", err)
+	}
+
+	for _, result := range report.Results() {
+		if result.Outcome != domain.OutcomeSkipped {
+			t.Errorf("%s step = %+v, want it to have found its work done", result.Step.ID, result)
+		}
+	}
+
+	if !maps.EqualFunc(files.files, before, slices.Equal) {
+		t.Errorf("files changed on a current install with nothing missing: %q", keysOf(files))
+	}
+}
+
 // --- the questions presentation asks -----------------------------------------------------------
 
 func TestSettingsExist(t *testing.T) {

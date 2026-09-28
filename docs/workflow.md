@@ -33,7 +33,8 @@ installs for each:
   the file does not already name it.
 
 `codefall doctor` checks that all of it is present and runnable. [ADR-006](adrs/ADR-006-install-layout.md)
-records the layout.
+records the layout. `codefall config` changes the agents list in `settings.json` and the persona in
+`user.json` afterwards, one command at a time and without prompting.
 
 ## The chain
 

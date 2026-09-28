@@ -17,6 +17,7 @@ import (
 	"github.com/samber/do/v2"
 	"github.com/spf13/cobra"
 
+	"github.com/lividlabs/codefall-cli/cli/internal/config"
 	"github.com/lividlabs/codefall-cli/cli/internal/create"
 	"github.com/lividlabs/codefall-cli/cli/internal/doctor"
 	"github.com/lividlabs/codefall-cli/cli/internal/initcmd"
@@ -46,6 +47,7 @@ func run(args []string, stdout, stderr io.Writer) error {
 		}
 	}()
 
+	config.Register(injector)
 	create.Register(injector)
 	doctor.Register(injector)
 	initcmd.Register(injector)
@@ -59,6 +61,7 @@ func run(args []string, stdout, stderr io.Writer) error {
 	root.SetErr(stderr)
 	root.AddCommand(doctor.Command(injector))
 	root.AddCommand(initcmd.Commands(injector)...)
+	root.AddCommand(config.Command(injector))
 	// create runs init in the directory it makes, so it gets an init command of its own.
 	root.AddCommand(create.Command(injector, initcmd.Command(injector)))
 

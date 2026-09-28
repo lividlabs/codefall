@@ -74,8 +74,10 @@ codefall init
 Running the `upgrade` command brings an installed project level with the binary: it reinstalls the
 skills, shared files, and hooks for the harnesses the settings record, replaces the sections codefall
 wrote into `AGENTS.md`, rewrites a harness name still spelled the old way, and records the run in the
-manifest. It changes nothing it did not write, reports "already up to date" when there is nothing to
-do, and asks before moving the installed version unless `--yes` answers. `--harness` adds a harness
+manifest. It changes nothing it did not write, and asks before moving the installed version unless
+`--yes` answers. On a project already installed at the binary's version it copies nothing, but puts
+back an ignore entry, an `AGENTS.md` section, a hook registration, or a testing file that has gone
+missing since, reports each, and says "already up to date" only when there was nothing to put back. `--harness` adds a harness
 the project did not choose at `init`, installs for it, and records it in the settings. A project set
 up before the manifest existed runs `init` one more time, which writes the manifest, and uses
 `upgrade` from then on.
@@ -121,13 +123,17 @@ checked-in list serves every machine, and `doctor` reports which entries yours c
 one entry, `subagent` on `current`, which is what every verb did before the list existed. `review`
 walks it for its reviewer, and `implement` and `design` walk it for a consult when a run cannot
 settle a question on its own; a `review` or `consult` block may carry its own order.
-[ADR-009](docs/adrs/ADR-009-agents.md) records the shape.
+`codefall config agents add <name> --harness <harness|current> [--model <model>]` adds an agent,
+last or `--before`/`--after` another, `codefall config agents remove <name>` takes one out unless an
+order still names it, and `codefall config agents order <name>...` sets the order; `codefall config
+show` prints the list and every order. [ADR-009](docs/adrs/ADR-009-agents.md) records the shape.
 
 `.codefall/user.json` sits beside `settings.json` and describes the person at the keyboard rather
 than the project, so it is yours and is never checked in: `init` adds it to `.gitignore`. Its one
 field today is `persona`, `engineer` or `product-manager`, and a missing file or a missing field
-means `engineer`. A `codefall config persona` command will set it, and editing the file by hand
-works too: `{"version": 1, "persona": "product-manager"}`. `doctor` reports the persona and fails a
+means `engineer`. `codefall config persona product-manager` sets it, creating the file and its
+`.gitignore` line when either is missing, and `codefall config persona` prints it and where it came
+from. Editing the file by hand works too: `{"version": 1, "persona": "product-manager"}`. `doctor` reports the persona and fails a
 file it cannot read. The schema is
 [`cli/schemas/user.schema.json`](cli/schemas/user.schema.json).
 
@@ -174,6 +180,7 @@ what to delete.
 | `codefall create <dir>` | Makes the directory and its git repository, commits a README and a `.gitignore`, runs `init` there, and offers the push |
 | `codefall init` | Sets a directory up for codefall, once: settings, the extension for each harness, Beads, hooks, the `AGENTS.md` sections, the testing tree, and the manifest that records the run |
 | `codefall upgrade` | Brings an installed project level with the binary, for the harnesses the settings record: warns about the breaking changes in between, reinstalls, removes what it no longer ships, and touches nothing it did not write |
+| `codefall config` | Shows the effective agents, their orders, and your persona (`show`), changes the agents list (`agents list`, `add`, `remove`, `order`), and prints or sets the persona (`persona`); never prompts, and refuses a write the settings would not accept |
 | `codefall doctor` | Reports whether a project has what codefall needs, with a remedy per unmet check, and repairs nothing |
 
 [ADR-010](docs/adrs/ADR-010-upgrade.md) records why `init` runs once and `upgrade` is its own command.

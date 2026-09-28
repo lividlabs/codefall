@@ -150,6 +150,61 @@ func NamesEntry(body, entry string) bool {
 	return false
 }
 
+// IgnoreLine is one line codefall needs in an ignore or attributes file: the entry, and the comment
+// that says why it is there for whoever finds the file later.
+type IgnoreLine struct {
+	Entry   string
+	Comment string
+}
+
+// WithIgnoreLines returns an ignore file's contents with every line it does not already name appended
+// under its comment, and the entries it appended, in the order given. A file that does not exist is
+// passed as None and comes back holding every line. A file that already names every entry comes back
+// unchanged with nothing appended, which is what makes a rerun a no-op rather than a growing list of
+// duplicates.
+//
+// The file may already be the project's own, holding entries that have nothing to do with codefall,
+// so this appends rather than rewrites. initcmd writes every line codefall needs this way, and
+// `codefall config persona` writes the user file's line the same way, so the two cannot disagree
+// about what a file that names an entry looks like.
+func WithIgnoreLines(existing mo.Option[string], lines []IgnoreLine) (string, []string) {
+	body, present := existing.Get()
+	if !present {
+		var fresh strings.Builder
+
+		added := make([]string, 0, len(lines))
+
+		for at, line := range lines {
+			if at > 0 {
+				fresh.WriteString("\n")
+			}
+
+			fresh.WriteString(line.Comment + "\n" + line.Entry + "\n")
+			added = append(added, line.Entry)
+		}
+
+		return fresh.String(), added
+	}
+
+	var added []string
+
+	for _, line := range lines {
+		if NamesEntry(body, line.Entry) {
+			continue
+		}
+
+		// A file that does not end in a newline would otherwise have its last entry joined to ours.
+		if !strings.HasSuffix(body, "\n") {
+			body += "\n"
+		}
+
+		body += "\n" + line.Comment + "\n" + line.Entry + "\n"
+		added = append(added, line.Entry)
+	}
+
+	return body, added
+}
+
 var (
 	repoRegexp    = regexp.MustCompile(RepoPattern)
 	testDirRegexp = regexp.MustCompile(TestDirPattern)

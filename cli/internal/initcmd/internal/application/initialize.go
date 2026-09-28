@@ -116,10 +116,15 @@ type Request struct {
 	// the repeats, so a name given twice is one install and each step reports the same order. A run
 	// that names none is refused by preflight rather than quietly installing nothing.
 	Harnesses []string
-	// NoOp is true when everything the run would write matches what is already installed: same
-	// version recorded in the manifest, nothing left to declare or rewrite. The use case is not
-	// asked at all.
-	NoOp bool
+	// Current is true when the manifest records every harness at this binary's version and there is
+	// nothing left to declare or rewrite. The run then copies nothing out of the binary: it skips the
+	// extension, cleanup, and Beads steps and writes no manifest, because none of what they would
+	// write can have changed. The steps that repair a project's own files still run — the settings
+	// step's rewrites, the hooks, the AGENTS.md sections, the testing tree, and the ignore entries —
+	// because a person can remove a line or a section between two runs of the same version, and
+	// doctor's remedy for that is `codefall upgrade`. Each of them reports a skip when it found its
+	// work already done, which is how the command knows whether to say the install is up to date.
+	Current bool
 }
 
 // Observer watches a run step by step, so a terminal can show what is happening while it happens.
@@ -185,24 +190,29 @@ func (i *Initialize) Run(ctx context.Context, request Request, observer Observer
 		return domain.Report{}, err
 	}
 
-	steps := []step{
-		{Step: domain.SettingsStep, run: i.settings},
-		{Step: domain.ExtensionStep, run: func(ctx context.Context, request Request) (domain.StepResult, error) {
+	steps := []step{{Step: domain.SettingsStep, run: i.settings}}
+
+	// An install already current at this version has nothing to copy, nothing to clean up after a
+	// copy, and a Beads it has already initialised; the steps after these three are the ones that
+	// repair a project's own files, and they run either way.
+	if !request.Current {
+		steps = append(steps, step{Step: domain.ExtensionStep, run: func(ctx context.Context, request Request) (domain.StepResult, error) {
 			result, files, err := i.extension(ctx, request)
 			written = files
 
 			return result, err
-		}},
-	}
-
-	if upgrading {
-		steps = append(steps, step{Step: domain.CleanupStep, run: func(_ context.Context, request Request) (domain.StepResult, error) {
-			return i.cleanup(request, previous, written)
 		}})
+
+		if upgrading {
+			steps = append(steps, step{Step: domain.CleanupStep, run: func(_ context.Context, request Request) (domain.StepResult, error) {
+				return i.cleanup(request, previous, written)
+			}})
+		}
+
+		steps = append(steps, step{Step: domain.BeadsStep, run: i.beads})
 	}
 
 	steps = append(steps,
-		step{Step: domain.BeadsStep, run: i.beads},
 		step{Step: domain.HookStep, run: i.hook},
 		step{Step: domain.AgentsStep, run: i.agents},
 		step{Step: domain.TestingStep, run: i.testing},
@@ -231,6 +241,13 @@ func (i *Initialize) Run(ctx context.Context, request Request, observer Observer
 	// The manifest is the last thing a run writes, because it says the install is complete and the
 	// upgrade gate believes it: written any earlier, a run that failed a later step would leave a
 	// record claiming work it never did, and the next run would report there was nothing to do.
+	//
+	// A run over a current install copied nothing, so it has no file lists to record, and the record
+	// already names this version: writing it would replace the lists with empty ones.
+	if request.Current {
+		return domain.NewReport(results...), nil
+	}
+
 	if err := i.writeManifest(request.Dir, request.CLIVersion, written); err != nil {
 		return domain.Report{}, fmt.Errorf("record the installation to %s: %w", manifest.Name, err)
 	}

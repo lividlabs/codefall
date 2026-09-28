@@ -6,11 +6,12 @@ relative to `cli/` unless it says otherwise.
 
 A Go command-line tool. One surface, one app, one module.
 
-**State: three components and nine shared modules.** `internal/doctor/` (`codefall doctor`) is the
+**State: four components and nine shared modules.** `internal/doctor/` (`codefall doctor`) is the
 first component and the reference for the rules below; `internal/initcmd/` (`codefall init` and
 `codefall upgrade`, one use case behind two commands, exported through `Commands`) is the second, and
 follows it; `internal/create/` (`codefall create`) is the third, and runs init's command in the
-directory it makes. `internal/shared/ui/` holds the palette, the marks, the colour-profile
+directory it makes; `internal/config/` (`codefall config`, one command with subcommands) is the
+fourth, and reads and writes the agents list and the persona. `internal/shared/ui/` holds the palette, the marks, the colour-profile
 writer, and the spinner runner; `internal/shared/process/` holds the command runner and the file
 system; `internal/shared/buildinfo/` holds the version the binary reports, for `--version` and for
 the manifest init writes. `internal/shared/harness/` holds the harnesses codefall can set up and where each one reads
@@ -179,7 +180,9 @@ The why lives in the ADRs. This file is the operative rules only — never resta
   2026-09-16; nothing in a `domain/` package imports that module, so its allow entry has no other
   proof. Both were made again for `internal/shared/userfile/` on 2026-09-27, against a
   `charm.land/lipgloss/v2` import in the module and a `userfile` import from
-  `internal/doctor/internal/domain/`.
+  `internal/doctor/internal/domain/`. The `config` component's `application-layer` and
+  `shared-modules` entries were proven on 2026-09-27, against a Cobra import from its
+  `application/` and a throwaway `internal/shared/proof/` importing its facade.
 - **`depguard` matches `_test.go` too.** Inner-layer tests are internal test packages (`package
   domain`, `package application`), so a `domain` test cannot import `os`. The schema test that holds
   `schemas/settings.schema.json` equal to the settings constants lives in `internal/shared/settings`,

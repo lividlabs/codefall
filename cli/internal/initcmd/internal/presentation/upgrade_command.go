@@ -31,7 +31,9 @@ func NewUpgradeCommand(initialize InitializeUseCase) *cobra.Command {
 			"the run in .codefall/manifest.json, removing what the previous install wrote that this " +
 			"one does not ship. Before it changes anything it prints the breaking changes recorded " +
 			"between the installed version and this one and asks to continue. A project already " +
-			"installed at this binary's version is reported as up to date and left alone. " +
+			"installed at this binary's version copies nothing: upgrade puts back any ignore entry, " +
+			"AGENTS.md section, hook registration, or testing file that has gone missing, reports what " +
+			"it restored, and reports the install as up to date when there was nothing to restore. " +
 			"--harness adds a harness the project did not choose at init and records it in the settings. " +
 			"Upgrade needs a manifest: a project that has none is codefall init's. " +
 			"Run below the root of a git repository, upgrade asks whether the install is there or at " +
@@ -84,13 +86,16 @@ func runUpgrade(cmd *cobra.Command, initialize InitializeUseCase, flags *upgrade
 		return err
 	}
 
-	if request.NoOp {
-		return ui.WriteLine(out, ui.Style(ui.ToneFaint).Render(
-			"already up to date with "+request.CLIVersion))
+	report, err := runInitialize(cmd.Context(), upgradeKind, initialize, request, out)
+	if err != nil {
+		return upgradeKind.wrap(err)
 	}
 
-	if _, err := runInitialize(cmd.Context(), upgradeKind, initialize, request, out); err != nil {
-		return upgradeKind.wrap(err)
+	// A current install ran only the repair steps, and printed only the ones that repaired
+	// something. When none did, the install is exactly as this version leaves it.
+	if request.Current && !changedAnything(report) {
+		return ui.WriteLine(out, ui.Style(ui.ToneFaint).Render(
+			"already up to date with "+request.CLIVersion))
 	}
 
 	return ui.WriteLine(out, ui.Style(ui.ToneFaint).Render(nextStep))
@@ -181,9 +186,13 @@ func buildUpgradeRequest(
 	// root, because the tree is what this run would make and doctor's remedy for an undeclared root
 	// is this command. A harness still recorded under an old spelling is work for the same reason:
 	// doctor's remedy for it is this command too.
+	//
+	// A current install still runs: the use case skips the copy out of the binary and repairs what
+	// a person may have removed since the last run, such as an ignore line or a section of
+	// AGENTS.md, which doctor's remedies send them here to put back.
 	if declaredTest.IsPresent() && len(formers) == 0 && !unrecorded &&
 		installedEverything(installation, request.Harnesses, request.CLIVersion) {
-		request.NoOp = true
+		request.Current = true
 
 		return request, nil
 	}
@@ -241,7 +250,7 @@ func reportBreakingChanges(initialize InitializeUseCase, dir, binary string, out
 }
 
 // installedEverything reports whether every harness this run is for is already installed at this
-// binary's version, which is what makes a rerun a no-op. A run for no harness has nothing installed
+// binary's version, which is what lets a rerun skip the copy. A run for no harness has nothing installed
 // rather than everything.
 func installedEverything(
 	recorded application.Installation, harnesses []string, version string,

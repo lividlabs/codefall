@@ -65,8 +65,8 @@ func (i *Initialize) preflight(ctx context.Context, request Request) error {
 
 		// bd init commits, so what it would sweep into that commit only matters when bd init is going
 		// to run — which needs bd itself to say whether Beads is already initialised, and needs a
-		// work tree to commit in.
-		if worktree && i.runner.LookPath(beadsCommand).IsPresent() {
+		// work tree to commit in. A run over a current install has no Beads step at all.
+		if worktree && !request.Current && i.runner.LookPath(beadsCommand).IsPresent() {
 			for _, problem := range i.beadsCommitProblems(ctx, request.Dir) {
 				add(problem)
 			}
@@ -248,9 +248,14 @@ func commandLine(name string, args []string) string {
 }
 
 // requiredTools is what this particular run needs, and all it ever needs are bd and git, because
-// every run initialises Beads and Beads sits inside a git repository. The extension step copies the
-// embedded tree to the harness's own skills directory, so no foreign CLI is needed.
+// a run initialises Beads and Beads sits inside a git repository. The extension step copies the
+// embedded tree to the harness's own skills directory, so no foreign CLI is needed. A run over a
+// current install has no Beads step, so it needs git alone, which the hook step's paths come from.
 func requiredTools(request Request) []requiredTool {
+	if request.Current {
+		return []requiredTool{{name: gitCommand}}
+	}
+
 	return []requiredTool{
 		{name: beadsCommand, remedy: "brew install beads"},
 		{name: gitCommand},
