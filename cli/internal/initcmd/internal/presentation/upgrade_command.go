@@ -30,10 +30,11 @@ func NewUpgradeCommand(initialize InitializeUseCase) *cobra.Command {
 			"rewrites a harness name the settings or the manifest still spell the old way, and records " +
 			"the run in .codefall/manifest.json, removing what the previous install wrote that this " +
 			"one does not ship. Before it changes anything it prints the breaking changes recorded " +
-			"between the installed version and this one and asks to continue. A project already " +
-			"installed at this binary's version copies nothing: upgrade puts back any ignore entry, " +
-			"AGENTS.md section, hook registration, or testing file that has gone missing, reports what " +
-			"it restored, and reports the install as up to date when there was nothing to restore. " +
+			"between the installed version and this one and asks to continue. Every run reinstalls " +
+			"the extension, so a project already installed at this binary's version gets back any " +
+			"skill, shared file, ignore entry, AGENTS.md section, hook registration, or testing file " +
+			"that has gone missing or been edited; upgrade reports what it restored, and reports the " +
+			"install as up to date only when nothing changed. " +
 			"--harness adds a harness the project did not choose at init and records it in the settings. " +
 			"Upgrade needs a manifest: a project that has none is codefall init's. " +
 			"Run below the root of a git repository, upgrade asks whether the install is there or at " +
@@ -91,8 +92,8 @@ func runUpgrade(cmd *cobra.Command, initialize InitializeUseCase, flags *upgrade
 		return upgradeKind.wrap(err)
 	}
 
-	// A current install ran only the repair steps, and printed only the ones that repaired
-	// something. When none did, the install is exactly as this version leaves it.
+	// A current install printed only the steps that changed something, the extension copy
+	// included. When none did, the install is exactly as this version leaves it.
 	if request.Current && !changedAnything(report) {
 		return ui.WriteLine(out, ui.Style(ui.ToneFaint).Render(
 			"already up to date with "+request.CLIVersion))
@@ -187,8 +188,9 @@ func buildUpgradeRequest(
 	// is this command. A harness still recorded under an old spelling is work for the same reason:
 	// doctor's remedy for it is this command too.
 	//
-	// A current install still runs: the use case skips the copy out of the binary and repairs what
-	// a person may have removed since the last run, such as an ignore line or a section of
+	// A current install still runs every step but Beads, and is not asked about a version that does
+	// not move: the copy out of the binary and the repair steps put back what a person may have
+	// removed since the last run, such as a skill, a shared script, an ignore line, or a section of
 	// AGENTS.md, which doctor's remedies send them here to put back.
 	if declaredTest.IsPresent() && len(formers) == 0 && !unrecorded &&
 		installedEverything(installation, request.Harnesses, request.CLIVersion) {
@@ -250,8 +252,8 @@ func reportBreakingChanges(initialize InitializeUseCase, dir, binary string, out
 }
 
 // installedEverything reports whether every harness this run is for is already installed at this
-// binary's version, which is what lets a rerun skip the copy. A run for no harness has nothing installed
-// rather than everything.
+// binary's version, which is what lets a rerun skip Beads and the version question. A run for no
+// harness has nothing installed rather than everything.
 func installedEverything(
 	recorded application.Installation, harnesses []string, version string,
 ) bool {

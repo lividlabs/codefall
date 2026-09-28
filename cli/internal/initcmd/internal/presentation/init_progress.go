@@ -14,9 +14,9 @@ import (
 // plain line per finished step everywhere else. The kind supplies the label the spinner opens with
 // and the error a cancelled run reports.
 //
-// A run over a current install prints only the steps that changed something. Every step it runs is
-// a repair that usually finds nothing to repair, and a list of skips would bury the one line that
-// says what was put back.
+// A run over a current install prints only the steps that changed something. Every step it runs,
+// the extension copy included, usually finds nothing to change, and a list of skips would bury the
+// one line that says what was put back.
 func runInitialize(
 	ctx context.Context, kind commandKind, initialize InitializeUseCase, request application.Request, out io.Writer,
 ) (domain.Report, error) {

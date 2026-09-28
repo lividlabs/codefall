@@ -55,16 +55,27 @@ type CommandResult struct {
 // the hook step's per-harness definitions.
 type ExtensionSource interface {
 	// Fetch mirrors the named subtrees of the extension's tree onto destDir, each file keeping the
-	// path it has in the tree, and returns every path it wrote, relative to destDir, so the caller
-	// can put it on record. A path under exclude is left behind: an entry holding a slash names a
-	// path in the tree, and an entry that is a bare file name matches that file wherever it sits.
-	Fetch(ctx context.Context, destDir string, sources, exclude []string) ([]string, error)
+	// path it has in the tree, and returns every path it installed, relative to destDir, so the
+	// caller can put it on record, and the ones that were missing or held other bytes, so the caller
+	// can say whether the copy changed anything. A file that already holds the tree's bytes is left
+	// as it is. A path under exclude is left behind: an entry holding a slash names a path in the
+	// tree, and an entry that is a bare file name matches that file wherever it sits.
+	Fetch(ctx context.Context, destDir string, sources, exclude []string) (Fetched, error)
 	// Read returns one file from the tree.
 	Read(path string) ([]byte, error)
 	// RenamedSkill returns the name a skill directory has now when former is a name it used to have,
 	// or None when former is no skill the tree has ever renamed. It is what lets an upgrade report a
 	// removed directory as a rename rather than a deletion.
 	RenamedSkill(former string) mo.Option[string]
+}
+
+// Fetched is what one Fetch did: every path the tree holds under the subtrees it was asked for,
+// which is what an install records, and the subset it had to write because the file was missing or
+// held other bytes, which is what an install reports. Both are relative to the destination and
+// sorted.
+type Fetched struct {
+	Files   []string
+	Changed []string
 }
 
 // ChangeLog is the record of what each release changed (one gateway role): the repository's
@@ -117,13 +128,12 @@ type Request struct {
 	// that names none is refused by preflight rather than quietly installing nothing.
 	Harnesses []string
 	// Current is true when the manifest records every harness at this binary's version and there is
-	// nothing left to declare or rewrite. The run then copies nothing out of the binary: it skips the
-	// extension, cleanup, and Beads steps and writes no manifest, because none of what they would
-	// write can have changed. The steps that repair a project's own files still run — the settings
-	// step's rewrites, the hooks, the AGENTS.md sections, the testing tree, and the ignore entries —
-	// because a person can remove a line or a section between two runs of the same version, and
-	// doctor's remedy for that is `codefall upgrade`. Each of them reports a skip when it found its
-	// work already done, which is how the command knows whether to say the install is up to date.
+	// nothing left to declare or rewrite. The run then skips the Beads step, which the install at this
+	// version has already been through, and so needs no bd on PATH. Every other step still runs, the
+	// extension copy and the cleanup after it included, because a person can delete a skill, a shared
+	// script, a line, or a section between two runs of the same version, and doctor's remedy for each
+	// is `codefall upgrade`. Each step reports a skip when it found its work already done, which is
+	// how the command knows whether to say the install is up to date.
 	Current bool
 }
 
@@ -190,25 +200,25 @@ func (i *Initialize) Run(ctx context.Context, request Request, observer Observer
 		return domain.Report{}, err
 	}
 
-	steps := []step{{Step: domain.SettingsStep, run: i.settings}}
-
-	// An install already current at this version has nothing to copy, nothing to clean up after a
-	// copy, and a Beads it has already initialised; the steps after these three are the ones that
-	// repair a project's own files, and they run either way.
-	if !request.Current {
-		steps = append(steps, step{Step: domain.ExtensionStep, run: func(ctx context.Context, request Request) (domain.StepResult, error) {
+	steps := []step{
+		{Step: domain.SettingsStep, run: i.settings},
+		{Step: domain.ExtensionStep, run: func(ctx context.Context, request Request) (domain.StepResult, error) {
 			result, files, err := i.extension(ctx, request)
 			written = files
 
 			return result, err
+		}},
+	}
+
+	if upgrading {
+		steps = append(steps, step{Step: domain.CleanupStep, run: func(_ context.Context, request Request) (domain.StepResult, error) {
+			return i.cleanup(request, previous, written)
 		}})
+	}
 
-		if upgrading {
-			steps = append(steps, step{Step: domain.CleanupStep, run: func(_ context.Context, request Request) (domain.StepResult, error) {
-				return i.cleanup(request, previous, written)
-			}})
-		}
-
+	// An install already current at this version has a Beads it has already initialised. The steps
+	// after this one repair a project's own files, and they run either way.
+	if !request.Current {
 		steps = append(steps, step{Step: domain.BeadsStep, run: i.beads})
 	}
 
@@ -242,12 +252,9 @@ func (i *Initialize) Run(ctx context.Context, request Request, observer Observer
 	// upgrade gate believes it: written any earlier, a run that failed a later step would leave a
 	// record claiming work it never did, and the next run would report there was nothing to do.
 	//
-	// A run over a current install copied nothing, so it has no file lists to record, and the record
-	// already names this version: writing it would replace the lists with empty ones.
-	if request.Current {
-		return domain.NewReport(results...), nil
-	}
-
+	// Every run writes it, a run over a current install included. There it comes out byte for byte
+	// as it went in unless the cleanup or the settings step changed the record, and the file is not a
+	// step, so writing it says nothing.
 	if err := i.writeManifest(request.Dir, request.CLIVersion, written); err != nil {
 		return domain.Report{}, fmt.Errorf("record the installation to %s: %w", manifest.Name, err)
 	}

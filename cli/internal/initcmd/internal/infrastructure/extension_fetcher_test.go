@@ -9,6 +9,7 @@ import (
 	"slices"
 	"testing"
 	"testing/fstest"
+	"time"
 )
 
 // The walk mirrors the whole source tree. The promise "everything that is in the source, nothing
@@ -33,8 +34,8 @@ func TestEmbeddedExtensionFetcherCopiesTheTree(t *testing.T) {
 		t.Fatalf("dest holds %d files, want all %d source files copied (%q)", len(got), len(src), got)
 	}
 
-	if len(installed) != len(got) {
-		t.Fatalf("installed = %d paths, want one per copied file (%v)", len(installed), installed)
+	if len(installed.Files) != len(got) {
+		t.Fatalf("installed = %d paths, want one per copied file (%v)", len(installed.Files), installed.Files)
 	}
 }
 
@@ -68,8 +69,8 @@ func TestEmbeddedExtensionFetcherSkipsTheExcludedPrefixes(t *testing.T) {
 		t.Errorf("dest holds %q, want %q", got, want)
 	}
 
-	if len(installed) != len(want) {
-		t.Errorf("installed = %q, want the same %d paths", installed, len(want))
+	if len(installed.Files) != len(want) {
+		t.Errorf("installed = %q, want the same %d paths", installed.Files, len(want))
 	}
 
 	// The hook definitions invoke the script by path, so it has to land runnable.
@@ -105,8 +106,8 @@ func TestEmbeddedExtensionFetcherCopiesOnlyTheNamedSubtrees(t *testing.T) {
 
 	want := []string{"hooks/shared/codefall-block-merge-to-main.sh", "shared/preflight.sh"}
 
-	if !slices.Equal(installed, want) {
-		t.Errorf("installed = %q, want %q", installed, want)
+	if !slices.Equal(installed.Files, want) {
+		t.Errorf("installed = %q, want %q", installed.Files, want)
 	}
 
 	if got := readAllFiles(t, dest); len(got) != len(want) {
@@ -135,12 +136,81 @@ func TestEmbeddedExtensionFetcherExcludesAFileNameWhereverItSits(t *testing.T) {
 
 	want := []string{"skills/x/SKILL.md", "skills/y/SKILL.md", "skills/y/reference/a.md"}
 
-	if !slices.Equal(installed, want) {
-		t.Errorf("installed = %q, want %q", installed, want)
+	if !slices.Equal(installed.Files, want) {
+		t.Errorf("installed = %q, want %q", installed.Files, want)
 	}
 
 	if got := readAllFiles(t, dest); len(got) != len(want) {
 		t.Errorf("dest holds %q, want only %q", got, want)
+	}
+}
+
+// A copy reports the files it had to write: every file on a first copy, none on a second over an
+// unchanged tree, and on a later one only the file that was deleted and the file that was edited.
+// A file already holding the tree's bytes is not written again, so its modification time stays.
+func TestEmbeddedExtensionFetcherReportsOnlyWhatDiffered(t *testing.T) {
+	src := fstest.MapFS{
+		"shared/preflight.sh": &fstest.MapFile{Data: []byte("#!/bin/bash\n")},
+		"skills/x/SKILL.md":   &fstest.MapFile{Data: []byte("---\nname: x\n---\n")},
+		"skills/y/SKILL.md":   &fstest.MapFile{Data: []byte("---\nname: y\n---\n")},
+	}
+	fetcher := NewEmbeddedExtensionFetcher(src, nil)
+	dest := t.TempDir()
+	all := []string{"shared/preflight.sh", "skills/x/SKILL.md", "skills/y/SKILL.md"}
+
+	first, err := fetcher.Fetch(context.Background(), dest, []string{"shared", "skills"}, nil)
+	if err != nil {
+		t.Fatalf("Fetch: %v", err)
+	}
+
+	if !slices.Equal(first.Changed, all) {
+		t.Errorf("first copy changed %q, want every file %q", first.Changed, all)
+	}
+
+	untouched := filepath.Join(dest, "skills/y/SKILL.md")
+	past := time.Now().Add(-time.Hour).Truncate(time.Second)
+
+	if err := os.Chtimes(untouched, past, past); err != nil {
+		t.Fatalf("Chtimes: %v", err)
+	}
+
+	second, err := fetcher.Fetch(context.Background(), dest, []string{"shared", "skills"}, nil)
+	if err != nil {
+		t.Fatalf("Fetch again: %v", err)
+	}
+
+	if len(second.Changed) != 0 || !slices.Equal(second.Files, all) {
+		t.Errorf("second copy = %+v, want every file installed and none changed", second)
+	}
+
+	if err := os.Remove(filepath.Join(dest, "shared/preflight.sh")); err != nil {
+		t.Fatalf("Remove: %v", err)
+	}
+
+	if err := os.WriteFile(filepath.Join(dest, "skills/x/SKILL.md"), []byte("edited\n"), 0o600); err != nil {
+		t.Fatalf("WriteFile: %v", err)
+	}
+
+	third, err := fetcher.Fetch(context.Background(), dest, []string{"shared", "skills"}, nil)
+	if err != nil {
+		t.Fatalf("Fetch a third time: %v", err)
+	}
+
+	if want := []string{"shared/preflight.sh", "skills/x/SKILL.md"}; !slices.Equal(third.Changed, want) {
+		t.Errorf("third copy changed %q, want %q", third.Changed, want)
+	}
+
+	if got, err := os.ReadFile(filepath.Join(dest, "skills/x/SKILL.md")); err != nil || string(got) != "---\nname: x\n---\n" {
+		t.Errorf("edited SKILL.md = %q, %v, want the tree's bytes back", got, err)
+	}
+
+	info, err := os.Stat(untouched)
+	if err != nil {
+		t.Fatalf("Stat: %v", err)
+	}
+
+	if !info.ModTime().Equal(past) {
+		t.Errorf("unchanged file modified at %v, want it left at %v", info.ModTime(), past)
 	}
 }
 

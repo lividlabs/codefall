@@ -1,6 +1,7 @@
 package infrastructure
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"io/fs"
@@ -11,6 +12,7 @@ import (
 
 	"github.com/samber/mo"
 
+	"github.com/lividlabs/codefall-cli/cli/internal/initcmd/internal/application"
 	"github.com/lividlabs/codefall-cli/cli/internal/shared/process"
 )
 
@@ -40,36 +42,39 @@ func (f *EmbeddedExtensionFetcher) RenamedSkill(former string) mo.Option[string]
 }
 
 // Fetch mirrors the named subtrees of the embedded tree onto destDir, except the excluded paths, and
-// returns the relative paths it wrote (a manifest-of-one-copy) sorted so two sequential runs produce
-// the same record. Each file keeps the path it has in the tree, so a caller that asks for
-// "hooks/shared" gets it back at destDir/hooks/shared.
+// returns the relative paths it installed (a manifest-of-one-copy) and the ones it had to write, both
+// sorted so two sequential runs produce the same record. Each file keeps the path it has in the
+// tree, so a caller that asks for "hooks/shared" gets it back at destDir/hooks/shared.
 func (f *EmbeddedExtensionFetcher) Fetch(
 	ctx context.Context, destDir string, sources, exclude []string,
-) ([]string, error) {
-	var installed []string
+) (application.Fetched, error) {
+	var fetched application.Fetched
 
 	for _, source := range sources {
-		written, err := f.mirror(ctx, destDir, source, exclude)
-		installed = append(installed, written...)
+		if err := f.mirror(ctx, destDir, source, exclude, &fetched); err != nil {
+			sort.Strings(fetched.Files)
+			sort.Strings(fetched.Changed)
 
-		if err != nil {
-			sort.Strings(installed)
-			return installed, err
+			return fetched, err
 		}
 	}
 
-	sort.Strings(installed)
-	return installed, nil
+	sort.Strings(fetched.Files)
+	sort.Strings(fetched.Changed)
+
+	return fetched, nil
 }
 
-// mirror copies one subtree. A source the tree does not hold is an error rather than nothing copied:
-// the caller named a subtree this binary was meant to ship.
+// mirror copies one subtree into fetched. A source the tree does not hold is an error rather than
+// nothing copied: the caller named a subtree this binary was meant to ship.
+//
+// A file already holding the tree's bytes is not written again, so a copy over an unchanged install
+// reports no change. A file that is missing, holds other bytes, or cannot be read is written; one
+// that cannot be read then fails at the write, with the reason.
 func (f *EmbeddedExtensionFetcher) mirror(
-	ctx context.Context, destDir, source string, exclude []string,
-) ([]string, error) {
-	var installed []string
-
-	err := fs.WalkDir(f.src, source, func(path string, d fs.DirEntry, err error) error {
+	ctx context.Context, destDir, source string, exclude []string, fetched *application.Fetched,
+) error {
+	return fs.WalkDir(f.src, source, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
@@ -96,27 +101,30 @@ func (f *EmbeddedExtensionFetcher) mirror(
 
 		target := filepath.Join(destDir, path)
 
-		if err := f.files.MkdirAll(filepath.Dir(target)); err != nil {
-			return fmt.Errorf("create %s: %w", filepath.Dir(target), err)
-		}
+		if existing, err := f.files.ReadFile(target); err != nil || !bytes.Equal(existing, data) {
+			if err := f.files.MkdirAll(filepath.Dir(target)); err != nil {
+				return fmt.Errorf("create %s: %w", filepath.Dir(target), err)
+			}
 
-		if err := f.files.WriteFile(target, data); err != nil {
-			return fmt.Errorf("write %s: %w", target, err)
+			if err := f.files.WriteFile(target, data); err != nil {
+				return fmt.Errorf("write %s: %w", target, err)
+			}
+
+			fetched.Changed = append(fetched.Changed, path)
 		}
 
 		// The hooks the definitions register are invoked by path, so a copied script has to be
-		// runnable where it lands: the embedded tree carries no modes to copy.
+		// runnable where it lands: the embedded tree carries no modes to copy. A script whose bytes
+		// already matched still gets the bit, in case a person took it away.
 		if strings.HasSuffix(path, ".sh") {
 			if err := f.files.MakeExecutable(target); err != nil {
 				return fmt.Errorf("make %s executable: %w", target, err)
 			}
 		}
 
-		installed = append(installed, path)
+		fetched.Files = append(fetched.Files, path)
 		return nil
 	})
-
-	return installed, err
 }
 
 // excluded reports whether a path in the tree is one the install leaves behind. An entry holding a

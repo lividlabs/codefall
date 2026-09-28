@@ -37,8 +37,10 @@ type installed struct {
 }
 
 // extension is the second step of a run: it mirrors the embedded extension tree out of the binary,
-// so it never touches a network or a foreign CLI. It also hands back every path it wrote, which the
-// run records in the manifest once the last step has succeeded.
+// so it never touches a network or a foreign CLI. It runs on every run, an upgrade over a current
+// install included, because a skill or a shared script deleted by hand is put back only by this
+// copy. It also hands back every path it installed, which the run records in the manifest once the
+// last step has succeeded.
 //
 // It copies twice, for two different reasons. Harnesses share skills directories — four of the five
 // read `.agents/` — so the skills are copied once per directory, and every harness that reads that
@@ -55,20 +57,24 @@ func (i *Initialize) extension(
 	}
 
 	// What each directory received, so a directory two harnesses share is fetched once, and what
-	// each harness installed, which is what the manifest records.
+	// each harness installed, which is what the manifest records. What the copy had to write, because
+	// the file was missing or held other bytes, is what the step reports.
 	copied := map[string][]string{}
 	written := installed{harnesses: map[string][]string{}}
+
+	var changed []string
 
 	for _, name := range chosen(request) {
 		dest := dests[name]
 
 		if _, done := copied[dest]; !done {
-			files, err := i.fetchSkills(ctx, request.Dir, dest)
+			fetched, err := i.fetchSkills(ctx, request.Dir, dest)
 			if err != nil {
 				return domain.StepResult{}, installed{}, err
 			}
 
-			copied[dest] = files
+			copied[dest] = fetched.Files
+			changed = append(changed, projectPaths(dest, fetched.Changed)...)
 		}
 
 		written.harnesses[name] = projectPaths(dest, copied[dest])
@@ -79,10 +85,43 @@ func (i *Initialize) extension(
 		return domain.StepResult{}, installed{}, err
 	}
 
-	written.shared = projectPaths(codefallDir, shared)
+	written.shared = projectPaths(codefallDir, shared.Files)
+	changed = append(changed, projectPaths(codefallDir, shared.Changed)...)
 
-	return domain.ExtensionStep.Done(fmt.Sprintf("installed codefall's skills into %s and its shared files into %s/",
-		directoryList(slices.Sorted(maps.Keys(copied))), codefallDir)), written, nil
+	slices.Sort(changed)
+
+	return extensionResult(directoryList(slices.Sorted(maps.Keys(copied))), changed, len(writtenPaths(written))),
+		written, nil
+}
+
+// changedLimit is how many changed files the extension step names before it gives their number
+// instead. A repair names the few files it put back; an upgrade across versions rewrites much of the
+// tree, and a list that long would bury the lines the other steps print.
+const changedLimit = 10
+
+// extensionResult is what the extension step reports. A copy that found every file already holding
+// the tree's bytes changed nothing and says so as a skip, which is what lets an upgrade over a
+// current install say it is up to date. A copy that wrote every file is a fresh install and says
+// where it installed. A copy that wrote some of them names what it wrote, or counts it past the
+// limit.
+func extensionResult(dirs string, changed []string, total int) domain.StepResult {
+	if len(changed) == 0 {
+		return domain.ExtensionStep.Skipped(fmt.Sprintf(
+			"codefall's skills in %s and its shared files in %s/ already match this version", dirs, codefallDir))
+	}
+
+	detail := fmt.Sprintf("installed codefall's skills into %s and its shared files into %s/", dirs, codefallDir)
+
+	switch {
+	case len(changed) == total:
+		return domain.ExtensionStep.Done(detail)
+	case len(changed) == 1:
+		return domain.ExtensionStep.Done(detail + "; wrote " + changed[0] + ", which was missing or differed")
+	case len(changed) <= changedLimit:
+		return domain.ExtensionStep.Done(detail + "; wrote " + sentenceList(changed) + ", which were missing or differed")
+	default:
+		return domain.ExtensionStep.Done(fmt.Sprintf("%s; wrote %d files that were missing or differed", detail, len(changed)))
+	}
 }
 
 // skillsDirs is where each chosen harness reads skills, or the error naming a harness codefall
