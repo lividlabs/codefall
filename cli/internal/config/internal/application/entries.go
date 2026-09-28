@@ -352,19 +352,7 @@ func (c *Config) SetPosting(dir string, on bool) (domain.Write, error) {
 		body, err = withNestedField(project.data, settings.BlockReview, settings.FieldPostToPullRequest, render)
 	} else {
 		body, err = withField(project.data, settings.BlockReview, func(indent string) ([]byte, error) {
-			key, err := json.Marshal(settings.FieldPostToPullRequest)
-			if err != nil {
-				return nil, err
-			}
-
-			value, err := render(indent)
-			if err != nil {
-				return nil, err
-			}
-
-			inner := indent + "  "
-
-			return slices.Concat([]byte("{\n"+inner), key, []byte(": "), value, []byte("\n"+indent+"}")), nil
+			return objectWithMember(indent, settings.FieldPostToPullRequest, render)
 		})
 	}
 

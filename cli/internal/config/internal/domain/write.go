@@ -32,6 +32,10 @@ func Unchanged(detail string) Write {
 // hand a feature back to the default entry is to clear the list.
 var ErrEmptyList = errors.New("name at least one agent, or clear the list so the default entry's applies")
 
+// ErrEmptyHarnessConfig refuses a block with nothing in it, which would say nothing about how the
+// harness is called. The way to have a harness run bare is to clear its block.
+var ErrEmptyHarnessConfig = errors.New("give the block at least one field, or clear it so the harness runs bare")
+
 // ParseAgents reads a list of agents from the forms a person typed, `harness` or `harness:model`,
 // in the order given. Every one has to parse, and the list has to hold at least one.
 func ParseAgents(texts []string) ([]settings.Agent, error) {
