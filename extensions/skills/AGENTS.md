@@ -8,7 +8,7 @@ writing and changing a skill; the extension-wide rules, ADR immutability, prose,
 
 - Named as **verbs** (`codefall-scaffold`, `codefall-upgrade`), one directory each:
   `<verb>/SKILL.md`.
-- `codefall-envision`, `codefall-specify`, `codefall-report`, `codefall-mock-up`,
+- `codefall-envision`, `codefall-specify`, `codefall-report`, `codefall-fix`, `codefall-mock-up`,
   `codefall-scaffold`, `codefall-upgrade`, and `codefall-equip` carry `disable-model-invocation:
   true`; a user invokes each deliberately. `codefall-design`, `codefall-implement`, `codefall-test`,
   `codefall-review`, and `codefall-refresh` carry no such line, so an agent may also run them: a
@@ -16,7 +16,8 @@ writing and changing a skill; the extension-wide rules, ADR immutability, prose,
   verb. Each still reports, offers, and applies only what the user takes; a human still performs
   every merge.
   `implement`, `design`, and `specify` run refresh when preflight reports the environment stale.
-  No other skill invokes another through the harness.
+  No other skill invokes another through the harness. `codefall-fix` runs design and implement
+  by following their `SKILL.md` files in its own run, not by invoking them.
 - A skill reports and offers; it applies only what the user takes. Nothing lands unrequested.
   Recording an observable fact is the exception: a skill that owns a status transition sets it when
   the fact occurs and reports that it did — `codefall-implement` flipping a vision to `Active` at first
@@ -67,7 +68,9 @@ the reasons and the sources.
 ## Supporting files
 
 - Linked **directly from `SKILL.md`**, one level deep. A supporting file does not link on to a file
-  `SKILL.md` does not also link.
+  `SKILL.md` does not also link. Another skill's `SKILL.md` is not a supporting file: a skill that
+  follows it as a procedure, as `codefall-fix` follows design's and implement's, names it and
+  nothing inside it, and that skill's own row checks its links.
 - Over **100 lines**: open with a table of contents.
 - Directories are named for what they hold: `templates/` for what a skill installs, `trackers/` for
   tracker profiles, `scripts/` for what a skill runs, `reference/` for what a skill reads on demand.
