@@ -6,6 +6,14 @@ below were written by hand, before that was wired up.
 Tags are bare version numbers (`0.1.2`), not `v`-prefixed, so they match the `ref` the marketplace
 pins. A `v0.1.1` tag also exists from before that convention was settled.
 
+## [0.24.0](https://github.com/lividlabs/codefall-cli/compare/v0.23.0...v0.24.0) (2026-09-29)
+
+
+### Features
+
+* **skills:** report files a bug and fix builds a small change in one run ([#159](https://github.com/lividlabs/codefall-cli/issues/159)) ([c52c2c8](https://github.com/lividlabs/codefall-cli/commit/c52c2c8c240826742f0fcae1deb56edb0d07dc48))
+* **skills:** upgrade remembers the templates a project declined ([#157](https://github.com/lividlabs/codefall-cli/issues/157)) ([6aad55e](https://github.com/lividlabs/codefall-cli/commit/6aad55ecfc404a9aca33b0b2b7e5b2abd0a20a47))
+
 ## [0.23.0](https://github.com/lividlabs/codefall-cli/compare/v0.22.0...v0.23.0) (2026-09-28)
 
 
