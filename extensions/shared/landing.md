@@ -1,11 +1,11 @@
 # Landing what a verb wrote
 
 The shared procedure for putting a verb's files into git: a branch of their own, a commit of those
-files and nothing else, and an offered pull request. Every verb that writes to the repository follows
-it — `codefall-envision`, `codefall-scaffold`, `codefall-specify`, `codefall-mock-up`,
-`codefall-design`, `codefall-equip`, `codefall-upgrade` — except `codefall-implement`, which lands one
-branch and one pull request per task on its own terms, and `codefall-review`, whose fixes land on the
-branch under review.
+files and nothing else, and an offered pull request. Every verb that writes to the repository
+follows it — `codefall-envision`, `codefall-scaffold`, `codefall-specify`, `codefall-report`,
+`codefall-mock-up`, `codefall-design`, `codefall-equip`, `codefall-upgrade` — except
+`codefall-implement`, which lands one branch and one pull request per task on its own terms, and
+`codefall-review`, whose fixes land on the branch under review.
 
 A human performs every merge to the default branch, and the guard hook denies the alternative.
 Everything short of that — branching, committing, pushing, opening the pull request — is the verb's
@@ -36,6 +36,7 @@ Branch names carry the verb and the identifier:
 | --- | --- |
 | `envision` | `vision/VISION-NNN-slug` |
 | `specify` | `spec/SPEC-NNN-slug` |
+| `report` | `bug/BUG-NNN-slug` |
 | `mock-up` | `mockup/<slug>` |
 | `design` | `design/DESIGN-NNN-slug` |
 | `scaffold` | `scaffold/<project-or-surface>` |

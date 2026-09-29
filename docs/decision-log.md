@@ -1637,6 +1637,32 @@ Decided at scaffold, 2026-08-16.
   model strings per provider (stale within a release); doctor probing every agent (doctor runs
   nothing a project declares, and equip's proof is where the run belongs).
 
+- **A bug gets its own verb and document, and small fixes get an alias, 2026-09-28.** Bugs reached
+  three verbs and none owned them: `test` sent a real bug to `implement`, which cannot create beads
+  from a description; `design`'s tier 0 expected a reproduction and a cause that no step produced;
+  and `implement`'s workers filed bugs as beads with a title and nothing to reproduce. `report` now
+  interviews the person who saw the bug, tries to reproduce it through the running product while
+  they are there, and writes `docs/bugs/BUG-NNN-slug.md` with evidence committed beside it, EARS
+  criteria citing a spec criterion where one exists, and one GitHub issue generated from it, or
+  adopted when the reporter filed one first. The attempt to reproduce is recorded as `Yes`, `No`, or
+  `Not attempted` and never gates the report, because a bug seen only in production or some of the
+  time is still real. `design` reads a report as a target, reproduces what the report could not, and
+  finds the cause before choosing a tier; `implement` puts `Fixes #<issue>` on the pull request that
+  reaches the default branch. `fix` is a user-invoked alias for small work: `design` at tier 0 for
+  one bead, then `implement` on it, behind one confirmation that carries both approvals, with one
+  preflight and one report. It is its own procedure, linking the reference files design and
+  implement already share and restating the rest; implement's *Verification and done* moved to
+  `reference/done.md` so both link it. A first version followed design's and implement's `SKILL.md`
+  files with overrides, which asked the agent to hold two long procedures and know which stops fix
+  replaced, and lost them at a compaction, since only the invoked skill's `SKILL.md` is restored.
+  Keeping the restated parts level is a judgment, so it is a rule in `extensions/skills/AGENTS.md`
+  with fix's `NOTES.md` as the map, not a CI check. A design document, an ADR, or a second bead is
+  an exit that names `design`. Seen and not taken: `fix` invoking the two skills through the harness
+  (two gates again, and not every harness can invoke a skill); a CI check hashing the restated
+  sections (the question it answers needs judgment); `fix` agent-invocable (it would fire on every
+  "fix this" in a session); reproduction as a gate; a priority field (the team's decision, not the
+  reporter's); images embedded in the issue (`gh` cannot upload them).
+
 ## Open
 
 - (nothing open; the last item graduated to ADR-012 on 2026-09-27)

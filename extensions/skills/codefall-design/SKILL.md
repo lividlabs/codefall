@@ -1,7 +1,7 @@
 ---
 name: codefall-design
 description: Decide how a feature gets built and put the work into the graph — read the docs and the code, judge whether the change warrants a design document at all, write one scaled to the work at docs/designs/, record hard-to-reverse choices as ADRs, decide which tasks are verified through the wired product and draft their test case and its criteria into the bead, and create the task graph in Beads from the document's staged task plan.
-argument-hint: "[the spec, the vision, or what you want built]"
+argument-hint: "[the spec, the bug report, the vision, or what you want built]"
 allowed-tools:
   - Read
   - Glob
@@ -37,6 +37,8 @@ Read each when its step says to; none is loaded up front.
   Technical Context and Hard Constraints blocks, the Task Plan and its callout. Read before step 5.
 - `reference/beads.md` — what gets created in Beads, the test case a bead's criteria name, the plan
   file, the edge direction, and how to verify the graph. Read before step 9.
+- `reference/bugs.md` — a fix for a bug: the report, reproducing it, the cause, the tier. Read at
+  step 2 for a bug.
 - `reference/revising.md` — reconciling the graph when a design changes after its beads exist, and
   settling the revision beads filed against it. Read for the Revise mode.
 - `reference/consulting.md` — putting an unsettled technical point to the configured agents, and
@@ -82,7 +84,6 @@ Three tiers. The work picks the tier; the user can overrule it.
 | **1 — minimal document** | Anything that crosses a component boundary, or fans out past roughly three dependent tasks | The three required sections |
 | **2 — full document** | The same, plus any conditional section whose trigger fires | Required three plus what triggered |
 
-- **Simple bug fixes land at tier 0.** One bead, with the reproduction and the cause.
 - **Tier 1 and 2 are not decided separately**: write the required three, then walk the triggers.
 - **An ADR is not gated on the tier.**
 - **Say the tier out loud before writing** — step 4.
@@ -137,8 +138,6 @@ Three states, one word plus a date.
 `codefall-design` maintains `docs/designs/AGENTS.md` from `templates/designs/AGENTS.md`: written when
 the directory is created, added on a later run if it is missing.
 
-One that exists and differs from the template: show the difference and ask.
-
 ## Beads
 
 One epic, `<prefix>-DESIGN-NNN`, and one task bead per row, `<prefix>-DESIGN-NNN-Tn`; tier 0 has no
@@ -179,7 +178,8 @@ match `main`: say so and run `/codefall-refresh` before continuing. `refresh=und
 
 One open question, unless the invocation already answered it:
 
-> "What are we designing? A spec identifier, a vision, or just tell me what needs building."
+> "What are we designing? A spec or bug report identifier, a vision, or just tell me what needs
+> building."
 
 **Then look for a spec.** Read `docs/specs/` — not `archive/` — and offer the relevant one:
 
@@ -188,9 +188,11 @@ One open question, unless the invocation already answered it:
 A spec is not required. If there is none and the work is more than a fix, say once that the design
 has no written target and offer `/specify`. On no, continue.
 
+**A bug report is a target the way a spec is**: read `reference/bugs.md` for one.
+
 **A spec that is not ready is a stop.** Two gates:
 
-- The spec document says `Status: Draft`.
+- The spec document, or the bug report, says `Status: Draft`.
 - Its tracker issues carry `requires-mockup`. Read the labels from the tracker per
   `../codefall-specify/trackers/<name>/PROFILE.md`; if the tracker is unreachable, say so and ask
   whether the mockups exist rather than guessing.
@@ -212,6 +214,7 @@ framed the work. A vision's **Environment & constraints** section is written for
   this design would create that is already a bead is a dependency edge, not a new task.
 - **Revision requests**, on an existing design — `bd list -l design-revision --spec <its path>`,
   filed by `codefall-implement` or `codefall-review`.
+- **The cause**, for a bug, per `reference/bugs.md`. It decides the tier.
 
 Report what you found before designing — open revision requests first. If the work already exists,
 say so and stop.
@@ -392,8 +395,6 @@ your own initiative.
 - **An upstream document found wrong is amended here**, within [Upstream documents](#upstream-documents).
 - **A ticket must not change under someone holding it.** An untouched bead is edited; a held one is
   replaced when the work done would no longer count.
-- **Never record a hop you can derive.** A design carries its spec, or its vision when there is no
-  spec — not both.
 - **Push back once, then defer** — on the tier, on the approach, on the cut. A consult informs,
   never decides.
 - **Never overwrite a file that has drifted.** Show the difference and ask.

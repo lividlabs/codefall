@@ -29,6 +29,10 @@ acceptance criteria in the body — the bead must be self-sufficient. Each is cr
 `--external-ref` set to the same value, else `<prefix>-<slug>`. A taken ID is refused; append `-2`
 and retry. `<prefix>` is what `bd config get issue_prefix` prints.
 
+**A fix for a bug report** is type `bug`. Its body names the report's path, its reproduction is the
+report's steps, and its criteria are the report's, each citing its identifier in full —
+`BUG-012-AC-01`. The tracker ref in its ID is the report's `**Issue:**` row.
+
 ## The test case in a bead's criteria
 
 A task whose work is verified through the wired product — the real interface, against the real
@@ -46,9 +50,9 @@ Three things go in the criteria.
   reason to add one.
 - **Every criterion the case will hold**, each carrying its source. A criterion that restates a spec
   criterion cites it in full — `SPEC-003-REQ-01-AC-01`, the form `codefall-specify` writes and the
-  form `grep` finds. A criterion that goes further is marked `derived`, cites the requirement it
-  elaborates — `SPEC-003-REQ-01` — and says in one line what it adds: a boundary, a negative path,
-  error handling. A case covers every criterion of the requirement it tests, or records why one was
+  form `grep` finds; one that restates a bug report's criterion cites `BUG-012-AC-01` the same way.
+  A criterion that goes further is marked `derived`, cites the requirement it elaborates —
+  `SPEC-003-REQ-01` — and says in one line what it adds: a boundary, a negative path, error handling. A case covers every criterion of the requirement it tests, or records why one was
   dropped.
 
 ```

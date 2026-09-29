@@ -44,6 +44,9 @@ runs, and what it finds is stated as a product fact ("the profile screen has thr
 without naming files. Open questions and what is out of scope are written out in full rather than
 compressed.
 
+**`report`.** The interview is the main event. The reproduction attempt is described by what the
+person would see on the screen, not by the driver or the commands it ran.
+
 **`mock-up`.** Unchanged.
 
 **`design`.** The person confirms what they can judge: the tier, the task cut against the spec,
@@ -56,7 +59,7 @@ parked with a note that it will need an ADR. A design with parked decisions is `
 no beads. The report names how many decisions were parked and ends by handing the document to an
 engineer's run.
 
-**`implement`, `equip`, `refresh`, `scaffold`, `upgrade`.** Say up front, in one sentence, that the
+**`implement`, `fix`, `equip`, `refresh`, `scaffold`, `upgrade`.** Say up front, in one sentence, that the
 verb is engineering work, and ask whether to continue. On yes, run unchanged: the work is the same
 whoever asks. The report still follows the register rule above.
 
