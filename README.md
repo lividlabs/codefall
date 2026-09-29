@@ -419,10 +419,10 @@ carries the fix closes the issue when you merge it.
 `fix` is the short path for small work. Given a bead, a bug report, an issue, or a sentence, it runs
 `design` at tier 0 to establish one bead, with the cause and the acceptance criteria, and then
 `implement` on that bead, in one run. What it removes is repetition: one preflight instead of two,
-one confirmation that shows the bead and the build plan together, and one report at the end. It
-follows `design`'s and `implement`'s own procedures rather than keeping a copy, so every rule of
-theirs holds, the merge rule included. When the work turns out to need a design document, an ADR,
-or more than one bead, it stops before writing anything and names `design`.
+one confirmation that shows the bead and the build plan together, and one report at the end. It is
+the path `design` takes at tier 0 and the path `implement` takes for one bead, written as one
+procedure, so its rules are theirs, the merge rule included. When the work turns out to need a
+design document, an ADR, or more than one bead, it stops before writing anything and names `design`.
 
 ### Designs
 
