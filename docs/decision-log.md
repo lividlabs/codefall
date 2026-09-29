@@ -1637,6 +1637,22 @@ Decided at scaffold, 2026-08-16.
   model strings per provider (stale within a release); doctor probing every agent (doctor runs
   nothing a project declares, and equip's proof is where the run belongs).
 
+- **A bug gets its own verb and document, and no `fix` verb, 2026-09-28.** Bugs reached three verbs
+  and none owned them: `test` sent a real bug to `implement`, which cannot create beads from a
+  description; `design`'s tier 0 expected a reproduction and a cause that no step produced; and
+  `implement`'s workers filed bugs as beads with a title and nothing to reproduce. `report` now
+  interviews the person who saw the bug, tries to reproduce it through the running product while they
+  are there, and writes `docs/bugs/BUG-NNN-slug.md` with evidence committed beside it, EARS criteria
+  citing a spec criterion where one exists, and one GitHub issue generated from it, or adopted when
+  the reporter filed one first. The attempt to reproduce is recorded as `Yes`, `No`, or
+  `Not attempted` and never gates the report, because a bug seen only in production or some of the
+  time is still real. `design` reads a report as a target, reproduces what the report could not,
+  and finds the cause before choosing a tier; `implement` puts `Fixes #<issue>` on the pull request
+  that reaches the default branch. Seen and not taken: a `fix` verb joining design and implement
+  (the chain keeps deciding and building apart; reconsider after real use); reproduction as a gate;
+  a priority field (the team's decision, not the reporter's); images embedded in the issue (`gh`
+  cannot upload them).
+
 ## Open
 
 - (nothing open; the last item graduated to ADR-012 on 2026-09-27)

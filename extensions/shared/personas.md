@@ -44,6 +44,9 @@ runs, and what it finds is stated as a product fact ("the profile screen has thr
 without naming files. Open questions and what is out of scope are written out in full rather than
 compressed.
 
+**`report`.** The interview is the main event. The reproduction attempt is described by what the
+person would see on the screen, not by the driver or the commands it ran.
+
 **`mock-up`.** Unchanged.
 
 **`design`.** The person confirms what they can judge: the tier, the task cut against the spec,

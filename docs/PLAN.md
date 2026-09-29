@@ -3,11 +3,12 @@
 The following items are outstanding in order to complete the first verion of the tool.
 
 ## Skills
-- [ ] `report` — report/file a bug; requires a slightly different process as compared to specifiying a requirement
-  - **Open Questions**
-    - Does the bug report would take the place of a spec? Likely yes.
-    - Does the bug report have a github issue and a markdown report? Probably.
-- [ ] `fix` — (under consideration) fix could potentially be a combination of design+implement but specifically for bugs reports
+- [x] `report` — report a bug: interview the reporter, try to reproduce it on the spot, and write
+  `docs/bugs/BUG-NNN-slug.md` with evidence beside it, mirrored to one GitHub issue
+  - A bug report takes the place of a spec: `design` reads it as a target and finds the cause
+  - Both a markdown report and a GitHub issue; the report is canonical
+- [ ] `fix` — deferred. `design` finds the cause and `implement` builds the fix; reconsider after
+  `report` has run on a real project, if report → design → implement proves too heavy for a small bug
 - [x] `test` — run tests
   - unit, integration, and e2e
   - testing scope: full suite, a subset based on local/branch changes, a specific subset

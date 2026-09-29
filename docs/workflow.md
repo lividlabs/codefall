@@ -38,8 +38,8 @@ records the layout. `codefall config` changes who reviews and consults in `setti
 
 ## The chain
 
-`envision`, `specify`, `mock-up`, `scaffold`, `upgrade`, and `equip` are invoked deliberately by a
-user (`disable-model-invocation: true`). `design`, `implement`, `test`, `review`, and `refresh`
+`envision`, `specify`, `report`, `mock-up`, `scaffold`, `upgrade`, and `equip` are invoked
+deliberately by a user (`disable-model-invocation: true`). `design`, `implement`, `test`, `review`, and `refresh`
 carry no such line, so an agent may run these too, and a session can carry a design through
 implementation, review, and test without a person typing each verb. Whichever way a verb starts, it
 reports what it found, offers, and applies only what the user takes. In order:
@@ -49,14 +49,16 @@ reports what it found, offers, and applies only what the user takes. In order:
 | `envision` | whatever the user arrived with: a sentence, a pitch document, a folder of mockups | `docs/visions/VISION-NNN-slug.md`, the *why*; sources kept verbatim under `docs/visions/sources/` | `scaffold` requires one; `specify` may draw on one |
 | `scaffold` | a vision; an interview for what a template cannot decide; the project's consult agents when a stack stays open | ratified ADRs, scoped `AGENTS.md` files, optionally project files, boundary lint, and the `start` and `update` scripts | a project ready for `specify` |
 | `specify` | the idea or vision, and an audit of what already exists; the project's consult agents for a question of fact the user cannot answer | `docs/specs/SPEC-NNN-slug.md`, the *what*: requirements with EARS acceptance criteria, mirrored to the tracker as a parent issue and one child per requirement | `design` |
+| `report` | the person who saw a bug, interviewed; the running product, driven through their steps; a test run's report or an issue they filed | `docs/bugs/BUG-NNN-slug.md`, what is wrong: the steps, the expected and actual result, evidence committed beside it, whether it reproduced, and EARS acceptance criteria, mirrored to one tracker issue | `design` |
 | `mock-up` | a design-tool export, or nothing | `docs/mockups/<slug>/`, matching the app's own design system | `design`; an issue labelled `requires-mockup` blocks design until it exists |
 | `design` | the spec, the vision, the code; the project's consult agents for a technical point it cannot settle | `docs/designs/DESIGN-NNN-slug.md`, the *how*, scaled to the change; ADRs for hard-to-reverse choices; beads with dependency edges, each carrying its acceptance criteria and, where the task is verified through the wired product, the test case and its criteria; or, with decisions the person could not settle, a `Draft` carrying them for an engineer's run | `implement`; `design` again, for a `Draft` with decisions needed |
 | `implement` | ready beads, an epic, or a design; the project's consult agents when a worker fails | a worktree per task, the test case before the code, verification against the bead's criteria and the project's checks, a pull request per task, walked in parallel waves until the frontier is empty | the human, who merges; `design`, for a disagreement that moves work, filed as a revision bead |
 | `review` | anything live: uncommitted work, a branch, a PR, a commit range, a path, a document; the project's consult agents for what the reviewer could not settle | `.codefall/reviews/`, a JSON and Markdown pair per review; fixes on the target's branch for the findings the user takes | the human; `design`, for a deferred finding that moves work |
-| `test` | what the project declares: suites, the changed subset, or one case in its `spec` or `agentic` modality | `.codefall/tests/`, a report per run; findings triaged, never an edit that makes a run pass | tracker issues on the user's word |
+| `test` | what the project declares: suites, the changed subset, or one case in its `spec` or `agentic` modality | `.codefall/tests/`, a report per run; findings triaged, never an edit that makes a run pass | `report`, for a real bug the user wants filed |
 
 A contained fix skips the documents: `design` writes beads only when a change stays inside one
-component and comes to a task or two, and `specify` is for features, not every change.
+component and comes to a task or two, and `specify` is for features, not every change. A bug starts
+at `report` instead of `specify`, and `design` finds its cause before it chooses a tier.
 
 The chain runs backward at the moment a step finds an earlier document wrong. A verb amends any
 upstream document, at any distance, in its own run and its own pull request, when the document's
@@ -110,10 +112,10 @@ dependency, a migration, or generated code changes `start` or `update` in the sa
 
 ## Who is authoritative for what
 
-- **Documents in the repository** are canonical for the why (vision), the what (spec), and the how
-  (design). Each carries a `Status` that describes the document only.
-- **The tracker** (GitHub Issues in this version) mirrors specs so people can see what is ready, in
-  progress, and done; the spec document stays canonical.
+- **Documents in the repository** are canonical for the why (vision), the what (spec), what is
+  wrong (bug report), and the how (design). Each carries a `Status` that describes the document only.
+- **The tracker** (GitHub Issues in this version) mirrors specs and bug reports so people can see
+  what is ready, in progress, and done; the document stays canonical.
 - **Beads** is authoritative for task state from the moment a design's staged task plan is approved
   and becomes beads. A design keeps its task table — the tasks, edges, and design refs it decided,
   under the epic's ID — and never a copy of work state.

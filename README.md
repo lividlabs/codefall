@@ -14,8 +14,8 @@ The repo holds two components:
 - [`extensions/`](extensions/) — the installable plugin: skills, hooks, and shared scripts. 
 
 Every skill is a **verb**. The verbs chain: `envision` frames the idea, `scaffold` makes the
-project, `specify` states the problem, `mock-up` shows what it looks like, `design` decides the
-shape, `implement` writes it, `review` checks it.
+project, `specify` states the problem, `report` states what is wrong, `mock-up` shows what it looks
+like, `design` decides the shape, `implement` writes it, `review` checks it.
 
 ## Installation
 
@@ -243,6 +243,7 @@ TODO: rename the skill names to the actual
 | [`scaffold`](extensions/skills/codefall-scaffold/SKILL.md) | Start a new project on the Clean + package-by-component stance: ratified ADRs, scoped `AGENTS.md`, optionally project files and boundary lint. | in progress |
 | [`upgrade`](extensions/skills/codefall-upgrade/SKILL.md) | Bring a project's install and docs current: offer `codefall upgrade` when the manifest is behind the binary, then report what changed in the templates since the project's version, with per-file provenance, and apply only what the user takes. Also handles first-time adoption of the stance. | in progress |
 | [`specify`](extensions/skills/codefall-specify/SKILL.md) | Turn a feature idea into a specification another session can implement: a spec document under `docs/specs/` holding requirements with EARS acceptance criteria, mirrored to the issue tracker. | in progress |
+| [`report`](extensions/skills/codefall-report/SKILL.md) | Turn a bug into a report another session can fix: interview the person who saw it for the steps, the expected and actual result, screenshots, and the environment, try to reproduce it on the spot, and write a bug report under `docs/bugs/` with acceptance criteria, mirrored to the issue tracker. | in progress |
 | [`mock-up`](extensions/skills/codefall-mock-up/SKILL.md) | Get the visual surface of a feature into the repository under `docs/mockups/`: import what a design tool exported, or make the mockup here, matching the app's own design system so it looks like it belongs. | in progress |
 | [`design`](extensions/skills/codefall-design/SKILL.md) | Decide how a feature gets built and put the work into the graph: a design document under `docs/designs/` scaled to the size of the change, ADRs for the choices that are hard to reverse, and the tasks in Beads with their dependency edges, each carrying the acceptance criteria it is verified against and the test case where one is called for. | in progress |
 | [`implement`](extensions/skills/codefall-implement/SKILL.md) | Execute the graph: claim ready beads, build each in an isolated worker worktree with tests as part of done, write the test case a bead's criteria name before the code, verify against acceptance criteria, open PRs, and walk the waves until the frontier is empty. Never merges to `main`, and never sets a test harness up. | in progress |
@@ -330,7 +331,7 @@ offered, never merged: that holds for every verb that writes a document, and onl
 A feature too large for one cohesive spec becomes sibling specs rather than a parent and children.
 The vision above them is what groups them, which is why a vision's `Related` line holds a list.
 
-`codefall-envision`, `codefall-specify`, `codefall-mock-up`, `codefall-scaffold`,
+`codefall-envision`, `codefall-specify`, `codefall-report`, `codefall-mock-up`, `codefall-scaffold`,
 `codefall-upgrade`, and `codefall-equip` are **explicitly invoked** — `/scaffold`, `/specify`, and so
 on. Each carries `disable-model-invocation: true`, so none of them fire on their own; scaffolding a
 project or filing an issue is a deliberate act, not something inferred from a passing remark.
@@ -386,6 +387,30 @@ their **Design notes**.
 
 When `specify` records a requirement whose surface has no picture yet, its tracker issue is labelled
 `requires-mockup` and `design` refuses to act on it. Landing the mockup clears the label.
+
+### Bug reports
+
+`report` writes down *what is wrong* as `docs/bugs/BUG-012-slug.md`, and holds the place a spec holds
+for a feature. It interviews the person who saw the bug for the steps from a starting point someone
+else can reach, the expected result and what says so, the actual result word for word, screenshots
+and logs, the environment, how often it happens, who it stops, and the last version that worked. It
+pushes back on "it's broken" and "sometimes" the way `specify` pushes back on "fast".
+
+**Then it tries to reproduce the bug while you are still there**, through the running product at the
+checkout's commit, driving your steps as written. A step it cannot follow is a step the report is
+missing, and it comes back to you with that step. The attempt changes nothing: no code, no data by
+hand, no mocks. It is never a gate, either: a bug seen only in production or only some of the time
+is still reported, and the report records whether it was reproduced, where, and what was tried.
+
+Evidence is committed beside the report in `docs/bugs/BUG-012-slug/`, yours and the reproduction's,
+each named for where it came from, because `gh` cannot upload images to an issue. The report's
+acceptance criteria state the expected behaviour in EARS, citing a spec criterion where one already
+says it, and they become the fix's criteria and its regression test. The issue is generated from the
+report, or, when you filed one first, adopted rather than duplicated.
+
+`design` takes a bug report as it takes a spec: it reproduces what the report could not, finds the
+cause before it chooses a tier, and most fixes land at tier 0 as one bead. The pull request that
+carries the fix closes the issue when you merge it.
 
 ### Designs
 
