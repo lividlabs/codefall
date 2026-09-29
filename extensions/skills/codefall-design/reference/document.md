@@ -33,12 +33,14 @@ labeled list, not a set of rows.
 | Label | Holds |
 | --- | --- |
 | `spec` | The specification this design implements |
+| `bug` | The bug report this design fixes |
 | `vision` | The vision that framed it — **only when there is no spec** |
 | `adr` | The ADR or ADRs this design produced |
 
 **Never record a hop you can derive.** A spec names its vision in its own `**Vision:**` row, so a
 design records the spec alone. A design written from a vision with no spec records the vision. A
-design with neither has no `Related` row until it produces an ADR.
+design for a bug records the report, and a spec only when the report's Spec row does not name it. A
+design with none of these has no `Related` row until it produces an ADR.
 
 ## Required sections
 

@@ -40,7 +40,8 @@ in a line, and the occurrence count where the class carries one.
 
 **A finding becomes a tracker issue only on the user's explicit word.** Search for an existing issue
 first, and offer to comment on it rather than opening a second. Present the candidates as a list and
-wait; nothing is filed because a run found it.
+wait; nothing is filed because a run found it. A real bug the user wants filed is filed through
+`/codefall-report` with the run report's path, so the issue and the bug report are one record.
 
 ## What triage never does
 

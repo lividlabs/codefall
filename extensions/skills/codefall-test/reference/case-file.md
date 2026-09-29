@@ -95,7 +95,8 @@ Five sections, in this order. An agentic case carries all five; a spec-only case
 
 **The spec's criteria are the floor.** A criterion that restates one cites it in full —
 `SPEC-003-REQ-01-AC-01` — which is the form `codefall-specify` writes and the form `grep` finds. A
-case covers every criterion of the requirement it tests, or records why one was dropped.
+case covers every criterion of the requirement it tests, or records why one was dropped. A bug
+report's criteria are a floor the same way, cited as `BUG-012-AC-01`.
 
 **A criterion may go beyond the spec, marked `derived`.** It cites the requirement it elaborates —
 `SPEC-003-REQ-01` — and says in one line what it adds: a boundary, a negative path, error handling.

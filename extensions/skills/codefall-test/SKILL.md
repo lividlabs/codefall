@@ -221,8 +221,8 @@ only on the user's explicit word.
 
 The verdicts, the report's path, the driver that ran, the side effects and their disposition, the
 attempt counts worth seeing, the anomaly sweep, and the triage classes. No summary of what went
-well. **End with what the user does next**, per class: a real bug goes to `/codefall-implement`
-as a bead, a wrong expectation to the decision that supersedes the criterion, a flake or agent
+well. **End with what the user does next**, per class: a real bug goes to `/codefall-report`
+with the run report's path, a wrong expectation to the decision that supersedes the criterion, a flake or agent
 variance is recorded and waits for the next run; when every case passed, nothing.
 
 ## Rules
