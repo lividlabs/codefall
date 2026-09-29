@@ -16,8 +16,11 @@ writing and changing a skill; the extension-wide rules, ADR immutability, prose,
   verb. Each still reports, offers, and applies only what the user takes; a human still performs
   every merge.
   `implement`, `design`, and `specify` run refresh when preflight reports the environment stale.
-  No other skill invokes another through the harness. `codefall-fix` runs design and implement
-  by following their `SKILL.md` files in its own run, not by invoking them.
+  No other skill invokes another through the harness.
+- **`codefall-fix` restates parts of `codefall-design` and `codefall-implement`** for one bead at
+  tier 0; its `NOTES.md` has the table of which parts and where. A change to any of those parts
+  checks `codefall-fix` in the same pull request, and a change to `codefall-fix` checks that it
+  still agrees with them. What fix links rather than restates reaches it without an edit.
 - A skill reports and offers; it applies only what the user takes. Nothing lands unrequested.
   Recording an observable fact is the exception: a skill that owns a status transition sets it when
   the fact occurs and reports that it did — `codefall-implement` flipping a vision to `Active` at first
@@ -68,12 +71,7 @@ the reasons and the sources.
 ## Supporting files
 
 - Linked **directly from `SKILL.md`**, one level deep. A supporting file does not link on to a file
-  `SKILL.md` does not also link. Another skill's `SKILL.md` is not a supporting file. A skill that
-  follows one as a procedure, as `codefall-fix` follows design's and implement's, says to read it in
-  full rather than preview it, and to read it again after a compaction, since only the invoked
-  skill's own `SKILL.md` is restored; it links directly any of that skill's files its own steps
-  depend on. `../scripts/skill-health.sh` skips such a `SKILL.md` in its depth and contents checks
-  on that condition, and checks its links on its own row.
+  `SKILL.md` does not also link.
 - Over **100 lines**: open with a table of contents.
 - Directories are named for what they hold: `templates/` for what a skill installs, `trackers/` for
   tracker profiles, `scripts/` for what a skill runs, `reference/` for what a skill reads on demand.
