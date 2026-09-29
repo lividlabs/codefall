@@ -121,7 +121,7 @@ A run that will create real side effects says so here, and says what cleans them
 ## Suite targets
 
 **The commands come from the same three sources `codefall-implement` resolves its own from**, in the
-same order — its *Verification and done* section states them — reading
+same order — its *Verification and done* reference states them — reading
 `.codefall/skills/codefall-test/CUSTOMIZE.md` in place of implement's own customization file. Say at
 the confirmation which source answered, and offer to record an inferred command in `AGENTS.md`.
 
