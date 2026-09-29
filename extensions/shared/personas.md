@@ -59,7 +59,7 @@ parked with a note that it will need an ADR. A design with parked decisions is `
 no beads. The report names how many decisions were parked and ends by handing the document to an
 engineer's run.
 
-**`implement`, `equip`, `refresh`, `scaffold`, `upgrade`.** Say up front, in one sentence, that the
+**`implement`, `fix`, `equip`, `refresh`, `scaffold`, `upgrade`.** Say up front, in one sentence, that the
 verb is engineering work, and ask whether to continue. On yes, run unchanged: the work is the same
 whoever asks. The report still follows the register rule above.
 

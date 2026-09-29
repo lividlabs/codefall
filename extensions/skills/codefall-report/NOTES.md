@@ -20,10 +20,9 @@ mocked or changed by hand.
 
 ## Dropped
 
-**A separate `fix` verb.** Finding the cause and cutting the work is `codefall-design`'s, which
-already sends a contained fix to tier 0, and building it is `codefall-implement`'s. A verb that did
-both would join what the chain keeps apart. Reconsider once `report` has run on real projects, if
-report, design, and implement for a one-line fix proves too heavy.
+**Finding the cause.** It is `codefall-design`'s, in `reference/bugs.md`, whether design runs on its
+own or inside `codefall-fix`. A report that guessed at a cause would hand design a conclusion to
+unlearn.
 
 **Reproduction as a gate.** An attempt that fails does not stop the report. Bugs that only happen in
 production, on particular data, or some of the time are real, and refusing them would lose them.

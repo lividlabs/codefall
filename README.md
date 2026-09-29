@@ -244,6 +244,7 @@ TODO: rename the skill names to the actual
 | [`upgrade`](extensions/skills/codefall-upgrade/SKILL.md) | Bring a project's install and docs current: offer `codefall upgrade` when the manifest is behind the binary, then report what changed in the templates since the project's version, with per-file provenance, and apply only what the user takes. Also handles first-time adoption of the stance. | in progress |
 | [`specify`](extensions/skills/codefall-specify/SKILL.md) | Turn a feature idea into a specification another session can implement: a spec document under `docs/specs/` holding requirements with EARS acceptance criteria, mirrored to the issue tracker. | in progress |
 | [`report`](extensions/skills/codefall-report/SKILL.md) | Turn a bug into a report another session can fix: interview the person who saw it for the steps, the expected and actual result, screenshots, and the environment, try to reproduce it on the spot, and write a bug report under `docs/bugs/` with acceptance criteria, mirrored to the issue tracker. | in progress |
+| [`fix`](extensions/skills/codefall-fix/SKILL.md) | Fix something small in one run: `design` at tier 0 for one bead, then `implement` on it, behind one confirmation instead of two. Takes a bead, a bug report, an issue, or a description; stops and names `design` when the work needs a design document, an ADR, or more than one bead. Never merges to `main`. | in progress |
 | [`mock-up`](extensions/skills/codefall-mock-up/SKILL.md) | Get the visual surface of a feature into the repository under `docs/mockups/`: import what a design tool exported, or make the mockup here, matching the app's own design system so it looks like it belongs. | in progress |
 | [`design`](extensions/skills/codefall-design/SKILL.md) | Decide how a feature gets built and put the work into the graph: a design document under `docs/designs/` scaled to the size of the change, ADRs for the choices that are hard to reverse, and the tasks in Beads with their dependency edges, each carrying the acceptance criteria it is verified against and the test case where one is called for. | in progress |
 | [`implement`](extensions/skills/codefall-implement/SKILL.md) | Execute the graph: claim ready beads, build each in an isolated worker worktree with tests as part of done, write the test case a bead's criteria name before the code, verify against acceptance criteria, open PRs, and walk the waves until the frontier is empty. Never merges to `main`, and never sets a test harness up. | in progress |
@@ -331,14 +332,15 @@ offered, never merged: that holds for every verb that writes a document, and onl
 A feature too large for one cohesive spec becomes sibling specs rather than a parent and children.
 The vision above them is what groups them, which is why a vision's `Related` line holds a list.
 
-`codefall-envision`, `codefall-specify`, `codefall-report`, `codefall-mock-up`, `codefall-scaffold`,
-`codefall-upgrade`, and `codefall-equip` are **explicitly invoked** — `/scaffold`, `/specify`, and so
-on. Each carries `disable-model-invocation: true`, so none of them fire on their own; scaffolding a
-project or filing an issue is a deliberate act, not something inferred from a passing remark.
-`codefall-design`, `codefall-implement`, `codefall-test`, `codefall-review`, and `codefall-refresh`
-carry no such line, so an agent may run them too: a session can carry a design through
-implementation, review, and test without a person typing each verb. Each still reports, offers, and
-applies only what the user takes, and a human still performs every merge.
+`codefall-envision`, `codefall-specify`, `codefall-report`, `codefall-fix`, `codefall-mock-up`,
+`codefall-scaffold`, `codefall-upgrade`, and `codefall-equip` are **explicitly invoked** —
+`/scaffold`, `/specify`, and so on. Each carries `disable-model-invocation: true`, so none of them
+fire on their own; scaffolding a project or filing an issue is a deliberate act, not something
+inferred from a passing remark. `codefall-design`, `codefall-implement`, `codefall-test`,
+`codefall-review`, and `codefall-refresh` carry no such line, so an agent may run them too: a
+session can carry a design through implementation, review, and test without a person typing each
+verb. Each still reports, offers, and applies only what the user takes, and a human still performs
+every merge.
 
 A question of fact you cannot answer in the interview, how the existing system behaves in a case the
 audit did not settle, is put to the project's consult agents once and comes back as a proposal you
@@ -411,6 +413,16 @@ report, or, when you filed one first, adopted rather than duplicated.
 `design` takes a bug report as it takes a spec: it reproduces what the report could not, finds the
 cause before it chooses a tier, and most fixes land at tier 0 as one bead. The pull request that
 carries the fix closes the issue when you merge it.
+
+### Fixes
+
+`fix` is the short path for small work. Given a bead, a bug report, an issue, or a sentence, it runs
+`design` at tier 0 to establish one bead, with the cause and the acceptance criteria, and then
+`implement` on that bead, in one run. What it removes is repetition: one preflight instead of two,
+one confirmation that shows the bead and the build plan together, and one report at the end. It
+follows `design`'s and `implement`'s own procedures rather than keeping a copy, so every rule of
+theirs holds, the merge rule included. When the work turns out to need a design document, an ADR,
+or more than one bead, it stops before writing anything and names `design`.
 
 ### Designs
 

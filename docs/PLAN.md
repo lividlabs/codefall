@@ -7,8 +7,9 @@ The following items are outstanding in order to complete the first verion of the
   `docs/bugs/BUG-NNN-slug.md` with evidence beside it, mirrored to one GitHub issue
   - A bug report takes the place of a spec: `design` reads it as a target and finds the cause
   - Both a markdown report and a GitHub issue; the report is canonical
-- [ ] `fix` — deferred. `design` finds the cause and `implement` builds the fix; reconsider after
-  `report` has run on a real project, if report → design → implement proves too heavy for a small bug
+- [x] `fix` — a low-ceremony alias: `design` at tier 0 and `implement` on the one bead it produces,
+  behind one confirmation, for a bead, a bug report, an issue, or a description; stops and names
+  `design` when the work needs a document, an ADR, or a second bead
 - [x] `test` — run tests
   - unit, integration, and e2e
   - testing scope: full suite, a subset based on local/branch changes, a specific subset
@@ -62,6 +63,7 @@ The decision log entry for 2026-09-16 has the reasoning.
   - [ ] `implement`
   - [ ] `review`
   - [ ] `report`
+  - [ ] `fix`
   - [ ] `test`
   - [ ] `equip`
   - [ ] `refresh`

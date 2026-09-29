@@ -38,7 +38,7 @@ records the layout. `codefall config` changes who reviews and consults in `setti
 
 ## The chain
 
-`envision`, `specify`, `report`, `mock-up`, `scaffold`, `upgrade`, and `equip` are invoked
+`envision`, `specify`, `report`, `fix`, `mock-up`, `scaffold`, `upgrade`, and `equip` are invoked
 deliberately by a user (`disable-model-invocation: true`). `design`, `implement`, `test`, `review`, and `refresh`
 carry no such line, so an agent may run these too, and a session can carry a design through
 implementation, review, and test without a person typing each verb. Whichever way a verb starts, it
@@ -58,7 +58,10 @@ reports what it found, offers, and applies only what the user takes. In order:
 
 A contained fix skips the documents: `design` writes beads only when a change stays inside one
 component and comes to a task or two, and `specify` is for features, not every change. A bug starts
-at `report` instead of `specify`, and `design` finds its cause before it chooses a tier.
+at `report` instead of `specify`, and `design` finds its cause before it chooses a tier. `fix` runs
+the two steps for one such change in a single run: `design` at tier 0 for one bead, then `implement`
+on it, behind one confirmation, stopping to name `design` when the work needs a document, an ADR, or
+a second bead. It takes a bead, a bug report, an issue, or a description.
 
 The chain runs backward at the moment a step finds an earlier document wrong. A verb amends any
 upstream document, at any distance, in its own run and its own pull request, when the document's
