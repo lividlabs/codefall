@@ -27,9 +27,18 @@ init` installed in the project's own `.codefall/`.
 
 ## Files beside this one
 
+**Read each of these in full, never a preview**, and resolve its own relative paths from its
+directory. **After a compaction, read the `SKILL.md` for the step you are on again before you
+continue**: only this file is restored, and the procedures it follows are not.
+
 - `../codefall-design/SKILL.md` — the design procedure. Read at step 2, and follow it where this file
-  says, resolving its own relative paths from its directory. Its `reference/bugs.md` and
-  `reference/beads.md` are the parts a fix uses.
+  says.
+- `../codefall-design/reference/bugs.md` — reproducing a bug and finding its cause. Read at step 2
+  for a bug.
+- `../codefall-design/reference/beads.md` — creating the bead. Read at step 4. It names
+  `../codefall-test/reference/case-file.md`, the test-case format, read at step 3 when the bead
+  carries a case, and `../codefall-design/reference/revising.md`, for a design whose graph already
+  exists, which a fix never reaches.
 - `../codefall-implement/SKILL.md` — the implement procedure. Read at step 4, and follow it the same
   way, for single-bead scope.
 
@@ -74,8 +83,8 @@ What the input is decides how much of design runs:
 | --- | --- |
 | A bead with a reproduction or a clear task, and acceptance criteria | Nothing from design. Read it, and go to step 3 |
 | A bead with a title and little else — a `discovered-from` bead, say | Design's steps 2–4 fill it in: the cause and the criteria. The bead is edited only if no one holds it |
-| A bug report, `BUG-NNN`, or the issue a report mirrors | Design's steps 2–4 with `reference/bugs.md`: reproduce if the report could not, find the cause |
-| Another issue, or a description | Design's steps 2–4 at tier 0; for a bug, `reference/bugs.md` as well |
+| A bug report, `BUG-NNN`, or the issue a report mirrors | Design's steps 2–4 with `../codefall-design/reference/bugs.md`: reproduce if the report could not, find the cause |
+| Another issue, or a description | Design's steps 2–4 at tier 0; for a bug, `../codefall-design/reference/bugs.md` as well |
 
 A bead someone else has claimed is a stop: say who holds it. A bead that is already closed, or has an
 open pull request, is reported and the run stops.
@@ -100,7 +109,7 @@ On yes, both approvals are given. Nothing is written before it.
 
 ### 4. Build it
 
-Create or edit the bead per design's `reference/beads.md` and push it. Then follow
+Create or edit the bead per `../codefall-design/reference/beads.md` and push it. Then follow
 `codefall-implement` from its step 5, for single-bead scope, with the go gate already passed: claim,
 build, verify, open the pull request, close the bead. Every rule of implement holds, the merge rule
 first.
@@ -115,6 +124,7 @@ the cleanup offer. **End with what the user does next**: review and merge the pu
 ## Rules
 
 - **Fix is design at tier 0 and implement on one bead.** Their rules hold throughout.
+- **Read the procedures in full, and again after a compaction.**
 - **One confirmation**, and nothing written before it.
 - **Tier 0 or an exit.** A design document, an ADR, or a second bead is `codefall-design`'s work.
 - **A ticket must not change under someone holding it.**

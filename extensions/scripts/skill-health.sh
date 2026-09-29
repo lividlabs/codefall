@@ -31,7 +31,10 @@
 # installed into projects, not read as instruction, so depth and contents skip
 # them, and a supporting file may name one without counting as nested.
 # Another skill's SKILL.md, named by a skill that follows its procedure, is
-# checked on its own row, so depth and contents skip it too.
+# skipped by depth and contents too. Those checks exist because a file reached
+# through another may only be previewed; a skill that follows another's
+# SKILL.md must instead say to read it in full and to read it again after a
+# compaction (extensions/skills/AGENTS.md). Its links are checked on its own row.
 # NOTES.md is never loaded by a skill and is exempt from everything.
 #
 # Token counts are estimates. The tokenizer is not available to a script, so

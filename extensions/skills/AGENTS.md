@@ -68,9 +68,12 @@ the reasons and the sources.
 ## Supporting files
 
 - Linked **directly from `SKILL.md`**, one level deep. A supporting file does not link on to a file
-  `SKILL.md` does not also link. Another skill's `SKILL.md` is not a supporting file: a skill that
-  follows it as a procedure, as `codefall-fix` follows design's and implement's, names it and
-  nothing inside it, and that skill's own row checks its links.
+  `SKILL.md` does not also link. Another skill's `SKILL.md` is not a supporting file. A skill that
+  follows one as a procedure, as `codefall-fix` follows design's and implement's, says to read it in
+  full rather than preview it, and to read it again after a compaction, since only the invoked
+  skill's own `SKILL.md` is restored; it links directly any of that skill's files its own steps
+  depend on. `../scripts/skill-health.sh` skips such a `SKILL.md` in its depth and contents checks
+  on that condition, and checks its links on its own row.
 - Over **100 lines**: open with a table of contents.
 - Directories are named for what they hold: `templates/` for what a skill installs, `trackers/` for
   tracker profiles, `scripts/` for what a skill runs, `reference/` for what a skill reads on demand.
