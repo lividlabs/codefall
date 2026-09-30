@@ -78,8 +78,11 @@ a bead `codefall-implement` or `codefall-review` filed because the design's text
 the design and the spec, disagree in a way the finder could not amend itself — the fix moves a task
 row or a criterion a bead cites, the document was frozen, or the user declined the amendment there.
 Its body says what the design says, what was found instead, and which document it names, and a
-`discovered-from` edge names the bead or the review that found it. Read them before the row-by-row
-pass, show them to the user, and settle every one in one of three ways:
+`discovered-from` edge names the bead or the review that found it. A bead labelled `design-amended`
+is different: `codefall-implement` and `codefall-review` file one, already closed, for each
+amendment they made, so the record of what was wrong is queryable. It asks nothing of this run and is not listed here. Read
+the revision beads before the row-by-row pass, show them to the user, and settle every one in one
+of three ways:
 
 | The user decides | What happens |
 | --- | --- |

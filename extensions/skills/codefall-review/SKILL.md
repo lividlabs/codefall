@@ -227,14 +227,20 @@ this step is where the rule lives: a dismissal with no reason is asked for one b
 
 Apply the accepted fixes with this session's tools, code and documents alike. A finding's proposed
 `patch` is a starting point, not a script — apply the intent, matching the surrounding code. Fixes
-are not re-reviewed here.
+are not re-reviewed here. **A code fix that changes behaviour the design or spec describes amends
+that document in the same commit**, under the rule below: the document is part of the fix, not a
+second finding.
 
 **A finding that an upstream document is wrong is fixed like any other document finding.** When the
 design behind the work says one thing and the code needed another, or the design and its spec
 disagree, and the document is `Draft` or `Ready`, the fix is text on the target's branch: the
 design's section amended, or a criterion appended to the spec with the requirement's tracker issue
-regenerated per `../codefall-specify/trackers/<name>/PROFILE.md`. Every document between the change
-and the code that restates the point is fixed together, or none is.
+regenerated per `../codefall-specify/trackers/<name>/PROFILE.md`. Fix every document between the
+change and the code that restates the point; when one of them fails these tests, fix none, and name
+each document in the bead offered below, so the whole chain reaches `codefall-design` together.
+Each document fix is recorded as a closed `design-amended` bead, per *Amendments* in
+`../codefall-implement/reference/beads.md`, with a `discovered-from` edge to the bead the branch
+names when there is one.
 
 **What that fix cannot do is offered as a bead.** A fix that would move work — a Task Plan row, a
 criterion a bead cites — or touch a frozen document, or one the user defers, leaves

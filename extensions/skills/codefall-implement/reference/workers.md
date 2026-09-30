@@ -57,16 +57,28 @@ The worker's final message is exactly one JSON object:
  "discovered": [{"kind": "code", "title": "Parser drops trailing comma", "context": "…",
                  "from": "booking-DESIGN-007-T2"},
                 {"kind": "design", "title": "§ Architecture names a StageStore the code replaced",
-                 "context": "…", "from": "booking-DESIGN-007-T2"}],
+                 "context": "…", "from": "booking-DESIGN-007-T2", "blocks": "Task Plan row T4"}],
  "amended": [{"document": "docs/designs/DESIGN-007-stage-context.md", "section": "Architecture",
               "summary": "StageStore renamed to StageContext, matching the code"}]}
 ```
 
 or `{"bead": "…", "status": "failure", "reason": "…"}`. The `discovered` list is how tangent work
 reaches the root, which files it — the worker's diff stays scoped to its bead. `kind` is `code` or
-`design` and picks the form under *Discovered work* in `beads.md`, so the root files each item
-without re-reading the worker's prose. The `amended` list names each upstream document the worker
-amended in its branch; the root reads it at the wave boundary per *Amendments* in `beads.md`.
+`design` and picks the form under *Discovered work* in `beads.md`. A `code` item is filed as it
+stands. The `amended` list names each upstream document the worker amended in its branch; the root
+reads it at the wave boundary per *Amendments* in `beads.md`, and records each entry as a closed
+`design-amended` bead there.
+
+**A `design` item is checked before it is filed.** Its `blocks` names the one thing that stopped
+the worker amending: a Task Plan row, a criterion a bead cites, or a frozen document. The root reads
+that against the design, and a `blocks` that holds is filed as a `design-revision` bead. A `blocks`
+that names none of the three, or names a row or criterion the fix would not in fact change, on a
+document whose Status is `Draft` or `Ready`, is text the worker could have amended: the root
+resumes the worker with a message naming the item and the test it failed, and the worker amends,
+pushes, and reports again, the document now in its `amended` list. No bead is filed for an item
+sent back. The close-out report names every item sent back beside the beads that were filed. A
+worker that cannot be resumed — it failed, or the harness has released it — leaves the item filed
+as a `design-revision` bead whose body says the fix is text this run could not land.
 
 ## Failure handling
 
