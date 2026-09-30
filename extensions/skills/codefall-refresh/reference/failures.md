@@ -1,7 +1,7 @@
 # Failures, and the sentence to say
 
 What `start` and `update` fail with most often, what each means, and what to tell a teammate who
-does not read stack traces. Read at step 6 when a command exits non-zero. Match on the stderr; say
+does not read stack traces. Read at step 7 when a command exits non-zero. Match on the stderr; say
 the row's sentence in your own words, with the one line of stderr that says it.
 
 A row marked **environment** ends with "run `/codefall-refresh` again once that is done". A row
