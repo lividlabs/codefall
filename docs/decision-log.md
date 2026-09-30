@@ -1682,6 +1682,16 @@ Decided at scaffold, 2026-08-16.
   most often run after `implement`); deleting the remote branch (a write to the team's remote,
   named for the user instead); a `merged` line in the shared preflight (only refresh acts on it).
 
+- **Test offers refresh on the default branch only, 2026-09-30.** Once refresh ended on the default
+  branch, `test`'s offer of `/codefall-refresh` for a branch that was behind or stale would take the
+  user off the branch under test. On the default branch nothing changes. On another branch, `behind`
+  is reported with the rebase left to the user and the run carries on, and a stale environment
+  names the declared `local.update` to run in place. An agentic run whose application is down after
+  `start` names the same command on a feature branch, and `local` undeclared now names
+  `/codefall-equip`, which is what refresh itself would have said. ADR-007 says an agentic run names
+  `codefall-refresh` when the application is down; that holds on the default branch, and this entry
+  is the narrowing for every other branch.
+
 ## Open
 
 - (nothing open; the last item graduated to ADR-012 on 2026-09-27)
