@@ -1663,6 +1663,25 @@ Decided at scaffold, 2026-08-16.
   "fix this" in a session); reproduction as a gate; a priority field (the team's decision, not the
   reporter's); images embedded in the issue (`gh` cannot upload them).
 
+- **Refresh ends on the default branch, 2026-09-30.** Run on a design branch after its PR had
+  squash-merged, `refresh` did what it was written to do: it left the checkout on the branch, left
+  `main` a commit behind, ran `update` against the branch, stamped the branch's commit, and kept
+  the branch. The person running it wanted the opposite. Refresh means taking them from wherever
+  they are and getting them set up for the next task on `main`. It now always ends in the primary
+  checkout on the default branch: from a feature branch it runs `git switch` and then
+  `git pull --ff-only`, and from a linked worktree it works in the primary checkout, since the
+  default branch cannot be checked out twice. The branch and the worktree it left are deleted and
+  removed when the default branch holds their work, and kept otherwise. "Holds their work" is
+  either ancestry or the `git-delete-squashed` test: the branch built as one commit on its
+  merge-base, and `git cherry` against the default branch. Every PR is squash-merged, so ancestry
+  alone never answers yes, and a remote branch that outlives its merge makes a `[gone]` upstream
+  no signal. Uncommitted work in the primary checkout stops the run before anything moves, because
+  running `update` would set the environment to a checkout the user is about to leave. Seen and not
+  taken: moving off a feature branch only once it has merged (still leaves the user on unmerged
+  work when they asked for `main`); stopping inside a worktree (stops the user where refresh is
+  most often run after `implement`); deleting the remote branch (a write to the team's remote,
+  named for the user instead); a `merged` line in the shared preflight (only refresh acts on it).
+
 ## Open
 
 - (nothing open; the last item graduated to ADR-012 on 2026-09-27)
