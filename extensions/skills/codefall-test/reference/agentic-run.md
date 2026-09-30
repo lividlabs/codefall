@@ -46,9 +46,10 @@ The application runs through the project's declared `start` command — the one 
 `.codefall/settings.json`. It is not started any other way, and a run never starts a service the
 project did not declare.
 
-When the application is down after `start`, or `local` is undeclared, stop and name
-`/codefall-refresh`. The run has nothing to drive, and repairing the environment is another verb's
-work.
+When `local` is undeclared, stop and name `/codefall-equip`. When the application is down after
+`start`, stop and name the remedy for the branch the run is on: `/codefall-refresh` on the default
+branch, and the declared `local.update` command on any other, since refresh would leave the branch
+under test. The run has nothing to drive, and repairing the environment is not this verb's work.
 
 ## Setup runs as scripts
 
