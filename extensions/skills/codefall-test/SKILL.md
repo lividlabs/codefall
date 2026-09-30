@@ -92,7 +92,9 @@ Read the lines; the Beads lines are none of this verb's business.
 | `test=undeclared` | settings carry no `test` block | Say `codefall upgrade` declares the testing root, and stop |
 | `test=unequipped` | no runner is declared | A case target stops and names `/codefall-equip`; a suite target carries on |
 | `test=unknown` | there is a `test` block, and preflight had no jq to read it | Read the block from `.codefall/settings.json` and act on what it says; `runners` absent or empty is `unequipped` |
-| `refresh=stale`, or `behind` above `0` | the checkout or the environment is behind | Say so, offer `/codefall-refresh`, and wait |
+| `refresh=stale`, or `behind` above `0`, on the default branch | the checkout or the environment is behind | Say so, offer `/codefall-refresh`, and wait |
+| `behind` above `0` on another branch | the branch is missing commits the default branch has | Say so and that the rebase is the user's; carry on. Never offer `/codefall-refresh`, which leaves the branch |
+| `refresh=stale` on another branch | the environment may not match the branch | Say so, name the declared `local.update` command to run here, and wait |
 | `refresh=undeclared` | no `local` block | Say so and name `/codefall-equip`; an agentic run stops, since it has no declared `start` |
 
 A preflight that emits no `test=` line at all is an older install: read the `test` block from
@@ -249,6 +251,8 @@ variance is recorded and waits for the next run; when every case passed, nothing
   says.
 - **A finding becomes a tracker issue only on the user's word**, and the existing issues are
   searched first.
-- **Name the remedy, never apply it.** This verb does not run `codefall init`, `/codefall-equip`, or
-  `/codefall-refresh`.
+- **Name the remedy, never apply it.** This verb does not run `codefall init`, `/codefall-equip`,
+  `/codefall-refresh`, or the declared `update`.
+- **`/codefall-refresh` is offered on the default branch only.** It ends on the default branch, so
+  on any other branch it takes the user away from what is under test.
 - **An argument that resolves to nothing is a stop**, not a guess at the nearest case.

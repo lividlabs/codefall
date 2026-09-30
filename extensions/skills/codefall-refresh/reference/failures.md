@@ -1,15 +1,18 @@
 # Failures, and the sentence to say
 
-What `start` and `update` fail with most often, what each means, and what to tell a teammate who
-does not read stack traces. Read at step 7 when a command exits non-zero. Match on the stderr; say
-the row's sentence in your own words, with the one line of stderr that says it.
+What refresh's commands in the primary checkout fail with most often — `git`, `start`, and
+`update` — what each means, and what to tell a teammate who does not read stack traces. Read at
+step 4 or step 8 when a command exits non-zero. Match on the stderr; say the row's sentence in your
+own words, with the one line of stderr that says it.
 
 A row marked **environment** ends with "run `/codefall-refresh` again once that is done". A row
 marked **script** names `/codefall-equip`, because the script is wrong and this skill does not edit
-it. A row marked **checkout** is the user's to resolve.
+it. A row marked **checkout** is the user's to resolve. A row marked **harness** ends with opening a
+session in the primary checkout and running `/codefall-refresh` there.
 
 | stderr says | Kind | What it means | What to do |
 | --- | --- | --- | --- |
+| `Operation not permitted`, `sandbox`, or a permission request rejected, on a path in the primary checkout, from a run started in a worktree | harness | The harness confines the session to the directory it started in — Codex's sandbox, OpenCode's external-directory permission in a non-interactive run | Open a session in the primary checkout and run `/codefall-refresh` there |
 | `Cannot connect to the Docker daemon`, `docker: command not found` | environment | Docker is not running, or not installed | Start Docker Desktop, or install it; then refresh again |
 | `port is already allocated`, `address already in use` | environment | Something else holds the port a service needs | Find what is on the port (`lsof -i :<port>`) and stop it, or stop a stale container |
 | `no configuration file provided`, `compose.yaml: no such file` | script | `start` names a compose file that is not there | Equip: the compose file moved, or the command is wrong |

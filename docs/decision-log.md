@@ -1682,6 +1682,35 @@ Decided at scaffold, 2026-08-16.
   most often run after `implement`); deleting the remote branch (a write to the team's remote,
   named for the user instead); a `merged` line in the shared preflight (only refresh acts on it).
 
+- **Test offers refresh on the default branch only, 2026-09-30.** Once refresh ended on the default
+  branch, `test`'s offer of `/codefall-refresh` for a branch that was behind or stale would take the
+  user off the branch under test. On the default branch nothing changes. On another branch, `behind`
+  is reported with the rebase left to the user and the run carries on, and a stale environment
+  names the declared `local.update` to run in place. An agentic run whose application is down after
+  `start` names the same command on a feature branch, and `local` undeclared now names
+  `/codefall-equip`, which is what refresh itself would have said. ADR-007 says an agentic run names
+  `codefall-refresh` when the application is down; that holds on the default branch, and this entry
+  is the narrowing for every other branch.
+
+- **Refresh names the primary checkout in every command, and leaves a worktree through the
+  harness, 2026-09-30.** Two parts of **Refresh ends on the default branch** did not survive a
+  test. The merged test built the branch as one squash commit and compared patch ids with
+  `git cherry`; a patch id includes context lines, so a merged branch read as unmerged when the
+  default branch had touched a nearby line first, or when the PR carried a commit the local branch
+  lacked. `git merge-tree --write-tree` replaces it: merged when merging the branch into the
+  default branch changes nothing, which is the question deletion asks. And refresh moved to the
+  primary checkout with one `cd`, which carries into the next command in no harness a worktree
+  session runs in — Claude Code resets it, Codex and OpenCode spawn a process per command in the
+  session's directory, and Antigravity's tool takes its directory per call. Every command now
+  names the primary checkout with `git -C` or `cd <primary> &&`. Where the harness has
+  `ExitWorktree`, refresh uses it, which returns the session to where it entered the worktree and
+  removes the worktree when its work is merged; the tool's own check refuses a squash-merged
+  branch, so refresh asks once before passing `discard_changes`. Without it, a merged worktree is
+  removed as the run's last command, and the report sends the user to a session in the primary
+  checkout. A harness that confines the session to its directory, such as Codex's sandbox, is a
+  row in the failures reference. A worktree shares the primary checkout's Beads database, so
+  `bd sync` does the same thing from either place.
+
 ## Open
 
 - (nothing open; the last item graduated to ADR-012 on 2026-09-27)
