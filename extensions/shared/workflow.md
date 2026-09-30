@@ -70,10 +70,12 @@ Four verbs sit beside the chain rather than in it:
   ([ADR-009.4](https://github.com/lividlabs/codefall-cli/blob/main/docs/adrs/ADR-009.4-agents.md)).
   One run equips one track, and each lands as its own pull request. What a search leaves ambiguous
   is consulted on once before the one question.
-- **`refresh`** is what to run instead of pulling by hand: fetch, fast-forward `main` when safe,
-  `bd sync` the beads with their Dolt remote, run `start`, run `update` when the commit moved,
-  record the commit in a git-ignored stamp. It never rebases a feature branch, stashes a dirty
-  tree, or settles a conflict the sync halts on.
+- **`refresh`** is what to run instead of pulling by hand, and it ends on `main` wherever it
+  starts: leave a feature branch or an implement worktree for the primary checkout, switch it to
+  `main` and fast-forward it, delete the branch and remove the worktree it left when their work is
+  merged, `bd sync` the beads with their Dolt remote, run `start`, run `update` when the commit
+  moved, record the commit in a git-ignored stamp. Uncommitted work in the primary checkout stops
+  it. It never rebases, stashes, deletes a remote branch, or settles a conflict the sync halts on.
 - **`upgrade`** brings the install and the documents current, in that order. When the manifest
   records an older version than the binary's, it offers `codefall upgrade`, runs it only on a yes,
   and puts the command's breaking changes and its question to the user. Then it brings a scaffolded

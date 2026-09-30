@@ -112,3 +112,5 @@ who was skipped or failed.
 ## Worktrees survive the run
 
 Cleanup is an offer at close-out — never automatic, and never for a worktree whose PR is still open.
+`codefall-refresh` is the one exception: run from inside a worktree whose work has merged, it
+removes that worktree and nothing else.
