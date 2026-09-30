@@ -10,10 +10,11 @@ ADR-005 in the repository's `docs/adrs/`.
 **`git pull --ff-only`** — the one way the default branch is ever moved. A fast-forward cannot lose
 anything and cannot produce a conflict, which is what makes it safe to run on a teammate's behalf.
 
-**The squash-merge test from `git-delete-squashed`** — build the branch as one commit on its
-merge-base and ask `git cherry` whether the default branch holds an equivalent patch. Every PR here
-is squash-merged, so git's own ancestry check never sees a merged branch, and the remote branch is
-not always gone, so a `[gone]` upstream is no signal either. The test needs no host API.
+**`git merge-tree --write-tree` as the merged test** — merge the branch into the default branch
+in memory, and call it merged when the result is the default branch's own tree: the branch holds
+nothing the default branch lacks, so deleting it loses nothing. Every PR here is squash-merged, so
+git's ancestry check never sees a merged branch, and the remote branch is not always gone, so a
+`[gone]` upstream is no signal either. The test needs no host API.
 
 **`codefall-implement`'s preflight reading** — the checkout lines come from the same shared script
 every verb runs; this skill reads them rather than asking git the same questions a second way.
@@ -42,7 +43,23 @@ kept when unmerged, deleted only when the default branch holds its work.
 checkout holds it, and the first answer was to stop and say so. That stopped the user in the one
 place refresh is most often run from after `codefall-implement`. Refresh works in the primary
 checkout instead, and removes the worktree it started in only when that work is merged and clean,
-which stays inside implement's rule that cleanup is never automatic for open work.
+which stays inside implement's rule that cleanup is never automatic for open work. Without an exit
+tool the removal is the run's last command, because the session's directory is gone after it.
+
+**The `git-delete-squashed` test.** The first version built the branch as one commit on its
+merge-base and asked `git cherry` whether the default branch held an equivalent patch. A patch id
+includes the context lines around each change, so it missed a merged branch when the default
+branch had touched a nearby line before the squash landed, and when the PR carried a commit the
+local branch did not — a suggestion applied on GitHub, a fix pushed from another machine. Both were
+reproduced in a scratch repository, and `merge-tree` answered both correctly.
+
+**A `cd` to the primary checkout.** The first version moved there once and let the rest of the run
+follow. Tested on 2026-09-30, that holds in no harness a worktree session runs in: Claude Code
+resets a `cd` outside the session's directory unless that directory was added, and tells the model
+not to `cd` to the original root; Codex and OpenCode start a fresh process per command, in the
+session's directory. Every command names the primary checkout instead. Claude Code's
+`ExitWorktree` is the one way a session actually moves, and only for a worktree that session
+entered with `EnterWorktree`.
 
 **Deleting the remote branch.** It is a write to the team's remote, and a repository that deletes
 branches on merge never needs it. Refresh names the command and leaves it to the user.

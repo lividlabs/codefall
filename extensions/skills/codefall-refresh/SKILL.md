@@ -8,6 +8,7 @@ allowed-tools:
   - Grep
   - AskUserQuestion
   - Bash
+  - ExitWorktree
 ---
 
 # Refresh
@@ -28,15 +29,16 @@ a file `codefall init` installed in the project's own `.codefall/`.
 
 ## Files beside this one
 
-- `reference/failures.md` — the failures `start` and `update` produce most often, what each means,
-  and the sentence to say. Read at step 7 when a command exits non-zero.
+- `reference/failures.md` — the failures refresh's commands produce most often, what each means,
+  and the sentence to say. Read when `git`, `start`, or `update` exits non-zero in the primary
+  checkout.
 
 ## Scope — run, never write
 
 | In scope | Out of scope | Whose |
 | --- | --- | --- |
 | Switching the primary checkout to the default branch, and fast-forwarding it | Rebasing, merging, or resetting any branch | the user |
-| Removing the worktree it was run from, and deleting a local branch, once its work is merged | Any other worktree, and any remote branch | `codefall-implement`'s cleanup offer, the user |
+| Leaving the worktree the run started in, and removing it and deleting a local branch once its work is merged | Any other worktree, and any remote branch | `codefall-implement`'s cleanup offer, the user |
 | Syncing the beads with their Dolt remote | Wiring the remote, or resolving a conflict the sync halts on | the user |
 | Running the declared `start` and `update` | Drafting, editing, or declaring them | `codefall-equip` |
 | Recording the stamp after a clean `update` | Any other file in the project | — |
@@ -46,35 +48,38 @@ a file `codefall init` installed in the project's own `.codefall/`.
 ## Where refresh takes the checkout
 
 Every run ends in the primary checkout, on the default branch. The primary checkout is the first
-`worktree` entry of `git worktree list --porcelain`; a linked worktree is any other.
+`worktree` entry of `git worktree list --porcelain`, written `<primary>` below; a linked worktree is
+any other.
 
 | Found | Action |
 | --- | --- |
-| Run from a linked worktree | Work moves to the primary checkout; the worktree is handled at step 4 |
-| Primary checkout has uncommitted changes | **Stop**: list the files and say to commit or stash them, then rerun. Nothing moves and nothing runs |
-| Primary checkout on another branch | `git switch <default>`; the branch is handled at step 4 |
-| Primary checkout on a detached HEAD | `git switch <default>` when a branch or remote ref contains `HEAD`; otherwise **stop** and name the hash, since switching would strand it |
-| `git switch` refused, such as the default branch held by another worktree | **Stop**: quote git's line and name the worktree that holds it |
-| On the default branch, `origin/<default>` is a fast-forward | `git pull --ff-only origin <default>` |
+| Run from a linked worktree | Leave it at step 3; the rest runs against `<primary>` |
+| `<primary>` has uncommitted changes | **Stop**: list the files and say to commit or stash them, then rerun. Nothing moves and nothing runs |
+| `<primary>` on another branch | `git -C <primary> switch <default>`; the branch is handled at step 5 |
+| `<primary>` on a detached HEAD | Switch when a branch or remote ref contains `HEAD`; otherwise **stop** and name the hash, since switching would strand it |
+| The switch refused, such as the default branch held by another worktree | **Stop**: quote git's line and name the worktree that holds it |
+| On the default branch, `origin/<default>` is a fast-forward | `git -C <primary> pull --ff-only origin <default>` |
 | On the default branch, diverged | Not pulled: say how many local commits the remote does not have; carry on |
 | No remote, or the fetch failed | Not pulled: say so; carry on |
 
 A pull that is refused is reported, never retried with a merge, a rebase, or a reset.
 
+**Every command names `<primary>`**: `git -C <primary> …`, and `cd <primary> && <command>` as one
+command for everything else. A `cd` on its own does not carry into the next command in most
+harnesses, and never out of a worktree session.
+
 ## Merged
 
-A branch is merged when `origin/<default>` holds its work, by either test:
+A branch is merged when merging it into `origin/<default>` would change nothing:
 
 ```bash
-git merge-base --is-ancestor <branch> origin/<default>        # merged or fast-forwarded
-base=$(git merge-base origin/<default> <branch>)
-squash=$(git commit-tree "<branch>^{tree}" -p "$base" -m squash)
-git cherry origin/<default> "$squash"                          # "-" first: squash-merged
+git -C <primary> merge-tree --write-tree origin/<default> <branch>
+git -C <primary> rev-parse "origin/<default>^{tree}"
 ```
 
-The second test builds the branch as one commit and asks whether the default branch already carries
-an equivalent patch; a line starting with `-` is a yes, `+` is a no. A squash that was edited at
-merge time reads as a no, and the branch is kept.
+Merged when the first exits `0` and its first line equals the second. Anything else — a different
+tree, a conflict, a git older than 2.38 that has no `--write-tree` — is not merged, and the branch
+is kept.
 
 ## The stamp
 
@@ -112,44 +117,60 @@ its branch, and `git status --porcelain` there. Then run the shared check agains
 checkout:
 
 ```bash
-"../../../.codefall/shared/preflight.sh" <primary checkout>
+"../../../.codefall/shared/preflight.sh" <primary>
 ```
 
 Note `branch`, `dirty`, `fetch`, `default_branch`, `behind`, `ahead`, `refresh`, and `beads`.
+`dirty=true` is the stop in [the table](#where-refresh-takes-the-checkout), before step 3.
 
-### 3. Go to the default branch
+### 3. Leave the worktree
 
-Apply [the table](#where-refresh-takes-the-checkout), in the primary checkout. Every command from
-here runs from the primary checkout's root: `cd` there, so the session stays there when the
-harness keeps a directory between commands.
+Only when the run started in one. Test its branch with [Merged](#merged), then, when the harness
+has `ExitWorktree`, call it: `remove` when the branch is merged and the worktree has no
+uncommitted changes, `keep` otherwise.
 
-### 4. Clean up what was left
+| `ExitWorktree` answers | Then |
+| --- | --- |
+| Done | The session is back where it entered the worktree |
+| No worktree session is active | The harness does not manage this one: the session stays, and a merged worktree is removed at step 9 |
+| Refuses `remove` over commits not on the original branch | That is the squash-merge. Ask once, citing the merged test; on yes call it with `discard_changes: true`, on no call `keep` |
+| Refuses `remove` for a worktree entered by path | Call `keep`; a merged worktree is removed at step 5 |
 
-Test each with [Merged](#merged), against the `origin/<default>` step 2 fetched.
+With no `ExitWorktree`, the session stays in the worktree, and a merged worktree is removed at
+step 9.
 
-- **The branch the primary checkout left.** Merged: `git branch -D <branch>`, and note its old
-  tip. Not merged: keep it, and note how many of its commits are not on its upstream, or that it
-  has none.
-- **The worktree the run started in.** Merged and clean: `git worktree remove <path>`, then
-  `git branch -D <branch>`, and note the old tip. Not merged, uncommitted work, or a detached HEAD:
-  keep it, and note which and the path.
+### 4. Go to the default branch
+
+Apply [the table](#where-refresh-takes-the-checkout) to `<primary>`. A command the harness refuses
+— `Operation not permitted`, a permission request rejected — is a stop; `reference/failures.md`
+has the row.
+
+### 5. Clean up the branch
+
+Test with [Merged](#merged), against the `origin/<default>` step 2 fetched.
+
+- **The branch `<primary>` left.** Merged: `git -C <primary> branch -D <branch>`, and note its
+  old tip. Not merged: keep it, and note how many of its commits are not on its upstream, or that
+  it has none.
+- **A worktree step 3 kept by path**, merged and clean: `git -C <primary> worktree remove <path>`,
+  then delete its branch the same way.
 - **A merged branch still on the remote.** Note it, with `git push origin --delete <branch>` as the
   user's to run.
 
 Never pass `--force` to `git worktree remove`, and never touch a worktree the run did not start in.
 
-### 5. Sync the beads
+### 6. Sync the beads
 
 Skip this step when preflight said `beads=blocked`: say so in the report, and leave the remedy to
 the verb that needs beads. Otherwise:
 
 ```bash
-bd sync
+cd <primary> && bd sync
 ```
 
 One command: pull the team's claims and closes from the Dolt remote, halt on a conflict, repair the
 blocked flags the merged edges changed, and push whatever this machine wrote and never published.
-Nothing in git moves. Read the exit code:
+Nothing in git moves. A worktree shares the primary checkout's database. Read the exit code:
 
 | Exit | Meaning | Say |
 | --- | --- | --- |
@@ -162,7 +183,7 @@ Nothing in git moves. Read the exit code:
 
 Never run `bd dolt push --force`, `bd dolt pull --strategy`, or `bd conflicts resolve` from here.
 
-### 6. Bring the environment level
+### 7. Bring the environment level
 
 Run the declared `start`, always: it is idempotent and cheap when everything is up, and `update`
 may assume it ran.
@@ -171,20 +192,20 @@ Then run the declared `update` when the stamp does not match `HEAD`, or when the
 it regardless. A stamp that matches is the skip: say the environment was already current at
 `<short hash>` and do not run `update`.
 
-Run both from the primary checkout's root, as declared, through the shell. Show the output as it
+Run each as `cd <primary> && <command>`, as declared, through the shell. Show the output as it
 arrives when it is short; summarize it when it is long, and keep the last twenty lines of stderr
-for step 7.
+for step 8.
 
-### 7. Say what happened
+### 8. Say what happened
 
 A clean exit from both: write the stamp.
 
 ```bash
-git rev-parse HEAD > .codefall/refresh.stamp
+git -C <primary> rev-parse HEAD > <primary>/.codefall/refresh.stamp
 ```
 
-Then confirm the stamp is ignored — `git check-ignore -q .codefall/refresh.stamp` — and, when it
-is not, say so and name `codefall upgrade` as the fix. Never add the entry from here.
+Then confirm the stamp is ignored — `git -C <primary> check-ignore -q .codefall/refresh.stamp` —
+and, when it is not, say so and name `codefall upgrade` as the fix. Never add the entry from here.
 
 A non-zero exit: read `reference/failures.md`, match the stderr, and say three things — what
 failed, what it means, and what to do — in one short paragraph a teammate who does not read
@@ -195,31 +216,44 @@ that is done". A failure that is the script's — a command not found, a wrong p
 
 No stamp is written after a failure.
 
-### 8. Report
+### 9. Remove the worktree the session is in
+
+Only when step 3 left the session inside a worktree whose branch is merged and which has no
+uncommitted changes. This is the last command of the run, since every command after it would run
+in a directory that is gone:
+
+```bash
+git -C <primary> worktree remove <path> && git -C <primary> branch -D <branch>
+```
+
+### 10. Report
 
 One block, short:
 
-- Where the user is now: the primary checkout's path, on the default branch at `<short>`, and
-  whether it moved from a branch, from `<short>`, or was not pulled and why.
-- What was left behind: each branch and worktree from step 4, removed with its old tip or kept and
-  why, and a merged branch still on the remote.
+- Where the user is now: `<primary>`, on the default branch at `<short>`, and whether it moved
+  from a branch, from `<short>`, or was not pulled and why.
+- What was left behind: each branch and worktree from steps 3, 5, and 9, removed with its old tip
+  or kept and why, and a merged branch still on the remote.
 - The beads: synced, no remote, skipped because beads is blocked, or halted and why.
 - The environment: `start` ran; `update` ran or was skipped as current.
 - The stamp: written at `<short>`, or not, and why.
 - **Last, what the user does next**: nothing, or the commit or stash a stop asked for, the
-  `codefall upgrade` for `.gitignore`, the `/codefall-equip` for a broken script. When the run
-  started in a worktree and the harness does not keep a directory between commands, the next step
-  is to open the next session in the primary checkout.
+  `codefall upgrade` for `.gitignore`, the `/codefall-equip` for a broken script. When the session
+  is still in a worktree directory, removed or not, the next step is to open the next session in
+  `<primary>`.
 
 ## Rules
 
 - **Every run ends on the default branch in the primary checkout**, or stops before anything
   moves and says why.
 - **Uncommitted work in the primary checkout stops the run.** Never stashes, never commits.
+- **Every command names the primary checkout**, with `git -C` or `cd <primary> &&` in the same
+  command. A `cd` on its own is never relied on.
 - **Moves the checkout with `git switch` and `git pull --ff-only` only.** Never merges, never
   rebases, never resets.
 - **Deletes a local branch or removes a worktree only when it is merged**, only the one the run
-  left, and never with `--force`. Never deletes a remote branch.
+  left, and never with `--force`. `discard_changes` goes to `ExitWorktree` only after the merged
+  test and the user's yes. Never deletes a remote branch.
 - **Syncs the beads with `bd sync` and never settles what it halts on.** No force push, no
   strategy flag, no remote wired from here.
 - **Never drafts, edits, or declares a script.** A project with nothing declared is sent to
