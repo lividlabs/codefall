@@ -86,13 +86,17 @@ a `design` discovery in step 3 and carry on.
   goes in your result's `discovered` list with `kind` `code`, not in your diff.
 - Where the design's text and the code disagree, or the spec's, and you can still finish the task,
   amend the document in this branch when its Status is `Draft` or `Ready` and the fix is text that
-  moves no work — no Task Plan row, no criterion your acceptance cites retired or reworded. A spec
-  is amended by appending the next `AC` number under its requirement; every document between the
-  change and your task that restates the point is amended together, or none is. Each amendment goes
-  in your result's `amended` list and in the PR body. A disagreement whose fix would move work, or
-  whose document is frozen — an `Active` vision, any ADR — goes in `discovered` with `kind`
-  `design` instead: what the document says, what you found with file and line, and what you did
-  about it. The root files that against the design, and `codefall-design` reads it.
+  moves no work — no Task Plan row, no criterion your acceptance cites retired or reworded. Text a
+  later task will read is still text, so amend it: work moves only when a row or a cited criterion
+  changes. A spec is amended by appending the next `AC` number under its requirement. Amend every
+  document between the change and your task that restates the point; when one of them fails these
+  tests, amend none, and name each document in the `design` discovery so the whole chain reaches
+  `codefall-design` together. Each amendment goes in your result's `amended` list and in the PR
+  body. A disagreement whose fix would move work, or whose document is frozen — an `Active` vision,
+  any ADR — goes in `discovered` with `kind` `design` instead: what the document says, what you
+  found with file and line, what you did about it, and in `blocks` the one thing that stopped you
+  amending — the Task Plan row, the cited criterion, or the frozen document. The root checks
+  `blocks` against the design before filing; an item that names none is sent back to you to amend.
 
 ## 4. Verify
 
@@ -140,14 +144,16 @@ Your final message is exactly one JSON object, no prose around it:
 ```json
 {"bead": "{{BEAD_ID}}", "status": "success", "pr": <number>, "branch": "{{BRANCH}}",
  "discovered": [{"kind": "code", "title": "…", "context": "…", "from": "{{BEAD_ID}}"},
-                {"kind": "design", "title": "…", "context": "…", "from": "{{BEAD_ID}}"}],
+                {"kind": "design", "title": "…", "context": "…", "from": "{{BEAD_ID}}",
+                 "blocks": "Task Plan row T4"}],
  "amended": [{"document": "docs/specs/SPEC-003-trip-export.md", "section": "REQ-01",
               "summary": "appended AC-05: the declined-card path"}]}
 ```
 
 `kind` is `code` for work in the code and `design` for a place a document is wrong that you could
-not amend; `amended` lists each document you did amend, by path, section, and one line. Either is
-an empty list when there is nothing.
+not amend, with `blocks` naming the row, cited criterion, or frozen document that stopped you;
+`amended` lists each document you did amend, by path, section, and one line. Either list is empty
+when there is nothing.
 
 On failure: `{"bead": "{{BEAD_ID}}", "status": "failure", "reason": "…"}` — with a reason concrete
 enough that a fresh worker could start from it.

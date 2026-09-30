@@ -51,7 +51,9 @@ bead cites retired or reworded; a spec is amended by appending), and the user ta
 confirmation the verb already holds. Every document between the change and the step is amended
 together, or none is. What fails those tests is filed as a bead labelled `design-revision` with the
 design's path as its `spec_id`; `design` lists those at its start, and its Revise mode closes each
-one: amended into the document, turned into a task row, or rejected with why.
+one: amended into the document, turned into a task row, or rejected with why. An amendment
+`implement` or `review` makes is also recorded as a closed bead labelled `design-amended`, with the
+same `spec_id`, so which documents were wrong, and where, can be listed later.
 [ADR-008](https://github.com/lividlabs/codefall-cli/blob/main/docs/adrs/ADR-008-upstream-amendments.md)
 records the rule.
 

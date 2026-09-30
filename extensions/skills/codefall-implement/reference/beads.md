@@ -95,10 +95,11 @@ bd dolt push
 **`design`** — the design's text and the code the task needed disagree, or the design and the spec
 disagree, the task could still be finished, and the worker could not amend the document itself:
 the fix would move a Task Plan row or a criterion a bead cites, or the document is frozen. Text the
-worker could amend was amended in its branch instead, under *Amendments* below. A revision request
-against the document: the same edge, plus the design's path as `--spec-id` and the label
-`design-revision`. `codefall-design` lists exactly those two markers at its start, and its Revise
-mode closes every one.
+worker could amend was amended in its branch instead, under *Amendments* below, and the root checks
+each item's `blocks` before filing it, per *Results* in the workers reference beside this file; an
+item that fails the check goes back to its worker, not into a bead. A revision request against the document: the same edge, plus the
+design's path as `--spec-id` and the label `design-revision`. `codefall-design` lists exactly those
+two markers at its start, and its Revise mode closes every one.
 
 ```bash
 bd create "DESIGN-007 § Architecture names a StageStore the code replaced with StageContext" \
@@ -138,9 +139,26 @@ boundary, before the next wave is claimed:
   `git show origin/<branch>:<path>`, never from the primary checkout, which does not carry it.
 - **The close reason** names the amendment beside what was verified, so the bead's record says the
   document moved with the work.
+- **Every amendment is recorded as a closed bead.** One per `amended` entry, labelled
+  `design-amended`, with `--spec-id` the document's path and the same `discovered-from` edge a
+  revision bead carries; the body says what the document said and what the code needed, and the
+  close reason names the branch and commit that carry the amendment. It adds no work to the graph
+  and `codefall-design` never lists it; it exists so `bd list -l design-amended --spec <path>`
+  answers which documents were wrong, where, and how often.
 
-Amendments are reported at close-out by document and PR, in their own bucket beside the discovered
-work. Under single-bead scope the same reading happens once, at the worker's return.
+```bash
+bd create "DESIGN-007 § Architecture: StageStore renamed to StageContext" \
+  --id "$(bd config get issue_prefix)-design-007-stagecontext-amended" \
+  --deps discovered-from:<bead> --spec-id docs/designs/DESIGN-007-stage-context.md \
+  -l design-amended
+bd close "$(bd config get issue_prefix)-design-007-stagecontext-amended" \
+  -r "amended on feat/booking-DESIGN-007-T2-wire-context @ <sha>: § Architecture now names StageContext"
+bd dolt push
+```
+
+Amendments are reported at close-out by document and PR, each with its `design-amended` bead, in
+their own bucket beside the discovered work. Under single-bead scope the same reading happens once,
+at the worker's return.
 
 ## Session end
 

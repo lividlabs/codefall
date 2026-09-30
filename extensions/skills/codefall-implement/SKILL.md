@@ -277,8 +277,9 @@ When the user overrules the classifier the same way twice, offer to record the p
 Per `reference/workers.md`. Per wave: render worker prompts, launch the batch, wait for results.
 Verify each success — branch on the remote, PR exists, or it did not happen. A failed bead is
 consulted on and retried once; a second failure is consulted on and escalates, per
-`reference/workers.md`. File discovered work, in the form
-its `kind` names, and read each `amended` list per `reference/beads.md`. Comment the PR link, close
+`reference/workers.md`. Check each `design` discovery per `reference/workers.md`, sending back
+what the worker could have amended; file the rest in the form its `kind` names, and read each
+`amended` list, recording every entry as a closed `design-amended` bead, per `reference/beads.md`. Comment the PR link, close
 the bead with what was verified, gate the landed bead with the new PR (stacked runs), `bd dolt push`. `--suggest-next` names the next wave; claim it and
 go again. Epic branch: merge each worker PR into the epic branch, serialized, at the wave boundary.
 Update the mirror per `reference/mirror.md`.
@@ -298,7 +299,8 @@ Do not merge, and do not wait for merges; the next session's `bd gate check` fin
 
 - Every bead built, with PR, branch, and what its close reason verified.
 - The merge order, bottom-up per stack, and what is blocked on the user.
-- Upstream amendments, by document and PR; then discovered work filed, in two buckets: code
+- Upstream amendments, by document and PR, each with its `design-amended` bead, and every
+  `design` item sent back to its worker; then discovered work filed, in two buckets: code
   follow-ups, and what was handed back to design — "DESIGN-NNN has N revision beads" — with the
   `bd comment` on the epic that names them.
 - Every consult: the bead, who answered, what it changed.

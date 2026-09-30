@@ -149,8 +149,9 @@ mirror, and neither otherwise.
 bead is done per `../codefall-implement/reference/done.md`. A failure is consulted on and retried
 once, per `workers.md`; a second one goes to the user.
 
-Comment the pull request link on the bead, close it with what was verified, file any discovered work
-as `discovered-from` beads, and `bd dolt push`.
+Comment the pull request link on the bead, close it with what was verified, check any `design`
+discovery and record any amendment per `../codefall-implement/reference/workers.md`, file the
+discovered work as `discovered-from` beads, and `bd dolt push`.
 
 ### 7. Report and stop
 
