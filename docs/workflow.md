@@ -54,11 +54,12 @@ reports what it found, offers, and applies only what the user takes. In order:
 | `design` | the spec, the vision, the code; the project's consult agents for a technical point it cannot settle | `docs/designs/DESIGN-NNN-slug.md`, the *how*, scaled to the change; ADRs for hard-to-reverse choices; beads with dependency edges, each carrying its acceptance criteria and, where the task is verified through the wired product, the test case and its criteria; or, with decisions the person could not settle, a `Draft` carrying them for an engineer's run | `implement`; `design` again, for a `Draft` with decisions needed |
 | `implement` | ready beads, an epic, or a design; the project's consult agents when a worker fails | a worktree per task, the test case before the code, verification against the bead's criteria and the project's checks, a pull request per task, walked in parallel waves until the frontier is empty | the human, who merges; `design`, for a disagreement that moves work, filed as a revision bead |
 | `review` | anything live: uncommitted work, a branch, a PR, a commit range, a path, a document; the project's consult agents for what the reviewer could not settle | `.codefall/reviews/`, a JSON and Markdown pair per review; fixes on the target's branch for the findings the user takes | the human; `design`, for a deferred finding that moves work |
-| `test` | what the project declares: suites, the changed subset, or one case in its `spec` or `agentic` modality | `.codefall/tests/`, a report per run; findings triaged, never an edit that makes a run pass | `report`, for a real bug the user wants filed |
+| `test` | what the project declares: suites, the changed subset, or one case in its `spec` or `agentic` modality | `.codefall/tests/`, a report per run; findings triaged, never an edit that makes a run pass | a tracker issue on the user's word, then `fix` or `design` on it; `report`, when the user wants a bug document |
 
 A contained fix skips the documents: `design` writes beads only when a change stays inside one
-component and comes to a task or two, and `specify` is for features, not every change. A bug starts
-at `report` instead of `specify`, and `design` finds its cause before it chooses a tier. `fix` runs
+component and comes to a task or two, and `specify` is for features, not every change. A bug a
+person saw starts at `report` instead of `specify`; a bug a test run found starts as the issue `test`
+files on the user's word. Either way `design` finds its cause before it chooses a tier. `fix` runs
 the two steps for one such change in a single run: `design` at tier 0 for one bead, then `implement`
 on it, behind one confirmation, stopping to name `design` when the work needs a document, an ADR, or
 a second bead. It takes a bead, a bug report, an issue, or a description.

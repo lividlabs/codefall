@@ -40,8 +40,20 @@ in a line, and the occurrence count where the class carries one.
 
 **A finding becomes a tracker issue only on the user's explicit word.** Search for an existing issue
 first, and offer to comment on it rather than opening a second. Present the candidates as a list and
-wait; nothing is filed because a run found it. A real bug the user wants filed is filed through
-`/codefall-report` with the run report's path, so the issue and the bug report are one record.
+wait; nothing is filed because a run found it.
+
+```bash
+gh issue list --search "<keywords>" --state all --json number,title,state,url,labels --limit 10
+```
+
+**On yes, file it in this session.** A new issue carries the `bug` label and a body written from the
+run: the case and variant, the criterion that failed with its verdict, the evidence as paths under
+`<root>/.artifacts/`, and the run report's path. A comment on an existing issue carries the same.
+Record the number in the run record's `issue` field and in the Markdown report's Triage section.
+
+**A bug document is the user's to ask for.** `/codefall-report <run report path>` writes
+`docs/bugs/BUG-NNN-slug.md` with acceptance criteria and adopts the issue this run filed rather than
+opening a second; it interviews the person running it, so it is never run from here.
 
 ## What triage never does
 
