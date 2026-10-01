@@ -1711,6 +1711,23 @@ Decided at scaffold, 2026-08-16.
   row in the failures reference. A worktree shares the primary checkout's Beads database, so
   `bd sync` does the same thing from either place.
 
+- **Test files its own issues again; report is for a human reporter, 2026-09-30.** Before the bug
+  verb landed (**A bug gets its own verb and document**, above), `test` filed a tracker issue in its
+  own session on the user's word, searching first and commenting on a match rather than opening a
+  second; the one defect was step 7 sending the user to `implement`, which cannot make a bead from a
+  description. That change fixed the pointer but also rerouted the filing itself through `report`,
+  which is user-only and interviews the person who saw the bug. For a bug an agent found during a
+  run there is no such person, and the test session cannot invoke `report`, so the chain stopped at
+  the first real bug, the session offered a handoff it could not perform, and the run record's
+  `issue` field and the dedupe rule became dead text. Test's in-session filing is restored, with the
+  `bug` label and the duplicate search `report`'s tracker profile uses, so a later `report` run
+  adopts the issue instead of opening a second. Step 7 now sends a filed issue to `fix` or `design`,
+  both of which take one. `report` is unchanged: it is the entry for a bug a person saw, and the
+  optional path to a bug document for one a run found. Seen and not taken: making `report`
+  model-invocable with a mode that skips the interview (its description would sit in every
+  session's listing under ADR-004.2, and the interview is the verb); and `test` writing
+  `docs/bugs/` itself (two writers for one document kind).
+
 ## Open
 
 - (nothing open; the last item graduated to ADR-012 on 2026-09-27)
