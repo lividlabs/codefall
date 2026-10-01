@@ -6,6 +6,18 @@ below were written by hand, before that was wired up.
 Tags are bare version numbers (`0.1.2`), not `v`-prefixed, so they match the `ref` the marketplace
 pins. A `v0.1.1` tag also exists from before that convention was settled.
 
+## [0.27.0](https://github.com/lividlabs/codefall/compare/v0.26.0...v0.27.0) (2026-10-01)
+
+
+### Features
+
+* **skills:** the chart is epic, round, and bar, and the epic's notes are the delivery's log ([#170](https://github.com/lividlabs/codefall/issues/170)) ([7c03898](https://github.com/lividlabs/codefall/commit/7c0389826e8dd383e8eacb8b9fb20e48b6cf4004))
+
+
+### Bug Fixes
+
+* **cli:** upgrade points a former $schema URL at the current one ([#168](https://github.com/lividlabs/codefall/issues/168)) ([9a870f8](https://github.com/lividlabs/codefall/commit/9a870f8cc697c535391d66fd86f5024c979e4a8a))
+
 ## [0.26.0](https://github.com/lividlabs/codefall/compare/v0.25.0...v0.26.0) (2026-10-01)
 
 
