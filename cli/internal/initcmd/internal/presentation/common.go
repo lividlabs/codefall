@@ -20,10 +20,10 @@ import (
 	"github.com/samber/mo"
 	"github.com/spf13/cobra"
 
-	"github.com/lividlabs/codefall-cli/cli/internal/initcmd/internal/application"
-	"github.com/lividlabs/codefall-cli/cli/internal/initcmd/internal/domain"
-	"github.com/lividlabs/codefall-cli/cli/internal/shared/harness"
-	"github.com/lividlabs/codefall-cli/cli/internal/shared/ui"
+	"github.com/lividlabs/codefall/cli/internal/initcmd/internal/application"
+	"github.com/lividlabs/codefall/cli/internal/initcmd/internal/domain"
+	"github.com/lividlabs/codefall/cli/internal/shared/harness"
+	"github.com/lividlabs/codefall/cli/internal/shared/ui"
 )
 
 // InitializeUseCase is what both commands need from the application layer, declared by their

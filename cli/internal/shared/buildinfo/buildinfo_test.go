@@ -16,7 +16,7 @@ const hash = "9bc737c41c85fb5a352b7685085d7acc7dac8e73"
 // checkout is the build information the go command records for a binary built from a checkout.
 func checkout(recorded string, modified bool) *debug.BuildInfo {
 	return &debug.BuildInfo{
-		Main: debug.Module{Path: "github.com/lividlabs/codefall-cli", Version: recorded},
+		Main: debug.Module{Path: "github.com/lividlabs/codefall", Version: recorded},
 		Settings: []debug.BuildSetting{
 			{Key: "vcs.revision", Value: hash},
 			{Key: "vcs.modified", Value: strconv.FormatBool(modified)},

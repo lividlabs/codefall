@@ -5,8 +5,8 @@ import (
 
 	"github.com/samber/mo"
 
-	"github.com/lividlabs/codefall-cli/cli/internal/initcmd/internal/application"
-	"github.com/lividlabs/codefall-cli/cli/internal/shared/process"
+	"github.com/lividlabs/codefall/cli/internal/initcmd/internal/application"
+	"github.com/lividlabs/codefall/cli/internal/shared/process"
 )
 
 // ExecCommandRunner runs external tools as child processes, through the shared process module. What

@@ -9,7 +9,7 @@ import (
 
 	"github.com/samber/mo"
 
-	"github.com/lividlabs/codefall-cli/cli/internal/shared/manifest"
+	"github.com/lividlabs/codefall/cli/internal/shared/manifest"
 )
 
 // fetchSkills copies the skills into one skills directory, minus the maintainer documents a project

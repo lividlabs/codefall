@@ -5,8 +5,8 @@ import (
 	"slices"
 	"testing"
 
-	"github.com/lividlabs/codefall-cli/cli/internal/initcmd/internal/domain"
-	"github.com/lividlabs/codefall-cli/cli/internal/shared/harness"
+	"github.com/lividlabs/codefall/cli/internal/initcmd/internal/domain"
+	"github.com/lividlabs/codefall/cli/internal/shared/harness"
 )
 
 // upgrading is a settled project with a finished run on record: the manifest, and every file it

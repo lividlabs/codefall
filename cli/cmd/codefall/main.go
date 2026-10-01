@@ -17,11 +17,11 @@ import (
 	"github.com/samber/do/v2"
 	"github.com/spf13/cobra"
 
-	"github.com/lividlabs/codefall-cli/cli/internal/config"
-	"github.com/lividlabs/codefall-cli/cli/internal/create"
-	"github.com/lividlabs/codefall-cli/cli/internal/doctor"
-	"github.com/lividlabs/codefall-cli/cli/internal/initcmd"
-	"github.com/lividlabs/codefall-cli/cli/internal/shared/buildinfo"
+	"github.com/lividlabs/codefall/cli/internal/config"
+	"github.com/lividlabs/codefall/cli/internal/create"
+	"github.com/lividlabs/codefall/cli/internal/doctor"
+	"github.com/lividlabs/codefall/cli/internal/initcmd"
+	"github.com/lividlabs/codefall/cli/internal/shared/buildinfo"
 )
 
 func main() {

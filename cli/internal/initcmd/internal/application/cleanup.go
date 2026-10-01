@@ -6,8 +6,8 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/lividlabs/codefall-cli/cli/internal/initcmd/internal/domain"
-	"github.com/lividlabs/codefall-cli/cli/internal/shared/manifest"
+	"github.com/lividlabs/codefall/cli/internal/initcmd/internal/domain"
+	"github.com/lividlabs/codefall/cli/internal/shared/manifest"
 )
 
 // cleanup is the step an upgrade runs after the extension step: it removes what the previous finished

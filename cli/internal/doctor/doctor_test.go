@@ -5,7 +5,7 @@ import (
 
 	"github.com/samber/do/v2"
 
-	"github.com/lividlabs/codefall-cli/cli/internal/doctor"
+	"github.com/lividlabs/codefall/cli/internal/doctor"
 )
 
 // A provider whose static return type is the concrete type compiles and then fails at runtime with

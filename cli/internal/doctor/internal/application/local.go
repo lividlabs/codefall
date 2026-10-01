@@ -10,8 +10,8 @@ import (
 
 	"github.com/samber/mo"
 
-	"github.com/lividlabs/codefall-cli/cli/internal/doctor/internal/domain"
-	"github.com/lividlabs/codefall-cli/cli/internal/shared/settings"
+	"github.com/lividlabs/codefall/cli/internal/doctor/internal/domain"
+	"github.com/lividlabs/codefall/cli/internal/shared/settings"
 )
 
 // equipRemedy is what to do about a project whose local commands are not declared: the verb that

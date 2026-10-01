@@ -6,7 +6,7 @@ import (
 
 	"github.com/samber/mo"
 
-	"github.com/lividlabs/codefall-cli/cli/internal/shared/settings"
+	"github.com/lividlabs/codefall/cli/internal/shared/settings"
 )
 
 // ghCommand is how the GitHub CLI is invoked. It is not a required tool: a run that cannot ask it

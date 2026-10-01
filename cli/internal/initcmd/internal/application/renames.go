@@ -12,9 +12,9 @@ import (
 
 	"github.com/samber/mo"
 
-	"github.com/lividlabs/codefall-cli/cli/internal/shared/harness"
-	"github.com/lividlabs/codefall-cli/cli/internal/shared/manifest"
-	"github.com/lividlabs/codefall-cli/cli/internal/shared/settings"
+	"github.com/lividlabs/codefall/cli/internal/shared/harness"
+	"github.com/lividlabs/codefall/cli/internal/shared/manifest"
+	"github.com/lividlabs/codefall/cli/internal/shared/settings"
 )
 
 // FormerHarnessNames reports the spellings .codefall/settings.json and .codefall/manifest.json still

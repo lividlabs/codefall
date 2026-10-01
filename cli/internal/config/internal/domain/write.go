@@ -7,7 +7,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/lividlabs/codefall-cli/cli/internal/shared/settings"
+	"github.com/lividlabs/codefall/cli/internal/shared/settings"
 )
 
 // Write is what one write did to one file, and the sentence that says so. A write that found the file

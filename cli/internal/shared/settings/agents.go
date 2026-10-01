@@ -7,7 +7,7 @@ import (
 
 	"github.com/samber/mo"
 
-	"github.com/lividlabs/codefall-cli/cli/internal/shared/harness"
+	"github.com/lividlabs/codefall/cli/internal/shared/harness"
 )
 
 // The agents a project reaches for when a verb needs another reader: a reviewer, or a second

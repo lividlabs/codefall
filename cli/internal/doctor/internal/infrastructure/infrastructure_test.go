@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/lividlabs/codefall-cli/cli/internal/doctor/internal/application"
+	"github.com/lividlabs/codefall/cli/internal/doctor/internal/application"
 )
 
 var (

@@ -11,9 +11,9 @@ import (
 	"charm.land/huh/v2"
 	"github.com/spf13/cobra"
 
-	"github.com/lividlabs/codefall-cli/cli/internal/initcmd/internal/application"
-	"github.com/lividlabs/codefall-cli/cli/internal/shared/buildinfo"
-	"github.com/lividlabs/codefall-cli/cli/internal/shared/ui"
+	"github.com/lividlabs/codefall/cli/internal/initcmd/internal/application"
+	"github.com/lividlabs/codefall/cli/internal/shared/buildinfo"
+	"github.com/lividlabs/codefall/cli/internal/shared/ui"
 )
 
 // NewUpgradeCommand builds `codefall upgrade`, every run after the first: it brings a project's

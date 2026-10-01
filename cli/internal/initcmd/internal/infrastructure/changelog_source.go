@@ -6,7 +6,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/lividlabs/codefall-cli/cli/internal/initcmd/internal/application"
+	"github.com/lividlabs/codefall/cli/internal/initcmd/internal/application"
 )
 
 // ChangeLogSource reads the breaking changes out of the changelog release-please writes. It parses

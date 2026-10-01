@@ -5,7 +5,7 @@
 package infrastructure
 
 import (
-	"github.com/lividlabs/codefall-cli/cli/internal/shared/process"
+	"github.com/lividlabs/codefall/cli/internal/shared/process"
 )
 
 // OSFileSystem reads and writes the disk through the operating system.

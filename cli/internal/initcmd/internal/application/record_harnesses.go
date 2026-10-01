@@ -7,7 +7,7 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/lividlabs/codefall-cli/cli/internal/shared/settings"
+	"github.com/lividlabs/codefall/cli/internal/shared/settings"
 )
 
 // recordHarnesses adds to .codefall/settings.json's harnesses list every name in wanted that it does

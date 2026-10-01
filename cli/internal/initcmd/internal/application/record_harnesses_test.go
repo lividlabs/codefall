@@ -4,8 +4,8 @@ import (
 	"slices"
 	"testing"
 
-	"github.com/lividlabs/codefall-cli/cli/internal/initcmd/internal/domain"
-	"github.com/lividlabs/codefall-cli/cli/internal/shared/harness"
+	"github.com/lividlabs/codefall/cli/internal/initcmd/internal/domain"
+	"github.com/lividlabs/codefall/cli/internal/shared/harness"
 )
 
 // The list is spliced in the layout the file already uses, and nothing else in the file moves: not

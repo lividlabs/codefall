@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/lividlabs/codefall-cli/cli/internal/shared/text"
+	"github.com/lividlabs/codefall/cli/internal/shared/text"
 )
 
 // gitCommand is how git is invoked. Init never asks git to change anything: it asks it two questions

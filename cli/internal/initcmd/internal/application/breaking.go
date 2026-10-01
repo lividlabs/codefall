@@ -5,7 +5,7 @@ import (
 
 	"github.com/samber/mo"
 
-	"github.com/lividlabs/codefall-cli/cli/internal/shared/version"
+	"github.com/lividlabs/codefall/cli/internal/shared/version"
 )
 
 // BreakingChanges reports the breaking changes a project upgrading from what its manifest records to

@@ -10,7 +10,7 @@ import (
 
 	"github.com/samber/mo"
 
-	"github.com/lividlabs/codefall-cli/cli/internal/create/internal/domain"
+	"github.com/lividlabs/codefall/cli/internal/create/internal/domain"
 )
 
 const projectDir = "/work/app"

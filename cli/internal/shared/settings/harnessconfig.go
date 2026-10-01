@@ -9,7 +9,7 @@ import (
 
 	"github.com/samber/mo"
 
-	"github.com/lividlabs/codefall-cli/cli/internal/shared/harness"
+	"github.com/lividlabs/codefall/cli/internal/shared/harness"
 )
 
 // How each harness is called when an agent runs on it. A harness name with no block runs bare, as

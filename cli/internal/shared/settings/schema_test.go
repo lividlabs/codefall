@@ -9,7 +9,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/lividlabs/codefall-cli/cli/internal/shared/harness"
+	"github.com/lividlabs/codefall/cli/internal/shared/harness"
 )
 
 // schemas/settings.schema.json is the published definition of .codefall/settings.json; this package
