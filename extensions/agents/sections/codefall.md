@@ -7,7 +7,8 @@ are invoked deliberately by a user; `design`, `implement`, `test`, `review`, and
 be run by an agent, so a session can carry a design through implementation, review, and test without
 a person typing each verb. They chain from an idea to open pull requests — `envision` → `specify` →
 `mock-up` → `design` → `implement` → `review` → `test` — and each leaves something the next one
-reads. A bug enters at `report`, and `design` takes its report as it takes a spec; `fix` runs
+reads. A bug a person saw enters at `report`, and `design` takes its report as it takes a spec; a
+bug `test` found enters as the issue it files on the user's word; `fix` runs
 `design` at tier 0 and `implement` on one bead in a single run. Beside the chain, `scaffold` starts
 a project, `upgrade` brings its install and documents current, and `equip` and `refresh` keep the
 local environment level with the checkout. A human performs every merge to `main`. Documents in the
