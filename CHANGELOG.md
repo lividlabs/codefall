@@ -6,6 +6,21 @@ below were written by hand, before that was wired up.
 Tags are bare version numbers (`0.1.2`), not `v`-prefixed, so they match the `ref` the marketplace
 pins. A `v0.1.1` tag also exists from before that convention was settled.
 
+## [0.25.0](https://github.com/lividlabs/codefall-cli/compare/v0.24.0...v0.25.0) (2026-10-01)
+
+
+### Features
+
+* **skills:** findings return to the epic as children, and a delivery ends when the graph is empty ([#165](https://github.com/lividlabs/codefall-cli/issues/165)) ([73f3ada](https://github.com/lividlabs/codefall-cli/commit/73f3adae5ef5931fd5b3d3bbaa733a74a77cede5))
+* **skills:** refresh ends on the default branch, wherever it starts ([#160](https://github.com/lividlabs/codefall-cli/issues/160)) ([6d52d8b](https://github.com/lividlabs/codefall-cli/commit/6d52d8bd08d181ec6de276a71abfce9ca73187ee))
+* **skills:** the root checks design discoveries, and every amendment leaves a closed bead ([#163](https://github.com/lividlabs/codefall-cli/issues/163)) ([7ec0e63](https://github.com/lividlabs/codefall-cli/commit/7ec0e6358c9a0b0a8519f939bbdc0bfb77354061))
+
+
+### Bug Fixes
+
+* **skills:** refresh works from any worktree, and test offers it on main only ([#162](https://github.com/lividlabs/codefall-cli/issues/162)) ([00fa999](https://github.com/lividlabs/codefall-cli/commit/00fa999b37f076a2a1d932ad941f620396986162))
+* **skills:** test files its own issues again, and report is for a human reporter ([#164](https://github.com/lividlabs/codefall-cli/issues/164)) ([0a02790](https://github.com/lividlabs/codefall-cli/commit/0a02790b6236ef557a75ce7337351d95ac167039))
+
 ## [0.24.0](https://github.com/lividlabs/codefall-cli/compare/v0.23.0...v0.24.0) (2026-09-29)
 
 
