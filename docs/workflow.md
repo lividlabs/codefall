@@ -124,8 +124,9 @@ Four verbs sit beside the chain rather than in it:
 - **`codefall upgrade`** prints the breaking changes recorded between the installed version and the
   binary's and asks to continue, then reinstalls the skills, shared files, and hooks for the harnesses
   the settings record, replaces its own marked sections and registrations, rewrites a harness name
-  still spelled the old way, removes what the previous install wrote that this one does not ship, and
-  touches nothing else. `codefall init` runs once and refuses a project that has a manifest, naming
+  still spelled the old way, points a `$schema` URL an earlier release wrote at the current one,
+  removes what the previous install wrote that this one does not ship, and touches nothing else.
+  `codefall init` runs once and refuses a project that has a manifest, naming
   `upgrade`
   ([ADR-010](https://github.com/lividlabs/codefall/blob/main/docs/adrs/ADR-010-upgrade.md)).
 

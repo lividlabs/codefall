@@ -77,8 +77,8 @@ codefall init
 
 Running the `upgrade` command brings an installed project level with the binary: it reinstalls the
 skills, shared files, and hooks for the harnesses the settings record, replaces the sections codefall
-wrote into `AGENTS.md`, rewrites a harness name still spelled the old way, and records the run in the
-manifest. It changes nothing it did not write, and asks before moving the installed version unless
+wrote into `AGENTS.md`, rewrites a harness name still spelled the old way, points a `$schema` URL an
+earlier release wrote at the current one, and records the run in the manifest. It changes nothing it did not write, and asks before moving the installed version unless
 `--yes` answers. It reinstalls the extension on every run, the binary's own version included, so a
 skill, shared file, ignore entry, `AGENTS.md` section, hook registration, or testing file that has
 gone missing or been edited is put back and reported, and it says "already up to date" only when
