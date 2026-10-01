@@ -27,7 +27,8 @@ func NewUpgradeCommand(initialize InitializeUseCase) *cobra.Command {
 		Short: "Bring this project's codefall install up to date",
 		Long: "Reinstalls the codefall extension, its shared files, and its hooks for the harnesses " +
 			".codefall/settings.json records, replaces the sections codefall wrote into AGENTS.md, " +
-			"rewrites a harness name the settings or the manifest still spell the old way, and records " +
+			"rewrites a harness name the settings or the manifest still spell the old way, points a " +
+			"$schema URL an earlier release wrote at the current one, and records " +
 			"the run in .codefall/manifest.json, removing what the previous install wrote that this " +
 			"one does not ship. Before it changes anything it prints the breaking changes recorded " +
 			"between the installed version and this one and asks to continue. Every run reinstalls " +

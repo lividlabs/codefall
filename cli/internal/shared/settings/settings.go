@@ -37,7 +37,10 @@ const (
 	TrackerGitHub = "github"
 	RepoPattern   = `^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$`
 	SchemaID      = "https://raw.githubusercontent.com/lividlabs/codefall/main/cli/schemas/settings.schema.json"
-	BlockReview   = "review"
+	// FieldSchema is the key a settings file names its schema under. It is optional: the schema is
+	// for an editor, and validation does not read it.
+	FieldSchema = "$schema"
+	BlockReview = "review"
 	// FieldPostToPullRequest is whether codefall-review may post its findings to a pull request.
 	// Optional, and absent means false: posting is visible to everyone on the pull request, so it is
 	// on only when the project said so.
@@ -76,6 +79,14 @@ const (
 	// directories itself.
 	FieldHarnesses = "harnesses"
 )
+
+// FormerSchemaIDs are the schema URLs earlier releases wrote into settings files, none of which
+// resolves now: until 0.26.0 the URL named the repository by its old name and a schemas/ directory
+// the files left when the CLI tree moved under cli/. An upgrade replaces any of them with SchemaID. A
+// URL that is not on this list is the project's own choice and stays.
+var FormerSchemaIDs = []string{
+	"https://raw.githubusercontent.com/lividlabs/codefall-cli/main/schemas/settings.schema.json",
+}
 
 // The .ignore file, which is not settings but is the other file init writes and doctor checks — so
 // it lives here for the same reason the settings format does (ADR-003).
@@ -228,7 +239,7 @@ type fieldSpec struct {
 // second check in Validate that reads the whole document: a list item's harness may be a
 // harnessConfig key, which no single field's check can see.
 var topLevelFields = []fieldSpec{
-	{"$schema", false, isString},
+	{FieldSchema, false, isString},
 	{"version", true, isVersion},
 	{"tracker", true, isTracker},
 	{FieldHarnesses, true, isHarnesses},
