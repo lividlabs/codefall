@@ -290,9 +290,12 @@ run, and say so.
    and every agent tried before it with why each was skipped or failed; every consult and what it
    changed; what was found, most severe first; what was fixed, dismissed, deferred, and the beads
    filed; what could not be checked and why; where the files are; and the branch or worktree the
-   fixes landed on if one was created. Anything decided here that no bead, file, or PR holds — a
-   dismissal's reason is already in the file — goes in a `bd comment` on the epic or the bead, and
-   the report says it is safe to `/clear`. **End with what the user does next**: on an epic's work,
+   fixes landed on if one was created. On an epic's work, one line goes on the epic's notes —
+   `round N (review) [date]: what was fixed and filed` — per *Session end* in
+   `../codefall-implement/reference/beads.md`. Anything decided here that no bead, file, or PR
+   holds — a dismissal's reason is already in the file — goes in a `bd comment` on the epic or the
+   bead, and the report says it is safe to `/clear`. **End with what the user does next**: on an
+   epic's work,
    `/codefall-implement <epic>` when children were filed, else `/codefall-test <epic>`; on another
    pull request or branch, push the fixes and merge; on uncommitted work, the findings files are
    left unstaged to commit with the work or not at all; otherwise nothing is pending. Where revision

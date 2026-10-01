@@ -37,8 +37,8 @@ Read each when its step says to; none is loaded up front.
   one. Read at step 2 when the epic already has closed children.
 - `reference/beads.md` — every `bd` command a run issues: session start, claim and close, the
   landed bead and its gates, discovered work as children of the epic, session end. Read at step 5.
-- `../../../.codefall/shared/delivery.sh <epic>` — the delivery's one-line chart. Run at the go
-  gate, at each wave boundary, and in the report.
+- `../../../.codefall/shared/delivery.sh <epic>` — the chart line. Run at the go gate, each wave
+  boundary, and the report.
 - `reference/workers.md` — launching a worker, the worktree seeding rule, chain sequencing, the
   result JSON, failure handling, and consulting. Read at step 6. Names
   `../../../.codefall/shared/running-agents.md`, `../../../.codefall/shared/run-agent.sh`,
@@ -95,8 +95,8 @@ point at `/design`.
 
 **An epic with closed children and `deferred` ones is the next round.** `codefall-review` and
 `codefall-test` file what they find as `deferred` children of the epic; a run on that epic reopens
-them, claims them, and builds them on top of the round before. The delivery is done when the chart
-shows nothing open and the last test run against the epic passed.
+them, claims them, and builds them on top of the round before. The delivery is done when every
+child but the landed bead is closed and the last test run against the epic passed.
 
 **Tier 0 is not a separate mode.**
 
@@ -163,8 +163,8 @@ beside the PR link. The one exception is the epic's `round`, set at the go gate 
 A bead is done when three things are true: **its acceptance criteria hold, the project's checks are
 green, and its PR is open.** Done is not merged. Where the commands come from, what is checked, and
 the test case a bead's criteria name are in `reference/done.md`. Done closes the task bead; the
-delivery is done only when the chart shows nothing open and `codefall-test`'s last run against the
-epic passed.
+delivery is done only when every child but the landed bead is closed and `codefall-test`'s last
+run against the epic passed.
 
 ## Merges and the mirror
 
@@ -190,9 +190,8 @@ line is touched, ever.
 
 ## Picking up an interrupted run
 
-State lives in three places — beads, git, GitHub — and a resumed session reconciles them rather
-than re-running anything. The table, and how a crashed round is told from the next one, are in
-`reference/resume.md`.
+A resumed session reconciles beads, git, and GitHub rather than re-running anything. The table,
+and how a crashed round is told from the next one, are in `reference/resume.md`.
 
 ## Project customizations and persona
 
@@ -315,14 +314,16 @@ Do not merge, and do not wait for merges; the next session's `bd gate check` fin
 - Every consult: the bead, who answered, what it changed.
 - The tracker mirror's state, the vision transition if one fired.
 - The worktree list, with the cleanup offer.
+- The epic's notes line, `round N (implement) [date]: what was built`, per *Session end* in
+  `reference/beads.md`.
 - Anything decided in this conversation that no bead, document, report, or PR holds — a strategy
   overrule, a skipped bead's reason — as a `bd comment` on the epic, then that it is safe to
   `/clear`.
 - Final `bd dolt push`.
 - **Last, what the user does next**: `/codefall-review <epic>` on the stack top or the epic
   branch, then `/codefall-test <epic>`; `/codefall-design DESIGN-NNN` where revision beads were
-  filed; and the merge, in the order above, only once the chart shows nothing open and the last
-  test run passed — otherwise `/codefall-implement <epic>` for the next round.
+  filed; and the merge, in the order above, only once every child but the landed bead is closed
+  and the last test run passed — otherwise `/codefall-implement <epic>` for the next round.
 
 ## Other modes
 

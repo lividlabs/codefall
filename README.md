@@ -539,14 +539,21 @@ the epic, so the epic cannot close until you have merged everything, and the nex
 **The delivery is done when the graph says so.** `review` and `test` run against the epic's work
 before you merge, and what they find — a deferred finding, a bug a run found — becomes a child of
 the epic on your word, so the epic stays open and the next round of `implement` picks it up. Every
-verb prints the delivery's one-line chart as it starts and as it ends:
+verb prints the delivery's one-line chart as it starts and as it ends, and appends one line to the
+epic's notes as it finishes, so `bd show <epic>` reads as the delivery's history:
 
 ```
-booking-DESIGN-007 · round 2 · 14/17 done ██████████████░░░ · 3 open · 0/9 PRs merged
+booking-DESIGN-007 · round 2 · 10/12 ██████████████░░░
+```
+
+```
+round 1 (implement) [2026-09-30]: 7 tasks built, PRs #101 #102
+round 1 (review) [2026-09-30]: 3 fixed, 2 deferred as children
+round 1 (test) [2026-09-30]: FAIL 2/7, 1 child filed
 ```
 
 Nothing open but the landed bead, and the last test run passed: that is done, and the merge order
-is what remains. [ADR-013](docs/adrs/ADR-013-deliveries.md) holds the rule.
+is what remains. [ADR-013.2](docs/adrs/ADR-013.2-deliveries.md) holds the rule.
 
 **A human performs every merge to `main`.** The run ends at open PRs and a reported bottom-up merge
 order, and the plugin ships a hook that mechanically denies the alternative. Tests are part of done

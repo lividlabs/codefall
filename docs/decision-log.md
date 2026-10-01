@@ -1752,6 +1752,18 @@ Decided at scaffold, 2026-08-16.
   lived since the CLI tree moved under `cli/`; the old URLs returned 404. Seen and not taken:
   editing ADR-BASE-02's mention of `codefall-cli` (a ratified ADR is never rewritten) and the
   module-path line above (history).
+- **The chart is epic, round, and bar; the epic's notes are the log, 2026-10-01.** Recorded as
+  `ADR-013.2`. The first chart line carried six unlabelled numbers and left two children out of its
+  count, so it disagreed with `bd show` on the same epic. It now prints the epic, the round, and
+  the children closed over all children, taken from `bd epic status --json` rather than counted by
+  hand. Each of implement, review, and test appends one line to the epic's notes at close-out —
+  `round N (verb) [date]: what happened` — so the delivery's turns are read from the bead and not
+  reconstructed from comments, reports, and gates. Metadata stays the one flat `round` key. Seen
+  and not taken: a JSON `delivery` blob in metadata (a second thing to manage, and `--set-metadata`
+  stores an object as a string); a `last` metadata key for the most recent verb (nothing reads
+  it); the PR-merged and open-count segments on the chart (the gates and `bd show` already say
+  it); and `bd show --children` for test's case lookup (its items carry no acceptance criteria,
+  so `bd list --parent` stays there).
 
 ## Open
 
