@@ -1,0 +1,3 @@
+# the bare `go build` output and state left by harnesses run inside the pane
+/vt
+.crush/
