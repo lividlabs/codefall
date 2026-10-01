@@ -14,8 +14,15 @@ downstream, as a bead — the last section.
 ## Row by row
 
 **Read the current beads first.** `bd show <prefix>-DESIGN-NNN-Tn --json` for every row, and
-`bd list --parent <prefix>-DESIGN-NNN` for anything the table no longer names. The comparison is
-against the graph itself, not against a record of what the document used to say.
+`bd list --parent <prefix>-DESIGN-NNN --all --limit 0` for anything the table no longer names. The
+comparison is against the graph itself, not against a record of what the document used to say.
+
+**Only beads named `<prefix>-DESIGN-NNN-Tn` are rows.** The epic's other children are the
+delivery's work: `<prefix>-DESIGN-NNN-MERGED`, the landed bead; the `code` discoveries, deferred
+review findings, and test-found bugs that `codefall-implement`, `codefall-review`, and
+`codefall-test` filed under the epic; closed `design-amended` records; and the revision beads the
+last section settles. List them under their own heading in the report, with the chart line from
+`../../../../.codefall/shared/delivery.sh <epic>`, and never treat one as a row the table dropped.
 
 A design that still carries a mapping line in place of a table was created before the table stayed.
 Rebuild the table from the beads — title, blockers, and design ref from each `bd show` — and rewrite
@@ -92,4 +99,7 @@ of three ways:
 
 **Every revision bead ends closed.** An open one after a revision means the loop is not finished,
 and the next run reads it again. Push after the closes, with the rest, and say per bead which way
-it went in the report.
+it went in the report. A revision bead filed during a delivery is already a child of the epic; a
+new row it becomes is a child too, as every row is, and the closed request stays where it is. This
+mode writes no round: the next round starts when `codefall-implement` claims the epic again, which
+is what the report's last line names — `/codefall-implement DESIGN-NNN`.

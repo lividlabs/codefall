@@ -32,6 +32,8 @@ directory: it names a file `codefall init` installed in the project's own `.code
 
 Read each when its step says to; none is loaded up front.
 
+- `reference/targets.md` — resolving an epic's work, several pull requests, document identifiers,
+  and a prose argument. Read at step 1 when the argument is one of those.
 - `reference/lenses.md` — what every code and document lens asks, and the notes on `docs`,
   `simplify`, `trace`, and edited ADRs. Read at the confirmation and at step 3.
 - `reference/reviewers.md` — the resolved list, `current` and this session, the `via=` forms, the
@@ -45,6 +47,8 @@ Read each when its step says to; none is loaded up front.
   the shape every reviewer returns.
 - `../../../.codefall/shared/running-agents.md` — which harness this is, resolving and walking the
   agent list, `via=`. Read at step 1. `../../../.codefall/shared/run-agent.sh` runs one agent.
+- `../../../.codefall/shared/delivery.sh <epic>` — the delivery's one-line chart. Run at the
+  confirmation and in the report when the target is an epic's work.
 
 ## Targets
 
@@ -58,20 +62,15 @@ The argument's shape decides what is being reviewed.
 | `<from>..<to>`, two commits | the work between them | `git diff <from> <to>`; both must be reachable from a live branch |
 | a path to a file or directory | that path as it stands | the files under it |
 | a codefall document identifier, or a path under `docs/` | that document | the file, plus the document upstream of it |
+| an epic ID, or `DESIGN-NNN` | the epic's work | the epic branch, or the stack's top, per `reference/targets.md` |
 | anything else — prose describing what to look at | that code | a search, confirmed with the user |
 
 **The default branch** is `git symbolic-ref --short refs/remotes/origin/HEAD` with the `origin/`
 prefix stripped, falling back to `git remote show origin` when that ref was never set locally, and
 to the current checkout's initial branch when there is no remote. Resolve it once per run.
 
-**Several pull requests** — `codefall-implement` leaves one per task. A stack, where each pull
-request is based on the one below it, is one target: the top branch, or the range from the merge-base
-of its tip with the default branch to its tip, holds every pull request's diff. Pull requests against the default branch share
-nothing and are one invocation each, in the order the implement report listed them.
-
-**Document identifiers** are the ones the other verbs define. Resolve one by globbing its directory
-and stop if it matches nothing or more than one. Never guess at a near miss, and never invent a form
-those verbs do not define.
+An epic's work, several pull requests, a document identifier, and a prose argument are each
+resolved per `reference/targets.md`.
 
 ### What is not reviewable
 
@@ -84,22 +83,6 @@ Five things are refused rather than attempted, and the refusal says which:
   either is enough, and a document where the two disagree is a `status` finding for whoever reviews
   the live one.
 - **A specific commit.** Out of scope for this verb.
-
-### A prose argument
-
-A prose argument is a scope and sometimes a narrowing. Resolve the scope by searching — the
-description names components, behaviours, or domain terms, and those map to files.
-
-**An ambiguous scope is interviewed, not guessed.** Search, show what you found, and ask what the
-search could not settle — which of two components was meant, whether the boundary includes its
-callers, whether a second subsystem matching the same terms is in or out. Search again with the
-answer.
-
-**Two rounds, then stop.** If the second round has not narrowed the set to something the user
-recognises, say so and ask for a path or a document identifier instead.
-
-Do not review until the user confirms the file list. Stop if the search finds nothing — say so and
-ask for a different description rather than widening on your own.
 
 ## The confirmation
 
@@ -118,7 +101,7 @@ Review now, or exclude any of these?
 Every lens that applies to the target runs unless the user drops it here. A prose argument that
 narrows — "review the auth code for security issues" — shows the reduced list. The confirmation also
 names the resolved agent list, or the `via=` override, and says where fixes will land when that
-would create a worktree or branch.
+would create a worktree or branch. For an epic's work it opens with the chart line.
 
 ## What gets read
 
@@ -199,6 +182,7 @@ report and the findings file.
 | A branch | That branch |
 | An open pull request | That PR's branch |
 | A commit range | The branch whose tip is `<to>`; if no branch has it, stop and ask |
+| An epic's work | The stack's top branch, or the epic branch |
 | A document or path, when something is already checked out for it | There |
 | A document or path on the default branch | A new worktree, branched from the default branch |
 
@@ -242,13 +226,15 @@ Each document fix is recorded as a closed `design-amended` bead, per *Amendments
 `../codefall-implement/reference/beads.md`, with a `discovered-from` edge to the bead the branch
 names when there is one.
 
-**What that fix cannot do is offered as a bead.** A fix that would move work — a Task Plan row, a
-criterion a bead cites — or touch a frozen document, or one the user defers, leaves
-`codefall-design` never hearing of it if it stays in the findings file alone. Offer, at triage, to
-file it in the `design` form under *Discovered work* in `../codefall-implement/reference/beads.md`:
-`--spec-id` the design's path, the label `design-revision`, and a `discovered-from` edge to the
-bead the branch names when there is one. On yes, create it, `bd dolt push`, and record its ID as
-the finding's `bead`. Never file one unasked, and never for a finding whose cause is the code.
+**What that fix cannot do, and what the user defers, is offered as a bead.** A finding left in the
+findings file alone is one no verb reads again. Offer, at triage, to file each in the form under
+*Discovered work* in `../codefall-implement/reference/beads.md`: the `design` form — `--spec-id`
+the design's path, the label `design-revision` — for a finding the design caused that a fix here
+cannot settle because it moves work, the document is frozen, or the user deferred it; the `code`
+form for a `deferred` finding whose cause is the code. Either carries a `discovered-from` edge to
+the bead the branch names when there is one, and is a `deferred` child of that bead's epic, read
+from `bd show <bead> --json`, when there is one. On yes, create it, `bd dolt push`, and record its
+ID as the finding's `bead`. Never file one unasked.
 
 ## The findings file
 
@@ -300,14 +286,18 @@ run, and say so.
    per `reference/posting.md` if that is enabled and the target is one.
 6. **Fix.** Apply what was taken, in the place [Where the fixes go](#where-the-fixes-go) names.
    Update the files.
-7. **Report.** The target, the reviewer by harness and model, and every agent tried before it with
-   why each was skipped or failed; every consult and what it changed; what was found, most severe
-   first; what was fixed, dismissed, deferred; what could not be checked and why; where the files are; and the branch or
-   worktree the fixes landed on if one was created. **End with what the user does next**: on a pull
-   request or a branch, push the fixes and merge; on uncommitted work, the findings files are left
-   unstaged to commit with the work or not at all; otherwise nothing is pending. Where revision
-   beads were filed, `/codefall-design DESIGN-NNN` comes before the merge, so the document is
-   corrected while the work that found it wrong is still in view.
+7. **Report.** The chart line for an epic's work; the target, the reviewer by harness and model,
+   and every agent tried before it with why each was skipped or failed; every consult and what it
+   changed; what was found, most severe first; what was fixed, dismissed, deferred, and the beads
+   filed; what could not be checked and why; where the files are; and the branch or worktree the
+   fixes landed on if one was created. Anything decided here that no bead, file, or PR holds — a
+   dismissal's reason is already in the file — goes in a `bd comment` on the epic or the bead, and
+   the report says it is safe to `/clear`. **End with what the user does next**: on an epic's work,
+   `/codefall-implement <epic>` when children were filed, else `/codefall-test <epic>`; on another
+   pull request or branch, push the fixes and merge; on uncommitted work, the findings files are
+   left unstaged to commit with the work or not at all; otherwise nothing is pending. Where revision
+   beads were filed, `/codefall-design DESIGN-NNN` comes first, so the document is corrected while
+   the work that found it wrong is still in view.
 
 **Three runs end early, and each ends cleanly.**
 
@@ -343,6 +333,7 @@ run, and say so.
   ADR, an archived document, a specific commit — and say which.
 - **An identifier that resolves to nothing is a stop**, not a guess.
 - **Only `fixed` and `deferred` findings reach a pull request.** A dismissed one was judged wrong.
-- **A revision bead is offered, never filed unasked**, and only for a finding the design caused
-  that a fix here cannot settle: it moves work, the document is frozen, or the user deferred it.
+- **A bead is offered, never filed unasked**: a `design-revision` bead for a finding the design
+  caused that a fix here cannot settle, a `code` bead for a deferred finding the code caused, each a
+  `deferred` child of the epic when there is one.
 - **The `.ignore` entry is offered, never added unasked**, and appended rather than written over.

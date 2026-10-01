@@ -95,8 +95,10 @@ Read the project's `AGENTS.md`, root and scoped. **Never run a remedy.**
 | Another issue, or a description | Establish what to change from the code; for a bug, `bugs.md` as well, without its offer of `/codefall-report` |
 
 A bead someone else holds is a stop: say who. A bead already closed, or with an open pull request,
-is reported, and the run stops. For anything else, `bd search` first: work already in the graph is
-that bead, not a new one.
+is reported, and the run stops. A bead whose parent epic still has open gates on `<epic>-MERGED` —
+a child of a delivery whose work has not merged — is a stop naming `/codefall-implement <epic>`:
+this verb lands on the default branch, and that work lands on the epic's stack or branch. For
+anything else, `bd search` first: work already in the graph is that bead, not a new one.
 
 **Read what binds the change**: `docs/adrs/`, and the code the change passes through, against the
 default branch as it stands. Cite file and line for the cause and for anything the bead assumed that
@@ -159,8 +161,9 @@ Do not merge, and do not wait for the merge.
 
 Report the bead and how it was established, the cause for a bug, the pull request and its branch,
 what the close verified, discovered work filed, every consult, and the worktree with the cleanup
-offer. **End with what the user does next**: review and merge the pull request, then
-`/codefall-test <area>/<slug>` when the bead named a case.
+offer. Anything decided here that no bead, PR, or document holds goes in a `bd comment` on the
+bead, and the report says it is safe to `/clear`. **End with what the user does next**: review and
+merge the pull request, then `/codefall-test <area>/<slug>` when the bead named a case.
 
 ## Rules
 

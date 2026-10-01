@@ -25,6 +25,10 @@ bd ready --mol <epic>   # the claimable frontier
 A project with no Dolt remote works identically; state is this-machine-only. Say so once; `bd dolt
 pull` failing for lack of a remote is that statement's trigger, not a stop.
 
+`bd ready` leaves `deferred` beads out, so the children a review or a test run filed for the next
+round stay off the frontier until that round's go reopens them (`bd update <id> -s open`); from
+then on `bd ready --mol <epic>` pulls them in like any other child.
+
 `bd gate check` fails safely. With `gh` missing, unauthenticated, or no GitHub remote, every gate
 stays open, the command reports per-gate errors, and it still exits 0: a report, never a falsely
 resolved gate. An `ESCALATE` line is different — the gate was checked and its PR is missing — and
@@ -70,10 +74,10 @@ bd gate create --type=gh:pr --blocks <epic>-MERGED --await-id=<pr-number> -r "PR
 the epic cannot close — until every PR is merged. A later session's `bd gate check` clears the
 gates as merges land. **Epic closed always means the code is on `main`.**
 
-**Which PRs get gates depends on the strategy.** A stacked run gates every PR as it opens. An
-epic-branch run gates none of its worker PRs — they target the epic branch and the root merges them
-at the wave boundary; its one gate is created at integration, for the aggregate PR. A standalone
-bead gets no gate.
+**Which PRs get gates depends on the strategy.** A stacked run gates every PR as it opens, a later
+round's PRs included. An epic-branch run gates none of its worker PRs — they target the epic branch
+and the root merges them at the wave boundary; its one gate is created at integration, for the
+aggregate PR, and a later round leaves it alone. A standalone bead gets no gate.
 
 ## Discovered work
 
@@ -83,12 +87,18 @@ where a tracker issue exists; `<prefix>-<slug>` otherwise. A taken ID is refused
 retry. Never `--force`. Workers report discoveries in their result JSON; the root files them — and
 files its own, from the reconciliation at step 3 — and pushes as after every other write.
 
-**`code`** — a tangent in the code: a bug, a missing test, a refactor. A task beside the graph,
+**Every discovered bead is a child of the epic**, created `deferred` so this round's `bd ready`
+does not pick it up, with the parent set in a second call because `--id` and `--parent` do not
+combine. The next round's go reopens it. At single-bead scope there is no epic: the edge alone, and
+status `open`. `codefall-review` and `codefall-test` file what they find in the same two forms.
+
+**`code`** — a tangent in the code: a bug, a missing test, a refactor. A task under the epic,
 linked to the bead that found it.
 
 ```bash
 bd create "Parser drops trailing comma" --id "$(bd config get issue_prefix)-parser-trailing-comma" \
-  --deps discovered-from:<bead> -p 2
+  --deps discovered-from:<bead> -p 2 -s deferred
+bd update "$(bd config get issue_prefix)-parser-trailing-comma" --parent <epic>
 bd dolt push
 ```
 
@@ -105,7 +115,8 @@ two markers at its start, and its Revise mode closes every one.
 bd create "DESIGN-007 § Architecture names a StageStore the code replaced with StageContext" \
   --id "$(bd config get issue_prefix)-design-007-stagestore" \
   --deps discovered-from:<bead> --spec-id docs/designs/DESIGN-007-stage-context.md \
-  -l design-revision -p 2
+  -l design-revision -p 2 -s deferred
+bd update "$(bd config get issue_prefix)-design-007-stagestore" --parent <epic>
 bd dolt push
 ```
 
@@ -131,8 +142,8 @@ boundary, before the next wave is claimed:
 - **Two workers amended the same section of one document.** Keep the one whose branch is lower in
   the stack, or the first to open its PR when the branches are independent; revert the other on its
   branch with a commit that names the kept amendment; say so in the report. An overlap the root
-  did not catch surfaces as a conflict at step 7's restack, which is reported and never resolved
-  silently.
+  did not catch surfaces as a conflict at step 7's integration merge, which is reported and never
+  resolved silently.
 - **A spec was amended.** Regenerate the requirement's tracker issue, the existing-requirement case
   of the *Refreshing* sequence in the spec's tracker profile, as the mirror reference beside this
   file says. The amended text is on the worker's branch and nowhere else: read it with
@@ -144,13 +155,16 @@ boundary, before the next wave is claimed:
   revision bead carries; the body says what the document said and what the code needed, and the
   close reason names the branch and commit that carry the amendment. It adds no work to the graph
   and `codefall-design` never lists it; it exists so `bd list -l design-amended --spec <path>`
-  answers which documents were wrong, where, and how often.
+  answers which documents were wrong, where, and how often. It is parented under the epic like
+  every other bead a delivery files, so `bd children <epic>` is complete, and the chart leaves it
+  out of every count.
 
 ```bash
 bd create "DESIGN-007 § Architecture: StageStore renamed to StageContext" \
   --id "$(bd config get issue_prefix)-design-007-stagecontext-amended" \
   --deps discovered-from:<bead> --spec-id docs/designs/DESIGN-007-stage-context.md \
   -l design-amended
+bd update "$(bd config get issue_prefix)-design-007-stagecontext-amended" --parent <epic>
 bd close "$(bd config get issue_prefix)-design-007-stagecontext-amended" \
   -r "amended on feat/booking-DESIGN-007-T2-wire-context @ <sha>: § Architecture now names StageContext"
 bd dolt push

@@ -72,6 +72,10 @@
         "upstream": {
           "type": "string",
           "description": "Path of the document this target was checked against. Absent for code targets and for a vision."
+        },
+        "epic": {
+          "type": "string",
+          "description": "The epic bead whose work this target is, when the target resolved to an epic branch or a stack top, or the branch's bead has a parent epic. Beads filed for deferred findings are its children."
         }
       }
     },
@@ -216,7 +220,7 @@
           },
           "bead": {
             "type": "string",
-            "description": "The design-revision bead filed for a deferred finding the design caused, when the user took the offer."
+            "description": "The bead filed for a deferred finding when the user took the offer: a design-revision bead for one the design caused, a code bead for one the code caused. A child of target.epic when there is one."
           },
           "consult": {
             "type": "string",

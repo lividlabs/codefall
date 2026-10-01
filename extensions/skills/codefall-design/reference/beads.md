@@ -85,6 +85,9 @@ The case-file format `codefall-implement` writes to is
 
 Every bead gets `--spec-id` set to the design document's path, so `bd list --spec <path>` finds a
 design's beads from the graph side, as `bd list --parent <prefix>-DESIGN-NNN` does from the epic.
+The epic gains children this run never creates: `codefall-implement`, `codefall-review`, and
+`codefall-test` file what they find under it, with `--parent` and a `discovered-from` edge, and
+those are not Task Plan rows; `revising.md` says how a later run tells them apart.
 
 ## The plan file
 
