@@ -6,6 +6,17 @@ below were written by hand, before that was wired up.
 Tags are bare version numbers (`0.1.2`), not `v`-prefixed, so they match the `ref` the marketplace
 pins. A `v0.1.1` tag also exists from before that convention was settled.
 
+## [0.26.0](https://github.com/lividlabs/codefall/compare/v0.25.0...v0.26.0) (2026-10-01)
+
+
+### ⚠ BREAKING CHANGES
+
+* go install now uses github.com/lividlabs/codefall/cli/cmd/codefall; the old path installs only the versions published before the rename. A mise configuration that still names packslip:github.com/lividlabs/codefall-cli keeps installing on mise 2026.9.16 or later, which follows the rename by repository ID; earlier versions need the new name.
+
+### Features
+
+* rename the repository and module to codefall ([#166](https://github.com/lividlabs/codefall/issues/166)) ([8570c68](https://github.com/lividlabs/codefall/commit/8570c68835a619985b22dd379e3f9389ff20cf8f))
+
 ## [0.25.0](https://github.com/lividlabs/codefall-cli/compare/v0.24.0...v0.25.0) (2026-10-01)
 
 
