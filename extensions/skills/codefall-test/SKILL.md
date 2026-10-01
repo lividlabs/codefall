@@ -254,9 +254,11 @@ and in a delivery a child of the epic, only on the user's explicit word.
 
 The chart line for an epic target; the verdicts, the report's path, the driver that ran, the side
 effects and their disposition, the attempt counts worth seeing, the anomaly sweep, the triage classes,
-and the beads filed. No summary of what went well. For an epic target, anything decided here that no
-bead, report, or issue holds goes in a `bd comment` on the epic, and the report says it is safe to
-`/clear`. **End with what the user does next.** For an epic target: `/codefall-implement <epic>`
+and the beads filed. No summary of what went well. For an epic target, one line goes on the epic's
+notes — `round N (test) [date]: the verdict and what was filed` — per *Session end* in
+`../codefall-implement/reference/beads.md`, and anything decided here that no bead, report, or
+issue holds goes in a `bd comment` on the epic; the report then says it is safe to `/clear`.
+**End with what the user does next.** For an epic target: `/codefall-implement <epic>`
 when children were filed; when nothing was, this run is the last test passed, and the merge order
 from the implement report is what remains. Otherwise per class: a real bug with an issue filed goes
 to `/codefall-fix #<issue>` when the change is contained and `/codefall-design #<issue>` otherwise,

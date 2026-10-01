@@ -14,8 +14,8 @@ downstream, as a bead — the last section.
 ## Row by row
 
 **Read the current beads first.** `bd show <prefix>-DESIGN-NNN-Tn --json` for every row, and
-`bd list --parent <prefix>-DESIGN-NNN --all --limit 0` for anything the table no longer names. The
-comparison is against the graph itself, not against a record of what the document used to say.
+`bd show <prefix>-DESIGN-NNN --children` for anything the table no longer names. The comparison is
+against the graph itself, not against a record of what the document used to say.
 
 **Only beads named `<prefix>-DESIGN-NNN-Tn` are rows.** The epic's other children are the
 delivery's work: `<prefix>-DESIGN-NNN-MERGED`, the landed bead; the `code` discoveries, deferred

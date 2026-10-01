@@ -88,9 +88,11 @@ Every bead a verb files during a delivery — a code discovery, a deferred revie
 test run found, a revision bead — is a child of the epic, created `deferred` so the round still
 running does not pick it up, and reopened at the next round's go. The round number is metadata on
 the epic, written by `implement` alone. Each verb prints the delivery's one-line chart from
-`.codefall/shared/delivery.sh` at its start and in its close-out, records in a `bd comment` anything
-decided in conversation that no artifact holds, and then says it is safe to `/clear`.
-[ADR-013](https://github.com/lividlabs/codefall/blob/main/docs/adrs/ADR-013-deliveries.md)
+`.codefall/shared/delivery.sh` at its start and in its close-out — the epic, the round, and the
+children closed over the children in all, counted as `bd epic status` counts them — appends one
+line to the epic's notes (`round N (verb) [date]: what happened`), records in a `bd comment`
+anything decided in conversation that no artifact holds, and then says it is safe to `/clear`.
+[ADR-013.2](https://github.com/lividlabs/codefall/blob/main/docs/adrs/ADR-013.2-deliveries.md)
 records the rule.
 
 ## Keeping the project current

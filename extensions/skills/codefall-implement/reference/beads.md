@@ -156,8 +156,8 @@ boundary, before the next wave is claimed:
   close reason names the branch and commit that carry the amendment. It adds no work to the graph
   and `codefall-design` never lists it; it exists so `bd list -l design-amended --spec <path>`
   answers which documents were wrong, where, and how often. It is parented under the epic like
-  every other bead a delivery files, so `bd children <epic>` is complete, and the chart leaves it
-  out of every count.
+  every other bead a delivery files, so `bd children <epic>` is complete; the chart counts every
+  child the way `bd epic status` does, this one included.
 
 ```bash
 bd create "DESIGN-007 § Architecture: StageStore renamed to StageContext" \
@@ -175,6 +175,25 @@ their own bucket beside the discovered work. Under single-bead scope the same re
 at the worker's return.
 
 ## Session end
+
+**The epic's log.** At epic scope, each of `codefall-implement`, `codefall-review`, and
+`codefall-test` appends one line to the epic's notes at its close-out, so `bd show <epic>` reads as
+the delivery's history:
+
+```bash
+bd update <epic> --append-notes "round 2 (implement) [2026-10-01]: 3 tasks built, PRs #103 #104"
+```
+
+The round, the verb in parentheses, the date in brackets, a colon, then what happened in words:
+
+```
+round 1 (implement) [2026-09-30]: 7 tasks built, PRs #101 #102
+round 1 (review) [2026-09-30]: 3 fixed, 2 deferred as children
+round 1 (test) [2026-09-30]: FAIL 2/7, 1 child filed
+```
+
+Always `--append-notes`; plain `--notes` replaces the whole log. The round is `metadata.round` on
+the epic, which `bd epic status --json` returns beside the child counts the chart prints.
 
 Final `bd dolt push`. Every write already landed when its command ran; the database is the handoff,
 and the next session opens with `bd ready`.
