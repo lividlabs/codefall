@@ -31,10 +31,14 @@ a file `codefall init` installed in the project's own `.codefall/`.
 
 Read each when its step says to; none is loaded up front.
 
-- `reference/landing.md` — the three landing strategies, file-scope prediction and the hotspot
-  rule, and the branch diagrams. Read at step 4.
+- `reference/landing.md` — the two landing strategies, integration, later rounds, and the branch
+  diagrams. Read at step 4 and step 7.
+- `reference/resume.md` — picking up an interrupted run, and telling a crashed round from the next
+  one. Read at step 2 when the epic already has closed children.
 - `reference/beads.md` — every `bd` command a run issues: session start, claim and close, the
-  landed bead and its gates, discovered work, session end. Read at step 5.
+  landed bead and its gates, discovered work as children of the epic, session end. Read at step 5.
+- `../../../.codefall/shared/delivery.sh <epic>` — the delivery's one-line chart. Run at the go
+  gate, at each wave boundary, and in the report.
 - `reference/workers.md` — launching a worker, the worktree seeding rule, chain sequencing, the
   result JSON, failure handling, and consulting. Read at step 6. Names
   `../../../.codefall/shared/running-agents.md`, `../../../.codefall/shared/run-agent.sh`,
@@ -56,7 +60,7 @@ Read each when its step says to; none is loaded up front.
 | Every test the current work needs | Regression campaigns and fresh-context retesting | `codefall-test` |
 | Writing the case file the criteria name | Deciding which tasks need a case; installing a runner | `codefall-design`, `codefall-equip` |
 | Harness checks on its own diffs | Independent review and verdicts | `review` |
-| Bead lifecycle: claim, close, discovered work | Creating or re-cutting the task graph | `codefall-design` |
+| Bead lifecycle: claim, close, discovered work filed as children of the epic | Creating or re-cutting the task graph | `codefall-design` |
 | The vision's `Active` transition | Any other document transition | the owning verb |
 | Mirroring work state to the spec's tracker issue | The mirror's lifecycle and labels | `codefall-specify` |
 
@@ -71,8 +75,9 @@ re-mirrors a spec change per `reference/mirror.md`. A fix that would move work i
 
 - **Implement writes every test the current work needs** — planned by the design's Testing Strategy
   or discovered mid-task, unit through end-to-end. A missing test is written, not sent back to
-  `codefall-design`. **`codefall-test` owns what comes after the work lands**: regression passes,
-  coverage campaigns, agentic testing in a fresh context.
+  `codefall-design`. **`codefall-test` owns the run against the epic's work and everything after
+  it**: the cases the beads named, run on the epic's branch before the merge; regression passes;
+  coverage campaigns; agentic testing in a fresh context.
 
 ## One bead or the graph
 
@@ -87,6 +92,11 @@ The argument fixes the scope; the skill never infers it.
 
 A design whose Task Plan still says `Staged. Not yet in Beads` has no graph to walk. Refuse and
 point at `/design`.
+
+**An epic with closed children and `deferred` ones is the next round.** `codefall-review` and
+`codefall-test` file what they find as `deferred` children of the epic; a run on that epic reopens
+them, claims them, and builds them on top of the round before. The delivery is done when the chart
+shows nothing open and the last test run against the epic passed.
 
 **Tier 0 is not a separate mode.**
 
@@ -111,25 +121,24 @@ A tier-0 bead has no document; the list collapses to bead + `AGENTS.md` + ADRs.
 
 ## Landing strategies
 
-Three ways work reaches `main`; `reference/landing.md` has the rules and the diagrams.
+Two ways work reaches `main`; `reference/landing.md` has the rules, integration, later rounds, and
+the diagrams.
 
 | Strategy | When |
 | --- | --- |
-| **Parallel stacks** (default) | Independent chains with disjoint predicted file scopes |
-| **Single stack** | Overlapping file scopes, uncertainty, or fan-in without a need for parallelism. Always correct |
-| **Epic branch** | Fan-in across chains, or work that must not land on `main` in increments — *and* parallelism matters |
-
-Hotspot files count as overlap until shown otherwise. When parallel stacks cannot be shown safe,
-serialize.
+| **Serial stack** (default) | Any graph: every bead in topological order, one branch atop the previous, workers one at a time |
+| **Epic branch** | Work that must not land on `main` in increments, or the user wants parallel waves |
 
 ## The go gate
 
 One approval, before any work starts. Everything the run will do, in one block:
 
-- the landing strategy and its one-line reason ("linear chain of 7, no fan-in → single stack");
+- the delivery's chart line, and on a later round the round number this run will set;
+- the landing strategy and its one-line reason ("a chain of 7 → serial stack"; "12 beads in 3
+  waves → epic branch");
 - the branch diagram;
-- the waves, and how many workers run concurrently in each — **there is no default cap**; the wave
-  is sized by the graph and the file scopes, and the user trims it here if it is too wide;
+- on an epic branch, the waves and how many workers run concurrently in each — **there is no
+  default cap**; the wave is sized by the graph, and the user trims it here if it is too wide;
 - the model proposed per bead, and one session-level effort recommendation as the exact command —
   "recommend `/effort high` before go";
 - what will be claimed in beads, and — when a vision sits behind the work — that go flips it to
@@ -147,13 +156,15 @@ test plan, one branch.
 
 Model choice is the root's, made at the gate. A bead's own execution metadata is a recommendation
 shown in the table; **implement never writes bead metadata** — what ran goes in a `bd comment`
-beside the PR link.
+beside the PR link. The one exception is the epic's `round`, set at the go gate of a later round.
 
 ## Verification and done
 
 A bead is done when three things are true: **its acceptance criteria hold, the project's checks are
 green, and its PR is open.** Done is not merged. Where the commands come from, what is checked, and
-the test case a bead's criteria name are in `reference/done.md`.
+the test case a bead's criteria name are in `reference/done.md`. Done closes the task bead; the
+delivery is done only when the chart shows nothing open and `codefall-test`'s last run against the
+epic passed.
 
 ## Merges and the mirror
 
@@ -180,18 +191,8 @@ line is touched, ever.
 ## Picking up an interrupted run
 
 State lives in three places — beads, git, GitHub — and a resumed session reconciles them rather
-than re-running anything:
-
-| Found | Meaning | Do |
-| --- | --- | --- |
-| Bead closed, PR merged | Finished and landed | `bd gate check` records it; nothing else |
-| Bead closed, PR open | Done, awaiting the human | Leave it; it is in the merge order |
-| Bead claimed, branch pushed, no PR | Worker stopped before `gh pr create` | Verify the branch, open the PR from the root — do not re-run the work |
-| Bead claimed, no branch | Work never started or never landed anywhere | Relaunch the worker with the same rendered prompt |
-| Bead unclaimed but `bd ready` says ready | Never started | Normal flow |
-
-A stacked chain resumes from its highest link with an open PR; everything below is merged or
-awaiting merge, and everything above follows the normal sequence.
+than re-running anything. The table, and how a crashed round is told from the next one, are in
+`reference/resume.md`.
 
 ## Project customizations and persona
 
@@ -247,7 +248,8 @@ board IDs, a standing strategy preference.
 Per [One bead or the graph](#one-bead-or-the-graph). With no argument, run the session-start
 commands in `reference/beads.md` — `bd ready` unfiltered, since no epic is chosen yet — then show
 the ready set grouped by epic, with title, priority, and what each unblocks, and ask. Never infer a
-batch from an unprompted ready set.
+batch from an unprompted ready set. An epic that already has closed children is read per
+`reference/resume.md`: a crashed round is reconciled, `deferred` children are the next round.
 
 ### 3. Read
 
@@ -258,16 +260,20 @@ assumed that has moved — and default to preserving whatever the design is sile
 ### 4. Classify the landing strategy
 
 Read `reference/landing.md`. Build the graph picture (`bd ready --mol <epic> --explain`,
-`bd dep tree`), find the chains and any fan-in, derive each chain's predicted file scope from its
-Design refs, apply the hotspot rule. Pick, constrained by `AGENTS.md` and `CUSTOMIZE.md`.
+`bd dep tree`). Serial stack unless the work must not land on `main` in increments or the user
+wants waves; on a later round, the strategy round one used. Constrained by `AGENTS.md` and
+`CUSTOMIZE.md`.
 
 ### 5. The go gate
 
-Present the block per [The go gate](#the-go-gate) and wait. On go, per `reference/beads.md`: flip
-the vision to `Active` if one is behind the work. Epic scope: create the epic branch if the
-strategy calls for one (`epic/<id>-<slug>` off `main`, pushed), create the landed bead, claim the
-epic and the first wave, `bd dolt push`. Single-bead scope: claim the bead, `bd dolt push`, nothing
-else.
+Present the block per [The go gate](#the-go-gate), the chart line first, and wait. On go, per
+`reference/beads.md`: flip the vision to `Active` if one is behind the work. Epic scope, first
+round: create the epic branch if the strategy calls for one (`epic/<id>-<slug>` off `main`,
+pushed), create the landed bead, claim the epic and the first wave, `bd dolt push`. Epic scope,
+later round: the epic branch, the landed bead, and the epic's claim already exist and are left
+alone; `bd update <epic> --set-metadata round=<N+1>`, reopen each `deferred` child this run takes
+with `bd update <id> -s open`, claim the first wave, `bd dolt push`. Single-bead scope: claim the
+bead, `bd dolt push`, nothing else.
 
 When the user overrules the classifier the same way twice, offer to record the preference in
 `CUSTOMIZE.md` — offer, never write unasked.
@@ -280,25 +286,28 @@ consulted on and retried once; a second failure is consulted on and escalates, p
 `reference/workers.md`. Check each `design` discovery per `reference/workers.md`, sending back
 what the worker could have amended; file the rest in the form its `kind` names, and read each
 `amended` list, recording every entry as a closed `design-amended` bead, per `reference/beads.md`. Comment the PR link, close
-the bead with what was verified, gate the landed bead with the new PR (stacked runs), `bd dolt push`. `--suggest-next` names the next wave; claim it and
-go again. Epic branch: merge each worker PR into the epic branch, serialized, at the wave boundary.
-Update the mirror per `reference/mirror.md`.
+the bead with what was verified, gate the landed bead with the new PR (stacked runs), `bd dolt push`. `--suggest-next` names the next wave; print the
+chart line, claim the wave, and go again. Epic branch: merge each worker PR into the epic branch,
+serialized, at the wave boundary. Update the mirror per `reference/mirror.md`.
 
 Single-bead scope is one iteration of the same loop, in one worktree.
 
 ### 7. Integrate
 
-When the frontier is empty: restack stack bottoms onto current `main`, re-run verification, resolve
-nothing silently. Epic branch: open the aggregate PR to `main`, titled as a release-worthy
-conventional commit, and gate the landed bead with it — `Closes` nothing; the gate owns the epic's
-close.
+When the frontier is empty: merge the stack top, or the epic branch, onto current `main` in a
+scratch worktree and run verification there, per *Integration* in `reference/landing.md`. Push
+nothing; a conflict is reported and the merge-forward offered, never a rebase. Epic branch, first
+round: open the aggregate PR to `main`, titled as a release-worthy conventional commit, and gate
+the landed bead with it — `Closes` nothing; the gate owns the epic's close. A later round reuses
+the aggregate PR that exists.
 
 ### 8. Report and stop
 
 Do not merge, and do not wait for merges; the next session's `bd gate check` finishes it.
 
+- The chart line.
 - Every bead built, with PR, branch, and what its close reason verified.
-- The merge order, bottom-up per stack, and what is blocked on the user.
+- The merge order, bottom-up, and what is blocked on the user.
 - Upstream amendments, by document and PR, each with its `design-amended` bead, and every
   `design` item sent back to its worker; then discovered work filed, in two buckets: code
   follow-ups, and what was handed back to design — "DESIGN-NNN has N revision beads" — with the
@@ -306,17 +315,19 @@ Do not merge, and do not wait for merges; the next session's `bd gate check` fin
 - Every consult: the bead, who answered, what it changed.
 - The tracker mirror's state, the vision transition if one fired.
 - The worktree list, with the cleanup offer.
+- Anything decided in this conversation that no bead, document, report, or PR holds — a strategy
+  overrule, a skipped bead's reason — as a `bd comment` on the epic, then that it is safe to
+  `/clear`.
 - Final `bd dolt push`.
-- **Last, what the user does next**: review the pull requests — a stack as one target, its top
-  branch; pull requests against the default branch one each — merge them in the order above, then
-  `/codefall-test <area>/<slug>` for each case a bead named, and `/codefall-design DESIGN-NNN`
-  where revision beads were filed.
+- **Last, what the user does next**: `/codefall-review <epic>` on the stack top or the epic
+  branch, then `/codefall-test <epic>`; `/codefall-design DESIGN-NNN` where revision beads were
+  filed; and the merge, in the order above, only once the chart shows nothing open and the last
+  test run passed — otherwise `/codefall-implement <epic>` for the next round.
 
 ## Other modes
 
-- **Resume** an interrupted run — per
-  [Picking up an interrupted run](#picking-up-an-interrupted-run). Reconcile, then continue the
-  normal loop.
+- **Resume** an interrupted run — per `reference/resume.md`. Reconcile, then continue the normal
+  loop.
 - **Abandon** a run: unclaim what is claimed and unbuilt, note why on each bead, report branches
   and PRs left standing. The user decides their fate; delete nothing.
 - **Drain assistance is reporting only.** After merges, `bd gate check` and the mirror update are
@@ -329,9 +340,12 @@ Do not merge, and do not wait for merges; the next session's `bd gate check` fin
 - **Closed means done — criteria verified, checks green, PR open.** Merged is the gates' to say.
 - **Publish the claim before the work.** `bd dolt push` follows every claim and every close.
 - **The graph is the sequencer.** `bd ready` decides what runs next; never start a blocked bead.
-- **Scope is exactly the bead.** Tangents become `discovered-from` beads, filed by the root, never
-  fixed in passing; a design or spec found wrong is amended in the PR or becomes a
-  `design-revision` bead, never a quiet workaround.
+- **Scope is exactly the bead.** Tangents become `deferred` children of the epic with a
+  `discovered-from` edge, filed by the root and taken at the next round's go, never fixed in
+  passing; a design or spec found wrong is amended in the PR or becomes a `design-revision` bead,
+  never a quiet workaround.
+- **Nothing is rebased or force-pushed.** Integration merges; a later round builds on top.
+- **The epic's `round` is the one metadata key implement writes.**
 - **Bead IDs ride every commit message.**
 - **Verify workers, never trust them.**
 - **One consult, one automatic retry, one more consult, then a human.** The root consults; a worker

@@ -43,6 +43,7 @@ interrupted session resumes from them rather than starting over.
 # Review: <target-key>
 
 **Reviewed:** <timestamp> · **Reviewer:** <harness>[:<model>] · **Revision:** <revision>
+**Epic:** <epic bead ID> — only when the target is an epic's work or the branch's bead has one
 **Tried:** <harness>[:<model>] (skipped: not on PATH), <harness>[:<model>] (failed: exited 76) — only when an agent was walked before the reviewer
 **Lenses:** <the lenses that ran>
 
@@ -61,9 +62,10 @@ interrupted session resumes from them rather than starting over.
 ```
 
 Findings are ordered most severe first, matching the triage list. A review with none says so under
-the heading rather than dropping it. A deferred finding filed as a revision bead carries the bead's
-ID after its status — `deferred · booking-design-007-stagestore` — and the JSON carries it as
-`bead`. A finding promoted from `notChecked` after a consult carries a line after its location —
+the heading rather than dropping it. A deferred finding filed as a bead — a revision bead, or a code
+bead under the epic — carries the bead's ID after its status — `deferred ·
+booking-design-007-stagestore` — and the JSON carries it as `bead`. A finding promoted from
+`notChecked` after a consult carries a line after its location —
 *consulted `codex:gpt-5-codex`: the retry loop re-reads the offset it just committed* — and the
 JSON carries it as `consult`; an entry a consult left in `notChecked` carries the consult's view
 appended to its text.

@@ -51,6 +51,27 @@ run: the case and variant, the criterion that failed with its verdict, the evide
 `<root>/.artifacts/`, and the run report's path. A comment on an existing issue carries the same.
 Record the number in the run record's `issue` field and in the Markdown report's Triage section.
 
+**In a delivery, the issue is also a child of the epic.** When the run's target was an epic's work,
+the same yes files a bead beside the issue, in the `code` form under *Discovered work* in
+`../../codefall-implement/reference/beads.md`, so the next round of `codefall-implement` claims it
+and the chart shows it:
+
+```bash
+bd create "<the issue's title>" --id "$(bd config get issue_prefix)-gh-<n>" --external-ref gh-<n> \
+  -t bug -s deferred --deps discovered-from:<bead> -p 2
+bd update "$(bd config get issue_prefix)-gh-<n>" --parent <epic>
+bd dolt push
+```
+
+`<bead>` is the child whose criteria name the failed case: the one citing the failed criterion's
+identifier where two children name the same case, every such child (one edge each) where none
+does, and the epic itself for a suite failure that names no case. Record the bead's ID in the run
+record's `bead` field beside `issue`.
+
+**A wrong expectation whose criterion a bead cites** is offered, on the user's word, as a
+`design-revision` child in the `design` form of the same reference, with `--spec-id` taken from that
+bead's `spec_id`; `codefall-design`'s Revise mode settles whether the criterion or the design moves.
+
 **A bug document is the user's to ask for.** `/codefall-report <run report path>` writes
 `docs/bugs/BUG-NNN-slug.md` with acceptance criteria and adopts the issue this run filed rather than
 opening a second; it interviews the person running it, so it is never run from here.

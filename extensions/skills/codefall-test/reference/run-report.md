@@ -21,7 +21,8 @@ Two files per run, sharing one stem. Read before the first write.
 `<run-key>` is the case id with its separators slugged — `checkout-place-order` for
 `checkout/place-order` — plus the variant when a single variant was named
 (`checkout-place-order-saved-card`). A suite run takes `suites`, `suites-changed`, or the suite's own
-name slugged. In full:
+name slugged. An epic run takes the epic's ID — `booking-DESIGN-007` — and carries one section per
+case it ran, then the `changed` suites. In full:
 
 ```
 .codefall/tests/2026-09-17T142201Z-checkout-place-order.md
@@ -44,8 +45,9 @@ search.
 ```markdown
 # Run: <run-key>
 
-**Ran:** <timestamp> · **Target:** <case id or suite> · **Modality:** <spec | agentic | suite>
+**Ran:** <timestamp> · **Target:** <case id, suite, or epic> · **Modality:** <spec | agentic | suite>
 **Driver:** <the tool that drove it, for an agentic run> · **Commit:** <HEAD, plus dirty>
+**Epic:** <epic bead ID> · **Branch:** <the branch checked out> — for an epic run
 
 ## <variant name> — PASS | FAIL | ERROR | PARTIAL
 
@@ -63,7 +65,7 @@ search.
 
 ## Triage
 
-<class per finding, and where the notes were written>
+<class per finding, the issue and the bead filed when the user asked, and where the notes were written>
 ```
 
 One section per variant. A run of one variant has one.

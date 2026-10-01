@@ -58,13 +58,15 @@ document beside the passage they were about. That is an edit to the reviewed art
 anyone agreed to it. Findings go in the findings file, and accepted ones become real edits after
 triage.
 
-**Filing findings as beads.** A finding that outlives the review would have become a
-`discovered-from` bead. The graph is `codefall-design`'s, and a review that quietly adds work to it
-is making a decision that is not its own. Deferred findings stay in the file, with one exception
-added later: a deferred finding the design caused is offered — never filed unasked — as a
-`design-revision` bead against the design, because that bead is the one path by which
-`codefall-design` learns its document is wrong. It is a request to the graph's owner, not work
-added to the graph.
+**Filing findings as beads unasked.** A finding that outlives the review is offered as a bead and
+never filed on the review's own initiative: the graph is `codefall-design`'s, and a review that
+quietly adds work to it is making a decision that is not its own. An earlier edition kept deferred
+findings in the file alone, with `design-revision` beads the one exception. That left a deferred
+finding whose cause was the code in a file `.ignore` hides from search, where no verb read it again
+and the person running the chain had to remember it. Under ADR-013 every finding the user defers is
+offered as a `deferred` child of the epic — a revision bead for one the design caused, a code bead
+for one the code caused — so the next round of `codefall-implement` claims it and the chart shows
+it. The offer is the same; what changed is where a taken offer lands.
 
 **Specific commits, merged pull requests, merged branches, superseded ADRs.** All were targets in the
 first draft. Reviewing history produces findings about code that has moved on, and there is nowhere

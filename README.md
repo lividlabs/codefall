@@ -337,10 +337,11 @@ The vision above them is what groups them, which is why a vision's `Related` lin
 `/scaffold`, `/specify`, and so on. Each carries `disable-model-invocation: true`, so none of them
 fire on their own; scaffolding a project or filing an issue is a deliberate act, not something
 inferred from a passing remark. `codefall-design`, `codefall-implement`, `codefall-test`,
-`codefall-review`, and `codefall-refresh` carry no such line, so an agent may run them too: a
-session can carry a design through implementation, review, and test without a person typing each
-verb. Each still reports, offers, and applies only what the user takes, and a human still performs
-every merge.
+`codefall-review`, and `codefall-refresh` carry no such line, so an agent may run them too. Each
+still reports, offers, and applies only what the user takes, and a human still performs every
+merge. The work on one epic from design to merge is a **delivery**, taken in **rounds** of
+`implement`, `review`, and `test`; every handoff is a bead, a document, a report, or a pull
+request, so a `/clear` between verbs loses nothing and each report ends with the next command.
 
 A question of fact you cannot answer in the interview, how the existing system behaves in a case the
 audit did not settle, is put to the project's consult agents once and comes back as a proposal you
@@ -516,22 +517,37 @@ then reaches you, with the analysis in front of you. That absence of mid-run gat
 overnight run possible, and the consult is what keeps a run from stopping on something a second
 reading would have settled.
 
-**How work lands is read from the graph's shape.** Independent chains stack toward `main` in
-parallel when their predicted file scopes are disjoint; overlap or fan-in serializes them into one
-topological stack; an epic branch appears only when fan-in meets a real need for parallelism, or
-when increments must not land on `main`. There is no depth cap — a deep stack costs only a muddy
-three-dot diff until it drains bottom-up.
+**Work lands one of two ways.** The default is a serial stack: every bead in topological order,
+one branch atop the previous, one pull request each, workers one at a time. The other is an epic
+branch, for work that must not land on `main` in increments or when you want parallel waves:
+workers branch off it in waves, the root merges them at each wave boundary, and one aggregate pull
+request reaches `main`. There is no depth cap — a deep stack costs only a muddy three-dot diff
+until it drains bottom-up. When the frontier is empty the run merges the stack top onto current
+`main` in a scratch worktree and verifies there; nothing is rebased or force-pushed, and a conflict
+is settled by merging `main` forward as an ordinary merge commit.
 
-**A bead closes at done — acceptance criteria verified, checks green, PR open — not at merge.** That
-is Beads' own semantics, and it is what lets a stacked dependent start the moment its parent's
-branch is pushed. The merge seam is carried by gates: every PR gates a "landed" bead inside the
-epic, so the epic cannot close until you have merged everything, and the next session's
+**A task bead closes at done — acceptance criteria verified, checks green, PR open — not at
+merge.** That is Beads' own semantics, and it is what lets a stacked dependent start the moment its
+parent's branch is pushed. The merge seam is carried by gates: every PR gates a "landed" bead inside
+the epic, so the epic cannot close until you have merged everything, and the next session's
 `bd gate check` turns your merges into bead state.
+
+**The delivery is done when the graph says so.** `review` and `test` run against the epic's work
+before you merge, and what they find — a deferred finding, a bug a run found — becomes a child of
+the epic on your word, so the epic stays open and the next round of `implement` picks it up. Every
+verb prints the delivery's one-line chart as it starts and as it ends:
+
+```
+booking-DESIGN-007 · round 2 · 14/17 done ██████████████░░░ · 3 open · 0/9 PRs merged
+```
+
+Nothing open but the landed bead, and the last test run passed: that is done, and the merge order
+is what remains. [ADR-013](docs/adrs/ADR-013-deliveries.md) holds the rule.
 
 **A human performs every merge to `main`.** The run ends at open PRs and a reported bottom-up merge
 order, and the plugin ships a hook that mechanically denies the alternative. Tests are part of done
-— the ones the design planned and the ones the work turned out to need — while regression and
-fresh-context retesting stay with the `test` verb.
+— the ones the design planned and the ones the work turned out to need — while the round's
+end-to-end run, regression, and fresh-context retesting are the `test` verb's.
 
 **A design the work proves wrong is amended by the work, not worked around.** A worker that can
 finish its task despite the design's text, or the spec's, disagreeing with the code amends that text

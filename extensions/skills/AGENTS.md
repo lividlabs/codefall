@@ -11,10 +11,11 @@ writing and changing a skill; the extension-wide rules, ADR immutability, prose,
 - `codefall-envision`, `codefall-specify`, `codefall-report`, `codefall-fix`, `codefall-mock-up`,
   `codefall-scaffold`, `codefall-upgrade`, and `codefall-equip` carry `disable-model-invocation:
   true`; a user invokes each deliberately. `codefall-design`, `codefall-implement`, `codefall-test`,
-  `codefall-review`, and `codefall-refresh` carry no such line, so an agent may also run them: a
-  session can carry a design through implementation, review, and test without a person typing each
-  verb. Each still reports, offers, and applies only what the user takes; a human still performs
-  every merge.
+  `codefall-review`, and `codefall-refresh` carry no such line, so an agent may also run them. Each
+  still reports, offers, and applies only what the user takes; a human still performs every merge.
+  A delivery — one epic from design to merge — runs as rounds of implement, review, and test, and
+  every handoff is an artifact, so a verb never relies on the conversation that ran the one before
+  it; its report ends with the next command and says it is safe to `/clear`.
   `implement`, `design`, and `specify` run refresh when preflight reports the environment stale.
   No other skill invokes another through the harness.
 - **`codefall-fix` restates parts of `codefall-design` and `codefall-implement`** for one bead at

@@ -33,7 +33,9 @@ name no case simply never reads them.
 - **Single-bead scope also gets a worktree.** The primary checkout stays free for the user.
 - **The worker is strategy-blind.** Stacked versus epic is fully encoded in `BASE_REF` and
   `PR_TARGET`. Branch names are root-supplied and deterministic — `feat/<bead>-<slug>` — so a
-  stacked link's `BASE_REF` can name its predecessor's branch before that worker exists.
+  stacked link's `BASE_REF` can name its predecessor's branch before that worker exists. A later
+  round's `BASE_REF` is the stack's open top or the epic branch, per *Later rounds* in the landing
+  reference beside this file.
 - **Worktree isolation seeds from the repo's default HEAD**, not from `BASE_REF`. The worker's
   first act is its own `git fetch` followed by `git checkout -b {{BRANCH}} origin/{{BASE_REF}}` —
   off the remote-tracking ref, because git's one-branch-one-worktree rule makes a plain checkout
@@ -43,9 +45,9 @@ name no case simply never reads them.
 
 ## Chains
 
-**Chains are strictly sequential; parallelism is across chains.** Link N+1 launches only after the
-root has verified two facts about link N: the branch is on the remote, and the PR exists. The root
-checks, never trusts.
+**A serial stack is strictly sequential; parallelism is the epic branch's waves.** Link N+1
+launches only after the root has verified two facts about link N: the branch is on the remote, and
+the PR exists. The root checks, never trusts.
 
 ## Results
 

@@ -4,11 +4,12 @@
 This project runs codefall's verbs, each a skill that reports, offers, and applies only what the
 user takes. `envision`, `specify`, `report`, `fix`, `mock-up`, `scaffold`, `upgrade`, and `equip`
 are invoked deliberately by a user; `design`, `implement`, `test`, `review`, and `refresh` may also
-be run by an agent, so a session can carry a design through implementation, review, and test without
-a person typing each verb. They chain from an idea to open pull requests — `envision` → `specify` →
+be run by an agent. They chain from an idea to open pull requests — `envision` → `specify` →
 `mock-up` → `design` → `implement` → `review` → `test` — and each leaves something the next one
-reads. A bug a person saw enters at `report`, and `design` takes its report as it takes a spec; a
-bug `test` found enters as the issue it files on the user's word; `fix` runs
+reads, so a delivery runs as rounds of `implement`, `review`, and `test` with a `/clear` between
+verbs, and ends when the epic has no open children and the last test run passed. A bug a person saw
+enters at `report`, and `design` takes its report as it takes a spec; a bug `test` found enters as
+the issue it files on the user's word, and as a child of the epic inside a delivery; `fix` runs
 `design` at tier 0 and `implement` on one bead in a single run. Beside the chain, `scaffold` starts
 a project, `upgrade` brings its install and documents current, and `equip` and `refresh` keep the
 local environment level with the checkout. A human performs every merge to `main`. Documents in the

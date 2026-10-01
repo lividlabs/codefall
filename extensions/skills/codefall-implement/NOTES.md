@@ -13,16 +13,25 @@ results, the recovery table, and the humans-merge-`main` rule with its hook.
 **From Kiro**: the one-task-at-a-time worker discipline and read-everything-first; drift
 reconciliation at resume, which became the recovery table.
 
-**From spec-kit**: parallel means file-disjoint, nothing else.
-
 **From beads' own docs**: close-at-done with gates carrying the merge seam.
 
 ## Dropped
 
 **From the dev-implement pair**: `MAX_STACK_DEPTH = 4` — the depth cap solved a cosmetic problem
-and a 12-PR stack works; the classification that sent multiple independent chains to an epic branch
-— chains parallelize as stacks; the two-skill split — one skill decides scope at run time; and the
-board scripts — beads replaced the project board.
+and a 12-PR stack works; the two-skill split — one skill decides scope at run time; and the board
+scripts — beads replaced the project board.
+
+**Parallel stacks**, the original default, with spec-kit's rule that parallel means file-disjoint
+and the file-scope prediction and hotspot rule that served it. In practice the classifier never
+picked it, the prediction machinery was the largest part of the landing reference, and two stacks
+each targeting `main` doubled every question about where a later round's bead goes. Two strategies
+remain: the serial stack, and the epic branch for parallel waves (ADR-013).
+
+**Restacking the stack bottoms onto `main` at integration.** It arrived with the import and was
+never recorded here. Rebasing the bottom alone left every link above based on commits that no
+longer existed, so the stack above it stopped merging cleanly. Integration now merges the stack top
+onto `main` in a scratch worktree and pushes nothing; a conflict is settled by merging `main`
+forward as an ordinary merge commit, which squash merge erases. Nothing is rebased or force-pushed.
 
 **From Kiro and spec-kit**: checklist gates and the converge audit — review is another verb.
 
@@ -62,7 +71,25 @@ mode when it fails.
 
 That is beads' own semantics — "closing a beads issue means 'work is done' but the code may still
 be on a feature branch" — and it is what lets a stacked dependent start the moment its parent's
-branch is pushed. The merge is tracked separately by the gates.
+branch is pushed. The merge is tracked separately by the gates. The epic is different: it closes
+when the graph is empty and the code is on `main`, and the graph is not empty while a child review
+or test filed is open. Done for the delivery is read from the graph, never declared (ADR-013).
+
+## Why discovered work is a child of the epic
+
+A finding that lived beside the graph, in a findings file, or in a tracker issue alone was invisible
+to the next verb's start, and the person running the chain had to remember it. As a child of the
+epic it holds the epic open, shows on the chart, and is claimed by the next round like any task.
+It is created `deferred` so the round still running does not pick it up: `bd ready` skips
+`deferred`, and the round boundary is where it opens. `design-amended` beads are parented too, for
+a complete `bd children`, and excluded from the counts because they are records, not work.
+
+## Why the epic's round is the one metadata implement writes
+
+The round has to live somewhere every verb can read and the chart can print, and only one verb may
+bump it or a review that files both a code child and a revision bead produces two bumps. Implement
+owns the moment a round starts — the go gate of a re-entry run — so it writes `round` there and
+nowhere else; design's Revise mode adds children and bumps nothing.
 
 ## Why the mirror is coarse
 

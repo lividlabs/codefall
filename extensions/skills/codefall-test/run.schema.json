@@ -16,8 +16,8 @@
       "properties": {
         "kind": {
           "type": "string",
-          "enum": ["case", "suites", "suite", "changed"],
-          "description": "case is one test case; suites is every declared suite; suite is one named suite; changed is the subset the changed files reach."
+          "enum": ["case", "suites", "suite", "changed", "epic"],
+          "description": "case is one test case; suites is every declared suite; suite is one named suite; changed is the subset the changed files reach; epic is every case an epic's children name plus the changed subset, on the epic's branch."
         },
         "key": {
           "type": "string",
@@ -55,12 +55,18 @@
 
     "ranAt": { "type": "string", "format": "date-time" },
 
+    "epic": {
+      "type": "string",
+      "description": "The epic bead whose work this run tested, when the target was an epic. The newest record carrying an epic is that delivery's last test run."
+    },
+
     "commit": {
       "type": "object",
       "required": ["revision"],
       "additionalProperties": false,
       "properties": {
         "revision": { "type": "string", "description": "HEAD of the checkout the run ran in." },
+        "branch": { "type": "string", "description": "The branch checked out for the run, when it was not the default branch." },
         "dirty": { "type": "boolean", "description": "True when the working tree carried changes." }
       }
     },
@@ -209,6 +215,10 @@
           "issue": {
             "type": "string",
             "description": "The tracker issue it was filed on or commented on, when the user asked for one."
+          },
+          "bead": {
+            "type": "string",
+            "description": "The child of the epic filed beside the issue, when the run's target was an epic's work and the user asked for one."
           },
           "note": { "type": "string" }
         }
