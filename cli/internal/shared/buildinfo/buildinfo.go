@@ -110,7 +110,7 @@ func describe(stampedVersion, stampedCommit string, info *debug.BuildInfo) build
 	}
 
 	// A module sum means the go command fetched the module at a version rather than building a
-	// checkout — `go install github.com/lividlabs/codefall-cli/cli/cmd/codefall@v0.14.0` — so the
+	// checkout — `go install github.com/lividlabs/codefall/cli/cmd/codefall@v0.14.0` — so the
 	// version is a published one, and nothing about a working tree was recorded.
 	if info.Main.Sum != "" {
 		return build{release: strings.TrimPrefix(info.Main.Version, "v")}

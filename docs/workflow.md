@@ -81,7 +81,7 @@ design's path as its `spec_id`; `design` lists those at its start, and its Revis
 one: amended into the document, turned into a task row, or rejected with why. An amendment
 `implement` or `review` makes is also recorded as a closed bead labelled `design-amended`, with the
 same `spec_id`, so which documents were wrong, and where, can be listed later.
-[ADR-008](https://github.com/lividlabs/codefall-cli/blob/main/docs/adrs/ADR-008-upstream-amendments.md)
+[ADR-008](https://github.com/lividlabs/codefall/blob/main/docs/adrs/ADR-008-upstream-amendments.md)
 records the rule.
 
 Every bead a verb files during a delivery — a code discovery, a deferred review finding, a bug a
@@ -90,7 +90,7 @@ running does not pick it up, and reopened at the next round's go. The round numb
 the epic, written by `implement` alone. Each verb prints the delivery's one-line chart from
 `.codefall/shared/delivery.sh` at its start and in its close-out, records in a `bd comment` anything
 decided in conversation that no artifact holds, and then says it is safe to `/clear`.
-[ADR-013](https://github.com/lividlabs/codefall-cli/blob/main/docs/adrs/ADR-013-deliveries.md)
+[ADR-013](https://github.com/lividlabs/codefall/blob/main/docs/adrs/ADR-013-deliveries.md)
 records the rule.
 
 ## Keeping the project current
@@ -99,13 +99,13 @@ Four verbs sit beside the chain rather than in it:
 
 - **`equip`** builds and rebuilds what the other verbs need the project to have. One track is the
   local environment: `start` and `update`, declared under `local` in `.codefall/settings.json`
-  ([ADR-005](https://github.com/lividlabs/codefall-cli/blob/main/docs/adrs/ADR-005-local-environment-scripts.md)).
+  ([ADR-005](https://github.com/lividlabs/codefall/blob/main/docs/adrs/ADR-005-local-environment-scripts.md)).
   The other is the test harness: a spec runner per surface, declared in `test.runners`, its
   commands recorded in the testing root's `AGENTS.md`
-  ([ADR-007](https://github.com/lividlabs/codefall-cli/blob/main/docs/adrs/ADR-007-test-cases.md)).
+  ([ADR-007](https://github.com/lividlabs/codefall/blob/main/docs/adrs/ADR-007-test-cases.md)).
   The third is the agents: how another harness is called, under `harnessConfig`, and who reviews
   and consults, in the `agents` lists, set up from any harness
-  ([ADR-009.4](https://github.com/lividlabs/codefall-cli/blob/main/docs/adrs/ADR-009.4-agents.md)).
+  ([ADR-009.4](https://github.com/lividlabs/codefall/blob/main/docs/adrs/ADR-009.4-agents.md)).
   One run equips one track, and each lands as its own pull request. What a search leaves ambiguous
   is consulted on once before the one question.
 - **`refresh`** is what to run instead of pulling by hand, and it ends on `main` wherever it
@@ -127,7 +127,7 @@ Four verbs sit beside the chain rather than in it:
   still spelled the old way, removes what the previous install wrote that this one does not ship, and
   touches nothing else. `codefall init` runs once and refuses a project that has a manifest, naming
   `upgrade`
-  ([ADR-010](https://github.com/lividlabs/codefall-cli/blob/main/docs/adrs/ADR-010-upgrade.md)).
+  ([ADR-010](https://github.com/lividlabs/codefall/blob/main/docs/adrs/ADR-010-upgrade.md)).
 
 The scripts stay current at the point of introduction: a task that adds infrastructure, a
 dependency, a migration, or generated code changes `start` or `update` in the same pull request.
