@@ -10,9 +10,9 @@ import (
 	"github.com/samber/do/v2"
 	"github.com/spf13/cobra"
 
-	"github.com/lividlabs/codefall-cli/cli/internal/config/internal/application"
-	"github.com/lividlabs/codefall-cli/cli/internal/config/internal/infrastructure"
-	"github.com/lividlabs/codefall-cli/cli/internal/config/internal/presentation"
+	"github.com/lividlabs/codefall/cli/internal/config/internal/application"
+	"github.com/lividlabs/codefall/cli/internal/config/internal/infrastructure"
+	"github.com/lividlabs/codefall/cli/internal/config/internal/presentation"
 )
 
 // Register wires config's object graph into the app's injector. This is the only place the

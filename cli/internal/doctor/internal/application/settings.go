@@ -11,9 +11,9 @@ import (
 
 	"github.com/samber/mo"
 
-	"github.com/lividlabs/codefall-cli/cli/internal/doctor/internal/domain"
-	"github.com/lividlabs/codefall-cli/cli/internal/shared/settings"
-	"github.com/lividlabs/codefall-cli/cli/internal/shared/userfile"
+	"github.com/lividlabs/codefall/cli/internal/doctor/internal/domain"
+	"github.com/lividlabs/codefall/cli/internal/shared/settings"
+	"github.com/lividlabs/codefall/cli/internal/shared/userfile"
 )
 
 // settings runs checks 1 to 4, and hands on to the five ignore-entry checks and the persona check.

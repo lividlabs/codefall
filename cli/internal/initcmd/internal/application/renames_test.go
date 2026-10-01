@@ -7,9 +7,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/lividlabs/codefall-cli/cli/internal/initcmd/internal/domain"
-	"github.com/lividlabs/codefall-cli/cli/internal/shared/harness"
-	"github.com/lividlabs/codefall-cli/cli/internal/shared/manifest"
+	"github.com/lividlabs/codefall/cli/internal/initcmd/internal/domain"
+	"github.com/lividlabs/codefall/cli/internal/shared/harness"
+	"github.com/lividlabs/codefall/cli/internal/shared/manifest"
 )
 
 var manifestFull = filepath.Join(workingDir, manifest.Name)

@@ -11,9 +11,9 @@ import (
 
 	"github.com/samber/mo"
 
-	"github.com/lividlabs/codefall-cli/cli/internal/initcmd/internal/domain"
-	"github.com/lividlabs/codefall-cli/cli/internal/shared/harness"
-	"github.com/lividlabs/codefall-cli/cli/internal/shared/settings"
+	"github.com/lividlabs/codefall/cli/internal/initcmd/internal/domain"
+	"github.com/lividlabs/codefall/cli/internal/shared/harness"
+	"github.com/lividlabs/codefall/cli/internal/shared/settings"
 )
 
 // Where settings live, relative to the directory init is run in. The display form is what a person

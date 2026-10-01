@@ -8,8 +8,8 @@ import (
 
 	"github.com/samber/mo"
 
-	"github.com/lividlabs/codefall-cli/cli/internal/doctor/internal/domain"
-	"github.com/lividlabs/codefall-cli/cli/internal/shared/text"
+	"github.com/lividlabs/codefall/cli/internal/doctor/internal/domain"
+	"github.com/lividlabs/codefall/cli/internal/shared/text"
 )
 
 // ghAuthStatus is the shape of `gh auth status --json hosts`.

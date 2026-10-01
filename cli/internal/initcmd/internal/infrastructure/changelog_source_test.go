@@ -4,7 +4,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/lividlabs/codefall-cli/cli/internal/initcmd/internal/application"
+	"github.com/lividlabs/codefall/cli/internal/initcmd/internal/application"
 )
 
 // fixture is the changelog's real shape: a hand-written preamble, releases newest first, a release

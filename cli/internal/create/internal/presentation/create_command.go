@@ -19,9 +19,9 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 
-	"github.com/lividlabs/codefall-cli/cli/internal/create/internal/application"
-	"github.com/lividlabs/codefall-cli/cli/internal/create/internal/domain"
-	"github.com/lividlabs/codefall-cli/cli/internal/shared/ui"
+	"github.com/lividlabs/codefall/cli/internal/create/internal/application"
+	"github.com/lividlabs/codefall/cli/internal/create/internal/domain"
+	"github.com/lividlabs/codefall/cli/internal/shared/ui"
 )
 
 // CreateUseCase is what the command needs from the application layer, declared by its consumer.

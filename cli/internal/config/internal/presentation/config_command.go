@@ -16,11 +16,11 @@ import (
 	"github.com/samber/mo"
 	"github.com/spf13/cobra"
 
-	"github.com/lividlabs/codefall-cli/cli/internal/config/internal/domain"
-	"github.com/lividlabs/codefall-cli/cli/internal/shared/harness"
-	"github.com/lividlabs/codefall-cli/cli/internal/shared/settings"
-	"github.com/lividlabs/codefall-cli/cli/internal/shared/ui"
-	"github.com/lividlabs/codefall-cli/cli/internal/shared/userfile"
+	"github.com/lividlabs/codefall/cli/internal/config/internal/domain"
+	"github.com/lividlabs/codefall/cli/internal/shared/harness"
+	"github.com/lividlabs/codefall/cli/internal/shared/settings"
+	"github.com/lividlabs/codefall/cli/internal/shared/ui"
+	"github.com/lividlabs/codefall/cli/internal/shared/userfile"
 )
 
 // ConfigUseCase is what the commands need from the application layer, declared by their consumer.

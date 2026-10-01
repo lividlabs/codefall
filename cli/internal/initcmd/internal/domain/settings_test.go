@@ -7,8 +7,8 @@ import (
 
 	"github.com/samber/mo"
 
-	"github.com/lividlabs/codefall-cli/cli/internal/shared/harness"
-	"github.com/lividlabs/codefall-cli/cli/internal/shared/settings"
+	"github.com/lividlabs/codefall/cli/internal/shared/harness"
+	"github.com/lividlabs/codefall/cli/internal/shared/settings"
 )
 
 // oneHarness is the harness every case that is not about harnesses passes, so a settings value can be

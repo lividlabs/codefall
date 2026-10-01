@@ -11,7 +11,7 @@ import (
 
 	"github.com/samber/mo"
 
-	"github.com/lividlabs/codefall-cli/cli/internal/create/internal/domain"
+	"github.com/lividlabs/codefall/cli/internal/create/internal/domain"
 )
 
 // gitCommand is how git is invoked. It is the only tool create needs itself; the tools init needs are

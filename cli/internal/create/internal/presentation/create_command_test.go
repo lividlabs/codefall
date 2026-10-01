@@ -12,8 +12,8 @@ import (
 	"github.com/samber/mo"
 	"github.com/spf13/cobra"
 
-	"github.com/lividlabs/codefall-cli/cli/internal/create/internal/application"
-	"github.com/lividlabs/codefall-cli/cli/internal/create/internal/domain"
+	"github.com/lividlabs/codefall/cli/internal/create/internal/application"
+	"github.com/lividlabs/codefall/cli/internal/create/internal/domain"
 )
 
 type fakeCreate struct {

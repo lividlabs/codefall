@@ -10,9 +10,9 @@ import (
 	"github.com/samber/do/v2"
 	"github.com/spf13/cobra"
 
-	"github.com/lividlabs/codefall-cli/cli/internal/create/internal/application"
-	"github.com/lividlabs/codefall-cli/cli/internal/create/internal/infrastructure"
-	"github.com/lividlabs/codefall-cli/cli/internal/create/internal/presentation"
+	"github.com/lividlabs/codefall/cli/internal/create/internal/application"
+	"github.com/lividlabs/codefall/cli/internal/create/internal/infrastructure"
+	"github.com/lividlabs/codefall/cli/internal/create/internal/presentation"
 )
 
 // Register wires create's object graph into the app's injector. This is the only place the

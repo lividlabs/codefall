@@ -4,7 +4,7 @@ Shared procedure. Every verb follows it. A persona describes the person at the k
 project: it is read from `.codefall/user.json`, a file that is never checked in, so two people
 running the same verb on the same project can be answered differently. The rule about what a persona
 may and may not change is stated once, here.
-[ADR-011](https://github.com/lividlabs/codefall-cli/blob/main/docs/adrs/ADR-011-personas.md) holds
+[ADR-011](https://github.com/lividlabs/codefall/blob/main/docs/adrs/ADR-011-personas.md) holds
 the reasoning.
 
 ## Contents

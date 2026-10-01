@@ -21,7 +21,7 @@ import (
 
 	"github.com/samber/mo"
 
-	"github.com/lividlabs/codefall-cli/cli/internal/shared/harness"
+	"github.com/lividlabs/codefall/cli/internal/shared/harness"
 )
 
 // Document is a decoded settings file: the generic shape a JSON decoder produces (strings, float64
@@ -36,7 +36,7 @@ const (
 	TrackerBeads  = "beads"
 	TrackerGitHub = "github"
 	RepoPattern   = `^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$`
-	SchemaID      = "https://raw.githubusercontent.com/lividlabs/codefall-cli/main/schemas/settings.schema.json"
+	SchemaID      = "https://raw.githubusercontent.com/lividlabs/codefall/main/cli/schemas/settings.schema.json"
 	BlockReview   = "review"
 	// FieldPostToPullRequest is whether codefall-review may post its findings to a pull request.
 	// Optional, and absent means false: posting is visible to everyone on the pull request, so it is

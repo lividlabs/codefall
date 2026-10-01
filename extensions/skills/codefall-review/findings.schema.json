@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://raw.githubusercontent.com/lividlabs/codefall-cli/main/extensions/skills/codefall-review/findings.schema.json",
+  "$id": "https://raw.githubusercontent.com/lividlabs/codefall/main/extensions/skills/codefall-review/findings.schema.json",
   "title": "Codefall review findings",
   "description": "One review of one target: what was reviewed, at which revision, who reviewed it, what was found, and what was decided about each finding. Written to .codefall/reviews/<timestamp>-<target-key>.json and rewritten after triage and after the fixes. A reviewer — subagent or external harness — returns this shape with every finding open; the session that triages fills in the rest.",
   "type": "object",

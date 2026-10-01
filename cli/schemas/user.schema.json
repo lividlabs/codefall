@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://raw.githubusercontent.com/lividlabs/codefall-cli/main/schemas/user.schema.json",
+  "$id": "https://raw.githubusercontent.com/lividlabs/codefall/main/cli/schemas/user.schema.json",
   "title": "Codefall user file",
   "description": "Per-person settings read from .codefall/user.json. The file describes the person at the keyboard, not the project, and is git-ignored.",
   "type": "object",

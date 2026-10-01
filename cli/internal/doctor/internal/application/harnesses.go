@@ -9,10 +9,10 @@ import (
 
 	"github.com/samber/mo"
 
-	"github.com/lividlabs/codefall-cli/cli/internal/doctor/internal/domain"
-	"github.com/lividlabs/codefall-cli/cli/internal/shared/harness"
-	"github.com/lividlabs/codefall-cli/cli/internal/shared/manifest"
-	"github.com/lividlabs/codefall-cli/cli/internal/shared/settings"
+	"github.com/lividlabs/codefall/cli/internal/doctor/internal/domain"
+	"github.com/lividlabs/codefall/cli/internal/shared/harness"
+	"github.com/lividlabs/codefall/cli/internal/shared/manifest"
+	"github.com/lividlabs/codefall/cli/internal/shared/settings"
 )
 
 // renameRemedy is what to do about a harness recorded under the spelling it had before it was named

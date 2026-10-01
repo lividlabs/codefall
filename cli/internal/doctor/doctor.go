@@ -10,9 +10,9 @@ import (
 	"github.com/samber/do/v2"
 	"github.com/spf13/cobra"
 
-	"github.com/lividlabs/codefall-cli/cli/internal/doctor/internal/application"
-	"github.com/lividlabs/codefall-cli/cli/internal/doctor/internal/infrastructure"
-	"github.com/lividlabs/codefall-cli/cli/internal/doctor/internal/presentation"
+	"github.com/lividlabs/codefall/cli/internal/doctor/internal/application"
+	"github.com/lividlabs/codefall/cli/internal/doctor/internal/infrastructure"
+	"github.com/lividlabs/codefall/cli/internal/doctor/internal/presentation"
 )
 
 // Register wires doctor's object graph into the app's injector. This is the only place the

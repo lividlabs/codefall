@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/lividlabs/codefall-cli/cli/internal/initcmd/internal/domain"
+	"github.com/lividlabs/codefall/cli/internal/initcmd/internal/domain"
 )
 
 // beadsResult is what the third step did in a run that got that far.

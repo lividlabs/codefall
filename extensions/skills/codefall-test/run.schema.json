@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://raw.githubusercontent.com/lividlabs/codefall-cli/main/extensions/skills/codefall-test/run.schema.json",
+  "$id": "https://raw.githubusercontent.com/lividlabs/codefall/main/extensions/skills/codefall-test/run.schema.json",
   "title": "Codefall test run",
   "description": "One run of one target: what was run, at which revision, what drove it, and what each criterion did. Written to .codefall/tests/<timestamp>-<run-key>.json beside the Markdown report of the same run. A suite or spec run fills `runner`; an agentic run fills `driver` and `variants`.",
   "type": "object",

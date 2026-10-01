@@ -15,8 +15,8 @@ import (
 	"charm.land/lipgloss/v2/tree"
 	"github.com/spf13/cobra"
 
-	"github.com/lividlabs/codefall-cli/cli/internal/doctor/internal/domain"
-	"github.com/lividlabs/codefall-cli/cli/internal/shared/ui"
+	"github.com/lividlabs/codefall/cli/internal/doctor/internal/domain"
+	"github.com/lividlabs/codefall/cli/internal/shared/ui"
 )
 
 // heading is the report's first line, drawn as a chip. The colorprofile writer strips the styling on

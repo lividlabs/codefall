@@ -10,7 +10,7 @@ import (
 
 	"github.com/samber/mo"
 
-	"github.com/lividlabs/codefall-cli/cli/internal/doctor/internal/domain"
+	"github.com/lividlabs/codefall/cli/internal/doctor/internal/domain"
 )
 
 // headingLines is the report's opening chip as it reaches a non-terminal stdout: colorprofile has

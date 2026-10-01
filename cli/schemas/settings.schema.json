@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://raw.githubusercontent.com/lividlabs/codefall-cli/main/schemas/settings.schema.json",
+  "$id": "https://raw.githubusercontent.com/lividlabs/codefall/main/cli/schemas/settings.schema.json",
   "title": "Codefall settings",
   "description": "Per-repository configuration read from .codefall/settings.json.",
   "type": "object",

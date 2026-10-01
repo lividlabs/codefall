@@ -17,7 +17,7 @@ import (
 	"maps"
 	"slices"
 
-	"github.com/lividlabs/codefall-cli/cli/internal/shared/harness"
+	"github.com/lividlabs/codefall/cli/internal/shared/harness"
 )
 
 // Name is where the record lives, in .codefall/ beside settings.json. It is written once every step

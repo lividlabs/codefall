@@ -24,13 +24,17 @@ Codefall is a single binary called `codefall` in can be installed in one of the 
 ### With [`mise`](https://mise.jdx.dev/)
 
 ```
-mise use packslip:github.com/lividlabs/codefall-cli     # current project
-mise use -g packslip:github.com/lividlabs/codefall-cli  # global installation
+mise use packslip:github.com/lividlabs/codefall     # current project
+mise use -g packslip:github.com/lividlabs/codefall  # global installation
 ```
+
+The repository used to be `lividlabs/codefall-cli`. A `mise` configuration that still names
+`packslip:github.com/lividlabs/codefall-cli` keeps installing on mise 2026.9.16 or later, which
+follows the rename by repository ID; earlier versions need the new name.
 
 ### Download pre-compiled binaries
 
-All realease binaries can be found on the [Github project release list](https://github.com/lividlabs/codefall-cli/releases).
+All realease binaries can be found on the [Github project release list](https://github.com/lividlabs/codefall/releases).
 
 ### Getting Started
 

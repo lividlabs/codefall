@@ -10,8 +10,8 @@ import (
 	tea "charm.land/bubbletea/v2"
 	"github.com/samber/mo"
 
-	"github.com/lividlabs/codefall-cli/cli/internal/config/internal/domain"
-	"github.com/lividlabs/codefall-cli/cli/internal/shared/settings"
+	"github.com/lividlabs/codefall/cli/internal/config/internal/domain"
+	"github.com/lividlabs/codefall/cli/internal/shared/settings"
 )
 
 func press(code rune, text string, mod tea.KeyMod) tea.KeyPressMsg {

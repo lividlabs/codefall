@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://raw.githubusercontent.com/lividlabs/codefall-cli/main/extensions/shared/consult.schema.json",
+  "$id": "https://raw.githubusercontent.com/lividlabs/codefall/main/extensions/shared/consult.schema.json",
   "title": "Codefall consult answer",
   "description": "One agent's answer to one question a run could not settle on its own (ADR-009.2). The agent proposes; the session that asked decides. An answer with cannotSettle true, or confidence low, advances the walk to the next agent in the list.",
   "type": "object",

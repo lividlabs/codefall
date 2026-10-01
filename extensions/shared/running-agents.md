@@ -3,7 +3,7 @@
 Shared procedure. Every verb that hands a question to another agent — `codefall-review` for its
 reviewer, and the verbs that consult when a run cannot settle something on its own — follows it, so
 the rules about which agent runs, in what order, and what its answer is allowed to do are stated
-once. [ADR-009.2](https://github.com/lividlabs/codefall-cli/blob/main/docs/adrs/ADR-009.2-agents.md)
+once. [ADR-009.2](https://github.com/lividlabs/codefall/blob/main/docs/adrs/ADR-009.2-agents.md)
 holds the reasoning.
 
 ## Contents

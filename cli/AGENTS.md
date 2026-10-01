@@ -1,4 +1,4 @@
-# codefall-cli
+# codefall
 
 The CLI is a component of the repo in `cli/`; `extensions/` holds the skills, hooks, and shared
 scripts that `codefall init` installs (the old "plugin" is renamed extension). Every path below is

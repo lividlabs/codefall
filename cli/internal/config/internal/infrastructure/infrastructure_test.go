@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/lividlabs/codefall-cli/cli/internal/config/internal/application"
+	"github.com/lividlabs/codefall/cli/internal/config/internal/application"
 )
 
 var _ application.FileSystem = (*OSFileSystem)(nil)

@@ -13,8 +13,8 @@ builds:
     # binary does not declare. buildinfo_test.go holds these to the package and its variables.
     ldflags:
       - -s -w
-      - -X github.com/lividlabs/codefall-cli/cli/internal/shared/buildinfo.version={{.Version}}
-      - -X github.com/lividlabs/codefall-cli/cli/internal/shared/buildinfo.commit={{.Commit}}
+      - -X github.com/lividlabs/codefall/cli/internal/shared/buildinfo.version={{.Version}}
+      - -X github.com/lividlabs/codefall/cli/internal/shared/buildinfo.commit={{.Commit}}
     goos:
       - darwin
       - linux

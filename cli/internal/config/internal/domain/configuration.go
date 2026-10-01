@@ -1,7 +1,7 @@
 package domain
 
 import (
-	"github.com/lividlabs/codefall-cli/cli/internal/shared/settings"
+	"github.com/lividlabs/codefall/cli/internal/shared/settings"
 )
 
 // Configuration is the effective configuration `codefall config show` prints: what every reader of

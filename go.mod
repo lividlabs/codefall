@@ -1,4 +1,4 @@
-module github.com/lividlabs/codefall-cli
+module github.com/lividlabs/codefall
 
 go 1.26.6
 

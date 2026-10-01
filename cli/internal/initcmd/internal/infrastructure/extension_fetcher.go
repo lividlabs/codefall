@@ -12,8 +12,8 @@ import (
 
 	"github.com/samber/mo"
 
-	"github.com/lividlabs/codefall-cli/cli/internal/initcmd/internal/application"
-	"github.com/lividlabs/codefall-cli/cli/internal/shared/process"
+	"github.com/lividlabs/codefall/cli/internal/initcmd/internal/application"
+	"github.com/lividlabs/codefall/cli/internal/shared/process"
 )
 
 // EmbeddedExtensionFetcher serves the extension tree out of the embedded extensions FS, and answers

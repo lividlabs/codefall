@@ -12,11 +12,11 @@ import (
 	"github.com/samber/mo"
 	"github.com/spf13/cobra"
 
-	"github.com/lividlabs/codefall-cli/cli/internal/initcmd/internal/application"
-	"github.com/lividlabs/codefall-cli/cli/internal/shared/buildinfo"
-	"github.com/lividlabs/codefall-cli/cli/internal/shared/harness"
-	"github.com/lividlabs/codefall-cli/cli/internal/shared/settings"
-	"github.com/lividlabs/codefall-cli/cli/internal/shared/ui"
+	"github.com/lividlabs/codefall/cli/internal/initcmd/internal/application"
+	"github.com/lividlabs/codefall/cli/internal/shared/buildinfo"
+	"github.com/lividlabs/codefall/cli/internal/shared/harness"
+	"github.com/lividlabs/codefall/cli/internal/shared/settings"
+	"github.com/lividlabs/codefall/cli/internal/shared/ui"
 )
 
 // The trackers the survey shows but does not accept. Huh has no disabled option, so they are offered

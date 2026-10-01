@@ -32,7 +32,7 @@ const (
 	// Name is where the file lives, beside settings.json. It is also the .gitignore entry.
 	Name     = ".codefall/user.json"
 	Version  = 1
-	SchemaID = "https://raw.githubusercontent.com/lividlabs/codefall-cli/main/schemas/user.schema.json"
+	SchemaID = "https://raw.githubusercontent.com/lividlabs/codefall/main/cli/schemas/user.schema.json"
 	// FieldVersion is the format's version, which every file carries.
 	FieldVersion = "version"
 	// FieldPersona is who the person at the keyboard works as. It is optional, and absent means

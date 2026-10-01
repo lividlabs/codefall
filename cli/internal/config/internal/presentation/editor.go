@@ -16,10 +16,10 @@ import (
 	"charm.land/huh/v2"
 	"github.com/samber/mo"
 
-	"github.com/lividlabs/codefall-cli/cli/internal/config/internal/domain"
-	"github.com/lividlabs/codefall-cli/cli/internal/shared/settings"
-	"github.com/lividlabs/codefall-cli/cli/internal/shared/ui"
-	"github.com/lividlabs/codefall-cli/cli/internal/shared/userfile"
+	"github.com/lividlabs/codefall/cli/internal/config/internal/domain"
+	"github.com/lividlabs/codefall/cli/internal/shared/settings"
+	"github.com/lividlabs/codefall/cli/internal/shared/ui"
+	"github.com/lividlabs/codefall/cli/internal/shared/userfile"
 )
 
 // The editor is `codefall config` with no arguments in a terminal: a menu over what a person

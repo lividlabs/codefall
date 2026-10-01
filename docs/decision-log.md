@@ -1741,6 +1741,17 @@ Decided at scaffold, 2026-08-16.
   test's verdict on the chart line (the user wanted one line); design's Revise mode bumping the
   round (two writers, two bumps); a worktree for test's epic checkout (`start` collides with the
   primary's services).
+- **Repository renamed to codefall, 2026-09-30.** The GitHub repository is `lividlabs/codefall`
+  and the module path is `github.com/lividlabs/codefall`, matching the binary, the release package
+  and the extension. GitHub redirects the old name for web, git, API and raw URLs, so links in the
+  changelog and in installed projects keep resolving; the module path is the one thing a redirect
+  does not cover, so `go install` of a new version needs the new path, and the change is breaking.
+  mise 2026.9.16 or later follows a packslip project by its repository ID, so a configuration
+  naming `codefall-cli` keeps installing there; earlier versions need the new name. The `$schema`
+  URLs moved at the same time from `main/schemas/` to `main/cli/schemas/`, where the files have
+  lived since the CLI tree moved under `cli/`; the old URLs returned 404. Seen and not taken:
+  editing ADR-BASE-02's mention of `codefall-cli` (a ratified ADR is never rewritten) and the
+  module-path line above (history).
 
 ## Open
 

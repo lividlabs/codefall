@@ -10,9 +10,9 @@ import (
 
 	"github.com/samber/mo"
 
-	"github.com/lividlabs/codefall-cli/cli/internal/config/internal/domain"
-	"github.com/lividlabs/codefall-cli/cli/internal/shared/settings"
-	"github.com/lividlabs/codefall-cli/cli/internal/shared/userfile"
+	"github.com/lividlabs/codefall/cli/internal/config/internal/domain"
+	"github.com/lividlabs/codefall/cli/internal/shared/settings"
+	"github.com/lividlabs/codefall/cli/internal/shared/userfile"
 )
 
 const workingDir = "/work"
@@ -26,7 +26,7 @@ var (
 // initSettings is the file init writes for a Beads project, with one key init does not write, so a
 // test can see it survive.
 const initSettings = `{
-  "$schema": "https://raw.githubusercontent.com/lividlabs/codefall-cli/main/schemas/settings.schema.json",
+  "$schema": "https://raw.githubusercontent.com/lividlabs/codefall/main/cli/schemas/settings.schema.json",
   "version": 1,
   "tracker": "beads",
   "harnesses": [

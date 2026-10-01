@@ -10,8 +10,8 @@ import (
 
 	"github.com/samber/do/v2"
 
-	"github.com/lividlabs/codefall-cli/cli/internal/initcmd"
-	"github.com/lividlabs/codefall-cli/extensions"
+	"github.com/lividlabs/codefall/cli/internal/initcmd"
+	"github.com/lividlabs/codefall/extensions"
 )
 
 // A provider whose static return type is the concrete type compiles and then fails at runtime with

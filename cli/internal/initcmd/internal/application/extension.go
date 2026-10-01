@@ -7,8 +7,8 @@ import (
 	"path"
 	"slices"
 
-	"github.com/lividlabs/codefall-cli/cli/internal/initcmd/internal/domain"
-	"github.com/lividlabs/codefall-cli/cli/internal/shared/harness"
+	"github.com/lividlabs/codefall/cli/internal/initcmd/internal/domain"
+	"github.com/lividlabs/codefall/cli/internal/shared/harness"
 )
 
 // The three subtrees of the embedded tree an install copies, and where each lands. Skills are the
