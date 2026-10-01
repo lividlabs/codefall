@@ -25,8 +25,9 @@ This directory is the extension. Everything above it is packaging.
 `codefall-scaffold`, `codefall-upgrade`, and `codefall-equip` are explicitly invoked and carry
 `disable-model-invocation: true`, so none of them fire on their own. `codefall-design`,
 `codefall-implement`, `codefall-test`, `codefall-review`, and `codefall-refresh` carry no such line,
-so an agent may run these too, and a session can carry a design through implementation, review, and
-test without a person typing each verb. The extension also ships hooks per harness, defined under
+so an agent may run these too; a delivery runs as rounds of implement, review, and test, each
+handoff a bead, a document, a report, or a pull request, with a `/clear` between verbs. The
+extension also ships hooks per harness, defined under
 [`hooks/`](hooks/): a `PreToolUse` guard that denies merges and pushes to the default branch
 everywhere, plus, for the harnesses that have the event (Claude Code, Codex, and OpenCode), a
 `SessionStart` prime on what Beads knows and a notice naming what the project needs done — the

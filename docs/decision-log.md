@@ -1727,6 +1727,20 @@ Decided at scaffold, 2026-08-16.
   model-invocable with a mode that skips the interview (its description would sit in every
   session's listing under ADR-004.2, and the interview is the verb); and `test` writing
   `docs/bugs/` itself (two writers for one document kind).
+- **Deliveries and rounds, 2026-09-30.** Recorded as `ADR-013`. Findings from implement, review,
+  and test left the epic's graph — a task beside it, a findings file `.ignore` hides, a tracker
+  issue — so the task beads burned down to zero while the work that would make the feature work sat
+  where no verb read it; a run lost the second of two findings. Every finding that survives triage
+  is now a `deferred` child of the epic, reopened at the next round's go, so `bd children <epic>`
+  answers whether the delivery is done and the chart line from `shared/delivery.sh` shows it at
+  every verb's start and end. `test` takes an epic as a target and runs the round's end-to-end
+  before the merge. *Parallel stacks*, the landing default nobody had ever hit, is gone with its
+  file-scope prediction; two strategies remain, the serial stack and the epic branch. Integration
+  no longer rebases stack bottoms — a bottoms-only rebase left the links above stale — and merges
+  the top onto `main` in a scratch worktree instead, pushing nothing. Seen and not taken: the last
+  test's verdict on the chart line (the user wanted one line); design's Revise mode bumping the
+  round (two writers, two bumps); a worktree for test's epic checkout (`start` collides with the
+  primary's services).
 
 ## Open
 
