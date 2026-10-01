@@ -118,11 +118,12 @@ func (i *Initialize) DeclaredTestDir(dir string) (mo.Option[string], error) {
 //
 // Settings that are already there are left alone: the run is an upgrade, or an init finishing a
 // project that was set up before the manifest existed, and the steps after this one still have work
-// to do either way. Two edits are made to them. An old spelling of a harness name in the settings or
-// the manifest is rewritten to the name the harness has now, and a harness this run installs for
-// that the settings do not name is added to their list, which is what `upgrade --harness` asks for.
-// Nothing else in either file changes: changing an answer the settings already record is a hand
-// edit, until a command exists for it.
+// to do either way. Three edits are made to them. An old spelling of a harness name in the settings
+// or the manifest is rewritten to the name the harness has now, a harness this run installs for that
+// the settings do not name is added to their list, which is what `upgrade --harness` asks for, and a
+// $schema URL an earlier release wrote is pointed at the one codefall publishes now. Nothing else in
+// either file changes: changing an answer the settings already record is a hand edit, until a
+// command exists for it.
 func (i *Initialize) settings(_ context.Context, request Request) (domain.StepResult, error) {
 	exists, err := i.SettingsExist(request.Dir)
 	if err != nil {
@@ -140,6 +141,11 @@ func (i *Initialize) settings(_ context.Context, request Request) (domain.StepRe
 			return domain.StepResult{}, err
 		}
 
+		repointed, err := i.currentSchema(request.Dir)
+		if err != nil {
+			return domain.StepResult{}, err
+		}
+
 		var edits []string
 
 		if renamed != "" {
@@ -148,6 +154,10 @@ func (i *Initialize) settings(_ context.Context, request Request) (domain.StepRe
 
 		if len(added) > 0 {
 			edits = append(edits, "added harness "+sentenceList(added)+" to "+settingsName)
+		}
+
+		if repointed {
+			edits = append(edits, "pointed $schema in "+settingsName+" at the current schema")
 		}
 
 		if len(edits) > 0 {
