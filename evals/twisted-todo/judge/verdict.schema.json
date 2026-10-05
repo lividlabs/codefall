@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://codefall.dev/evals/twisted-todo/verdict.schema.json",
+  "title": "Judge verdict",
+  "description": "What the judge returns for one run: one entry per rubric block, each with the exact quotes that decided it, and one overall result.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["overall", "overall_reason", "blocks"],
+  "properties": {
+    "overall": {
+      "type": "string",
+      "enum": ["pass", "pass with findings", "fail"]
+    },
+    "overall_reason": {
+      "type": "string",
+      "description": "One paragraph in plain sentences. For a fail, the first block that failed and the line that failed it. For pass with findings, the one sentence or session that fell short."
+    },
+    "blocks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["block", "title", "verdict", "judged_on", "quotes", "reason"],
+        "properties": {
+          "block": { "type": "integer", "minimum": 1 },
+          "title": { "type": "string" },
+          "verdict": { "type": "string", "enum": ["pass", "fail", "not exercised", "unclear"] },
+          "judged_on": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "The transcript or evidence files the verdict rests on, by name."
+          },
+          "quotes": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Exact text from a transcript or an exact field from evidence/. Never a paraphrase. Empty only for not exercised."
+          },
+          "reason": { "type": "string", "description": "One or two sentences. For unclear, what would settle it." }
+        }
+      }
+    }
+  }
+}

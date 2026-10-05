@@ -9,13 +9,16 @@
 #   3. copies the fixture into a fresh directory, makes it a git repository on `main`, and creates a
 #      private GitHub repository for it (`gh repo create --private`), pushed;
 #   4. runs `codefall init` for Claude Code with the GitHub tracker, which also runs `bd init`;
-#   5. declares what `equip` would have declared: the `local` scripts and the Playwright runner, in
-#      `.codefall/settings.json` and the testing root's AGENTS.md;
-#   6. sets the persona to `product-manager`;
-#   7. installs the recipe's Action (it is in the fixture) and the shared landing customization
-#      that tells the design verb the stack lands itself;
-#   8. commits, pushes, adopts the git origin as the Beads Dolt remote, and writes the paths the
+#   5. sets the persona to `product-manager`;
+#   6. installs the document-landing Action by copying the template codefall ships
+#      (extensions/skills/codefall-equip/templates/codefall-land-documents.yml) to
+#      .github/workflows/, so the throwaway lands documents the way a project that ran
+#      `/codefall-equip landing` does; a throwaway has no branch rule, so the default token merges;
+#   7. commits, pushes, adopts the git origin as the Beads Dolt remote, and writes the paths the
 #      driver reads into evals/twisted-todo/.throwaway.env.
+#
+# It declares nothing under `local` or `test.runners`: the chain's first two sessions are
+# `/codefall-equip local` and `/codefall-equip test`, and they are under test too.
 #
 # Usage: fixture/setup.sh [repo-name]      default: twisted-todo-<date>-<time>
 # Env:   EVAL_WORK_DIR  where the project checkout goes (default: ~/tmp/twisted-todo)
@@ -27,6 +30,7 @@ set -euo pipefail
 here=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 eval_root=$(cd "$here/.." && pwd)
 codefall_repo=$(cd "$eval_root/../.." && pwd)
+action_template="$codefall_repo/extensions/skills/codefall-equip/templates/codefall-land-documents.yml"
 
 name=${1:-twisted-todo-$(date +%Y%m%d-%H%M%S)}
 work_root=${EVAL_WORK_DIR:-$HOME/tmp/twisted-todo}
@@ -54,6 +58,7 @@ for scope in repo workflow project delete_repo; do
 done
 gh extension list 2>/dev/null | grep -q 'github/gh-stack' || gh extension install github/gh-stack
 owner=$(gh api user -q .login)
+[ -f "$action_template" ] || { echo "missing $action_template; is this checkout on a branch that ships the landing track?" >&2; exit 1; }
 
 say "Building codefall from $codefall_repo ($(git -C "$codefall_repo" branch --show-current))"
 mkdir -p "$bin_dir"
@@ -90,42 +95,16 @@ say "Running codefall init (it runs bd init too)"
 "$codefall" init --harness claude --tracker github --issues-repo "$owner/$name" --test-dir testing
 bd config get issue_prefix
 
-say "Declaring the local scripts and the Playwright runner (what equip would write)"
-tmp=$(mktemp)
-jq '.local = {"start": "scripts/local.sh start", "update": "scripts/local.sh update"} | .test.runners = ["playwright"]' \
-  .codefall/settings.json >"$tmp" && mv "$tmp" .codefall/settings.json
-python3 - <<'EOF'
-import re, pathlib
-p = pathlib.Path("testing/AGENTS.md")
-text = p.read_text()
-line = ("- **playwright** — all: `npm run e2e`. One case: "
-        "`npm run e2e -- testing/test-cases/<area>/<slug>.e2e.ts`. List: `npx playwright test --list`.\n")
-text = re.sub(r"(## Runners\n\n[^\n]*\n)", r"\1\n" + line, text, count=1)
-text = text.replace(
-    "## Setup and state-forcing commands\n\nThe commands that prepare a run, and the ones that put the product into a state a case needs.\n",
-    "## Setup and state-forcing commands\n\nThe commands that prepare a run, and the ones that put the product into a state a case needs.\n\n"
-    "- `scripts/local.sh start` brings the server up at http://localhost:3000; `scripts/local.sh update` applies migrations.\n"
-    "- A clean database: stop the server, delete `data/app.db*`, start again. Nothing else holds state.\n")
-p.write_text(text)
-EOF
-
 say "Setting the persona to product-manager"
 "$codefall" config persona product-manager
 
-say "Installing the shared landing customization (the Action lands the document stack)"
-mkdir -p .codefall/skills/shared
-cat >.codefall/skills/shared/CUSTOMIZE.md <<'EOF'
-# Landing customization
-
-This repository lands its document stacks itself. A GitHub Action
-(`.github/workflows/land-document-stack.yml`) merges the stack when the design pull request is open
-and not a draft. The design verb opens its pull request ready for review (or marks it ready when it
-was a draft), says the stack will land on its own, and stops. It asks nobody to merge.
-EOF
+say "Installing the document-landing Action from codefall's template"
+mkdir -p .github/workflows
+cp "$action_template" .github/workflows/codefall-land-documents.yml
 
 say "Committing the install and pushing"
 git add -A
-git commit -qm "chore: codefall init, local scripts and runner declared, document-stack action"
+git commit -qm "chore: codefall init, persona, and the document-landing Action"
 git push -q origin main
 
 say "Adopting the git origin as the Beads Dolt remote"

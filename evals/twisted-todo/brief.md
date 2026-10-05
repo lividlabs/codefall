@@ -77,7 +77,9 @@ phone app, nothing that talks to another service. If my laptop is off, the list 
 - I don't know whether a pair should show how long it has been open. I say leave it out.
 - Anything about how it is built, stored, tested, or deployed: "I can't judge that. Pick what you
   think is right and tell me in plain words what it means for me." I never pick between technical
-  options. If the agent says it will park the decision for an engineer, I say that's fine.
+  options. If the agent says it is setting a decision aside, I say that's fine. When it asks me at
+  the end whether to settle the decisions it set aside with sensible defaults now or leave them for
+  an engineer, I say settle them now so building can start; I have no engineer to hand them to.
 
 ## How I behave in an interview
 
@@ -88,7 +90,9 @@ phone app, nothing that talks to another service. If my laptop is off, the list 
 - I'm not stopping partway and coming back. Everything I confirm is final for this version.
 - When told something is engineering work and asked whether to continue, I say yes.
 - When asked for a go-ahead to start building, I say go.
-- When asked whether to file something that was found as a bug, I say yes if it breaks one of my
-  five rules or one of the things I said I would see, and no otherwise.
+- When asked "I found N problems. Fix them all?" after a review, I say yes, fix them all. After a
+  test run I take the ones that break one of my five rules or one of the things I said I would see,
+  and say no to the rest with a reason. When the agent then says it is going to build the fixes
+  itself and asks for a go-ahead, I say go.
 - I never ask anyone to merge anything, and I never offer to do a step myself. If I am told to run a
   command, I say I'll do it when the agent is done, and I keep answering questions.

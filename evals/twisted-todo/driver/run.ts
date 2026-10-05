@@ -1,6 +1,8 @@
-// Runs the chain: envision, specify, design, implement, review, test, each a fresh session in the
-// project directory, with the PM simulator answering; lands the document stack and merges the code
-// stack as the person would; gathers evidence; runs the judge.
+// Runs the chain: equip (local, then test), envision, specify, design, implement, review, test,
+// each a fresh session in the project directory, with the PM simulator answering. Between
+// sessions it does what the person would: merges the equip pull requests, waits for the Action to
+// merge each document pull request, returns the checkout to main, and merges the code stack after
+// test. Then it gathers evidence and runs the judge through .codefall/shared/run-agent.sh.
 //
 //   node run.ts                      the whole chain, then the judge
 //   node run.ts --from implement     resume a run from a verb (pass --run <dir> to reuse a run dir)
@@ -39,24 +41,26 @@ const deviation = (text: string) => {
   log(`DEVIATION: ${text}`);
   appendFileSync(join(runDir, "deviations.txt"), text + "\n");
 };
+const asThePerson = (text: string) => {
+  log(`as the person: ${text}`);
+  appendFileSync(join(runDir, "deviations.txt"), `(not a deviation) ${text}\n`);
+};
 
 const model = args.model ?? "opus";
 const simModel = args["sim-model"] ?? "sonnet";
-const judgeModel = args["judge-model"] ?? "opus";
+const judgeAgents = (args["judge-agents"] ?? "muse,opencode").split(",").map((s) => s.trim()).filter(Boolean);
 const effort = (args.effort as any) ?? undefined;
-const settleDesign = args["settle-design"] !== "false";
 const maxPmTurns = Number(args["max-pm-turns"] ?? 60);
 const maxMinutes = Number(args["max-minutes"] ?? 90);
+const landMinutes = Number(args["land-minutes"] ?? 10);
 const brief = readFileSync(join(evalRoot, "brief.md"), "utf8");
 const gh = makeGh(repo, runDir, log);
-const summary: Record<string, unknown> = { repo, projectDir, model, simModel, startedAt: new Date().toISOString(), sessions: [] as unknown[] };
+const summary: Record<string, unknown> = { repo, projectDir, model, simModel, judgeAgents, startedAt: new Date().toISOString(), sessions: [] as unknown[] };
 
-async function runVerb(verb: Verb, personaOverride?: "engineer"): Promise<SessionOutcome> {
+async function runVerb(verb: Verb): Promise<SessionOutcome> {
   const s = step(verb);
   const firstMessage = `${s.skill} ${s.argument(projectDir)}`.trim();
-  const persona = personaOverride ?? "product-manager";
-  setPersona(persona);
-  log(`--- ${verb}: ${firstMessage.slice(0, 80)}${firstMessage.length > 80 ? "…" : ""} (persona ${persona})`);
+  log(`--- ${verb}: ${firstMessage.slice(0, 80)}${firstMessage.length > 80 ? "…" : ""}`);
   const simulator = new Simulator({
     brief,
     verb,
@@ -69,24 +73,24 @@ async function runVerb(verb: Verb, personaOverride?: "engineer"): Promise<Sessio
   log(`${verb} ended: ${outcome.status}, ${outcome.pmTurns} PM turns, $${outcome.costUsd.toFixed(2)}`);
   (summary.sessions as unknown[]).push({ verb, status: outcome.status, pmTurns: outcome.pmTurns, costUsd: outcome.costUsd, sessionId: outcome.sessionId });
   writeFileSync(join(runDir, "summary.json"), JSON.stringify(summary, null, 2) + "\n");
-  if (personaOverride) setPersona("product-manager");
   return outcome;
 }
 
 async function main(): Promise<void> {
   if (!args["judge-only"]) {
-    const from = (args.from as Verb | undefined) ?? "envision";
+    const from = (args.from as Verb | undefined) ?? CHAIN[0];
     const verbs = CHAIN.slice(CHAIN.indexOf(from));
     if (!verbs.length) fail(`--from must be one of ${CHAIN.join(", ")}`);
 
+    setPersona("product-manager");
     for (const verb of verbs) {
       const outcome = await runVerb(verb);
       if (outcome.status !== "done") {
         log(`stopping the chain: ${verb} ended ${outcome.status}`);
         break;
       }
-      if (verb === "design") await afterDesign(outcome);
-      if (verb === "test") afterTest();
+      const goOn = await afterVerb(verb);
+      if (!goOn) break;
     }
   }
 
@@ -95,65 +99,83 @@ async function main(): Promise<void> {
   summary.finishedAt = new Date().toISOString();
   writeFileSync(join(runDir, "summary.json"), JSON.stringify(summary, null, 2) + "\n");
 
-  const record = await judgeRun({ runDir, judgeDir: join(evalRoot, "judge"), briefPath: join(evalRoot, "brief.md"), model: judgeModel, log });
+  const record = await judgeRun({ runDir, judgeDir: join(evalRoot, "judge"), briefPath: join(evalRoot, "brief.md"), projectDir, agents: judgeAgents, log });
+  summary.judgedBy = record.judgedBy;
+  writeFileSync(join(runDir, "summary.json"), JSON.stringify(summary, null, 2) + "\n");
   log(`run directory: ${runDir}`);
-  log(`overall: ${record.verdict?.overall ?? "see verdict.json"}`);
+  log(`overall: ${record.verdict?.overall ?? "see verdict.json"} (judged by ${record.judgedBy ?? "nobody"})`);
 }
 
-// Between design and implement: settle a Draft design if allowed, then wait for the Action.
-async function afterDesign(outcome: SessionOutcome): Promise<void> {
-  const design = latestDoc("designs");
-  const isDraft = design ? /\*\*Status:\*\*\s*Draft/.test(readFileSync(design, "utf8")) : false;
-  const parked = design ? /## Decisions needed/.test(readFileSync(design, "utf8")) : false;
-  if (isDraft && parked) {
-    if (!settleDesign) {
-      log("the design is Draft with decisions parked; --settle-design=false, so the chain stops here");
-      throw new StopChain();
+// What the person would do once a verb's session is over. Returns false when the chain should stop.
+async function afterVerb(verb: Verb): Promise<boolean> {
+  const after = step(verb).after;
+  switch (after.kind) {
+    case "merge-own-pr": {
+      const pr = gh.latestPr(after.prefix);
+      if (!pr) {
+        deviation(`${verb} opened no pull request on ${after.prefix}*; the next verb runs against main as it is`);
+        return true;
+      }
+      if (pr.state !== "MERGED") {
+        gh.mergePr(pr.number);
+        asThePerson(`the driver merged ${verb}'s pull request #${pr.number} (${pr.headRefName}), which is a person's to merge`);
+      }
+      gh.returnToMain(projectDir);
+      return true;
     }
-    deviation("the design ended Draft with decisions parked under the product-manager persona; the driver ran one extra design session with the engineer persona to settle them (design-settle.md)");
-    const settled = await runVerb("design-settle", "engineer");
-    if (settled.status !== "done") throw new StopChain();
-  }
-
-  const pr = gh.designPr() ?? gh.listPrs("all").find((p) => p.headRefName.startsWith("design/"));
-  if (!pr) {
-    deviation("no design pull request was found after the design session; implement will run against whatever is on main");
-    return;
-  }
-  if (pr.state === "MERGED") {
-    log(`design PR #${pr.number} already merged`);
-    return;
-  }
-  log(`waiting for the Action to land the document stack at design PR #${pr.number}`);
-  const landed = await gh.waitForStackLanding(pr.number, Number(args["land-minutes"] ?? 15));
-  if (!landed) {
-    deviation(`the Action did not merge design PR #${pr.number} within the wait; the driver merged the stack as the person would, from outside the project directory`);
-    try {
-      gh.mergeStack(pr.number);
-    } catch (error: any) {
-      deviation(`the driver's own stack merge failed too: ${error.message}`);
+    case "wait-for-action": {
+      if (verb === "design") {
+        const design = latestDoc("designs");
+        const text = design ? readFileSync(design, "utf8") : "";
+        if (/\*\*Status:\*\*\s*Draft/.test(text) && /## Decisions needed/.test(text)) {
+          log("the design is Draft with decisions left for an engineer; the chain stops here, because no engineer is in this run");
+          return false;
+        }
+      }
+      const pr = gh.latestPr(after.prefix);
+      if (!pr) {
+        deviation(`${verb} opened no pull request on ${after.prefix}*; the next verb runs against main as it is`);
+        return true;
+      }
+      if (pr.state === "MERGED") {
+        log(`${verb}'s pull request #${pr.number} is already merged`);
+      } else {
+        log(`waiting up to ${landMinutes} minutes for the Action to merge ${verb}'s pull request #${pr.number}`);
+        const merged = await gh.waitForMerge(pr.number, landMinutes);
+        if (!merged) {
+          deviation(`the Action did not merge ${verb}'s pull request #${pr.number} within ${landMinutes} minutes; the driver merged it as the person would, from outside the project directory`);
+          try {
+            gh.mergePr(pr.number);
+          } catch (error: any) {
+            deviation(`the driver's own merge of #${pr.number} failed too: ${error.message}`);
+          }
+        }
+      }
+      gh.returnToMain(projectDir);
+      asThePerson(`the driver returned the checkout to main after ${verb}`);
+      return true;
     }
+    case "merge-code-stack": {
+      const top = gh.codeStackTop();
+      if (!top) {
+        log("no open code stack to merge");
+        return true;
+      }
+      const open = gh.listPrs("open").filter((p) => p.headRefName.startsWith("feat/"));
+      log(`merging the code stack: ${open.length} layer(s), top #${top.number} ${top.headRefName}`);
+      try {
+        gh.mergeStack(top.number);
+        asThePerson(`the driver merged the code stack at #${top.number} after test, which is a person's to merge, from outside the project directory`);
+      } catch (error: any) {
+        deviation(`merging the code stack at #${top.number} failed: ${error.message}`);
+      }
+      gh.returnToMain(projectDir);
+      return true;
+    }
+    case "none":
+      return true;
   }
 }
-
-// After test: merge the code stack as the person would, so the delivery reaches main.
-function afterTest(): void {
-  const top = gh.codeStackTop();
-  if (!top) {
-    log("no open code stack to merge");
-    return;
-  }
-  const open = gh.listPrs("open").filter((p) => p.headRefName.startsWith("feat/"));
-  log(`merging the code stack: ${open.length} layer(s), top #${top.number} ${top.headRefName}`);
-  try {
-    gh.mergeStack(top.number);
-    appendFileSync(join(runDir, "deviations.txt"), `(not a deviation) the driver merged the code stack at #${top.number} after test, as the person would, from outside the project directory\n`);
-  } catch (error: any) {
-    deviation(`merging the code stack at #${top.number} failed: ${error.message}`);
-  }
-}
-
-class StopChain extends Error {}
 
 function setPersona(persona: "engineer" | "product-manager"): void {
   const bin = env.CODEFALL_BIN ?? "codefall";
@@ -207,11 +229,6 @@ function fail(message: string): never {
 }
 
 main().catch((error) => {
-  if (error instanceof StopChain) {
-    log("chain stopped; gathering evidence and judging what exists");
-    gh.gatherEvidence(projectDir, runDir, epicId());
-    return judgeRun({ runDir, judgeDir: join(evalRoot, "judge"), briefPath: join(evalRoot, "brief.md"), model: judgeModel, log });
-  }
   log(`driver error: ${error.stack ?? error.message}`);
   process.exit(1);
 });

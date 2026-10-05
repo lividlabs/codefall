@@ -22,11 +22,15 @@ warning is harmless.
 | `src/main.js`, `src/server.js`, `src/page.js`, `src/db.js` | the server, the routes, the page shell and visual language, the database and migration runner |
 | `src/migrations/0001_init.sql` | the one migration, so the runner is proven and later features add the next file |
 | `test/*.test.js` | unit tests on `node:test`, run by `npm test` |
-| `scripts/local.sh` | `start`, `update`, and `stop`; what `equip` would declare as the local scripts |
-| `playwright.config.ts` | the runner, collecting `*.e2e.ts` from `testing/test-cases/` as `equip` configures it |
+| `scripts/local.sh` | `start`, `update`, and `stop`; what the chain's `equip local` session finds and declares |
+| `playwright.config.ts` | the runner, collecting `*.e2e.ts` from `testing/test-cases/`; what the chain's `equip test` session finds and declares |
 | `AGENTS.md` | the project's rules; `codefall init` adds its sections below them |
-| `.github/workflows/land-document-stack.yml` | the recipe's Action, adapted for a throwaway |
 | `setup.sh`, `teardown.sh` | create and delete the throwaway repository |
+
+The document-landing Action is not in the fixture. `setup.sh` copies it from the template codefall
+ships, `extensions/skills/codefall-equip/templates/codefall-land-documents.yml`, so the throwaway
+runs the same file a project gets from `/codefall-equip landing`, and a change to the template
+reaches the eval without a second copy to keep in step.
 
 `codefall init` creates `testing/` with its `AGENTS.md`, `README.md`, and `CLAUDE.md`; the fixture
 does not carry them.
@@ -45,12 +49,11 @@ evals/twisted-todo/fixture/setup.sh my-run-name     # or your own
 It writes `evals/twisted-todo/.throwaway.env` with the project directory and the repository name;
 the driver and `teardown.sh` read it. That file is for one run and should not be committed.
 
-Two things it does that `equip` would otherwise do in its own pull requests: it declares the
-`local` scripts and the `playwright` runner in `.codefall/settings.json`, and it fills the Runners
-line in `testing/AGENTS.md`. The chain under test does not include `equip`, and without those
-declarations `implement` refuses to start a bead that names a test case. `equip` still works
-against the fixture if someone wants to run it by hand: the scripts and the Playwright config are
-where its search looks.
+It declares nothing under `local` or `test.runners` and writes no Runners line: the chain's first
+two sessions are `/codefall-equip local` and `/codefall-equip test`, which find the scripts and the
+Playwright configuration and declare them in their own pull requests, so `equip` is under test too.
+The one thing it installs that `equip` would otherwise install is the document-landing Action,
+copied from codefall's template, so that the document pull requests land without a person.
 
 ## teardown.sh
 

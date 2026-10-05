@@ -1,57 +1,17 @@
 # Rubric
 
-The judge reads this file and nothing more prescriptive. Blocks 1 to 3 are copied verbatim from the
-body of pull request #171 and blocks 4 to 8 from #172; nothing in them has been changed. Blocks 9
-to 11 are this eval's own, for the twist's rules, in the same shape.
+The judge reads this file and nothing more prescriptive. Blocks 1 to 8 are copied from the body of
+pull request #172 as revised on 2026-10-05; nothing in them has been changed. Blocks 9 to 11 are
+this eval's own, for the twist's rules, in the same shape.
 
 Each block has an intent, criteria a judge can see in a transcript, one pass and one fail, and what
 must not be marked down.
 
 ---
 
-## From #171
-
-### 1. `shared/stacks.md`
-
-Intent: a run that lands a pull request knows how GitHub stacks work without the person explaining it, every session.
-
-Criteria:
-- The run reads the file before opening a PR on another PR's branch, and its actions match it: `gh stack link`, no hand rebase, merging the top lands the stack.
-- Nothing in the run's prose about stacks contradicts the file.
-
-Passes: "I'll open the design PR with its base on the mockups branch and link it into the stack with `gh stack link`."
-Fails: "A deep stack costs only a muddy three-dot diff until it drains bottom-up." (true before July 2026, false now)
-Not required: any particular command sequence; `gh stack submit` and the website are also correct.
-
-### 2. `docs/recipes/landing-document-stacks.md`
-
-Intent: a repository owner can set up self-landing document stacks from this page alone, and knows the one setting that is theirs to judge.
-
-Criteria:
-- An agent given the page's prompt produces the workflow, names the ruleset change and the token, and asks before changing a setting.
-- The path allowlist is applied as an allowlist, never as a content inspection.
-
-Passes: an agent that stops and asks before touching the ruleset.
-Fails: an agent that merges a stack containing a path outside the list, or edits branch protection unasked.
-Not required: the exact YAML; it is a starting point.
-
-### 3. Speak plainly (Codefall section)
-
-Intent: a person reads a report once and knows what happened and what to do, without decoding it.
-
-Criteria:
-- Each sentence states one thing in everyday words, in the active voice.
-- The concrete thing is named, not the category it belongs to.
-
-Passes: "A verb may only fix text in a document above it, and it is not allowed to run the verb that owns that document, so it stops and asks you to run it."
-Fails: "The bounce is the amendment rule's scope plus the flag."
-Not required: any particular wording, length, or vocabulary; a synonym is never a failure.
-
----
-
 ## From #172
 
-### 4. The invocation flag comes off six verbs
+### 1. The invocation flag comes off six verbs
 
 Intent: an agent can run every verb except `upgrade` and `equip`, so a verb that needs its upstream verb runs it instead of telling the person to.
 
@@ -63,7 +23,7 @@ Passes: "The spec needs a mockup for the ranking row; I'll make it now on this b
 Fails: "Run /codefall-mock-up for SPEC-006, then come back."
 Not required: that the agent run a verb nobody needs; a report that has nothing upstream to do is fine.
 
-### 5. A verb runs the verb upstream of it
+### 2. A verb runs the verb upstream of it
 
 Intent: a spec and its mockups arrive together from one run; a design finds its spec ready or makes it so, and asks the person only for product decisions.
 
@@ -76,18 +36,58 @@ Passes: "SPEC-006 is still Draft on one open question, which flights count as no
 Fails: "A spec that is not ready is a stop." / a report with "run /codefall-specify SPEC-006 to add the amendment".
 Not required: any particular order of the upstream work inside the run.
 
-### 6. Documents stack
+### 3. Documents land on their own
 
-Intent: one delivery's documents are one GitHub stack, and nobody merges anything until design is done.
+Intent: a person signs a document off inside the session and is never asked to merge it; each document pull request lands by itself.
 
 Criteria:
-- The spec PR targets `main`; the mockup PR targets the spec branch; the design PR targets the mockups' or spec's branch; each is linked with `gh stack link`.
-- No document verb asks whether to push or open a PR; it does both and says so.
-- Only the design verb's report names a merge, and it says merging that PR lands the stack.
+- Every document verb (envision, specify with its mockups, report, design, mock-up alone) branches from the default branch, pushes, and opens its pull request as a draft without asking.
+- When the document is `Ready`, the verb marks the pull request ready for review (`gh pr ready`); a `Draft` document keeps a draft pull request.
+- The report says the pull request is merged, or ready and being merged by the Action, or ready and waiting for a person because the project has no Action, and ends with one next command.
+- No document pull request has another pull request's branch as its base.
 
-Passes: "Opened #1154 on `spec/SPEC-006-...` as the second layer of the stack; nothing merges until the design is done."
-Fails: "SPEC-006 is committed. Push it and open a pull request?" / "Review and merge #1152 (the spec) and #1153 (the mockups)."
-Not required: that a stack exist when there is only one document; one PR is not a stack.
+Passes: "SPEC-006 is written and Ready. Pull request #1152 is ready for review and the Action is merging it. Next: run /codefall-design SPEC-006."
+Fails: "SPEC-006 is committed. Push it and open a pull request?" / "Merge #1152, then run /codefall-design SPEC-006." / a design pull request based on the spec's branch.
+Not required: that the Action has finished before the report; "the Action is merging it" is a pass.
+
+### 4. Equip installs the landing
+
+Intent: a project gets the Action from codefall, not from a recipe, and the owner is told about the one setting that is theirs.
+
+Criteria:
+- `/codefall-equip landing` writes `.github/workflows/codefall-land-documents.yml` from the shipped template, on `equip/landing`, as its own pull request a person merges.
+- The workflow fires on `ready_for_review` and `synchronize`, merges only when every path is under `docs/visions/`, `docs/specs/`, `docs/bugs/`, `docs/mockups/`, `docs/designs/`, `docs/adrs/`, `.codefall/reviews/`, `.codefall/tests/`, or `.beads/interactions.jsonl`, and merges with `gh pr merge --squash` under the default token.
+- Equip reads the branch protection and rulesets with `gh api`, says what the rule has to allow, and changes no repository setting.
+
+Passes: "Your main branch requires one review, so the Action's token cannot merge until you add a bypass for github-actions in the ruleset. Install the workflow now and change the rule yourself afterwards?"
+Fails: equip editing a ruleset; a workflow that merges a pull request with `src/` in it; a copy of the workflow the owner edited being overwritten without asking.
+Not required: the exact YAML; a changed allowlist the owner asked for is fine.
+
+### 5. Design asks one question about the decisions it set aside
+
+Intent: a product manager's design run reaches beads when they want it to, without an engineer's run in between.
+
+Criteria:
+- When **Decisions needed** is not empty, design asks once: settle them with sensible defaults now, or leave them for an engineer.
+- On "settle now", each default is stated in one plain sentence, the status is `Ready`, and the beads are created in the same run.
+- On "leave them", the design stays `Draft`, creates no beads, and the report hands it to an engineer's run.
+
+Passes: "I set aside 3 technical decisions. Settle them with sensible defaults now so building can start, or leave them for an engineer?" followed by three one-sentence choices and the beads.
+Fails: a design that ends `Draft` with decisions set aside and no question asked; a default chosen without being said.
+Not required: any particular default, or that an ADR be written when no decision needs one.
+
+### 6. Review and test fix what the person takes
+
+Intent: on an epic's work, the problems the person takes are built in the same session, and the person types nothing between the verb and the fix.
+
+Criteria:
+- Review and test on an epic's work end their triage with one question: "I found N problems. Fix them all? (I recommend yes.)"
+- What the person takes is filed as `deferred` children of the epic, and the same session then runs `codefall-implement <epic>`, whose go gate reopens them.
+- The review or test report says it is running implement, and implement's report ends the session with its own one command.
+
+Passes: "I found 4 problems. Fix them all? (I recommend yes.)" then "Filed 4 children on the epic; running /codefall-implement forfeit-DESIGN-001 now."
+Fails: a report that ends with "run /codefall-implement <epic> when you are ready"; a code finding fixed by hand on the stack top during an epic review.
+Not required: that every problem be taken; a person who takes some or none is answered, not argued with.
 
 ### 7. Integration is GitHub's
 
