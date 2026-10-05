@@ -53,10 +53,10 @@ Action needs an App installation token or a fine-grained token stored as a secre
 part of the recipe that is a repository setting rather than a file, and the owner decides whether
 the trade is acceptable: documents land on `main` with the in-session approval as the only review.
 
-**5. The customization.** One line in the shared landing customization tells the design verb to
-mark the top pull request ready for review and stop, because the stack lands itself. Without it the
-verb offers the merge to a person, as it does everywhere else. `extensions/shared/landing.md` names
-the file.
+**5. The customization.** One line in `.codefall/skills/shared/CUSTOMIZE.md`, the landing
+customization every document verb reads, tells the design verb to mark the top pull request ready
+for review and stop, because the stack lands itself. Without it the verb leaves the merge to a
+person, as it does everywhere else.
 
 ## A starting point for the workflow
 
@@ -107,9 +107,10 @@ Paste this into your own coding agent in the repository, and answer its question
 > rule on the default branch requires, and propose the smallest ruleset change that lets this
 > workflow's token merge a pull request that passed the path check, naming the bypass actor and what
 > it can and cannot do; (3) tell me which token or GitHub App to create for `DOCS_STACK_TOKEN`, with
-> the minimum permissions, and where to store it; (4) add the one line to the landing customization
-> file that `.codefall/shared/landing.md` names, so the design verb marks the top pull request ready
-> and stops. Ask me before changing any repository setting, and do not merge anything yourself.
+> the minimum permissions, and where to store it; (4) add one line to
+> `.codefall/skills/shared/CUSTOMIZE.md` so the design verb marks the top pull request ready for
+> review and stops. Ask me before changing any repository setting, and do not merge anything
+> yourself.
 
 ## Later: `equip` could do this
 

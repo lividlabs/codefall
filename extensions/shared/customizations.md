@@ -13,5 +13,9 @@ you loaded it, and follow it for this run. `<verb>` is the name of the skill tha
 It carries procedure this extension cannot know — a system to consult, a question this project always
 asks, a section every document carries, a step that runs after writing.
 
+One customization is shared rather than per verb: `.codefall/skills/shared/CUSTOMIZE.md`, read by
+the landing procedure beside this file, for how this repository lands the documents every verb
+writes the same way.
+
 It extends the skill and never relaxes it: the skill's **Rules** hold regardless. A customization
 that would suspend one is asking for a different skill — say so and stop.

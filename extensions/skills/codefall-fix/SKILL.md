@@ -2,7 +2,6 @@
 name: codefall-fix
 description: Fix something small in one run — a bead, a bug report, an issue, or a description. Establish one bead at tier 0 with its cause and acceptance criteria, build it in a worktree with tests as part of done, and open a pull request, behind a single confirmation. Stops and names codefall-design when the work needs a design document, an ADR, or more than one bead. Never merges to main.
 argument-hint: "[a bead, a bug report, an issue, or what to fix]"
-disable-model-invocation: true
 allowed-tools:
   - Read
   - Glob

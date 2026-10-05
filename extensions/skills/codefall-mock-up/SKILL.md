@@ -2,7 +2,6 @@
 name: codefall-mock-up
 description: Get the visual surface of a feature into the repository under docs/mockups/ — import what a design tool exported, or make the mockup here, matching the application's own design system so it looks like it belongs, static or working depending on what the open question is.
 argument-hint: "[the screen or surface, or a path to a mockup you already have]"
-disable-model-invocation: true
 allowed-tools:
   - Read
   - Glob
@@ -23,8 +22,11 @@ is the job rather than the failure.
 
 The output is `docs/mockups/<slug>/` — the files, and a `README.md` saying what each one shows.
 
-This skill runs before or after `codefall-specify`, and neither order is wrong. A mockup can be what makes the
-requirements obvious, or it can be drawn once they are settled.
+`codefall-specify` runs this skill for each requirement with a visual surface, and `codefall-design`
+runs it for a requirement still waiting on one; a person can also run it alone, before or after a
+spec. A mockup can be what makes the requirements obvious, or it can be drawn once they are settled.
+**Run from another verb**, the spec and the surfaces are given, the files go on that verb's branch,
+and that verb lands them: steps 1, 6, and 10 say what is skipped.
 
 Plugin paths in this document — the ones that start with `../` — are relative to this skill's
 directory, the one holding this `SKILL.md`. Resolve them from where the file lives; they are not
@@ -217,7 +219,8 @@ run, and say so.
 
 **No precondition check.** This skill needs a place to write and nothing else.
 
-Ask one question, and offer the three answers:
+**Run from `codefall-specify` or `codefall-design`**, the spec and the surfaces are given: read the
+spec and go to step 2. Otherwise ask one question, and offer the three answers:
 
 > Is this mockup for a spec, for a vision, or are we starting fresh?
 
@@ -285,8 +288,8 @@ user move it.
 ### 6. Branch, make one thing, then stop
 
 Before the first file, read `../../../.codefall/shared/landing.md` and take its branch step:
-standing on the default branch, `git switch -c mockup/<slug>`; on another branch — a spec's, often —
-ask once which to use.
+`mockup/<slug>`, stacked on the spec's pull request when one is open. **Run from another verb, stay
+on its branch**; the files are part of its commit.
 
 Build the first screen and show it: the path, and what to open it with.
 
@@ -322,17 +325,21 @@ either document — they belong to `codefall-specify` and `codefall-envision`.
 
 ### 10. Land and wrap up
 
-Land the run per `../../../.codefall/shared/landing.md`: commit the mockup directory, the `AGENTS.md`
-if it was written, and the spec or vision if one was edited — by path, nothing else — and offer the
-push and the pull request. The merge is the user's.
+**Run from another verb**: land nothing. Hand back the directories and the per-file lines, and stop;
+the calling verb commits them with its document.
+
+Otherwise land the run per `../../../.codefall/shared/landing.md`: commit the mockup directory, the
+`AGENTS.md` if it was written, and the spec or vision if one was edited — by path, nothing else —
+push, and open the pull request, stacked on the spec's when one is open. Nothing merges until
+`codefall-design` is done.
 
 Do not create issues. Do not start a design.
 
 Report the directories, every file with what it shows, what the mockup was matched against, options
 offered and which was taken, states deliberately not made and why, anything assumed because the user
-did not answer, any labels cleared, the branch, and the pull request if one was opened. **End with
-what the user does next**: merge the pull request; then `/codefall-design SPEC-NNN` where a spec was
-waiting on this mockup, otherwise `/codefall-specify`.
+did not answer, any labels cleared, the branch, and the pull request. **End with what the user does
+next**, one command: `/codefall-design SPEC-NNN` where a spec was waiting on this mockup; otherwise
+say in a sentence that the mockup is in place and nothing is pending.
 
 ## Rules
 

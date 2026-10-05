@@ -8,16 +8,20 @@ writing and changing a skill; the extension-wide rules, ADR immutability, prose,
 
 - Named as **verbs** (`codefall-scaffold`, `codefall-upgrade`), one directory each:
   `<verb>/SKILL.md`.
-- `codefall-envision`, `codefall-specify`, `codefall-report`, `codefall-fix`, `codefall-mock-up`,
-  `codefall-scaffold`, `codefall-upgrade`, and `codefall-equip` carry `disable-model-invocation:
-  true`; a user invokes each deliberately. `codefall-design`, `codefall-implement`, `codefall-test`,
-  `codefall-review`, and `codefall-refresh` carry no such line, so an agent may also run them. Each
-  still reports, offers, and applies only what the user takes; a human still performs every merge.
-  A delivery — one epic from design to merge — runs as rounds of implement, review, and test, and
+- `codefall-upgrade` and `codefall-equip` carry `disable-model-invocation: true`; a user invokes
+  each deliberately, because each changes the install or the settings. Every other skill carries no
+  such line, so an agent may run it. Each still reports, offers, and applies only what the user
+  takes; a human still performs every merge.
+- **A verb runs the verb upstream of it** when the work needs that verb's judgment, in the same run
+  and on the same branch, under the confirmation it already holds: `specify` runs `mock-up` for a
+  requirement that needs one, `design` runs `specify` on a `Draft` spec and `mock-up` on a
+  requirement still waiting, `specify` runs `envision` when a vision needs more than a text
+  amendment. It asks the person only for a product decision. It never tells the person to run a
+  verb and come back. `implement`, `design`, and `specify` run refresh when preflight reports the
+  environment stale. Running a skill needs `Skill` in `allowed-tools`.
+- A delivery — one epic from design to merge — runs as rounds of implement, review, and test, and
   every handoff is an artifact, so a verb never relies on the conversation that ran the one before
-  it; its report ends with the next command and says it is safe to `/clear`.
-  `implement`, `design`, and `specify` run refresh when preflight reports the environment stale.
-  No other skill invokes another through the harness.
+  it; its report ends with one next step and says it is safe to `/clear`.
 - **`codefall-fix` restates parts of `codefall-design` and `codefall-implement`** for one bead at
   tier 0; its `NOTES.md` has the table of which parts and where. A change to any of those parts
   checks `codefall-fix` in the same pull request, and a change to `codefall-fix` checks that it

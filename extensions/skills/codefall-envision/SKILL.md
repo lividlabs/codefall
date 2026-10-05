@@ -2,7 +2,6 @@
 name: codefall-envision
 description: Get an idea onto paper before anyone specifies or scaffolds it — take whatever the user arrived with, from a sentence to a folder of mockups, organize it into one or more numbered vision documents under docs/visions/, and record what is still unknown rather than inventing answers.
 argument-hint: "[the idea, or a path to a document you already have]"
-disable-model-invocation: true
 allowed-tools:
   - Read
   - Glob

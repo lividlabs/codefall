@@ -29,9 +29,11 @@ remain: the serial stack, and the epic branch for parallel waves (ADR-013).
 
 **Restacking the stack bottoms onto `main` at integration.** It arrived with the import and was
 never recorded here. Rebasing the bottom alone left every link above based on commits that no
-longer existed, so the stack above it stopped merging cleanly. Integration now merges the stack top
-onto `main` in a scratch worktree and pushes nothing; a conflict is settled by merging `main`
-forward as an ordinary merge commit, which squash merge erases. Nothing is rebased or force-pushed.
+longer existed, so the stack above it stopped merging cleanly. A scratch-worktree trial merge
+replaced it for a week; then GitHub's own stacked pull requests (public preview, 2026-07-30) made
+both unnecessary. GitHub rebases the layers above a merged one, and `gh stack rebase` cascades a
+lower-layer fix. Integration now asks GitHub whether each layer is mergeable and nothing is rebased
+or force-pushed by hand (ADR-014).
 
 **From Kiro and spec-kit**: checklist gates and the converge audit — review is another verb.
 
@@ -49,10 +51,10 @@ single-writer besides. That is why every `bd` write is the root's: architecture,
 
 ## Why there is no depth cap
 
-The cost of a deep stack is cosmetic — the top PR's three-dot diff shows unmerged ancestors until
-the chain drains bottom-up. It is disclosed at the go gate, not capped against. Any DAG serializes
-into a single stack by topological order, so the single stack is always available and costs only
-wall-clock, never structure.
+A deep stack used to cost a muddy three-dot diff on the top PR until the chain drained. GitHub's
+stacked pull requests show each layer its own diff, so that cost is gone; what remains is
+wall-clock, disclosed at the go gate. Any DAG serializes into a single stack by topological order,
+so the single stack is always available and costs nothing in structure.
 
 ## Why workers are verified, never trusted
 

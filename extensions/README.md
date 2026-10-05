@@ -21,12 +21,11 @@ This directory is the extension. Everything above it is packaging.
 | [`codefall-equip`](skills/codefall-equip/SKILL.md) | Equip a project with the three things the other verbs need it to have: the local-environment scripts `codefall-refresh` runs — `start` and `update`, declared under `local`; the test harness `codefall-test` runs cases through — a spec runner per surface, its configuration pointed at the testing root, declared in `test.runners` and with its commands recorded in the testing root's `AGENTS.md`; and the agents `codefall-review` and every consult reach for — how a harness is called, under `harnessConfig`, and the `agents` lists, set up from any harness. Finds what the project already has or drafts it from what the repository or the session shows. One track per run; scaffold and implement follow the local one as the procedure. |
 | [`codefall-refresh`](skills/codefall-refresh/SKILL.md) | Take the user from wherever they are to the default branch, current: leave a feature branch or an implement worktree for the primary checkout, switch to the default branch and fast-forward it, clean up the branch and worktree whose work has merged, sync the Beads database with its Dolt remote, run the declared `start` and `update`, record the commit the environment now matches, and turn a failure into a sentence that says what to do. Safe to run at any time. |
 
-`codefall-envision`, `codefall-specify`, `codefall-report`, `codefall-fix`, `codefall-mock-up`,
-`codefall-scaffold`, `codefall-upgrade`, and `codefall-equip` are explicitly invoked and carry
-`disable-model-invocation: true`, so none of them fire on their own. `codefall-design`,
-`codefall-implement`, `codefall-test`, `codefall-review`, and `codefall-refresh` carry no such line,
-so an agent may run these too; a delivery runs as rounds of implement, review, and test, each
-handoff a bead, a document, a report, or a pull request, with a `/clear` between verbs. The
+`codefall-upgrade` and `codefall-equip` are explicitly invoked and carry
+`disable-model-invocation: true`, since each changes the install or the settings. Every other verb
+an agent may run too, and a verb runs the verb upstream of it when the work needs it, so a person is
+never told to run a command and come back; a delivery runs as rounds of implement, review, and test,
+each handoff a bead, a document, a report, or a pull request, with a `/clear` between verbs. The
 extension also ships hooks per harness, defined under
 [`hooks/`](hooks/): a `PreToolUse` guard that denies merges and pushes to the default branch
 everywhere, plus, for the harnesses that have the event (Claude Code, Codex, and OpenCode), a

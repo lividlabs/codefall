@@ -2,7 +2,6 @@
 name: codefall-report
 description: Turn a bug someone ran into into a report another session can fix — interview the person who saw it for the steps, the expected and actual result, screenshots, and the environment, push back on vague answers, try to reproduce it on the spot, then write a bug report with acceptance criteria into the repository, mirrored to the issue tracker.
 argument-hint: "[what went wrong, or a test run's report]"
-disable-model-invocation: true
 allowed-tools:
   - Read
   - Glob

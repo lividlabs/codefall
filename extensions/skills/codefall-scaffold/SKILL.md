@@ -2,7 +2,6 @@
 name: codefall-scaffold
 description: Start a new project on the Clean + package-by-component stance — interview for the calls a template can't make (bounded contexts, app topology, per-surface architecture), then emit ratified ADRs, scoped AGENTS.md files, and optionally the project files and boundary-lint wiring.
 argument-hint: "[project-name] [path]"
-disable-model-invocation: true
 allowed-tools:
   - Read
   - Glob

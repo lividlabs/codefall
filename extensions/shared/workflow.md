@@ -18,10 +18,15 @@ is where it is edited; `codefall init` installs the copy and replaces it on a re
 
 ## The chain
 
-`envision`, `specify`, `report`, `fix`, `mock-up`, `scaffold`, `upgrade`, and `equip` are invoked
-deliberately by a user (`disable-model-invocation: true`). `design`, `implement`, `test`, `review`, and `refresh`
-carry no such line, so an agent may run these too. Whichever way a verb starts, it reports what it
-found, offers, and applies only what the user takes.
+`upgrade` and `equip` are invoked deliberately by a user (`disable-model-invocation: true`), because
+each changes the install or the project's settings. Every other verb an agent may run too, and **a
+verb runs the verb upstream of it** when the work needs that verb's judgment: `specify` runs
+`mock-up` for a requirement with a visual surface, `design` runs `specify` to settle a `Draft` spec
+and `mock-up` for a requirement still waiting on one, and `specify` runs `envision` when a vision
+needs more than a text amendment. It runs in the same session and on the same branch, under the
+confirmation the verb already holds, and asks the person only for a product decision; nobody is
+told to run a command and come back. Whichever way a verb starts, it reports what it found, offers,
+and applies only what the user takes.
 
 The work on one epic from the design's graph to the human merge is a **delivery**, taken in
 **rounds** of `implement`, `review`, and `test`. A delivery ends when the epic has no open children
@@ -34,9 +39,9 @@ report ends with the next command. In order:
 | --- | --- | --- | --- |
 | `envision` | whatever the user arrived with: a sentence, a pitch document, a folder of mockups | `docs/visions/VISION-NNN-slug.md`, the *why*; sources kept verbatim under `docs/visions/sources/` | `scaffold` requires one; `specify` may draw on one |
 | `scaffold` | a vision; an interview for what a template cannot decide; the project's consult agents when a stack stays open | ratified ADRs, scoped `AGENTS.md` files, optionally project files, boundary lint, and the `start` and `update` scripts | a project ready for `specify` |
-| `specify` | the idea or vision, and an audit of what already exists; the project's consult agents for a question of fact the user cannot answer | `docs/specs/SPEC-NNN-slug.md`, the *what*: requirements with EARS acceptance criteria, mirrored to the tracker as a parent issue and one child per requirement | `design` |
+| `specify` | the idea or vision, and an audit of what already exists; the project's consult agents for a question of fact the user cannot answer | `docs/specs/SPEC-NNN-slug.md`, the *what*: requirements with EARS acceptance criteria, mirrored to the tracker as a parent issue and one child per requirement; the mockups its requirements need, made through `mock-up` in the same run | `design` |
 | `report` | the person who saw a bug, interviewed; the running product, driven through their steps; a test run's report or an issue they filed | `docs/bugs/BUG-NNN-slug.md`, what is wrong: the steps, the expected and actual result, evidence committed beside it, whether it reproduced, and EARS acceptance criteria, mirrored to one tracker issue | `design` |
-| `mock-up` | a design-tool export, or nothing | `docs/mockups/<slug>/`, matching the app's own design system | `design`; an issue labelled `requires-mockup` blocks design until it exists |
+| `mock-up` | a design-tool export, or nothing; run by `specify` or `design` for a requirement that needs one, or alone | `docs/mockups/<slug>/`, matching the app's own design system | `design`; an issue still labelled `requires-mockup` is one `design` runs `mock-up` for before it starts |
 | `design` | the spec, the vision, the code; the project's consult agents for a technical point it cannot settle | `docs/designs/DESIGN-NNN-slug.md`, the *how*, scaled to the change; ADRs for hard-to-reverse choices; beads with dependency edges, each carrying its acceptance criteria and, where the task is verified through the wired product, the test case and its criteria; or, with decisions the person could not settle, a `Draft` carrying them for an engineer's run | `implement`; `design` again, for a `Draft` with decisions needed |
 | `implement` | ready beads, an epic, or a design; the project's consult agents when a worker fails | a worktree per task, the test case before the code, verification against the bead's criteria and the project's checks, a pull request per task, walked as a serial stack or in waves on an epic branch until the frontier is empty | `review` and `test` on the epic's work; `implement` again, the next round, when they added children; the human, who merges when the graph is empty; `design`, for a disagreement that moves work, filed as a revision bead |
 | `review` | anything live: uncommitted work, a branch, a PR, a commit range, a path, a document, an epic's work; the project's consult agents for what the reviewer could not settle | `.codefall/reviews/`, a JSON and Markdown pair per review; fixes on the target's branch for the findings the user takes; children of the epic for the deferred ones | the human; `implement`, for the children it filed; `design`, for a deferred finding that moves work |
@@ -139,9 +144,15 @@ dependency, a migration, or generated code changes `start` or `update` in the sa
 - **A human performs every merge to `main`.** `implement` ends at open PRs and a reported bottom-up
   merge order, and the guard hook denies the alternative in every harness.
 - **Everything short of the merge is the verb's.** A verb that writes to the repository branches
-  before its first file, commits what it wrote by path, and offers the push and the pull request;
-  a document never sits uncommitted on `main`. `implement` does this per task; the document verbs,
+  before its first file, commits what it wrote by path, pushes, and opens the pull request; a
+  document never sits uncommitted on `main`. `implement` does this per task; the document verbs,
   `scaffold`, `equip`, and `upgrade` follow the shared `landing.md` beside this file's installed copy.
+- **One delivery's documents are one stack.** The spec's pull request is the bottom layer, the
+  mockups stack on it, the design on top, each branched from the layer below and linked with
+  `gh stack link`. Nobody is asked to merge until `design` is done; merging the design pull request
+  lands the stack. `implement`'s task pull requests stack the same way from `main`. The shared
+  stacks reference says how GitHub stacks work, and a repository that lands its document stacks
+  itself says so in the shared landing customization.
 - **The context that finds a problem never fixes it.** `review` runs in the first agent this machine
   can run from the review list of the project's entry for the harness the session is in, else its
   `default` entry, a subagent of the current harness with nothing configured, and `via=` overrides

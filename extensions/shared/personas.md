@@ -36,8 +36,10 @@ so a prompt rendered for another agent carries nothing about it.
 
 **Every verb.** Reports and questions are in product vocabulary: what a user gets, what changes for
 them, what is still open. No file paths, component names, or command output in prose unless the
-person asks. The one exception is the last line of every report, which still names the exact next
-command, because that line is how the person continues.
+person asks. The last line of every report says in one plain sentence what happens next and names
+**exactly one command** when there is a step for the person to start — the button they press. Never
+a list of commands: anything else the verb could do, it did in this run or asks about in a
+sentence.
 
 **`envision`, `specify`.** The interview is the main event and gets the room. The code audit still
 runs, and what it finds is stated as a product fact ("the profile screen has three tabs today")

@@ -10,6 +10,7 @@ allowed-tools:
   - Write
   - Edit
   - Bash
+  - Skill
   - WebSearch
   - WebFetch
 ---
@@ -33,6 +34,8 @@ init` installed in the project's own `.codefall/`.
 
 Read each when its step says to; none is loaded up front.
 
+- `reference/lifecycle.md` — the three statuses, where each lives, and what each allows. Read at
+  step 7 and for the other modes.
 - `reference/document.md` — the design document's shape: header, sections and their triggers, the
   Technical Context and Hard Constraints blocks, the Task Plan and its callout. Read before step 5.
 - `reference/beads.md` — what gets created in Beads, the test case a bead's criteria name, the plan
@@ -119,19 +122,8 @@ Consequences, Related — written from `../codefall-scaffold/templates/adrs/_TEM
 
 ## Status and lifecycle
 
-Three states, one word plus a date.
-
-| Status | Meaning | Lives in |
-| --- | --- | --- |
-| `Draft — <date>` | Being written. The user stopped and is coming back | `docs/designs/` |
-| `Ready — <date>` | Written and agreed, beads created. The normal end of a session | `docs/designs/` |
-| `Archived — <date>` | Superseded or dropped | `docs/designs/archive/` |
-
-- **Status describes the document, never the work.** Work state is Beads' — `bd list` and
-  `bd ready`.
-- `Archived` moves the file to `docs/designs/archive/` under the same name; citations still resolve.
-- A design that no longer describes the code is revised or archived, not labelled. Revising
-  reconciles the graph — `reference/revising.md`.
+`Draft`, `Ready`, or `Archived`, one word plus a date, describing the document and never the work.
+The table and the rules are in `reference/lifecycle.md`.
 
 ## The designs directory
 
@@ -190,14 +182,14 @@ has no written target and offer `/specify`. On no, continue.
 
 **A bug report is a target the way a spec is**: read `reference/bugs.md` for one.
 
-**A spec that is not ready is a stop.** Two gates:
+**A spec that is not ready is finished here, not refused.** Two cases:
 
-- The spec document, or the bug report, says `Status: Draft`.
-- Its tracker issues carry `requires-mockup`. Read the labels from the tracker per
-  `../codefall-specify/trackers/<name>/PROFILE.md`; if the tracker is unreachable, say so and ask
-  whether the mockups exist rather than guessing.
-
-Name the gate, say what clears it, and stop.
+- The spec, or the bug report, says `Status: Draft`: run `codefall-specify` on it in this run, on
+  its branch, to settle what is open and promote it. Stop only on a question the person cannot
+  settle.
+- Its tracker issues carry `requires-mockup` (read per `../codefall-specify/trackers/<name>/PROFILE.md`;
+  an unreachable tracker is asked about, never guessed): run `codefall-mock-up` for each such
+  requirement in this run, on this run's branch, before designing.
 
 **Then read what frames it.** The spec's vision, if it names one. `docs/visions/` if no spec
 framed the work. A vision's **Environment & constraints** section is written for this moment.
@@ -304,8 +296,9 @@ bodies, and their edges. The user approves the graph, not a document.
 
 ### 8. Branch, then write the document
 
-Branch first, per `../../../.codefall/shared/landing.md` — `design/DESIGN-NNN-slug` — unless this
-is a tier 0 run with no ADR, which writes no file.
+Branch first, per `../../../.codefall/shared/landing.md` — `design/DESIGN-NNN-slug`, stacked on the
+mockups' or the spec's pull request when one is open — unless this is a tier 0 run with no ADR,
+which writes no file.
 
 Write `docs/designs/DESIGN-NNN-slug.md` with the Task Plan **staged**, the ADR if there is one,
 `docs/designs/AGENTS.md` if it was missing, and the amendments the user took: a spec's mirrored, a
@@ -349,9 +342,10 @@ Report:
 - the ready set — which tasks `codefall-implement` can start on today;
 - anything left unresolved, the decisions parked and how many, and any concern the user overruled;
 - the branch and the pull request;
-- **last, what the user does next**: merge the pull request, then `/codefall-implement DESIGN-NNN`,
-  or `/codefall-implement <bead>` at tier 0; with decisions parked, have an engineer run
-  `/codefall-design DESIGN-NNN` to settle them.
+- **last, what the user does next**: merge the design pull request — the top of the document stack,
+  so the spec and mockups land with it — then one command: `/codefall-implement DESIGN-NNN`, or
+  `/codefall-implement <bead>` at tier 0; with decisions parked, `/codefall-design DESIGN-NNN` for
+  an engineer to settle them.
 
 ## Other modes
 

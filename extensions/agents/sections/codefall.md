@@ -2,9 +2,9 @@
 ## Codefall
 
 This project runs codefall's verbs, each a skill that reports, offers, and applies only what the
-user takes. `envision`, `specify`, `report`, `fix`, `mock-up`, `scaffold`, `upgrade`, and `equip`
-are invoked deliberately by a user; `design`, `implement`, `test`, `review`, and `refresh` may also
-be run by an agent. They chain from an idea to open pull requests — `envision` → `specify` →
+user takes. `upgrade` and `equip` are invoked deliberately by a user; every other verb may also be
+run by an agent, and a verb runs the verb upstream of it when the work needs it, rather than telling
+the person to. They chain from an idea to open pull requests — `envision` → `specify` →
 `mock-up` → `design` → `implement` → `review` → `test` — and each leaves something the next one
 reads, so a delivery runs as rounds of `implement`, `review`, and `test` with a `/clear` between
 verbs, and ends when the epic has no open children and the last test run passed. A bug a person saw

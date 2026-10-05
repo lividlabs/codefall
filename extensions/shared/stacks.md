@@ -2,8 +2,8 @@
 
 Shared reference. Read before opening a pull request whose base is another pull request's branch,
 and before merging or changing one. Everything here is from GitHub's own documentation of the
-feature; nothing is codefall's rule. Where a verb stacks and how it links is in `landing.md` beside
-this file and in `codefall-implement`'s landing reference.
+feature; nothing is codefall's rule. Where a verb stacks and how it links is in the landing
+procedure beside this file and in `codefall-implement`'s landing reference.
 
 **Written 2026-10-05 against the public preview.** GitHub shipped stacked pull requests on
 2026-07-30 and still marks them "subject to change". A model's training may predate the feature,

@@ -1764,6 +1764,27 @@ Decided at scaffold, 2026-08-16.
   it); the PR-merged and open-count segments on the chart (the gates and `bd show` already say
   it); and `bd show --children` for test's case lookup (its items carry no acceptance criteria,
   so `bd list --parent` stays there).
+- **Verbs run their upstream verbs, and documents stack, 2026-10-05.** Recorded as `ADR-014`, with
+  `ADR-004.3` and `ADR-013.3` as the editions it changes. A product manager was handed four
+  commands by a `specify` report. Four rules produced them: the invocation flag kept an agent from
+  running `mock-up` or `specify` itself; ADR-008's text-only limit on amendments sent any bigger
+  change back to the person even before beads existed; every document verb opened its own pull
+  request from `main` and offered the merge; and the product-manager persona's last-line rule named
+  "the exact next command". The flag now stays only on `upgrade` and `equip`. `specify` runs
+  `mock-up` for each requirement that needs one and `envision` for a vision that needs more than
+  text; `design` runs `specify` on a `Draft` spec and `mock-up` on a requirement still waiting,
+  instead of refusing. The documents of a delivery stack as GitHub stacked pull requests, each
+  verb branching from the layer below and linking with `gh stack link`, with one merge at the
+  design pull request; a repository can land the stack itself per `docs/recipes/`. `implement`'s
+  integration asks GitHub whether each layer is mergeable and cascades a lower-layer fix with
+  `gh stack`, so the scratch-worktree trial merge of 2026-10-01 is withdrawn. The persona rule is
+  one plain sentence and exactly one command. `shared/stacks.md` records the feature, which
+  shipped after the models' training data. Seen and not taken: keeping the flag on `scaffold` (no
+  verb calls it, the interview is the gate, and other harnesses never had the flag); auto-merge of
+  document pull requests as shipped behaviour (a repository setting the owner should make, so it is
+  a recipe and a possible `equip` track); a "speak plainly" rule that forbids any term the person
+  has not used (the plain-language guides say explain on first use, not avoid); and running
+  `design` from `specify` (the next step is the person's one button).
 
 ## Open
 

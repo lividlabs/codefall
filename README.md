@@ -336,16 +336,15 @@ offered, never merged: that holds for every verb that writes a document, and onl
 A feature too large for one cohesive spec becomes sibling specs rather than a parent and children.
 The vision above them is what groups them, which is why a vision's `Related` line holds a list.
 
-`codefall-envision`, `codefall-specify`, `codefall-report`, `codefall-fix`, `codefall-mock-up`,
-`codefall-scaffold`, `codefall-upgrade`, and `codefall-equip` are **explicitly invoked** —
-`/scaffold`, `/specify`, and so on. Each carries `disable-model-invocation: true`, so none of them
-fire on their own; scaffolding a project or filing an issue is a deliberate act, not something
-inferred from a passing remark. `codefall-design`, `codefall-implement`, `codefall-test`,
-`codefall-review`, and `codefall-refresh` carry no such line, so an agent may run them too. Each
-still reports, offers, and applies only what the user takes, and a human still performs every
-merge. The work on one epic from design to merge is a **delivery**, taken in **rounds** of
-`implement`, `review`, and `test`; every handoff is a bead, a document, a report, or a pull
-request, so a `/clear` between verbs loses nothing and each report ends with the next command.
+`codefall-upgrade` and `codefall-equip` are **explicitly invoked** and carry
+`disable-model-invocation: true`, because each changes the install or the project's settings. Every
+other verb an agent may run too, and a verb runs the verb upstream of it when the work needs it: a
+spec that needs a mockup gets one from `mock-up` inside the `specify` run, a design that finds its
+spec still `Draft` runs `specify` to settle it, and nobody is told to go run a command and come
+back. Each verb still reports, offers, and applies only what the user takes, and a human still
+performs every merge. The work on one epic from design to merge is a **delivery**, taken in
+**rounds** of `implement`, `review`, and `test`; every handoff is a bead, a document, a report, or
+a pull request, so a `/clear` between verbs loses nothing and each report ends with one next step.
 
 A question of fact you cannot answer in the interview, how the existing system behaves in a case the
 audit did not settle, is put to the project's consult agents once and comes back as a proposal you
@@ -392,8 +391,10 @@ and outlives all of them, so a mockup filed under whichever spec arrived first m
 either duplicate it or reach into another spec's directory. Specs reference mockups by path under
 their **Design notes**.
 
-When `specify` records a requirement whose surface has no picture yet, its tracker issue is labelled
-`requires-mockup` and `design` refuses to act on it. Landing the mockup clears the label.
+When `specify` records a requirement whose surface has no picture yet, it runs `mock-up` for that
+surface in the same run and on the same branch, so the spec and its mockups arrive together. Only a
+requirement whose mockup you chose to skip is labelled `requires-mockup`, and `design` then runs
+`mock-up` for it before it starts rather than refusing. Landing the mockup clears the label.
 
 ### Bug reports
 
@@ -522,13 +523,14 @@ overnight run possible, and the consult is what keeps a run from stopping on som
 reading would have settled.
 
 **Work lands one of two ways.** The default is a serial stack: every bead in topological order,
-one branch atop the previous, one pull request each, workers one at a time. The other is an epic
-branch, for work that must not land on `main` in increments or when you want parallel waves:
-workers branch off it in waves, the root merges them at each wave boundary, and one aggregate pull
-request reaches `main`. There is no depth cap — a deep stack costs only a muddy three-dot diff
-until it drains bottom-up. When the frontier is empty the run merges the stack top onto current
-`main` in a scratch worktree and verifies there; nothing is rebased or force-pushed, and a conflict
-is settled by merging `main` forward as an ordinary merge commit.
+one branch atop the previous, one pull request each, workers one at a time, linked into a GitHub
+stack as they open. The other is an epic branch, for work that must not land on `main` in increments
+or when you want parallel waves: workers branch off it in waves, the root merges them at each wave
+boundary, and one aggregate pull request reaches `main`. There is no depth cap: each layer of a
+stack shows only its own diff, merging the top lands every layer, and GitHub rebases what is above a
+layer you merge alone. Nothing is rebased or force-pushed by hand; a fix to a lower layer is
+cascaded with `gh stack`. The documents stack the same way: spec, then mockups, then design, and
+merging the design pull request lands all three.
 
 **A task bead closes at done — acceptance criteria verified, checks green, PR open — not at
 merge.** That is Beads' own semantics, and it is what lets a stacked dependent start the moment its

@@ -23,9 +23,10 @@ gh pr list --state open --json headRefName,baseRefName,number --limit 200
 
 - **An epic branch** — an open PR from `epic/<epic>-*` — is the target as a branch: its diff against
   the default branch holds every wave the root merged into it.
-- **A serial stack** — open PRs from `feat/<epic>-*` — has one top: the branch that is no other open
-  PR's `baseRefName`. The top is the target, as a branch; its three-dot diff against the default
-  branch holds every link's change.
+- **A serial stack** — open PRs from `feat/<epic>-*`, linked as a GitHub stack — has one top: the
+  branch that is no other open PR's `baseRefName`. The top is the target, as a branch; the range
+  from its merge-base with the default branch to its tip holds every layer's change, since each
+  PR's own view shows only its layer.
 - **Nothing open** means every PR has merged or none was opened: say which, and stop. A merged PR
   is not reviewable.
 
