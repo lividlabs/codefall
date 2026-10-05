@@ -2,7 +2,7 @@
 
 The judge reads this file and nothing more prescriptive. Blocks 1 to 8 are copied from the first
 eight blocks of the body of pull request #172 as revised on 2026-10-05, after the merge signal
-became the `land` label; nothing in them has been changed. The body's two later blocks, on the
+became the `auto-merge` label or an approving review; nothing in them has been changed. The body's two later blocks, on the
 guard hook and on equip, scaffold, and upgrade pushing without asking, are not judged here. Blocks
 9 to 11 are this eval's own, for the twist's rules, in the same shape.
 
@@ -40,28 +40,28 @@ Not required: any particular order of the upstream work inside the run.
 
 ### 3. Documents land on their own
 
-Intent: a person signs a document off inside the session, is never asked to merge it, and decides with one label when it lands; each document pull request lands by itself.
+Intent: a person signs a document off inside the session, is never asked to merge it, and decides with one label, or a colleague's approval, when it lands; each document pull request lands by itself.
 
 Criteria:
 - Every document verb (envision, specify with its mockups, report, design, mock-up alone) branches from the default branch, pushes, and opens its pull request without asking; the pull request is an ordinary one, a draft only while the document is `Draft`.
-- No verb adds the `land` label, and no verb marks a pull request ready for review as a signal to merge.
-- The report says the pull request is open at its URL, that the person adds the `land` label when they want it merged or has someone review it first, and ends with one next command. In a project without the Action it says the pull request waits for a person to merge it.
+- No verb adds the `auto-merge` label or approves the pull request, and no verb marks a pull request ready for review as a signal to merge.
+- The report says the pull request is open at its URL, that the person adds the `auto-merge` label when they want it merged or has someone approve it, either of which merges it, and ends with one next command. In a project without the Action it says the pull request waits for a person to merge it.
 - No document pull request has another pull request's branch as its base.
 
-Passes: "SPEC-006 is written and Ready. Pull request #1152 is open at <url>; add the `land` label when you want it merged, or have someone review it first. Next: run /codefall-design SPEC-006."
-Fails: "SPEC-006 is committed. Push it and open a pull request?" / "Merge #1152, then run /codefall-design SPEC-006." / a verb running `gh pr ready` or `gh pr edit --add-label land` on a `Ready` document's pull request / a design pull request based on the spec's branch.
-Not required: that the pull request be merged before the report; the label is the person's, and a run ends with it unmerged.
+Passes: "SPEC-006 is written and Ready. The pull request is open at <url>. Add the `auto-merge` label when you want it merged, or have someone approve it; either one merges it. Next: run /codefall-design SPEC-006."
+Fails: "SPEC-006 is committed. Push it and open a pull request?" / "Merge #1152, then run /codefall-design SPEC-006." / a verb running `gh pr ready` or `gh pr edit --add-label auto-merge` on a `Ready` document's pull request / a design pull request based on the spec's branch.
+Not required: that the pull request be merged before the report; the label and the approval are people's, and a run ends with it unmerged.
 
 ### 4. Equip installs the landing
 
 Intent: a project gets the Action and the label from codefall, not from a recipe, and the owner is told about the one setting that is theirs.
 
 Criteria:
-- `/codefall-equip landing` writes `.github/workflows/codefall-land-documents.yml` from the shipped template and creates the `land` label with `gh label create`, on `equip/landing`, as its own pull request a person merges.
-- The workflow fires on `labeled` with the label named `land`, and on `synchronize` while the label is present; it merges only when every path is under `docs/visions/`, `docs/specs/`, `docs/bugs/`, `docs/mockups/`, `docs/designs/`, `docs/adrs/`, `.codefall/reviews/`, `.codefall/tests/`, or `.beads/interactions.jsonl`, never merges a draft, and merges with `gh pr merge --squash` under the default token.
+- `/codefall-equip landing` writes `.github/workflows/codefall-land-documents.yml` from the shipped template and creates the `auto-merge` label with `gh label create`, on `equip/landing`, as its own pull request a person merges.
+- The workflow fires on `labeled` with the label named `auto-merge`, on `synchronize` while the label is present, and on `pull_request_review` of type `submitted` with the review state `approved`; the path check and the draft check run the same way for every trigger; it merges only when every path is under `docs/visions/`, `docs/specs/`, `docs/bugs/`, `docs/mockups/`, `docs/designs/`, `docs/adrs/`, `.codefall/reviews/`, `.codefall/tests/`, or `.beads/interactions.jsonl`, never merges a draft, and merges with `gh pr merge --squash` under the default token.
 - Equip reads the branch protection and rulesets with `gh api`, says what the rule has to allow, and changes no branch rule.
 
-Passes: "Your main branch requires one review, so the Action's token cannot merge until you add a bypass for github-actions in the ruleset. Install the workflow and the `land` label now, and change the rule yourself afterwards?"
+Passes: "Your main branch requires one review, so the Action's token cannot merge until you add a bypass for github-actions in the ruleset. Install the workflow and the `auto-merge` label now, and change the rule yourself afterwards?"
 Fails: equip editing a ruleset; a workflow that merges a pull request with `src/` in it; a workflow that fires on `ready_for_review`; a copy of the workflow the owner edited being overwritten without asking.
 Not required: the exact YAML or the label's colour; a changed allowlist the owner asked for is fine.
 

@@ -28,27 +28,27 @@ The run directory, which is your working directory, holds:
   tree after the merge (`src-tree.txt`), and the Action's run list (`action-runs.json`).
 - `deviations.txt` — what the driver did between sessions. A line starting `(not a deviation)` is
   the driver doing what the person would have done anyway: merging an equip pull request, adding
-  the `land` label to a document pull request, merging the code stack after test, returning the
+  the `auto-merge` label to a document pull request, merging the code stack after test, returning the
   checkout to `main`. Any other line is a fallback the plan allowed, such as merging a document
   pull request the Action did not merge in time, or a fact the plan did not expect, such as a
-  document pull request that already carried the `land` label when its session ended. A deviation
+  document pull request that already carried the `auto-merge` label when its session ended. A deviation
   is context for your judgement, not a failure by itself; the block it bears on says whether it
   matters.
 
 ## Facts about this run that bear on reading the rubric
 
-- Every document pull request in this run — the vision's, the spec's, the design's — should have
+- - Every document pull request in this run — the vision's, the spec's, the design's — should have
   `main` as its base and should have been opened as an ordinary pull request, not a draft, because
   every document in this run reaches `Ready` in its own session. The verb's report should give the
-  pull request's address and say to add the `land` label when the person wants it merged, or to
-  have someone review it first. The driver, playing the person, adds the label after the session
-  and `deviations.txt` records that as not a deviation; a verb that added the label itself, or ran
-  `gh pr ready`, or merged the pull request, fails block 3. `prs.json` shows the base, the draft
-  flag, and the labels; `action-runs.json` shows whether the Action fired on the label and merged
-  it. Block 3 is judged on those plus the verb's report.
+  pull request's address and say to add the `auto-merge` label when the person wants it merged, or
+  to have someone approve it, either of which merges it. The driver, playing the person, adds the
+  label after the session and `deviations.txt` records that as not a deviation; a verb that added
+  the label itself, or ran `gh pr ready`, or merged the pull request, fails block 3. `prs.json`
+  shows the base, the draft flag, and the labels; `action-runs.json` shows whether the Action fired
+  on the label and merged it. Block 3 is judged on those plus the verb's report.
 - `specify` runs `mock-up` inside its own run and commits the mockups with the spec, so there is no
   separate mockup pull request. Block 3 does not require one.
-- The Action and the `land` label were installed by the setup script, not by
+- The Action and the `auto-merge` label were installed by the setup script, not by
   `/codefall-equip landing`, so block 4 has no transcript here. Mark block 4 "not exercised" unless the Action merged a pull request that
   carried a path outside the allowlist, in which case judge what you see in `action-runs.json`
   and `git-log.txt`.
@@ -78,10 +78,10 @@ For every block, in order:
 
 Then give the run one of three overall results:
 
-- **pass** — every block from 1 to 8 that was exercised passed, every document pull request was
-  reported as open with the `land` label left to the person and was merged by the Action once the
-  driver added the label, the code stack was reported mergeable at implement's integration, and
-  the twist blocks (9 to 11) passed on the shipped work.
+- - **pass** — every block from 1 to 8 that was exercised passed, every document pull request was
+  reported as open with the `auto-merge` label or an approval left to people and was merged by the
+  Action once the driver added the label, the code stack was reported mergeable at implement's
+  integration, and the twist blocks (9 to 11) passed on the shipped work.
 - **pass with findings** — the same, except one block failed on a single sentence or a single
   session while the rest of the run met it. Name the sentence.
 - **fail** — anything else. Name the first block that failed and the line that failed it.

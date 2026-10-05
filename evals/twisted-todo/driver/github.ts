@@ -1,5 +1,5 @@
 // What the driver does on GitHub and in the project in the person's place: merges the equip pull
-// requests, adds the `land` label to each document pull request and waits for the Action to merge
+// requests, adds the `auto-merge` label to each document pull request and waits for the Action to merge
 // it, merges the code stack at the end, returns the checkout to main after each landing, and
 // gathers evidence for the judge.
 // Every gh command runs with the run directory as its working directory and GH_REPO naming the
@@ -41,12 +41,13 @@ export function makeGh(repo: string, cwd: string, log: (line: string) => void) {
     },
 
     /**
-     * Adds the `land` label to a document pull request, as the person would after reading the
-     * verb's report. This is the one thing that tells the Action to merge; no verb does it. The
+     * Adds the `auto-merge` label to a document pull request, as the person would after reading the
+     * verb's report. The label or an approving review tells the Action to merge, and the driver is
+     * the only person here, so it adds the label; no verb does either. The
      * command names the repository explicitly, so it is plainly a call from outside the project.
      */
-    addLandLabel(pr: number): void {
-      gh("pr", "edit", String(pr), "--add-label", "land", "--repo", repo);
+    addAutoMergeLabel(pr: number): void {
+      gh("pr", "edit", String(pr), "--add-label", "auto-merge", "--repo", repo);
     },
 
     /** Waits for a pull request to be merged. Returns true when merged, false on timeout. */

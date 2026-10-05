@@ -63,14 +63,14 @@ Flags: `--model` (sessions, default `opus`), `--sim-model` (default `sonnet`), `
 | After | The driver, as the person |
 | --- | --- |
 | `equip-local`, `equip-test` | merges the equip pull request with `gh pr merge --squash`; returns the checkout to `main` |
-| `envision`, `specify`, `design` | adds the `land` label to the document pull request with `gh pr edit <n> --add-label land --repo <owner>/<repo>`, as the person would after reading the report; waits for the Action to merge it; merges it itself only when the wait runs out, recorded as a deviation; returns the checkout to `main` |
+| `envision`, `specify`, `design` | adds the `auto-merge` label to the document pull request with `gh pr edit <n> --add-label auto-merge --repo <owner>/<repo>`, as the person would after reading the report; waits for the Action to merge it; merges it itself only when the wait runs out, recorded as a deviation; returns the checkout to `main` |
 | `design`, when the design is `Draft` with decisions left for an engineer | stops the chain and judges what exists |
 | `implement`, `review` | nothing; the code stack stays open |
 | `test` | merges the code stack at its top with `gh stack merge --squash --yes`; returns the checkout to `main` |
 
 Every `gh` call runs with the run directory as its working directory and `GH_REPO` set: that is the
 "session outside the project directory" the plan describes, and no hook applies to it. A document
-pull request that already carries the `land` label when its session ends, or that is already
+pull request that already carries the `auto-merge` label when its session ends, or that is already
 merged, is recorded as a deviation, because only the person adds that label. Returning
 the checkout to `main` is plain `git fetch`, `git checkout main`, `git pull --ff-only`, recorded in
 `deviations.txt` as not a deviation.

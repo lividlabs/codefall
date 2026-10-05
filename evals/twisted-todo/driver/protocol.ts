@@ -18,7 +18,7 @@ export type Step = {
   /**
    * What the driver does once the session is done, in the person's place:
    * - `merge-own-pr`: the verb opened a pull request a person merges (equip); the driver merges it.
-   * - `label-and-wait`: the verb opened a document pull request; the driver adds the `land` label
+   * - `label-and-wait`: the verb opened a document pull request; the driver adds the `auto-merge` label
    *   as the person would, waits for the Action to merge it, and merges it itself only as a
    *   recorded fallback. `prefix` is the branch prefix.
    * - `none`: nothing to land (implement, review; the code stack stays open).

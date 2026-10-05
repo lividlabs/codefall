@@ -30,8 +30,8 @@ warning is harmless.
 The document-landing Action is not in the fixture. `setup.sh` copies it from the template codefall
 ships, `extensions/skills/codefall-equip/templates/codefall-land-documents.yml`, so the throwaway
 runs the same file a project gets from `/codefall-equip landing`, and a change to the template
-reaches the eval without a second copy to keep in step. `setup.sh` also creates the `land` label
-the Action listens for, which the landing track would create.
+reaches the eval without a second copy to keep in step. `setup.sh` also creates the `auto-merge`
+label the Action listens for, which the landing track would create.
 
 `codefall init` creates `testing/` with its `AGENTS.md`, `README.md`, and `CLAUDE.md`; the fixture
 does not carry them.
@@ -54,8 +54,8 @@ It declares nothing under `local` or `test.runners` and writes no Runners line: 
 two sessions are `/codefall-equip local` and `/codefall-equip test`, which find the scripts and the
 Playwright configuration and declare them in their own pull requests, so `equip` is under test too.
 The one thing it installs that `equip` would otherwise install is the document landing: the Action,
-copied from codefall's template, and the `land` label, so that a document pull request merges once
-the driver, playing the person, adds the label.
+copied from codefall's template, and the `auto-merge` label, so that a document pull request merges
+once the driver, playing the person, adds the label.
 
 ## teardown.sh
 
