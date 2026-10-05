@@ -1,8 +1,10 @@
 # Rubric
 
-The judge reads this file and nothing more prescriptive. Blocks 1 to 8 are copied from the body of
-pull request #172 as revised on 2026-10-05; nothing in them has been changed. Blocks 9 to 11 are
-this eval's own, for the twist's rules, in the same shape.
+The judge reads this file and nothing more prescriptive. Blocks 1 to 8 are copied from the first
+eight blocks of the body of pull request #172 as revised on 2026-10-05, after the merge signal
+became the `land` label; nothing in them has been changed. The body's two later blocks, on the
+guard hook and on equip, scaffold, and upgrade pushing without asking, are not judged here. Blocks
+9 to 11 are this eval's own, for the twist's rules, in the same shape.
 
 Each block has an intent, criteria a judge can see in a transcript, one pass and one fail, and what
 must not be marked down.
@@ -38,30 +40,30 @@ Not required: any particular order of the upstream work inside the run.
 
 ### 3. Documents land on their own
 
-Intent: a person signs a document off inside the session and is never asked to merge it; each document pull request lands by itself.
+Intent: a person signs a document off inside the session, is never asked to merge it, and decides with one label when it lands; each document pull request lands by itself.
 
 Criteria:
-- Every document verb (envision, specify with its mockups, report, design, mock-up alone) branches from the default branch, pushes, and opens its pull request as a draft without asking.
-- When the document is `Ready`, the verb marks the pull request ready for review (`gh pr ready`); a `Draft` document keeps a draft pull request.
-- The report says the pull request is merged, or ready and being merged by the Action, or ready and waiting for a person because the project has no Action, and ends with one next command.
+- Every document verb (envision, specify with its mockups, report, design, mock-up alone) branches from the default branch, pushes, and opens its pull request without asking; the pull request is an ordinary one, a draft only while the document is `Draft`.
+- No verb adds the `land` label, and no verb marks a pull request ready for review as a signal to merge.
+- The report says the pull request is open at its URL, that the person adds the `land` label when they want it merged or has someone review it first, and ends with one next command. In a project without the Action it says the pull request waits for a person to merge it.
 - No document pull request has another pull request's branch as its base.
 
-Passes: "SPEC-006 is written and Ready. Pull request #1152 is ready for review and the Action is merging it. Next: run /codefall-design SPEC-006."
-Fails: "SPEC-006 is committed. Push it and open a pull request?" / "Merge #1152, then run /codefall-design SPEC-006." / a design pull request based on the spec's branch.
-Not required: that the Action has finished before the report; "the Action is merging it" is a pass.
+Passes: "SPEC-006 is written and Ready. Pull request #1152 is open at <url>; add the `land` label when you want it merged, or have someone review it first. Next: run /codefall-design SPEC-006."
+Fails: "SPEC-006 is committed. Push it and open a pull request?" / "Merge #1152, then run /codefall-design SPEC-006." / a verb running `gh pr ready` or `gh pr edit --add-label land` on a `Ready` document's pull request / a design pull request based on the spec's branch.
+Not required: that the pull request be merged before the report; the label is the person's, and a run ends with it unmerged.
 
 ### 4. Equip installs the landing
 
-Intent: a project gets the Action from codefall, not from a recipe, and the owner is told about the one setting that is theirs.
+Intent: a project gets the Action and the label from codefall, not from a recipe, and the owner is told about the one setting that is theirs.
 
 Criteria:
-- `/codefall-equip landing` writes `.github/workflows/codefall-land-documents.yml` from the shipped template, on `equip/landing`, as its own pull request a person merges.
-- The workflow fires on `ready_for_review` and `synchronize`, merges only when every path is under `docs/visions/`, `docs/specs/`, `docs/bugs/`, `docs/mockups/`, `docs/designs/`, `docs/adrs/`, `.codefall/reviews/`, `.codefall/tests/`, or `.beads/interactions.jsonl`, and merges with `gh pr merge --squash` under the default token.
-- Equip reads the branch protection and rulesets with `gh api`, says what the rule has to allow, and changes no repository setting.
+- `/codefall-equip landing` writes `.github/workflows/codefall-land-documents.yml` from the shipped template and creates the `land` label with `gh label create`, on `equip/landing`, as its own pull request a person merges.
+- The workflow fires on `labeled` with the label named `land`, and on `synchronize` while the label is present; it merges only when every path is under `docs/visions/`, `docs/specs/`, `docs/bugs/`, `docs/mockups/`, `docs/designs/`, `docs/adrs/`, `.codefall/reviews/`, `.codefall/tests/`, or `.beads/interactions.jsonl`, never merges a draft, and merges with `gh pr merge --squash` under the default token.
+- Equip reads the branch protection and rulesets with `gh api`, says what the rule has to allow, and changes no branch rule.
 
-Passes: "Your main branch requires one review, so the Action's token cannot merge until you add a bypass for github-actions in the ruleset. Install the workflow now and change the rule yourself afterwards?"
-Fails: equip editing a ruleset; a workflow that merges a pull request with `src/` in it; a copy of the workflow the owner edited being overwritten without asking.
-Not required: the exact YAML; a changed allowlist the owner asked for is fine.
+Passes: "Your main branch requires one review, so the Action's token cannot merge until you add a bypass for github-actions in the ruleset. Install the workflow and the `land` label now, and change the rule yourself afterwards?"
+Fails: equip editing a ruleset; a workflow that merges a pull request with `src/` in it; a workflow that fires on `ready_for_review`; a copy of the workflow the owner edited being overwritten without asking.
+Not required: the exact YAML or the label's colour; a changed allowlist the owner asked for is fine.
 
 ### 5. Design asks one question about the decisions it set aside
 
@@ -78,15 +80,16 @@ Not required: any particular default, or that an ADR be written when no decision
 
 ### 6. Review and test fix what the person takes
 
-Intent: on an epic's work, the problems the person takes are built in the same session, and the person types nothing between the verb and the fix.
+Intent: on an epic's work, the problems the person takes are built in the same session, each with a priority the graph can sort by, and the person types nothing between the verb and the fix.
 
 Criteria:
 - Review and test on an epic's work end their triage with one question: "I found N problems. Fix them all? (I recommend yes.)"
-- What the person takes is filed as `deferred` children of the epic, and the same session then runs `codefall-implement <epic>`, whose go gate reopens them.
+- Every finding is listed with its Beads priority beside its severity or class: review's blocker P1, important P2, minor P3; test's real bug P1, wrong expectation P2, agent variance or anomaly P3, flake P4. No verb assigns P0.
+- What the person takes is filed as `deferred` children of the epic with `-p` set to that priority, and the same session then runs `codefall-implement <epic>`, whose go gate reopens them.
 - The review or test report says it is running implement, and implement's report ends the session with its own one command.
 
-Passes: "I found 4 problems. Fix them all? (I recommend yes.)" then "Filed 4 children on the epic; running /codefall-implement forfeit-DESIGN-001 now."
-Fails: a report that ends with "run /codefall-implement <epic> when you are ready"; a code finding fixed by hand on the stack top during an epic review.
+Passes: "1. The retry loop re-reads the offset it just committed — P1 · blocker · correctness" then "I found 4 problems. Fix them all? (I recommend yes.)" then "Filed 4 children on the epic; running /codefall-implement forfeit-DESIGN-001 now."
+Fails: a report that ends with "run /codefall-implement <epic> when you are ready"; a code finding fixed by hand on the stack top during an epic review; every bead filed at `-p 2` whatever the finding was.
 Not required: that every problem be taken; a person who takes some or none is answered, not argued with.
 
 ### 7. Integration is GitHub's

@@ -18,12 +18,13 @@ export type Step = {
   /**
    * What the driver does once the session is done, in the person's place:
    * - `merge-own-pr`: the verb opened a pull request a person merges (equip); the driver merges it.
-   * - `wait-for-action`: the verb opened a document pull request; the driver waits for the Action
-   *   to merge it and merges it itself only as a recorded fallback. `prefix` is the branch prefix.
+   * - `label-and-wait`: the verb opened a document pull request; the driver adds the `land` label
+   *   as the person would, waits for the Action to merge it, and merges it itself only as a
+   *   recorded fallback. `prefix` is the branch prefix.
    * - `none`: nothing to land (implement, review; the code stack stays open).
    * - `merge-code-stack`: the delivery is over; the driver merges the code stack top.
    */
-  after: { kind: "merge-own-pr"; prefix: string } | { kind: "wait-for-action"; prefix: string } | { kind: "none" } | { kind: "merge-code-stack" };
+  after: { kind: "merge-own-pr"; prefix: string } | { kind: "label-and-wait"; prefix: string } | { kind: "none" } | { kind: "merge-code-stack" };
 };
 
 // The idea, in the person's words, as the first message of the chain. The brief has the rest.
@@ -59,21 +60,21 @@ export const STEPS: Step[] = [
     skill: "/codefall-envision",
     argument: () => IDEA,
     simulatorNotes: `This is the vision interview. Give the idea as you would say it out loud; answer why now, who feels the problem, what this does not cover. Keep the rules at the level of rules, not exact behaviour: when the agent asks for precise behaviour, say that is for the spec. Confirm the document when it carries the five rules and the out-of-scope list. It is Ready, not Draft. Never ask to merge anything; the session is over when the report ends.`,
-    after: { kind: "wait-for-action", prefix: "vision/" },
+    after: { kind: "label-and-wait", prefix: "vision/" },
   },
   {
     verb: "specify",
     skill: "/codefall-specify",
     argument: (dir) => findId(dir, "visions", "VISION", "VISION-001"),
     simulatorNotes: `This is the spec interview. Yes, work from the vision. Aim for three requirements: adding a pair, finishing one task and forfeiting its rival, and the Forfeits page. You have no mockups; ask the agent to make them, and you want the main page full and empty and the Forfeits page full and empty, no loading or error drawings. Answer failure questions from the brief. Confirm the recap and the document when they carry the five rules. Ready, not Draft. Never ask to merge anything.`,
-    after: { kind: "wait-for-action", prefix: "spec/" },
+    after: { kind: "label-and-wait", prefix: "spec/" },
   },
   {
     verb: "design",
     skill: "/codefall-design",
     argument: (dir) => findId(dir, "specs", "SPEC", "SPEC-001"),
     simulatorNotes: `This is the design. You can judge the tier (accept the agent's call; tier 1 is expected), the task cut (five tasks or fewer; ask for a smaller cut if more), and the test criteria in product terms (they must cover the five rules). You cannot judge anything technical: say so plainly and let the agent set it aside. When the agent asks whether to settle the technical decisions it set aside with sensible defaults now or leave them for an engineer, say settle them now so building can start. Confirm the document when the plan covers the three requirements.`,
-    after: { kind: "wait-for-action", prefix: "design/" },
+    after: { kind: "label-and-wait", prefix: "design/" },
   },
   {
     verb: "implement",

@@ -3,9 +3,10 @@
 An end-to-end test of codefall's chain on a small project, with an agent playing the product
 manager and a second agent judging the transcripts. It tests what #171 and #172 changed: a verb
 runs the verb upstream of it instead of handing the person a command; specify makes the mockups its
-requirements need in the same run; each document pull request opens as a draft, is marked ready
-when the person has signed the document off, and is merged by a GitHub Action, so nobody is asked
-to merge a document; design asks one question about the technical decisions it set aside and, on
+requirements need in the same run; each document pull request is pushed and opened without asking,
+the report tells the person to add the `land` label when they want it merged, and a GitHub Action
+merges it on that label, so nobody is asked to merge a document and no verb merges one; design
+asks one question about the technical decisions it set aside and, on
 "settle now", reaches beads in the same run; review and test ask "Fix them all?" and run implement
 themselves; implement's integration asks GitHub rather than rebasing; the product-manager report
 ends with one sentence and one command; the chart line and the notes log sit on the epic.
@@ -64,8 +65,8 @@ play.
 makes a private GitHub repository and pushes it, runs `codefall init --harness claude --tracker
 github` (which runs `bd init`), sets the persona to `product-manager`, copies the document-landing
 Action from the template codefall ships (`extensions/skills/codefall-equip/templates/
-codefall-land-documents.yml`) into `.github/workflows/`, pushes, and adopts the git origin as the
-Beads Dolt remote. It declares nothing under `local` or `test.runners`: the chain's first two
+codefall-land-documents.yml`) into `.github/workflows/`, creates the `land` label the Action
+listens for, pushes, and adopts the git origin as the Beads Dolt remote. It declares nothing under `local` or `test.runners`: the chain's first two
 sessions are `equip local` and `equip test`, so equip is under test too. `fixture/teardown.sh`
 deletes the repository. Neither has been run.
 
@@ -80,9 +81,9 @@ table as code, with the "after" column as the step's `after` field.
 | --- | --- | --- | --- | --- |
 | equip-local | `/codefall-equip local` | say yes to engineering work; declare the existing `scripts/local.sh`; say yes to proving it | ask to merge | merges the `equip/local` pull request as the person; returns the checkout to `main` |
 | equip-test | `/codefall-equip test` | say yes to engineering work; declare the existing Playwright configuration | ask to merge | merges the `equip/test-harness` pull request as the person; returns to `main` |
-| envision | `/codefall-envision <the idea in Mara's words>` | give the idea as spoken, answer why now and non-goals, keep rules at rule level, confirm a Ready document | give behaviour precise enough to build; ask to merge | waits for the Action to merge the `vision/` pull request; returns to `main` |
-| specify | `/codefall-specify VISION-001` | work from the vision; aim at three requirements; say no mockup exists and ask for them (main page full and empty, Forfeits full and empty); confirm recap and document; Ready | ask to merge; accept more than three requirements without saying so; choose anything technical | waits for the Action to merge the `spec/` pull request; returns to `main` |
-| design | `/codefall-design SPEC-001` | accept the tier; ask for five tasks or fewer; confirm the criteria cover the five rules; decline technical choices; answer "settle them now" to the one question | decide anything technical | stops the chain if the design is `Draft` with decisions left; otherwise waits for the Action to merge the `design/` pull request; returns to `main` |
+| envision | `/codefall-envision <the idea in Mara's words>` | give the idea as spoken, answer why now and non-goals, keep rules at rule level, confirm a Ready document | give behaviour precise enough to build; ask to merge | adds the `land` label to the `vision/` pull request as the person, waits for the Action to merge it; returns to `main` |
+| specify | `/codefall-specify VISION-001` | work from the vision; aim at three requirements; say no mockup exists and ask for them (main page full and empty, Forfeits full and empty); confirm recap and document; Ready | ask to merge; accept more than three requirements without saying so; choose anything technical | adds the `land` label to the `spec/` pull request as the person, waits for the Action to merge it; returns to `main` |
+| design | `/codefall-design SPEC-001` | accept the tier; ask for five tasks or fewer; confirm the criteria cover the five rules; decline technical choices; answer "settle them now" to the one question | decide anything technical | stops the chain if the design is `Draft` with decisions left; otherwise adds the `land` label to the `design/` pull request as the person, waits for the Action to merge it; returns to `main` |
 | implement | `/codefall-implement DESIGN-001` | say yes to engineering work; say go at the gate; accept the serial stack | ask to merge | nothing; the code stack stays open |
 | review | `/codefall-review DESIGN-001` | say yes to engineering work; review with every lens; answer "yes, fix them all"; say go at the implement go gate inside the session | fix anything itself | nothing |
 | test | `/codefall-test DESIGN-001` | run now; take the problems that break a rule or something she said she would see, decline the rest with a reason; say go at the implement go gate if any were taken | ask for fixes by hand | merges the code stack at its top as the person, from outside the project directory; returns to `main` |
@@ -96,13 +97,16 @@ remedy is a command for the person, is done; a loop is stuck. Caps: 60 PM turns 
 session. Review and test each contain a run of implement that the verb started itself, so those
 two sessions are longer than the others.
 
-**Waiting for the Action.** After envision, specify, and design, the driver finds the newest pull
-request on the verb's branch prefix and waits up to ten minutes (`--land-minutes`) for it to be
-merged. The verb marks it ready for review as its last step, which is what fires the Action. If the
-pull request is still open when the wait ends, the driver merges it itself and records a deviation.
-A design left `Draft` with decisions set aside stops the chain, because the person said to leave
-them for an engineer and no engineer is in this run; the brief says to settle them now, so that
-path is a simulator failure, recorded as such.
+**Adding the label and waiting for the Action.** After envision, specify, and design, the driver
+finds the newest pull request on the verb's branch prefix and adds the `land` label to it, acting as
+the person from outside the project directory (`gh pr edit <n> --add-label land --repo
+<owner>/<repo>`), which is what fires the Action. Then it waits up to ten minutes
+(`--land-minutes`) for the pull request to be merged. If the pull request is still open when the
+wait ends, the driver merges it itself and records a deviation. A pull request that already carries
+the label when the session ends, or that is already merged, is recorded as a deviation too, because
+no verb adds the label and no verb merges. A design left `Draft` with decisions set aside stops the
+chain, because the person said to leave them for an engineer and no engineer is in this run; the
+brief says to settle them now, so that path is a simulator failure, recorded as such.
 
 **Returning to `main`.** A verb leaves the checkout on the branch it wrote. After each landing the
 driver runs `git fetch`, `git checkout main`, `git pull --ff-only` in the project directory, as the
@@ -112,14 +116,16 @@ person would, and records it as not a deviation. It does this with plain git rat
 ## Merging, in plain words
 
 The person is away, and no human merges. Documents land through the Action described in
-`docs/landing-documents.md`: each document verb opens its pull request as a draft and marks it
-ready when the document is `Ready`; the Action checks that every path is a document path and
-merges with `gh pr merge --squash` under the default token. A throwaway needs no branch protection,
-so the default token can merge. Equip's two pull requests and the code stack are a person's to
-merge, and the driver merges them acting as the person from a session outside the project
-directory, where codefall's guard hook does not apply: `gh pr merge --squash` for an equip pull
-request, `gh stack merge <top> --squash --yes` for the code stack, each with the run directory as
-its working directory and `GH_REPO` naming the repository.
+`docs/landing-documents.md`: each document verb pushes and opens an ordinary pull request and tells
+the person to add the `land` label when they want it merged; the Action runs on that label, checks
+that every path is a document path, and merges with `gh pr merge --squash` under the default token.
+The driver adds the label in the person's place, from a session outside the project directory. A
+throwaway needs no branch protection, so the default token can merge. Equip's two pull requests
+and the code stack are a person's to merge, and the driver merges them acting as the person from
+the same outside session, where codefall's guard hook does not apply: `gh pr merge --squash` for an
+equip pull request, `gh stack merge <top> --squash --yes` for the code stack, each with the run
+directory as its working directory and `GH_REPO` naming the repository. Inside a session the guard
+also denies `gh stack merge`, so a verb cannot land the stack itself.
 
 ## The judge
 
@@ -141,18 +147,21 @@ finishing one forfeits the other; the Forfeits page is the record. The judge nam
 each block applies to, quotes the deciding lines, gives `pass`, `fail`, `not exercised`, or
 `unclear`, and checks the block's "Not required" line before any fail. The prompt also states the
 facts about this run that bear on reading the rubric: every document pull request has `main` as its
-base and was opened as a draft; specify commits the mockups with the spec, so there is no mockup
-pull request; the Action was installed by the setup script, so block 4 (equip's landing track) has
-no transcript and is marked not exercised; design should reach `Ready` in its own session because
-the simulator says "settle them now"; review and test each contain an implement run.
+base and was opened as an ordinary pull request, with the `land` label added by the driver as the
+person and never by a verb; specify commits the mockups with the spec, so there is no mockup pull
+request; the Action and the label were installed by the setup script, so block 4 (equip's landing
+track) has no transcript and is marked not exercised; design should reach `Ready` in its own
+session because the simulator says "settle them now"; review and test each contain an implement
+run.
 
 The judge reads the transcripts and an `evidence/` directory the driver gathers: pull requests with
-bases, draft flags, and states, issues, Action runs, the git log of `main`, the document tree on
+bases, draft flags, labels, and states, issues, Action runs, the git log of `main`, the document tree on
 `main`, the settings, the Beads epic and its children and notes, the review and test records, and
 the test cases.
 
 **Pass for the whole run:** every block from 1 to 8 that was exercised passed; every document pull
-request was merged by the Action or reported as ready and being merged by it; the code stack was
+request was reported as open with the `land` label left to the person, and was merged by the Action
+once the driver added the label; the code stack was
 reported mergeable at implement's integration; and the twist blocks (9 to 11) passed on the shipped
 work. "Pass with findings" is the same except one block failed on a single sentence or a single
 session. Anything else is a fail, named by the first block that failed and the line that failed it.

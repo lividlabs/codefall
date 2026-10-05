@@ -12,8 +12,9 @@
 #   5. sets the persona to `product-manager`;
 #   6. installs the document-landing Action by copying the template codefall ships
 #      (extensions/skills/codefall-equip/templates/codefall-land-documents.yml) to
-#      .github/workflows/, so the throwaway lands documents the way a project that ran
-#      `/codefall-equip landing` does; a throwaway has no branch rule, so the default token merges;
+#      .github/workflows/, and creates the `land` label the Action listens for, so the throwaway
+#      lands documents the way a project that ran `/codefall-equip landing` does; a throwaway has
+#      no branch rule, so the default token merges;
 #   7. commits, pushes, adopts the git origin as the Beads Dolt remote, and writes the paths the
 #      driver reads into evals/twisted-todo/.throwaway.env.
 #
@@ -101,6 +102,9 @@ say "Setting the persona to product-manager"
 say "Installing the document-landing Action from codefall's template"
 mkdir -p .github/workflows
 cp "$action_template" .github/workflows/codefall-land-documents.yml
+
+say "Creating the land label the Action listens for, as /codefall-equip landing would"
+gh label create land --description "merge this document pull request" --color 0E8A16 --repo "$owner/$name"
 
 say "Committing the install and pushing"
 git add -A

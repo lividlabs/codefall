@@ -1,8 +1,9 @@
 // Runs the chain: equip (local, then test), envision, specify, design, implement, review, test,
 // each a fresh session in the project directory, with the PM simulator answering. Between
-// sessions it does what the person would: merges the equip pull requests, waits for the Action to
-// merge each document pull request, returns the checkout to main, and merges the code stack after
-// test. Then it gathers evidence and runs the judge through .codefall/shared/run-agent.sh.
+// sessions it does what the person would: merges the equip pull requests, adds the `land` label to
+// each document pull request and waits for the Action to merge it, returns the checkout to main,
+// and merges the code stack after test. Then it gathers evidence and runs the judge through
+// .codefall/shared/run-agent.sh.
 //
 //   node run.ts                      the whole chain, then the judge
 //   node run.ts --from implement     resume a run from a verb (pass --run <dir> to reuse a run dir)
@@ -123,7 +124,7 @@ async function afterVerb(verb: Verb): Promise<boolean> {
       gh.returnToMain(projectDir);
       return true;
     }
-    case "wait-for-action": {
+    case "label-and-wait": {
       if (verb === "design") {
         const design = latestDoc("designs");
         const text = design ? readFileSync(design, "utf8") : "";
@@ -138,8 +139,14 @@ async function afterVerb(verb: Verb): Promise<boolean> {
         return true;
       }
       if (pr.state === "MERGED") {
-        log(`${verb}'s pull request #${pr.number} is already merged`);
+        deviation(`${verb}'s pull request #${pr.number} was already merged before the person added the land label; something other than the person merged it`);
       } else {
+        if (pr.labels.some((l) => l.name === "land")) {
+          deviation(`${verb}'s pull request #${pr.number} already carried the land label when the session ended; the verb or something in it added it, which no verb may do`);
+        } else {
+          gh.addLandLabel(pr.number);
+          asThePerson(`the driver added the land label to ${verb}'s pull request #${pr.number}, as the person would after reading the report, from outside the project directory`);
+        }
         log(`waiting up to ${landMinutes} minutes for the Action to merge ${verb}'s pull request #${pr.number}`);
         const merged = await gh.waitForMerge(pr.number, landMinutes);
         if (!merged) {

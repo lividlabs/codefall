@@ -1,6 +1,7 @@
 // What the driver does on GitHub and in the project in the person's place: merges the equip pull
-// requests, waits for the Action to merge each document pull request, merges the code stack at the
-// end, returns the checkout to main after each landing, and gathers evidence for the judge.
+// requests, adds the `land` label to each document pull request and waits for the Action to merge
+// it, merges the code stack at the end, returns the checkout to main after each landing, and
+// gathers evidence for the judge.
 // Every gh command runs with the run directory as its working directory and GH_REPO naming the
 // repository, so it is a session outside the project directory, where codefall's guard hook does
 // not apply. The guard is a Claude Code hook; it never saw these commands anyway.
@@ -11,7 +12,7 @@ import { join } from "node:path";
 
 export type Gh = ReturnType<typeof makeGh>;
 
-export type Pr = { number: number; title: string; headRefName: string; baseRefName: string; state: string; isDraft: boolean; mergedAt: string | null; url: string };
+export type Pr = { number: number; title: string; headRefName: string; baseRefName: string; state: string; isDraft: boolean; mergedAt: string | null; url: string; labels: { name: string }[] };
 
 export function makeGh(repo: string, cwd: string, log: (line: string) => void) {
   const env = { ...process.env, GH_REPO: repo, GH_PROMPT_DISABLED: "1" };
@@ -25,7 +26,7 @@ export function makeGh(repo: string, cwd: string, log: (line: string) => void) {
   const ghJson = <T = any>(...args: string[]): T => JSON.parse(gh(...args) || "null");
 
   const listPrs = (state = "all"): Pr[] =>
-    ghJson("pr", "list", "--state", state, "--limit", "200", "--json", "number,title,headRefName,baseRefName,state,isDraft,mergedAt,url");
+    ghJson("pr", "list", "--state", state, "--limit", "200", "--json", "number,title,headRefName,baseRefName,state,isDraft,mergedAt,url,labels");
 
   return {
     gh,
@@ -39,6 +40,15 @@ export function makeGh(repo: string, cwd: string, log: (line: string) => void) {
         .sort((a, b) => b.number - a.number)[0];
     },
 
+    /**
+     * Adds the `land` label to a document pull request, as the person would after reading the
+     * verb's report. This is the one thing that tells the Action to merge; no verb does it. The
+     * command names the repository explicitly, so it is plainly a call from outside the project.
+     */
+    addLandLabel(pr: number): void {
+      gh("pr", "edit", String(pr), "--add-label", "land", "--repo", repo);
+    },
+
     /** Waits for a pull request to be merged. Returns true when merged, false on timeout. */
     async waitForMerge(pr: number, minutes: number): Promise<boolean> {
       const until = Date.now() + minutes * 60_000;
@@ -48,7 +58,7 @@ export function makeGh(repo: string, cwd: string, log: (line: string) => void) {
         if (view.state === "MERGED") return true;
         if (view.state === "CLOSED") return false;
         if (view.isDraft && !saidDraft) {
-          log(`PR #${pr} is still a draft; the Action fires only when a verb marks it ready`);
+          log(`PR #${pr} is a draft, so the document is Draft; the Action never merges a draft, label or not`);
           saidDraft = true;
         }
         await new Promise((r) => setTimeout(r, 30_000));
