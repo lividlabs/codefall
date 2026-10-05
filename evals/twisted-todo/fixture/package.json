@@ -1,0 +1,19 @@
+{
+  "name": "forfeit",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "A todo list where tasks come in pairs and finishing one forfeits the other.",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "start": "node src/main.js",
+    "migrate": "node src/migrate.js",
+    "test": "node --test \"test/**/*.test.js\"",
+    "e2e": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.55.0"
+  }
+}
