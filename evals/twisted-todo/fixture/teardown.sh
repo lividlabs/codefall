@@ -20,6 +20,12 @@ if [ -d "$PROJECT_DIR" ]; then
   (cd "$PROJECT_DIR" && [ -x scripts/local.sh ] && scripts/local.sh stop) || true
 fi
 
+scopes=$(gh api user -i 2>/dev/null | awk -F': ' 'tolower($1)=="x-oauth-scopes"{print $2}')
+case " ${scopes//,/ } " in *" delete_repo "*) ;; *)
+  echo "gh token lacks the 'delete_repo' scope, which deleting the repository needs. Run: gh auth refresh -s delete_repo, then run this script again." >&2
+  exit 1 ;;
+esac
+
 if gh repo view "$REPO" >/dev/null 2>&1; then
   gh repo delete "$REPO" --yes
   echo "deleted https://github.com/$REPO"

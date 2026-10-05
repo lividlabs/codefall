@@ -51,12 +51,16 @@ need curl "used by scripts/local.sh"
 node -e 'const [maj] = process.versions.node.split("."); if (Number(maj) < 24) { console.error(`Node ${process.versions.node} is too old; the fixture needs Node 24 or newer.`); process.exit(1) }'
 gh auth status >/dev/null 2>&1 || { echo "gh is not logged in; run gh auth login" >&2; exit 1; }
 scopes=$(gh api user -i 2>/dev/null | awk -F': ' 'tolower($1)=="x-oauth-scopes"{print $2}')
-for scope in repo workflow project delete_repo; do
+for scope in repo workflow project; do
   case " ${scopes//,/ } " in *" $scope "*) ;; *)
-    echo "gh token lacks the '$scope' scope (has: $scopes). Run: gh auth refresh -s repo -s workflow -s project -s read:project -s delete_repo" >&2
+    echo "gh token lacks the '$scope' scope (has: $scopes). Run: gh auth refresh -s repo -s workflow -s project -s read:project" >&2
     exit 1 ;;
   esac
 done
+# Only teardown.sh needs delete_repo. Say so now, so the person is not surprised later; do not stop.
+case " ${scopes//,/ } " in *" delete_repo "*) ;; *)
+  echo "note: the gh token lacks the 'delete_repo' scope. Setup and the run do not need it; teardown.sh does. Grant it before tearing down: gh auth refresh -s delete_repo" >&2 ;;
+esac
 gh extension list 2>/dev/null | grep -q 'github/gh-stack' || gh extension install github/gh-stack
 owner=$(gh api user -q .login)
 [ -f "$action_template" ] || { echo "missing $action_template; is this checkout on a branch that ships the landing track?" >&2; exit 1; }
