@@ -29,9 +29,9 @@ The resolved list is passed into worker prompts. Workers re-derive nothing.
 
 **Tests are part of done, not a follow-up.** So are the local scripts: a bead whose criteria name
 the `start` and `update` change, or whose diff adds infrastructure, a dependency, a migration, or
-generated code, changes the declared scripts in the same PR, following the local track in the
-`codefall-equip` skill's section *When another verb follows this skill*. The bead is the
-confirmation; the PR body names the change.
+generated code, changes the declared scripts in the same PR, following the local track of
+`codefall-equip` as that skill's followers reference says. The bead is the confirmation; the PR
+body names the change.
 
 **A test case the criteria name is written before the code**, from those criteria and from nothing
 else — never the sibling spec, the application's code, or a pull request's own text. Its format is

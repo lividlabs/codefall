@@ -24,10 +24,10 @@ one run, `scaffold` starts a project, `upgrade` brings its install and documents
 `equip` and `refresh` keep the local environment level with the checkout. Bead state travels over
 the git remote as `refs/dolt/data`: a verb runs `bd dolt push` after every bead write, and `refresh`
 runs `bd sync`.
-`envision`, `specify`, `report`, `fix`, `mock-up`, `scaffold`, `upgrade`, and `equip` are invoked
-deliberately by a user; `design`, `implement`, `test`, `review`, and `refresh` may also be run by an
-agent. Every verb applies only what the user takes; a human performs every merge to `main`, and a
-hook denies the alternative.
+`upgrade` and `equip` are invoked deliberately by a user; every other verb may also be run by an
+agent, and a verb runs the verb upstream of it when the work needs it. Every verb applies only what the user takes; no verb merges to `main`, and a hook denies the
+attempt. A person merges code pull requests; a GitHub Action a project installs with `equip landing`
+merges a document pull request once its verb marks it ready for review.
 [`docs/workflow.md`](docs/workflow.md) holds the full chain, what each verb reads and writes, and
 who is authoritative for what.
 

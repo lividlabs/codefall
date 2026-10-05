@@ -7,6 +7,7 @@ Two files per invocation, sharing one stem. Read at step 4, before the first wri
 - Naming
 - The Markdown shape
 - Where they are committed
+- Kept out of codebase search
 - `revision`
 
 ## Naming
@@ -77,6 +78,17 @@ With the fixes, on whatever branch the fixes landed on — one commit carrying b
 **Except for uncommitted work**, where committing the findings would put them in the diff under
 review. There the files are written and left unstaged, and the report says they are uncommitted and
 where they are. The user commits them with their own work or not at all.
+
+## Kept out of codebase search
+
+`codefall init` writes the `.ignore` line and `codefall doctor` warns when it is missing. Before
+the review, when it is missing, offer:
+
+> `.ignore` doesn't list `.codefall/reviews/`, so findings from this review will show up in
+> codebase searches. Add the line?
+
+On yes, append it — never replace the file. On no, carry on and say nothing further. Say nothing at
+all when the line is already there.
 
 ## `revision`
 

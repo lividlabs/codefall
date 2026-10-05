@@ -12,9 +12,10 @@ enters at `report`, and `design` takes its report as it takes a spec; a bug `tes
 the issue it files on the user's word, and as a child of the epic inside a delivery; `fix` runs
 `design` at tier 0 and `implement` on one bead in a single run. Beside the chain, `scaffold` starts
 a project, `upgrade` brings its install and documents current, and `equip` and `refresh` keep the
-local environment level with the checkout. A human performs every merge to `main`. Documents in the
-repository are canonical for the why, the what, and the how; the tracker mirrors specs and bug
-reports; Beads holds task state. `.codefall/shared/workflow.md` has the chain, what each verb reads
+local environment level with the checkout. No verb merges to `main`: a person merges code pull
+requests, and a GitHub Action the project installs with `equip landing` merges a document pull
+request once its verb marks it ready for review. Documents in the repository are canonical for the
+why, the what, and the how; the tracker mirrors specs and bug reports; Beads holds task state. `.codefall/shared/workflow.md` has the chain, what each verb reads
 and writes, and who is authoritative for what.
 
 Speak plainly. Use everyday words, full sentences, and the active voice. Omit needless words. Say

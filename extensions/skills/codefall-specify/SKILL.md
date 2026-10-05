@@ -49,8 +49,8 @@ Read each when its step says to; none is loaded up front.
   `../../../.codefall/shared/consult.schema.json`.
 - `../../../.codefall/shared/import-mockup.md` — the shared procedure for bringing a user's mockup into the
   repository. Read at step 8 when they have one.
-- `../../../.codefall/shared/landing.md` — the branch, stacked on the vision's pull request when one
-  is open, the commit, and the pull request. Read at step 11 and step 14.
+- `../../../.codefall/shared/landing.md` — the branch, the commit, the draft pull request, and
+  marking it ready. Read at step 11 and step 14.
 
 ## Scope — what, not how
 
@@ -341,8 +341,8 @@ Then set the status: `Ready`, unless they said they are stopping and coming back
 
 ### 11. Branch, then write the spec
 
-Branch first, per `../../../.codefall/shared/landing.md` — `spec/SPEC-NNN-slug`, stacked on the
-vision's pull request when one is open.
+Branch first, per `../../../.codefall/shared/landing.md` — `spec/SPEC-NNN-slug`, from the default
+branch.
 
 Then write `docs/specs/SPEC-NNN-slug.md`, and `docs/specs/AGENTS.md` if it was missing. The commit
 waits for the mirror, which writes the issue number into the document.
@@ -365,15 +365,16 @@ If a vision framed this work, add the spec identifier to its `Related` line, and
 amendment the user took at step 10; change nothing else in the file.
 
 Then land it per `../../../.codefall/shared/landing.md`: commit by path — the spec, the mockups,
-the `AGENTS.md` files, the vision — push, and open the pull request, its body carrying
-`Relates to #<spec-issue>`. It is the bottom of the delivery's document stack, or the layer above
-the vision's; nothing merges until `codefall-design` is done.
+the `AGENTS.md` files, the vision — push, open the pull request as a draft with
+`Relates to #<spec-issue>` in its body, and mark it ready for review when the status is `Ready`.
+The Action merges it; no person is asked to.
 
 Report the spec path, its identifier, its status, every open question it carries, every consult and
 what it settled, the issues that were created with links, the mockups made and where, any vision
-amendment, the branch, and the pull request. **End with what the user does next**, one command:
-`/codefall-design SPEC-NNN`; where the user asked for a sibling spec, say so in a sentence and ask
-whether to write it now.
+amendment, the branch, and the pull request with its state worded as the landing procedure says:
+merged, ready and being merged by the Action, or ready and waiting for a person because the project
+has no Action. **End with one command**: `/codefall-design SPEC-NNN`; where the user asked for a
+sibling spec, say so in a sentence and ask whether to write it now.
 
 ## Other modes
 

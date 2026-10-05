@@ -1,38 +1,38 @@
 # Landing what a verb wrote
 
 The shared procedure for putting a verb's files into git: a branch of their own, a commit of those
-files and nothing else, and an offered pull request. Every verb that writes to the repository
-follows it — `codefall-envision`, `codefall-scaffold`, `codefall-specify`, `codefall-report`,
+files and nothing else, a push, and a pull request. Every verb that writes to the repository follows
+it — `codefall-envision`, `codefall-scaffold`, `codefall-specify`, `codefall-report`,
 `codefall-mock-up`, `codefall-design`, `codefall-equip`, `codefall-upgrade` — except
 `codefall-implement`, which lands one branch and one pull request per task on its own terms, and
 `codefall-review`, whose fixes land on the branch under review.
 
-A human performs every merge to the default branch, and the guard hook denies the alternative.
-Everything short of that — branching, committing, pushing, opening the pull request — is the verb's
-to do, and a document never sits uncommitted on the default branch.
+No verb merges to the default branch, and the guard hook denies the attempt. Everything short of
+that — branching, committing, pushing, opening the pull request — is the verb's to do, and a
+document never sits uncommitted on the default branch.
 
-**The documents of one delivery stack.** The spec's pull request is the bottom layer, the mockups
-stack on it, the design on top, and nobody is asked to merge until the design is done: merging the
-design pull request lands the whole stack. The stacks reference beside this file (stacks.md) says
-how GitHub stacks work; this file says where each verb's layer goes.
+**Two kinds of pull request leave this procedure.**
+
+- **A document pull request** comes from `codefall-envision`, `codefall-specify` (its mockups
+  included), `codefall-report`, `codefall-design`, and `codefall-mock-up` run on its own. It is
+  opened as a draft, marked ready for review when the person has signed the document off, and
+  merged by a GitHub Action the project installs with `/codefall-equip landing`, which merges a
+  ready pull request that touches only document paths. A project without the Action gets the same
+  pull request, and a person merges it.
+- **A pull request from `codefall-equip`, `codefall-scaffold`, or `codefall-upgrade`** changes
+  scripts, settings, or templates, so it is opened ready for review and a person merges it.
+
+Document pull requests do not stack. Each one branches from the default branch and targets it. The
+one verb that stacks pull requests is `codefall-implement`, for code; the stacks reference beside
+this file (stacks.md) is its.
 
 ## Contents
 
-- The shared customization
 - Before the first file: the branch
-- Stacking on the layer below
 - After the last file: the commit
 - Then: push and pull request
+- Marking a document pull request ready
 - What to report
-
-## The shared customization
-
-Landing is the one behaviour every document verb shares, so its customization is shared too:
-`.codefall/skills/shared/CUSTOMIZE.md` in the user's project, read before the branch step by every
-verb that follows this file, beside the verb's own `CUSTOMIZE.md`. It is where a repository that
-lands its document stacks itself says so — for example, that the design verb marks the top pull
-request ready for review and stops, because an Action merges the stack. The customizations rule
-holds: it extends this procedure and never relaxes it.
 
 ## Before the first file: the branch
 
@@ -42,8 +42,7 @@ Read the checkout before writing anything — `branch` and `dirty` from the pref
 
 | Checkout | Do |
 | --- | --- |
-| The layer below has an open pull request | `git fetch origin` and `git switch -c <branch> origin/<layer-branch>`, per *Stacking on the layer below*, and say so |
-| On the default branch, no layer below | `git switch -c <branch>` and say so — it is not a question |
+| On the default branch | `git switch -c <branch>` and say so — it is not a question |
 | On another branch | Ask once: write onto this branch, or branch from the default branch? |
 | Detached HEAD | Stop. Say where the checkout is and ask for a branch to work on |
 | Run from another verb | No branch of your own; the files go on the calling verb's branch and in its commit |
@@ -58,29 +57,11 @@ Branch names carry the verb and the identifier:
 | `mock-up` | `mockup/<slug>` |
 | `design` | `design/DESIGN-NNN-slug` |
 | `scaffold` | `scaffold/<project-or-surface>` |
-| `equip` | `equip/local`, `equip/test-harness`, or `equip/agents` |
+| `equip` | `equip/local`, `equip/test-harness`, `equip/agents`, or `equip/landing` |
 | `upgrade` | `upgrade/<YYYY-MM-DD>` |
 
 A dirty tree does not stop the branch: `git switch -c` carries uncommitted changes along untouched.
 It decides what the commit holds, which is only the files this run wrote.
-
-## Stacking on the layer below
-
-The layer below is the open pull request of the document this one builds on:
-
-| Verb | Layer below |
-| --- | --- |
-| `specify` | the vision's, `vision/VISION-NNN-*`, when the spec draws on one |
-| `mock-up` | the spec's, `spec/SPEC-NNN-*`; else the vision's |
-| `design` | the mockups', `mockup/*`, when a mockup run landed its own layer; else the spec's; else the bug report's, `bug/BUG-NNN-*` |
-
-Find it with `gh pr list --state open --json number,headRefName,baseRefName --limit 200` and the
-branch prefix. A pull request that has merged is no layer: branch from the default branch as the
-table above says. A document with no upstream — a vision, a bug report, a spec with no vision —
-starts a stack of its own at the default branch.
-
-Branching from `origin/<layer-branch>` is what makes the diff of this layer show only this
-document. The pull request below is never edited, rebased, or force-pushed by this run.
 
 ## After the last file: the commit
 
@@ -108,16 +89,13 @@ was written, and the pull request is how it reaches the next verb; neither is a 
 
 ```bash
 git push -u origin <branch>
-gh pr create --base <layer-branch-or-default> --title "<the commit line>" --body-file <tempfile> [--draft]
-gh stack link <layer-pr-or-stack-number> <branch>     # when there is a layer below
+gh pr create --base <default-branch> --title "<the commit line>" --body-file <tempfile> --draft   # a document pull request
+gh pr create --base <default-branch> --title "<the commit line>" --body-file <tempfile>           # equip, scaffold, upgrade
 ```
 
-The base is the layer below's branch when there is one, else the default branch. `--draft` when the
-document's status is `Draft`; `gh pr ready` when a later run promotes it. With a layer below,
-`gh stack link` adds this pull request to the stack: the layer's pull request number when the stack
-does not exist yet (two pull requests make one), the stack number GitHub shows when it does. The
-`gh-stack` extension is `gh extension install github/gh-stack`; a machine without it gets the pull
-request and a line in the report saying the stack was not linked and how to.
+The base is always the default branch. A document pull request is opened as a draft every time,
+whatever the document's status; marking it ready is the last step of the run, below, so that the
+Action never merges a run that is still writing.
 
 The body says what the document is and its status, and carries `Relates to #<issue>` when the run
 created or refreshed a tracker issue, so the issue and the pull request find each other. The title
@@ -127,13 +105,40 @@ is the commit line: a squash merge takes it as the commit message.
   pull request is named rather than opened again.
 - **No remote** (`git remote` prints nothing): say so, skip the push, and report the branch. The
   commit is the deliverable on this machine.
-- **Never merge, and never push the default branch.** The merge is the person's, at the top of the
-  stack, when the design is done — unless the shared customization says the repository lands the
-  stack itself.
+- **Never merge, and never push the default branch.**
+
+## Marking a document pull request ready
+
+When every file of the run is committed and pushed and the document's status is `Ready`, mark the
+pull request ready for review:
+
+```bash
+gh pr ready <number>
+```
+
+This is the sign-off reaching GitHub: the person confirmed the document before it was written, and
+marking the pull request ready is what tells the Action to merge it. A document whose status is
+`Draft` — the person is stopping and coming back, or a design still carries decisions it set
+aside — keeps a draft pull request, and the run that later promotes the document marks it ready.
+
+Then read the state once before reporting:
+
+```bash
+gh pr view <number> --json state,mergedAt
+```
+
+Which of three things to say is decided by what comes back and by whether the project has the
+Action, which is the file `.github/workflows/codefall-land-documents.yml`:
+
+| State | Project has the Action | Say |
+| --- | --- | --- |
+| `MERGED` | either | the pull request is merged |
+| `OPEN`, ready | yes | the pull request is ready and the Action is merging it; it takes a minute or two |
+| `OPEN`, ready | no | the pull request is ready and waits for a person to merge it; `/codefall-equip landing` installs the Action |
+| `OPEN`, draft | either | the pull request is a draft because the document is `Draft`, and what promotes it |
 
 ## What to report
 
-The branch, the commit's subject line, the pull request URL, and its place in the stack: which layer
-it is, and that nothing merges until the design pull request is done. The design verb's report says
-instead that merging its pull request lands the stack. When there was no remote, that the work is
-committed locally and where.
+The branch, the commit's subject line, the pull request URL, and the pull request's state in one of
+the four sentences above. For an `equip`, `scaffold`, or `upgrade` pull request: that it is open
+and a person merges it. When there was no remote, that the work is committed locally and where.

@@ -305,8 +305,8 @@ config, it enforces all five rules.
 Docs-only output leaves the boundary-enforcement obligation unmet. Say so plainly in the report and
 name it as the first task the user owes the project.
 
-**Either code tier also equips the project**, per the `codefall-equip` skill's section *When
-another verb follows this skill* and the profile's depth notes: draft from what this run emitted,
+**Either code tier also equips the project**, per `../codefall-equip/reference/followers.md` and
+the profile's depth notes: draft from what this run emitted,
 `start` exits `0` with nothing to bring up yet, and declare both under `local` in
 `.codefall/settings.json` when it exists — otherwise report the declaration as owed once
 `codefall init` has run. Docs-only output writes no scripts and names `codefall-equip` as owed.

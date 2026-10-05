@@ -48,6 +48,18 @@ Document identifiers are the ones the other verbs define. Resolve one by globbin
 stop if it matches nothing or more than one. Never guess at a near miss, and never invent a form
 those verbs do not define.
 
+A document is read with the document upstream of it:
+
+| Target | Upstream | Found by |
+| --- | --- | --- |
+| vision | none | — |
+| spec | its vision, when it has one | the `**Vision:**` header row |
+| design | its spec, or its vision when there is no spec | the `**Related:**` row |
+| ADR | the design that cites it, and every other accepted ADR | `grep -rl 'ADR-007' docs/designs/`, substituting the identifier, plus `docs/adrs/` |
+
+Links point one way: reaching a design from a spec or an ADR is a grep for the identifier. A
+vision has no upstream and is reviewed for internal consistency alone.
+
 ## A prose argument
 
 A prose argument is a scope and sometimes a narrowing. Resolve the scope by searching — the

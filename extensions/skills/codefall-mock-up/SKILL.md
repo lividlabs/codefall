@@ -288,8 +288,8 @@ user move it.
 ### 6. Branch, make one thing, then stop
 
 Before the first file, read `../../../.codefall/shared/landing.md` and take its branch step:
-`mockup/<slug>`, stacked on the spec's pull request when one is open. **Run from another verb, stay
-on its branch**; the files are part of its commit.
+`mockup/<slug>`, from the default branch. **Run from another verb, stay on its branch**; the files
+are part of its commit.
 
 Build the first screen and show it: the path, and what to open it with.
 
@@ -330,16 +330,18 @@ the calling verb commits them with its document.
 
 Otherwise land the run per `../../../.codefall/shared/landing.md`: commit the mockup directory, the
 `AGENTS.md` if it was written, and the spec or vision if one was edited — by path, nothing else —
-push, and open the pull request, stacked on the spec's when one is open. Nothing merges until
-`codefall-design` is done.
+push, open the pull request as a draft, and mark it ready for review once the person has seen the
+last file. The Action merges it; no person is asked to.
 
 Do not create issues. Do not start a design.
 
 Report the directories, every file with what it shows, what the mockup was matched against, options
 offered and which was taken, states deliberately not made and why, anything assumed because the user
-did not answer, any labels cleared, the branch, and the pull request. **End with what the user does
-next**, one command: `/codefall-design SPEC-NNN` where a spec was waiting on this mockup; otherwise
-say in a sentence that the mockup is in place and nothing is pending.
+did not answer, any labels cleared, the branch, and the pull request with its state worded as the
+landing procedure says: merged, ready and being merged by the Action, or ready and waiting for a
+person because the project has no Action. **End with one command**: `/codefall-design SPEC-NNN`
+where a spec was waiting on this mockup; otherwise say in a sentence that the mockup is in place
+and nothing is pending.
 
 ## Rules
 

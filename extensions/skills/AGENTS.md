@@ -11,14 +11,17 @@ writing and changing a skill; the extension-wide rules, ADR immutability, prose,
 - `codefall-upgrade` and `codefall-equip` carry `disable-model-invocation: true`; a user invokes
   each deliberately, because each changes the install or the settings. Every other skill carries no
   such line, so an agent may run it. Each still reports, offers, and applies only what the user
-  takes; a human still performs every merge.
+  takes; no skill merges to the default branch.
 - **A verb runs the verb upstream of it** when the work needs that verb's judgment, in the same run
   and on the same branch, under the confirmation it already holds: `specify` runs `mock-up` for a
   requirement that needs one, `design` runs `specify` on a `Draft` spec and `mock-up` on a
   requirement still waiting, `specify` runs `envision` when a vision needs more than a text
-  amendment. It asks the person only for a product decision. It never tells the person to run a
-  verb and come back. `implement`, `design`, and `specify` run refresh when preflight reports the
-  environment stale. Running a skill needs `Skill` in `allowed-tools`.
+  amendment, `review` and `test` run `implement` on the epic to build the problems the person took.
+  It asks the person only for a product decision. It never tells the person to run a verb and come
+  back. `design` with technical decisions it set aside asks once whether to settle them with
+  defaults now or leave them for an engineer, and on "now" reaches `Ready` and beads in the same
+  run. `implement`, `design`, and `specify` run refresh when preflight reports the environment
+  stale. Running a skill needs `Skill` in `allowed-tools`.
 - A delivery — one epic from design to merge — runs as rounds of implement, review, and test, and
   every handoff is an artifact, so a verb never relies on the conversation that ran the one before
   it; its report ends with one next step and says it is safe to `/clear`.
@@ -30,10 +33,15 @@ writing and changing a skill; the extension-wide rules, ADR immutability, prose,
   Recording an observable fact is the exception: a skill that owns a status transition sets it when
   the fact occurs and reports that it did — `codefall-implement` flipping a vision to `Active` at first
   claim is this shape. Judgment transitions — promote, archive, revise — stay offer-only.
-- A skill that writes to the repository lands its files per `../shared/landing.md`: the branch and
-  the commit are part of the write the user already confirmed, the push and the pull request are
-  one offer, and the merge is never the skill's. No skill says "do not commit"; the one prohibition
-  is the default branch, and the guard hook holds it.
+- A skill that writes to the repository lands its files per `../shared/landing.md`: the branch,
+  the commit, the push, and the pull request are part of the write the user already confirmed, and
+  the merge is never the skill's. A document verb — `codefall-envision`, `codefall-specify`,
+  `codefall-report`, `codefall-design`, `codefall-mock-up` on its own — opens a draft pull request
+  and marks it ready when the document is `Ready`; the GitHub Action `codefall-equip`'s landing
+  track installs merges it. `codefall-equip`, `codefall-scaffold`, and `codefall-upgrade` open a
+  pull request a person merges. Document pull requests never stack; `codefall-implement`'s code pull
+  requests do. No skill says "do not commit"; the one prohibition is the default branch, and the
+  guard hook holds it.
 - **Refuse only what you cannot do.** A missing surface profile, a missing tool, an unsupported
   tracker — those are exits. Disagreeing about size, altitude, or fit is not: say what you think and
   why, then do what the user asks. `codefall-envision`'s floor and `codefall-specify`'s cohesion check are both

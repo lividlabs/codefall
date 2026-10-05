@@ -52,9 +52,11 @@ run: the case and variant, the criterion that failed with its verdict, the evide
 Record the number in the run record's `issue` field and in the Markdown report's Triage section.
 
 **In a delivery, the issue is also a child of the epic.** When the run's target was an epic's work,
-the same yes files a bead beside the issue, in the `code` form under *Discovered work* in
-`../../codefall-implement/reference/beads.md`, so the next round of `codefall-implement` claims it
-and the chart shows it:
+the question is one line — "I found N problems. Fix them all? (I recommend yes.)" — and the person
+may take all, some, or none. Each one taken files an issue and a bead beside it, in the `code` form
+under *Discovered work* in `../../codefall-implement/reference/beads.md`; once the report is
+written, the session runs `codefall-implement` on the epic, whose go gate reopens those children
+and builds them, and the chart shows it:
 
 ```bash
 bd create "<the issue's title>" --id "$(bd config get issue_prefix)-gh-<n>" --external-ref gh-<n> \

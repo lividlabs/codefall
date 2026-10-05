@@ -89,10 +89,12 @@ One entry per decision:
 ```
 
 **A design with a non-empty Decisions needed section is `Draft`, never `Ready`, and creates no
-beads.** The next-action line of the run's report hands the document to an engineer's run of
-`codefall-design`, whose Promote mode settles each entry with the person, moves the outcome into
-the section it belongs to, removes the entry, and only then creates the graph. The section is
-deleted when it is empty, like every conditional section.
+beads.** Before the status is set, the run asks the person once whether to settle the entries with
+sensible defaults now or leave them for an engineer. Settled now, each entry's outcome moves into
+the section it belongs to, the entry is removed, and the graph is created in the same run. Left,
+the design stays `Draft`, and an engineer's run of `codefall-design` in Promote mode settles each
+entry with that person, moves the outcome, removes the entry, and only then creates the graph. The
+section is deleted when it is empty, like every conditional section.
 
 ## Technical Context
 

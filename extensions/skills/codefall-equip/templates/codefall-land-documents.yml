@@ -1,0 +1,44 @@
+# Merges a document pull request once a codefall verb marks it ready for review.
+#
+# codefall's document verbs (envision, specify, report, design, and mock-up) open their pull
+# request as a draft and mark it ready when the person has signed the document off. This workflow
+# is that sign-off reaching the default branch: it merges a ready pull request whose diff touches
+# only document paths. A pull request with any other path in it waits for a person.
+#
+# Installed by `/codefall-equip landing`. The allowlist below is the one codefall's verbs write
+# into; change it only if this project keeps those documents somewhere else. The token is the
+# default GITHUB_TOKEN. A repository whose default branch requires a review has to let this
+# workflow through, and that is a repository setting the owner makes, not a line in this file;
+# docs/landing-documents.md in the codefall repository says which setting.
+name: codefall-land-documents
+on:
+  pull_request:
+    types: [ready_for_review, synchronize]
+permissions:
+  contents: write
+  pull-requests: write
+concurrency:
+  group: codefall-land-documents-${{ github.event.pull_request.number }}
+  cancel-in-progress: false
+jobs:
+  land:
+    if: github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Only document paths
+        run: |
+          set -euo pipefail
+          allow='^(docs/(visions|specs|bugs|mockups|designs|adrs)/|\.codefall/(reviews|tests)/|\.beads/interactions\.jsonl$)'
+          base="origin/${{ github.event.pull_request.base.ref }}"
+          # HEAD is the pull request merged onto its base, so base...HEAD is exactly its diff.
+          if git diff --name-only "$base...HEAD" | grep -vE "$allow"; then
+            echo "the paths above are not document paths; a person merges this pull request" >&2
+            exit 1
+          fi
+      - name: Merge
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh pr merge "${{ github.event.pull_request.number }}" --squash

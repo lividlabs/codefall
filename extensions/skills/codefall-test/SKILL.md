@@ -11,6 +11,7 @@ allowed-tools:
   - Edit
   - Bash
   - Agent
+  - Skill
 ---
 
 # Test
@@ -248,7 +249,10 @@ still gets a report, marked as the run it was, with every side effect it created
 
 Read `reference/triage.md` when anything failed, was unreachable, or turned up in the anomaly sweep.
 Classify each, write the working notes it names, and stop there: a finding becomes a tracker issue,
-and in a delivery a child of the epic, only on the user's explicit word.
+and in a delivery a child of the epic, only on the user's explicit word. **For an epic target the
+question is one line** — "I found N problems. Fix them all? (I recommend yes.)" — and the person
+may take all, some, or none; each one taken is filed as the triage reference says, an issue and a
+`deferred` child of the epic.
 
 ### 7. Report
 
@@ -258,9 +262,11 @@ and the beads filed. No summary of what went well. For an epic target, one line 
 notes — `round N (test) [date]: the verdict and what was filed` — per *Session end* in
 `../codefall-implement/reference/beads.md`, and anything decided here that no bead, report, or
 issue holds goes in a `bd comment` on the epic; the report then says it is safe to `/clear`.
-**End with what the user does next.** For an epic target: `/codefall-implement <epic>`
-when children were filed; when nothing was, this run is the last test passed, and the merge order
-from the implement report is what remains. Otherwise per class: a real bug with an issue filed goes
+**End with what the user does next.** For an epic target: when children were filed, say this run
+is now running `codefall-implement <epic>` to fix them, then run that skill with the epic as its
+argument, through the `Skill` tool, in this session; its go gate reopens the children, and its
+report ends the session with its own one command. When nothing was filed, this run is the last
+test passed, and the merge order from the implement report is what remains. Otherwise per class: a real bug with an issue filed goes
 to `/codefall-fix #<issue>` when the change is contained and `/codefall-design #<issue>` otherwise,
 or to `/codefall-report <run report path>` when the user wants a bug document first; a real bug not
 filed waits for the user's word; a wrong expectation goes to the decision that supersedes the
@@ -290,7 +296,10 @@ nothing.
 - **Side effects are recorded the moment they exist**, and cleaned up the way `<root>/AGENTS.md`
   says.
 - **A finding becomes a tracker issue, and in a delivery a `deferred` child of the epic, only on
-  the user's word**, and the existing issues are searched first.
+  the user's word**, and the existing issues are searched first. In a delivery the word is the
+  answer to one question, "Fix them all?", and the children it files are built by
+  `codefall-implement`, which this session runs after the report; the person types nothing between
+  the test and the fix.
 - **Name the remedy, never apply it.** This verb does not run `codefall init`, `/codefall-equip`,
   or `/codefall-refresh`, and runs the declared `update` only on the epic's branch it checked out
   itself.
