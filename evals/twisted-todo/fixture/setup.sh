@@ -50,7 +50,7 @@ need go "to build codefall from this branch"
 need curl "used by scripts/local.sh"
 node -e 'const [maj] = process.versions.node.split("."); if (Number(maj) < 24) { console.error(`Node ${process.versions.node} is too old; the fixture needs Node 24 or newer.`); process.exit(1) }'
 gh auth status >/dev/null 2>&1 || { echo "gh is not logged in; run gh auth login" >&2; exit 1; }
-scopes=$(gh api user -i 2>/dev/null | awk -F': ' 'tolower($1)=="x-oauth-scopes"{print $2}')
+scopes=$(gh api user -i 2>/dev/null | tr -d '\r' | awk -F': ' 'tolower($1)=="x-oauth-scopes"{print $2}')
 for scope in repo workflow project; do
   case " ${scopes//,/ } " in *" $scope "*) ;; *)
     echo "gh token lacks the '$scope' scope (has: $scopes). Run: gh auth refresh -s repo -s workflow -s project -s read:project" >&2
