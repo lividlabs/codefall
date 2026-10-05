@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 # PreToolUse guard: deny any shell command that would merge or push to the default branch.
 #
-# A human performs every merge to main; no codefall verb ever does. A denial from this
-# hook is the system working as designed. For Claude Code and Codex a deny is exit 2 with
+# No codefall verb merges to main. A person merges a code pull request, and the
+# land-documents workflow merges a document pull request on the `land` label when the
+# project has it installed. A denial from this hook is the system working as designed. For Claude Code and Codex a deny is exit 2 with
 # the reason on stderr, shown to the model. Antigravity needs a JSON decision on stdout,
 # which --antigravity selects. Exit 0 raises no objection; the normal permission flow
 # still applies.
@@ -37,7 +38,7 @@ fi
 [ -z "$cmd" ] && exit 0
 
 deny() {
-  reason="codefall: $1 A human performs every merge to '$2' — report the merge order and stop."
+  reason="codefall: $1 No verb merges to '$2': a person merges a code pull request, and the land-documents workflow merges a document pull request on the 'land' label. Report and stop."
   if [ -n "$antigravity" ]; then
     python3 -c 'import json,sys; print(json.dumps({"decision": "deny", "reason": sys.argv[1]}))' "$reason"
     exit 0

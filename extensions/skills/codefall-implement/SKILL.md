@@ -336,7 +336,7 @@ Do not merge, and do not wait for merges; the next session's `bd gate check` fin
 
 ## Rules
 
-- **A human performs every merge to `main`; this skill performs none, in any mode.**
+- **A person merges every code PR to `main`; this skill performs none, in any mode.**
 - **Every `bd` write is the root's, in the primary checkout.** Workers never run `bd`.
 - **Closed means done — criteria verified, checks green, PR open.** Merged is the gates' to say.
 - **Publish the claim before the work.** `bd dolt push` follows every claim and every close.

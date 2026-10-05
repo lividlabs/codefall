@@ -168,7 +168,7 @@ merge the pull request, then `/codefall-test <area>/<slug>` when the bead named 
 
 - **One bead at tier 0, or an exit** naming `/codefall-design`.
 - **One confirmation, and nothing written before it.**
-- **A human performs every merge to `main`; fix performs none.**
+- **A person merges every code PR to `main`; fix performs none.**
 - **A ticket must not change under someone holding it.**
 - **Scope is exactly the bead.** A tangent becomes a `discovered-from` bead, never a change in passing.
 - **Tests are part of done.** A test case the criteria name is written first, from the criteria alone.
