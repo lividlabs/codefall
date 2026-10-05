@@ -208,6 +208,11 @@
             "enum": ["bug", "expectation", "flake", "variance"],
             "description": "Real bug, wrong expectation, flake, or agent variance."
           },
+          "priority": {
+            "type": "string",
+            "enum": ["P0", "P1", "P2", "P3", "P4"],
+            "description": "The Beads priority the finding carries and the bead filed for it takes: a real bug that fails a criterion P1, a wrong expectation P2, agent variance or an anomaly P3, a flake P4. P0 is set by a person, never by the verb."
+          },
           "occurrences": {
             "type": "string",
             "description": "For variance, how often it has been seen across runs: \"2 of 6 runs\"."

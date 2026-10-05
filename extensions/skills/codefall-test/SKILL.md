@@ -249,7 +249,11 @@ still gets a report, marked as the run it was, with every side effect it created
 
 Read `reference/triage.md` when anything failed, was unreachable, or turned up in the anomaly sweep.
 Classify each, write the working notes it names, and stop there: a finding becomes a tracker issue,
-and in a delivery a child of the epic, only on the user's explicit word. **For an epic target the
+and in a delivery a child of the epic, only on the user's explicit word. Every finding is listed
+with the Beads priority its class carries — a real bug that fails a criterion P1, a wrong
+expectation P2, agent variance or an anomaly from the sweep P3, a flake P4, per the table in
+`reference/triage.md` — and a bead filed for it is created with `-p` set to that priority. P0 is a
+person's to set by hand. **For an epic target the
 question is one line** — "I found N problems. Fix them all? (I recommend yes.)" — and the person
 may take all, some, or none; each one taken is filed as the triage reference says, an issue and a
 `deferred` child of the epic.

@@ -168,6 +168,17 @@
               "minor"
             ]
           },
+          "priority": {
+            "type": "string",
+            "enum": [
+              "P0",
+              "P1",
+              "P2",
+              "P3",
+              "P4"
+            ],
+            "description": "The Beads priority the finding carries and the bead filed for it takes: blocker P1, important P2, minor P3. P0 is set by a person, never by the verb."
+          },
           "location": {
             "type": "object",
             "required": [

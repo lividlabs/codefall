@@ -150,9 +150,10 @@ are held to; read them there, never restate them.
 - **Do not overstate severity or inflate the count.**
 - **No flattery.** No summary of what the work does well.
 
-Severity: a **blocker** is wrong and will be observed; **important** is wrong under conditions that
-will occur; **minor** is worth fixing and costs nothing to leave. A `REVIEW.md` at the project root,
-if present, states what the project cares about and wins.
+Severity, with the Beads priority a finding's bead takes: a **blocker** (P1) is wrong and will be
+observed; **important** (P2) is wrong under conditions that will occur; **minor** (P3) is worth
+fixing and costs nothing to leave. `reference/findings-file.md` has the table; P0 is a person's to
+set. A `REVIEW.md` at the project root, if present, states what the project cares about and wins.
 
 ## Who reviews
 
@@ -187,9 +188,9 @@ say the fixes were not applied and why, and leave the tree as it is.
 
 ## Triage and fixes
 
-Present the findings as one numbered list, most severe first, each with its location, its claim, and
-the conditions under which it matters. Then ask which to fix. **On an epic's work the question is
-one line** — "I found N problems. Fix them all? (I recommend yes.)" — and the person may take all,
+Present the findings as one numbered list, most severe first, each with its priority and severity,
+its location, its claim, and the conditions under which it matters. Then ask which to fix. **On an
+epic's work the question is one line** — "I found N problems. Fix them all? (I recommend yes.)" — and the person may take all,
 some, or none.
 
 | Status | Meaning |
@@ -198,12 +199,12 @@ some, or none.
 | `dismissed` | The user rejected it, with a reason |
 | `deferred` | Real, but not now |
 
-A dismissed finding is written with its `reason`. The schema does not require it, so this step
-does: a dismissal with no reason is asked for one before the write.
+A dismissed finding is written with its `reason`; a dismissal with no reason is asked for one
+before the write.
 
-Apply the accepted fixes with this session's tools, code and documents alike. A finding's proposed
-`patch` is a starting point, not a script — apply the intent, matching the surrounding code. Fixes
-are not re-reviewed here. **On an epic's work, a taken code finding is not fixed here**: it is
+Apply the accepted fixes, code and documents alike. A finding's proposed `patch` is a starting
+point, not a script — apply the intent, matching the surrounding code. Fixes are not re-reviewed
+here. **On an epic's work, a taken code finding is not fixed here**: it is
 filed as a `deferred` child of the epic in the `code` form below, or the `design` form where the
 design caused it, its status is `deferred` with the bead's ID, and step 8 runs `codefall-implement`
 on the epic to build every one of them in this session. Document fixes on an epic's work still land
@@ -229,8 +230,8 @@ the design's path, the label `design-revision` — for a finding the design caus
 cannot settle because it moves work, the document is frozen, or the user deferred it; the `code`
 form for a `deferred` finding whose cause is the code. Either carries a `discovered-from` edge to
 the bead the branch names when there is one, and is a `deferred` child of that bead's epic, read
-from `bd show <bead> --json`, when there is one. On yes, create it, `bd dolt push`, and record its
-ID as the finding's `bead`. Never file one unasked.
+from `bd show <bead> --json`, when there is one. On yes, create it with `-p` set to the finding's
+priority, `bd dolt push`, and record its ID as the finding's `bead`. Never file one unasked.
 
 ## The findings file
 
@@ -323,10 +324,9 @@ run, and say so.
 - **The target decides where fixes land**, never where the session started.
 - **Uncommitted work is never moved to a worktree**, and a dirty tree stops a move rather than
   carrying changes onto another branch.
-- **Every finding ends with a status**, and the files are written even when nothing was found and
-  even when nothing was fixed.
-- **Refuse what is not reviewable** — a merged or closed pull request, a merged branch, a superseded
-  ADR, an archived document, a specific commit — and say which.
+- **Every finding ends with a status**, and the files are written even when nothing was found or
+  fixed.
+- **Refuse what is not reviewable**, and say which of the five it is.
 - **An identifier that resolves to nothing is a stop**, not a guess.
 - **Only `fixed` and `deferred` findings reach a pull request.** A dismissed one was judged wrong.
 - **A bead is offered, never filed unasked**: a `design-revision` bead for a finding the design

@@ -3,6 +3,14 @@
 What happens to what a run found. Read it when a run failed, could not reach something, or turned up
 an anomaly.
 
+## Contents
+
+- The four classes
+- Priority
+- Where the notes go
+- Issues
+- What triage never does
+
 **Search the tracker before classifying anything as new.** A failure already reported is a comment
 on that issue, not a second issue.
 
@@ -22,6 +30,23 @@ classify it as a real bug in that agent's own instructions.
 
 **An anomaly from the sweep is triaged like anything else**, and it stays out of the verdict. It was
 not a criterion; it does not fail one.
+
+## Priority
+
+Every finding carries a Beads priority beside its class, and a bead filed for it is created with
+`-p <n>` set to that priority. The class word stays; the priority is what `bd ready` sorts by.
+
+| Finding | Priority |
+| --- | --- |
+| Real bug that fails a criterion | P1 |
+| Wrong expectation | P2 |
+| Agent variance | P3 |
+| Anomaly from the sweep | P3 |
+| Flake | P4 |
+
+P0 is a person's to set by hand on a bead they judge urgent; no verb assigns it. The run record
+carries the priority on each triage entry as `priority`, one of `P0` to `P4`, and the Markdown
+report's Triage section shows it on the finding's line.
 
 ## Where the notes go
 
@@ -60,11 +85,12 @@ and builds them, and the chart shows it:
 
 ```bash
 bd create "<the issue's title>" --id "$(bd config get issue_prefix)-gh-<n>" --external-ref gh-<n> \
-  -t bug -s deferred --deps discovered-from:<bead> -p 2
+  -t bug -s deferred --deps discovered-from:<bead> -p <n>
 bd update "$(bd config get issue_prefix)-gh-<n>" --parent <epic>
 bd dolt push
 ```
 
+`-p <n>` is the finding's priority from the table above: `1` for a real bug that fails a criterion.
 `<bead>` is the child whose criteria name the failed case: the one citing the failed criterion's
 identifier where two children name the same case, every such child (one edge each) where none
 does, and the epic itself for a suite failure that names no case. Record the bead's ID in the run
@@ -72,7 +98,8 @@ record's `bead` field beside `issue`.
 
 **A wrong expectation whose criterion a bead cites** is offered, on the user's word, as a
 `design-revision` child in the `design` form of the same reference, with `--spec-id` taken from that
-bead's `spec_id`; `codefall-design`'s Revise mode settles whether the criterion or the design moves.
+bead's `spec_id` and `-p 2`; `codefall-design`'s Revise mode settles whether the criterion or the
+design moves.
 
 **A bug document is the user's to ask for.** `/codefall-report <run report path>` writes
 `docs/bugs/BUG-NNN-slug.md` with acceptance criteria and adopts the issue this run filed rather than

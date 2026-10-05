@@ -5,6 +5,7 @@ Two files per invocation, sharing one stem. Read at step 4, before the first wri
 ## Contents
 
 - Naming
+- Priority
 - The Markdown shape
 - Where they are committed
 - Kept out of codebase search
@@ -38,6 +39,21 @@ conditional rule is rejected by some harnesses' schema flags, and triage checks 
 **The files are written three times** — after the review, after triage, after the fixes. An
 interrupted session resumes from them rather than starting over.
 
+## Priority
+
+Every finding carries a Beads priority beside its severity, and a bead filed for the finding is
+created with `-p <n>` set to it. The severity word stays; the priority is what `bd ready` sorts by.
+
+| Finding | Priority |
+| --- | --- |
+| blocker | P1 |
+| important | P2 |
+| minor | P3 |
+
+P0 is a person's to set by hand on a bead they judge urgent; no verb assigns it. The JSON carries
+the priority as `priority`, one of `P0` to `P4`, and the Markdown shows it first on the finding's
+line.
+
 ## The Markdown shape
 
 ```markdown
@@ -50,7 +66,7 @@ interrupted session resumes from them rather than starting over.
 
 ## Findings
 
-### 1. <claim> — `blocker` · `correctness` · fixed
+### 1. <claim> — P1 · `blocker` · `correctness` · fixed
 `path/to/file.go:120-134`
 
 <conditions, when there are any, then the claim in full>
@@ -65,7 +81,8 @@ interrupted session resumes from them rather than starting over.
 Findings are ordered most severe first, matching the triage list. A review with none says so under
 the heading rather than dropping it. A deferred finding filed as a bead — a revision bead, or a code
 bead under the epic — carries the bead's ID after its status — `deferred ·
-booking-design-007-stagestore` — and the JSON carries it as `bead`. A finding promoted from
+booking-design-007-stagestore` — and the JSON carries it as `bead`; the bead was created with `-p`
+set to the finding's priority. A finding promoted from
 `notChecked` after a consult carries a line after its location —
 *consulted `codex:gpt-5-codex`: the retry loop re-reads the offset it just committed* — and the
 JSON carries it as `consult`; an entry a consult left in `notChecked` carries the consult's view
