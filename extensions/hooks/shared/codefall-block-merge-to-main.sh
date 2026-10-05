@@ -14,7 +14,8 @@
 # Deliberate limits: this inspects the command string plus, for `gh pr merge`, the PR's
 # actual base branch. It prefers a rare false denial over a false allow, and it is a
 # guard, not the only line — a repository ruleset protecting the default branch remains
-# the backstop.
+# the backstop. `gh stack merge` is denied on the command string alone, without reading
+# the stack, because a stack's trunk is the default branch in every codefall use.
 set -u
 
 antigravity=
@@ -48,6 +49,11 @@ deny() {
 # The protected branch: origin's default, else main.
 protected=$(git symbolic-ref --quiet --short refs/remotes/origin/HEAD 2>/dev/null | sed 's|^origin/||')
 [ -z "$protected" ] && protected=main
+
+# --- gh stack merge: lands every layer of a stack on its trunk, which is the default branch. ---
+if printf '%s' "$cmd" | grep -qE '(^|[;&|[:space:]])gh[[:space:]]+stack[[:space:]]+merge([[:space:]]|$)'; then
+  deny "denied: 'gh stack merge' lands a stack on '$protected'." "$protected"
+fi
 
 # --- gh pr merge: the PR's base decides; an undetermined base is denied, not allowed. ---
 if printf '%s' "$cmd" | grep -qE '(^|[;&|[:space:]])gh[[:space:]]+pr[[:space:]]+merge([[:space:]]|$)'; then
