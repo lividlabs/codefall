@@ -100,27 +100,31 @@ the verb.
 ### Document pull requests land on their own
 
 Each document verb — `envision`, `specify` with its mockups, `report`, `design`, and `mock-up` run
-alone — branches from the default branch, writes the document, works with the person until they
-sign it off, commits, pushes, and opens an ordinary pull request. A GitHub Action in the project
-merges that pull request when a person adds the label `land` to it, provided its diff touches only
-document paths: `docs/visions/`, `docs/specs/`, `docs/bugs/`, `docs/mockups/`, `docs/designs/`,
-`docs/adrs/`, `.codefall/reviews/`, `.codefall/tests/`, and `.beads/interactions.jsonl`. Any
-other path means the pull request waits for a person. The Action's trigger is the `pull_request`
-event of type `labeled` with the label named `land`, plus `synchronize` while the label is present,
-so a late commit is checked again before the merge; its merge is `gh pr merge --squash` under the
-default token. No verb adds the label, and no verb marks a pull request ready for review as a
-signal: the label is the person's decision, made after the report, after a colleague's review, or
-not at all.
+alone — branches from the default branch, writes the document, works with the person until they sign
+it off, commits, pushes, and opens an ordinary pull request. A GitHub Action in the project merges
+that pull request when a person adds the label `auto-merge` to it or approves it, provided its diff
+touches only document paths: `docs/visions/`, `docs/specs/`, `docs/bugs/`, `docs/mockups/`,
+`docs/designs/`, `docs/adrs/`, `.codefall/reviews/`, `.codefall/tests/`, and
+`.beads/interactions.jsonl`. Any other path means the pull request waits for a person. The Action's
+trigger is the `pull_request` event of type `labeled` with the label named `auto-merge`, plus
+`synchronize` while the label is present, so a late commit is checked again before the merge, plus
+the `pull_request_review` event of type `submitted` with the review state `approved`; the path check
+and the draft check run the same way for every trigger, and the merge is `gh pr merge --squash`
+under the default token. GitHub does not let a pull request's author approve it, and a verb opens
+the pull request as the person running it, so an approval always comes from a second person. No verb
+adds the label or approves, and no verb marks a pull request ready for review as a signal: the label
+is the person's decision, made after the report, after a colleague's review, or not at all.
 
 A document whose status is `Draft` gets a draft pull request. The run that later promotes it to
 `Ready` marks the pull request ready for review before pushing, because GitHub does not merge a
 draft; the pull request still waits for the label.
 
-The report of each of those verbs says the pull request is open at its URL, that the person adds
-the `land` label when they want it merged or has someone review it first, and ends with one next
-command: `envision` → `/codefall-specify VISION-NNN`, `specify` → `/codefall-design SPEC-NNN`,
-`report` → `/codefall-design BUG-NNN`, `design` → `/codefall-implement DESIGN-NNN`. A project
-without the Action hears that the pull request waits for a person to merge it.
+The report of each of those verbs says the pull request is open at its URL, that the person adds the
+`auto-merge` label when they want it merged or has someone approve it, either of which merges it,
+and ends with one next command: `envision` → `/codefall-specify VISION-NNN`, `specify` →
+`/codefall-design SPEC-NNN`, `report` → `/codefall-design BUG-NNN`, `design` → `/codefall-implement
+DESIGN-NNN`. A project without the Action hears that the pull request waits for a person to merge
+it.
 
 Documents do not stack. `equip`, `scaffold`, and `upgrade` push and open their pull request the same
 way, without asking, and a person merges those because they change code and settings. Push and pull
@@ -136,12 +140,12 @@ merging the document. A label a person adds is a deliberate act with one meaning
 
 `codefall-equip` gains a fourth track, `landing`, which writes
 `.github/workflows/codefall-land-documents.yml` from a template the extension ships, creates the
-`land` label in the repository, reads the default branch's protection and rulesets with `gh api`,
-tells the owner what the rule has to allow for the workflow's token to merge, and changes no other
-repository setting. A repository that requires a
-review on its default branch has to let the Action through; that is the owner's decision, made in
-the open. `codefall init` does not install the workflow: the installer rewrites its subtrees on
-every upgrade, and the workflow is a file the owner may edit.
+`auto-merge` label in the repository, reads the default branch's protection and rulesets with `gh
+api`, tells the owner what the rule has to allow for the workflow's token to merge, and changes no
+other repository setting. A repository that requires a review on its default branch has to let the
+Action through; that is the owner's decision, made in the open. `codefall init` does not install the
+workflow: the installer rewrites its subtrees on every upgrade, and the workflow is a file the owner
+may edit.
 
 ### Integration is GitHub's
 

@@ -15,10 +15,10 @@ document never sits uncommitted on the default branch.
 
 - **A document pull request** comes from `codefall-envision`, `codefall-specify` (its mockups
   included), `codefall-report`, `codefall-design`, and `codefall-mock-up` run on its own. It is
-  opened as an ordinary pull request, and a GitHub Action the project installs with
-  `/codefall-equip landing` merges it when a person adds the `land` label to it, provided it touches
-  only document paths. No verb adds the label. A project without the Action gets the same pull
-  request, and a person merges it by hand.
+  opened as an ordinary pull request, and a GitHub Action the project installs with `/codefall-equip
+  landing` merges it when a person adds the `auto-merge` label to it or approves it, provided it
+  touches only document paths. No verb adds the label or approves. A project without the Action gets
+  the same pull request, and a person merges it by hand.
 - **A pull request from `codefall-equip`, `codefall-scaffold`, or `codefall-upgrade`** changes
   scripts, settings, or templates, so a person merges it; the Action never touches it.
 
@@ -105,8 +105,10 @@ is the commit line: a squash merge takes it as the commit message.
   pull request is named rather than opened again.
 - **No remote** (`git remote` prints nothing): say so, skip the push, and report the branch. The
   commit is the deliverable on this machine.
-- **Never merge, never push the default branch, and never add the `land` label.** The label is a
-  person's way of saying a document pull request may merge; a verb that added it would be merging.
+- **Never merge, never push the default branch, and never add the `auto-merge` label.** The label
+  is a person's way of saying a document pull request may merge; a verb that added it would be
+  merging. An approving review is the other way, and GitHub does not let the pull request's author
+  give one.
 - **Changes the person asks for after the pull request is open** are new commits on the same
   branch, pushed the same way.
 
@@ -122,8 +124,9 @@ gh pr create --base <default-branch> --title "<the commit line>" --body-file <te
 The draft state follows the document's status and nothing else. When a later run promotes the
 document to `Ready`, that run marks the pull request ready for review with `gh pr ready <number>`
 before it pushes the commit, because GitHub does not merge a draft and because the push is what
-makes the Action look at the pull request again if the `land` label is already on it. Marking the
-pull request ready is not the signal to merge; the `land` label is, and a person adds it.
+makes the Action look at the pull request again if the `auto-merge` label is already on it. Marking
+the pull request ready is not the signal to merge; the `auto-merge` label or an approving review is,
+and a person gives it.
 
 ## What to report
 
@@ -133,8 +136,8 @@ file `.github/workflows/codefall-land-documents.yml`:
 
 | Pull request | Project has the Action | Say |
 | --- | --- | --- |
-| document, `Ready` | yes | the pull request is open at <url>; add the `land` label when you want it merged, or have someone review it first |
-| document, `Ready` | no | the pull request is open at <url> and waits for a person to merge it; `/codefall-equip landing` installs the Action that merges a labelled document pull request |
+| document, `Ready` | yes | the pull request is open at <url>; add the `auto-merge` label when you want it merged, or have someone approve it; either one merges it |
+| document, `Ready` | no | the pull request is open at <url> and waits for a person to merge it; `/codefall-equip landing` installs the Action that merges a labelled or approved document pull request |
 | document, `Draft` | either | the pull request is a draft at <url> because the document is `Draft`, and what promotes it |
 | `equip`, `scaffold`, or `upgrade` | either | the pull request is open at <url>, and a person merges it because it changes code or settings |
 

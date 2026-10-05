@@ -20,7 +20,7 @@ environment** — `start`, which brings its services up, and `update`, which mak
 environment match the checkout; the **test harness** — the spec runner that collects the specs
 beside the project's test cases; the **agents** — how another harness is called, and who reviews
 and consults; and the **document landing** — the GitHub Action that merges a document pull request
-once a person adds the `land` label to it. The first three are declared in
+once a person labels it `auto-merge` or approves it. The first three are declared in
 `.codefall/settings.json`: `local`, which `codefall-refresh` runs; `test.runners`, which
 `codefall-test` reads; `harnessConfig` and the `agents` lists, which `codefall-review` and every
 consult read. The fourth is one file under `.github/workflows/` and one label.
@@ -87,7 +87,7 @@ Read each when its step says to; none is loaded up front.
 | Declaring `local`, `test.runners`, `harnessConfig`, and the `agents` lists in `.codefall/settings.json` | Per-branch databases, shared or otherwise | the project |
 | Recording the runner's commands in the testing root's `AGENTS.md` | The testing root, its tree, and the `CODEFALL TESTING` section | `codefall init` |
 | Proving a candidate meets the contract, or an agent answers | Any other settings field | `codefall init` |
-| Installing the workflow and the `land` label that merge document pull requests | Changing a branch rule or any other repository setting | the owner |
+| Installing the workflow and label that merge document pull requests | Changing a branch rule or any other repository setting | the owner |
 
 **Every run does the same thing**, whether what it equips exists or not: read the project, propose
 the draft or the revision, confirm, write, declare. There is no first-time mode.
@@ -309,11 +309,11 @@ configuration, one question, one change.
 3. **Ask the one question**: install the workflow, shown in full, with the branch-rule finding in a
    sentence. A rule that would block the workflow's token is the owner's to change.
 4. **Write** `.github/workflows/codefall-land-documents.yml` from the template, on `equip/landing`,
-   and create the `land` label.
+   and create the `auto-merge` label.
 5. **Prove** that the file parses, the allowlist accepts a spec path and rejects a source path, and
    the label exists.
 6. **Report** what was written, what the owner changes, and the landing: its own pull request, a
-   person's to merge; then a document pull request merges when a person adds the `land` label.
+   person's to merge; then a document pull request merges on the `auto-merge` label or an approval.
 
 ## Rules
 
@@ -337,8 +337,8 @@ configuration, one question, one change.
   Flutter — and say which modality remains.
 - **Names in settings, commands in `<root>/AGENTS.md`.** Never the other way around, and never both.
 - **A harness is equipped in its own pull request.** It never rides along in a task's.
-- **The landing track changes no branch rule.** It writes one workflow file, creates the `land`
-  label, and tells the owner what the branch rule has to allow.
+- **The landing track changes no branch rule.** It writes one workflow file, creates the
+  `auto-merge` label, and tells the owner what the branch rule has to allow.
 - **Cases are not this skill's.** An empty tree is what proves a harness; writing the first case is
   `/codefall-implement`.
 - **Refresh, test, and review are not this skill.** Say so and stop when the user wants the

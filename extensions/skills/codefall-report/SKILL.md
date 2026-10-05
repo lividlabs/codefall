@@ -224,12 +224,13 @@ mirror fails**: give the user the exact command that fixes the tracker and say t
 
 Land it per `../../../.codefall/shared/landing.md`: commit by path — the report, its attachments,
 the `AGENTS.md` — push, and open the pull request with `Relates to #<issue>` in its body, a draft
-only when the status is `Draft`. Never add the `land` label: a person adds it when they want the
-report merged.
+only when the status is `Draft`. Never add the `auto-merge` label: a person adds it when they want
+the report merged.
 
 Report the path, identifier, status, severity, the reproduction outcome, every open question, the
 issue with its link, the branch, and the pull request, worded as the landing procedure says: it is
-open at its URL; add the `land` label when you want it merged, or have someone review it first.
+open at its URL; add the `auto-merge` label when you want it merged, or have someone approve it;
+either one merges it.
 **End with one command**: `/codefall-design BUG-NNN`.
 
 ## Other modes

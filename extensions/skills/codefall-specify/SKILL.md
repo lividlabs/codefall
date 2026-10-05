@@ -367,12 +367,13 @@ amendment the user took at step 10; change nothing else in the file.
 Then land it per `../../../.codefall/shared/landing.md`: commit by path — the spec, the mockups,
 the `AGENTS.md` files, the vision — push, and open the pull request with
 `Relates to #<spec-issue>` in its body, a draft only when the status is `Draft`. Never add the
-`land` label: a person adds it when they want the spec merged.
+`auto-merge` label: a person adds it when they want the spec merged.
 
 Report the spec path, its identifier, its status, every open question it carries, every consult and
 what it settled, the issues that were created with links, the mockups made and where, any vision
-amendment, the branch, and the pull request, worded as the landing procedure says: it is open at
-its URL; add the `land` label when you want it merged, or have someone review it first.
+amendment, the branch, and the pull request, worded as the landing procedure says: it is open at its
+URL; add the `auto-merge` label when you want it merged, or have someone approve it; either one
+merges it.
 **End with one command**: `/codefall-design SPEC-NNN`; where the user asked for a
 sibling spec, say so in a sentence and ask whether to write it now.
 

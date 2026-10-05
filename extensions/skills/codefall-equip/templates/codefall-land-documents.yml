@@ -1,23 +1,28 @@
-# Merges a document pull request when a person adds the `land` label to it.
+# Merges a document pull request when a person adds the `auto-merge` label to it or approves it.
 #
 # codefall's document verbs (envision, specify, report, design, and mock-up) open their pull
-# request and tell the person to add the `land` label when they want it merged, or to have someone
-# review it first. No verb adds the label. This workflow is the person's label reaching the default
-# branch: it merges a labelled pull request whose diff touches only document paths. A pull request
-# with any other path in it waits for a person.
+# request and tell the person to add the `auto-merge` label when they want it merged, or to have
+# someone approve it; either one merges it. No verb adds the label or approves. This workflow is
+# that decision reaching the default branch: it merges a labelled or approved pull request whose
+# diff touches only document paths. A pull request with any other path in it waits for a person.
+# GitHub does not let a pull request's author approve it, and the verbs open pull requests as the
+# person running them, so an approval always comes from a second person.
 #
-# Installed by `/codefall-equip landing`, which also creates the `land` label in the repository.
-# The allowlist below is the one codefall's verbs write into; change it only if this project keeps
-# those documents somewhere else. The token is the default GITHUB_TOKEN. A repository whose default
-# branch requires a review has to let this workflow through, and that is a repository setting the
-# owner makes, not a line in this file; docs/landing-documents.md in the codefall repository says
-# which setting.
+# Installed by `/codefall-equip landing`, which also creates the `auto-merge` label in the
+# repository. The allowlist below is the one codefall's verbs write into; change it only if this
+# project keeps those documents somewhere else. The token is the default GITHUB_TOKEN. A repository
+# whose default branch requires a review has to let this workflow through, and that is a repository
+# setting the owner makes, not a line in this file; docs/landing-documents.md in the codefall
+# repository says which setting.
 name: codefall-land-documents
 on:
   pull_request:
-    # `labeled` is the person adding `land`; `synchronize` is a commit pushed afterwards, so a
-    # late change is checked again before it merges.
+    # `labeled` is the person adding `auto-merge`; `synchronize` is a commit pushed afterwards, so
+    # a late change is checked again before it merges.
     types: [labeled, synchronize]
+  pull_request_review:
+    # `submitted` is a review arriving; only one whose state is `approved` merges.
+    types: [submitted]
 permissions:
   contents: write
   pull-requests: write
@@ -26,14 +31,16 @@ concurrency:
   cancel-in-progress: false
 jobs:
   land:
-    # Run when the label being added is `land`, or when a commit lands on a pull request that
-    # already carries it. A draft pull request is never merged: GitHub refuses, and a draft means
-    # the document is still `Draft`.
+    # Run when the label being added is `auto-merge`, when a commit lands on a pull request that
+    # already carries it, or when a review approving the pull request is submitted. A draft pull
+    # request is never merged: GitHub refuses, and a draft means the document is still `Draft`.
+    # The path check below runs the same way whichever trigger fired.
     if: >-
       github.event.pull_request.draft == false &&
       (
-        (github.event.action == 'labeled' && github.event.label.name == 'land') ||
-        (github.event.action == 'synchronize' && contains(github.event.pull_request.labels.*.name, 'land'))
+        (github.event_name == 'pull_request' && github.event.action == 'labeled' && github.event.label.name == 'auto-merge') ||
+        (github.event_name == 'pull_request' && github.event.action == 'synchronize' && contains(github.event.pull_request.labels.*.name, 'auto-merge')) ||
+        (github.event_name == 'pull_request_review' && github.event.review.state == 'approved')
       )
     runs-on: ubuntu-latest
     steps:
@@ -45,7 +52,8 @@ jobs:
           set -euo pipefail
           allow='^(docs/(visions|specs|bugs|mockups|designs|adrs)/|\.codefall/(reviews|tests)/|\.beads/interactions\.jsonl$)'
           base="origin/${{ github.event.pull_request.base.ref }}"
-          # HEAD is the pull request merged onto its base, so base...HEAD is exactly its diff.
+          # HEAD is the pull request merged onto its base for both events, so base...HEAD is
+          # exactly its diff.
           if git diff --name-only "$base...HEAD" | grep -vE "$allow"; then
             echo "the paths above are not document paths; a person merges this pull request" >&2
             exit 1

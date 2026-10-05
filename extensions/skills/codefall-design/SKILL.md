@@ -330,7 +330,7 @@ There is no back-link to write into the spec: the design's `spec` label carries 
 
 Then land it per `../../../.codefall/shared/landing.md`, with `.beads/interactions.jsonl` when it
 changed: push, and open the pull request, a draft only when the status is `Draft`. Never add the
-`land` label: a person adds it when they want the design merged.
+`auto-merge` label: a person adds it when they want the design merged.
 
 Report:
 
@@ -343,8 +343,8 @@ Report:
 - anything left unresolved, the decisions set aside and how many, whether the person had them
   settled now or left for an engineer, and any concern the user overruled;
 - the branch and the pull request, worded as the landing procedure says: it is open at its URL;
-  add the `land` label when you want it merged, or have someone review it first; a `Draft` design
-  has a draft pull request;
+  add the `auto-merge` label when you want it merged, or have someone approve it; either one merges
+  it; a `Draft` design has a draft pull request;
 - **last, one command**: `/codefall-implement DESIGN-NNN`, or `/codefall-implement <bead>` at
   tier 0; with decisions left for an engineer, `/codefall-design DESIGN-NNN`.
 

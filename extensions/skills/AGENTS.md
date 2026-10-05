@@ -38,9 +38,9 @@ writing and changing a skill; the extension-wide rules, ADR immutability, prose,
   of them is a question, and the merge is never the skill's. A document verb — `codefall-envision`,
   `codefall-specify`, `codefall-report`, `codefall-design`, `codefall-mock-up` on its own — opens
   an ordinary pull request, a draft only while the document is `Draft`, and its report says to add
-  the `land` label when the person wants it merged; the GitHub Action `codefall-equip`'s landing
-  track installs merges a labelled pull request, and no skill adds the label or marks a pull request
-  ready for review as a signal. `codefall-equip`, `codefall-scaffold`, and `codefall-upgrade` open a
+  the `auto-merge` label when the person wants it merged or to have someone approve it; the GitHub
+  Action `codefall-equip`'s landing track installs merges a labelled or approved pull request, and
+  no skill adds the label, approves, or marks a pull request ready for review as a signal. `codefall-equip`, `codefall-scaffold`, and `codefall-upgrade` open a
   pull request a person merges. Document pull requests never stack; `codefall-implement`'s code pull
   requests do. No skill says "do not commit"; the one prohibition is the default branch, and the
   guard hook holds it.

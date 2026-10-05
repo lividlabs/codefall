@@ -1779,7 +1779,7 @@ Decided at scaffold, 2026-08-16.
   sensible defaults now or leave them for an engineer, and on "now" reaches `Ready` and beads in
   the same run. A document pull request is opened from `main` without asking, a draft only while
   the document is `Draft`, and merged by a GitHub Action that `equip`'s new landing track installs
-  when a person adds the `land` label to it and every path in it is a document path; no verb adds
+  when a person adds the `auto-merge` label to it and every path in it is a document path; no verb adds
   the label, and `equip`, `scaffold`, and `upgrade` push and open their pull request without
   asking too; documents do not stack. `implement`'s
   integration asks GitHub whether each layer of its code stack is mergeable and cascades a

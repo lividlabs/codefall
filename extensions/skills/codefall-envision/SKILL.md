@@ -232,14 +232,14 @@ branch, `git switch -c vision/VISION-NNN-slug`; on another branch, ask once whic
 
 Write the vision, the source document if there was one, and `docs/visions/AGENTS.md` if it was
 missing. Then commit those files by path, push, and open the pull request, all per the same
-procedure; it is a draft only when the status is `Draft`. Never add the `land` label: a person adds
-it when they want the document merged.
+procedure; it is a draft only when the status is `Draft`. Never add the `auto-merge` label: a person
+adds it when they want the document merged.
 
 Do not create issues. Do not start a specification.
 
 Report the path, the identifier, the status, every open question the document carries, the branch,
-and the pull request, worded as the landing procedure says: it is open at its URL; add the `land`
-label when you want it merged, or have someone review it first.
+and the pull request, worded as the landing procedure says: it is open at its URL; add the
+`auto-merge` label when you want it merged, or have someone approve it; either one merges it.
 **End with one command**: `/codefall-scaffold` for a project not yet scaffolded, otherwise
 `/codefall-specify VISION-NNN`.
 

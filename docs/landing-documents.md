@@ -12,20 +12,22 @@ mockups it makes under `docs/mockups/`), `report` (`docs/bugs/`), `design` (`doc
 1. branches from the default branch;
 2. writes the document and works with you until you sign it off;
 3. commits the files it wrote, pushes, and opens an ordinary pull request;
-4. tells you the pull request's address, and that you add the `land` label when you want it merged,
-   or have someone review it first.
+4. tells you the pull request's address, and that you add the `auto-merge` label when you want it
+   merged, or have someone approve it; either one merges it.
 
-The label is your decision reaching GitHub. A GitHub Action in your repository runs when the `land`
-label is added to a pull request, checks that every path in the pull request's diff is a document
-path, and merges it. No verb adds the label, and nothing else a verb does is read as a signal to
-merge. You can add the label the moment the verb's report ends, or after a colleague has read the
-document, or never.
+The label is your decision reaching GitHub. A GitHub Action in your repository runs when the
+`auto-merge` label is added to a pull request or when someone approves it, checks that every path in
+the pull request's diff is a document path, and merges it. No verb adds the label or approves, and
+nothing else a verb does is read as a signal to merge. GitHub does not let a pull request's author
+approve it, and the verbs open pull requests as the person running them, so an approval always comes
+from a second person. You can add the label the moment the verb's report ends, or after a colleague
+has read the document, or never.
 
 A document you left as `Draft` — you stopped and are coming back, or a design still carries
 technical decisions you chose to leave for an engineer — gets a draft pull request. It blocks
 nothing. The run that later promotes the document to `Ready` marks the pull request ready for
 review, because GitHub does not merge a draft; that mark is not a signal to merge, and the pull
-request still waits for the `land` label.
+request still waits for the `auto-merge` label or an approval.
 
 Document pull requests do not stack. Each one branches from the default branch and lands on its
 own. Code pull requests are different: `implement` opens one per task as a GitHub stack, and a
@@ -35,12 +37,13 @@ merge, because they change scripts and settings.
 ## The Action
 
 `/codefall-equip landing` installs it as `.github/workflows/codefall-land-documents.yml`, from a
-template the extension ships, and creates the `land` label in your repository. The file does three
-things:
+template the extension ships, and creates the `auto-merge` label in your repository. The file does
+three things:
 
-**It runs when the `land` label is added to a pull request**, and again on every commit pushed to a
-pull request that already carries the label, so a late change is checked again before it merges. A
-draft pull request is never merged, whatever labels it has.
+**It runs when the `auto-merge` label is added to a pull request, or when a review approving it is
+submitted**, and again on every commit pushed to a pull request that already carries the label, so a
+late change is checked again before it merges. The path check and the draft check run the same way
+for every trigger. A draft pull request is never merged, whatever labels or approvals it has.
 
 **It checks the paths.** The pull request's diff against its base must contain only paths under:
 
@@ -89,12 +92,13 @@ A repository with no rule on its default branch needs nothing.
 
 A project that has not run `/codefall-equip landing` gets the same pull requests. Each verb's report
 says the pull request is open and waits for a person to merge it, and names `/codefall-equip
-landing` as the way to merge document pull requests with a label instead.
+landing` as the way to merge document pull requests with a label or an approval instead.
 
 ## What a report looks like
 
-> SPEC-006 is written and `Ready`. Pull request #1152 is open at <url>; add the `land` label when
-> you want it merged, or have someone review it first. Next: run `/codefall-design SPEC-006`.
+> SPEC-006 is written and `Ready`. The pull request is open at <url>. Add the `auto-merge` label
+> when you want it merged, or have someone approve it; either one merges it. Next: run
+> `/codefall-design SPEC-006`.
 
 > DESIGN-003 is `Draft`: you left two technical decisions for an engineer. Pull request #1158 is a
 > draft at <url> until they are settled. Next: have an engineer run `/codefall-design DESIGN-003`.

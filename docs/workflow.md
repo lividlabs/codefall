@@ -4,9 +4,10 @@ codefall is a set of verbs — skills a coding harness runs on request — plus 
 them into a project. The verbs chain from an idea to open pull requests, and every step leaves
 something in the repository or in the task graph that the next step reads. Humans decide at each
 gate; a person merges every code pull request, and a GitHub Action the project installs merges a
-document pull request once a person adds the `land` label to it. This file is the map; each verb's
-`SKILL.md` under [`extensions/skills/`](../extensions/skills/) holds the procedure, and the
-[README](../README.md) argues for it. This file is edited here; the three sections from *The chain*
+document pull request once a person adds the `auto-merge` label to it or approves it. This file is
+the map; each verb's `SKILL.md` under [`extensions/skills/`](../extensions/skills/) holds the
+procedure, and the [README](../README.md) argues for it. This file is edited here; the three
+sections from *The chain*
 on are copied into [`extensions/shared/workflow.md`](../extensions/shared/workflow.md), which `init`
 installs, by `extensions/scripts/workflow-sync.sh --write`, and CI fails when the copy drifts.
 
@@ -118,7 +119,8 @@ Four verbs sit beside the chain rather than in it:
   and consults, in the `agents` lists, set up from any harness
   ([ADR-009.4](https://github.com/lividlabs/codefall/blob/main/docs/adrs/ADR-009.4-agents.md)).
   The fourth is the document landing: the GitHub Action that merges a document pull request once
-  a person adds the `land` label to it, and the label itself, with the branch rule read and
+  a person adds the `auto-merge` label to it or approves it, and the label itself, with the branch
+  rule read and
   reported, never changed
   ([ADR-014](https://github.com/lividlabs/codefall/blob/main/docs/adrs/ADR-014-upstream-verbs-and-document-landing.md)).
   One run equips one track, and each lands as its own pull request, which a person merges. What a
@@ -172,13 +174,14 @@ dependency, a migration, or generated code changes `start` or `update` in the sa
 - **No verb merges to `main`.** A person merges every code pull request: `implement` ends at open
   PRs and a reported merge order, and the guard hook denies the alternative in every harness. A
   GitHub Action the project installs with `equip landing` merges a document pull request once a
-  person adds the `land` label to it and its diff holds only document paths; no verb adds the
-  label, and a project without the Action merges those by hand.
+  person adds the `auto-merge` label to it or approves it and its diff holds only document paths; no
+  verb adds the label or approves, and a project without the Action merges those by hand.
 - **Everything short of the merge is the verb's.** A verb that writes to the repository branches
   from `main` before its first file, commits what it wrote by path, pushes, and opens the pull
   request without asking; a document never sits uncommitted on `main`. A document verb opens an
   ordinary pull request, a draft only while the document is `Draft`, and its report says to add the
-  `land` label when the person wants it merged; `scaffold`, `equip`, and `upgrade` open one a
+  `auto-merge` label when the person wants it merged or to have someone approve it; `scaffold`,
+  `equip`, and `upgrade` open one a
   person merges. `implement` does this per task, as one GitHub stack per epic; documents do not
   stack. All of them follow the shared `landing.md` beside this file's installed copy.
 - **The context that finds a problem never fixes it.** `review` runs in the first agent this machine

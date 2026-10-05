@@ -330,16 +330,16 @@ the calling verb commits them with its document.
 
 Otherwise land the run per `../../../.codefall/shared/landing.md`: commit the mockup directory, the
 `AGENTS.md` if it was written, and the spec or vision if one was edited — by path, nothing else —
-push, and open the pull request once the person has seen the last file. Never add the `land`
-label: a person adds it when they want the mockup merged.
+push, and open the pull request once the person has seen the last file. Never add the
+`auto-merge` label: a person adds it when they want the mockup merged.
 
 Do not create issues. Do not start a design.
 
 Report the directories, every file with what it shows, what the mockup was matched against, options
 offered and which was taken, states deliberately not made and why, anything assumed because the user
 did not answer, any labels cleared, the branch, and the pull request, worded as the landing
-procedure says: it is open at its URL; add the `land` label when you want it merged, or have
-someone review it first. **End with one command**: `/codefall-design SPEC-NNN`
+procedure says: it is open at its URL; add the `auto-merge` label when you want it merged, or have
+someone approve it; either one merges it. **End with one command**: `/codefall-design SPEC-NNN`
 where a spec was waiting on this mockup; otherwise say in a sentence that the mockup is in place
 and nothing is pending.
 
