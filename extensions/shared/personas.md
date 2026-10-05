@@ -4,7 +4,7 @@ Shared procedure. Every verb follows it. A persona describes the person at the k
 project: it is read from `.codefall/user.json`, a file that is never checked in, so two people
 running the same verb on the same project can be answered differently. The rule about what a persona
 may and may not change is stated once, here.
-[ADR-011](https://github.com/lividlabs/codefall/blob/main/docs/adrs/ADR-011-personas.md) holds
+[ADR-011.2](https://github.com/lividlabs/codefall/blob/main/docs/adrs/ADR-011.2-personas.md) holds
 the reasoning.
 
 ## Contents
@@ -67,7 +67,7 @@ project's stance and what it already uses — says each choice in one plain sent
 the section of the document it belongs to, and carries on to `Ready` and the beads in the same
 run. A decision that needs an ADR gets one, written from the default; the report says so in a
 sentence, so an engineer knows where to look. On **leave them**, the design stays `Draft`, creates
-no beads, its pull request stays a draft, and the report says an engineer's run of
+no beads, its pull request is a draft, and the report says an engineer's run of
 `/codefall-design DESIGN-NNN` settles them. The report names how many decisions were set aside and
 which answer the person gave.
 
