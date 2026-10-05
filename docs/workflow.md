@@ -3,8 +3,9 @@
 codefall is a set of verbs — skills a coding harness runs on request — plus the CLI that installs
 them into a project. The verbs chain from an idea to open pull requests, and every step leaves
 something in the repository or in the task graph that the next step reads. Humans decide at each
-gate, and a human performs every merge to `main`. This file is the map; each verb's `SKILL.md`
-under [`extensions/skills/`](../extensions/skills/) holds the procedure, and the
+gate; a person merges every code pull request, and a GitHub Action the project installs merges a
+document pull request once its verb marks it ready for review. This file is the map; each verb's
+`SKILL.md` under [`extensions/skills/`](../extensions/skills/) holds the procedure, and the
 [README](../README.md) argues for it. This file is edited here; the three sections from *The chain*
 on are copied into [`extensions/shared/workflow.md`](../extensions/shared/workflow.md), which `init`
 installs, by `extensions/scripts/workflow-sync.sh --write`, and CI fails when the copy drifts.
@@ -43,17 +44,20 @@ each changes the install or the project's settings. Every other verb an agent ma
 verb runs the verb upstream of it** when the work needs that verb's judgment: `specify` runs
 `mock-up` for a requirement with a visual surface, `design` runs `specify` to settle a `Draft` spec
 and `mock-up` for a requirement still waiting on one, and `specify` runs `envision` when a vision
-needs more than a text amendment. It runs in the same session and on the same branch, under the
+needs more than a text amendment, and `review` and `test` run `implement` on the epic to build the
+problems the person took. It runs in the same session and on the same branch, under the
 confirmation the verb already holds, and asks the person only for a product decision; nobody is
-told to run a command and come back. Whichever way a verb starts, it reports what it found, offers,
-and applies only what the user takes.
+told to run a command and come back. `design` with technical decisions it set aside asks once
+whether to settle them with sensible defaults now or leave them for an engineer, and on "now"
+reaches `Ready` and beads in the same run. Whichever way a verb starts, it reports what it found,
+offers, and applies only what the user takes.
 
 The work on one epic from the design's graph to the human merge is a **delivery**, taken in
 **rounds** of `implement`, `review`, and `test`. A delivery ends when the epic has no open children
 and the last test run against it passed. A *run* is one invocation of one verb; a *session* is one
 conversation. Every handoff between verbs is a bead, a document, a report, or a pull request, so a
 `/clear` between verbs loses nothing, and that is the intended way to run a delivery: each verb's
-report ends with the next command. In order:
+report ends with one next command. In order:
 
 | Verb | Reads | Writes | Hands to |
 | --- | --- | --- | --- |
@@ -62,10 +66,10 @@ report ends with the next command. In order:
 | `specify` | the idea or vision, and an audit of what already exists; the project's consult agents for a question of fact the user cannot answer | `docs/specs/SPEC-NNN-slug.md`, the *what*: requirements with EARS acceptance criteria, mirrored to the tracker as a parent issue and one child per requirement; the mockups its requirements need, made through `mock-up` in the same run | `design` |
 | `report` | the person who saw a bug, interviewed; the running product, driven through their steps; a test run's report or an issue they filed | `docs/bugs/BUG-NNN-slug.md`, what is wrong: the steps, the expected and actual result, evidence committed beside it, whether it reproduced, and EARS acceptance criteria, mirrored to one tracker issue | `design` |
 | `mock-up` | a design-tool export, or nothing; run by `specify` or `design` for a requirement that needs one, or alone | `docs/mockups/<slug>/`, matching the app's own design system | `design`; an issue still labelled `requires-mockup` is one `design` runs `mock-up` for before it starts |
-| `design` | the spec, the vision, the code; the project's consult agents for a technical point it cannot settle | `docs/designs/DESIGN-NNN-slug.md`, the *how*, scaled to the change; ADRs for hard-to-reverse choices; beads with dependency edges, each carrying its acceptance criteria and, where the task is verified through the wired product, the test case and its criteria; or, with decisions the person could not settle, a `Draft` carrying them for an engineer's run | `implement`; `design` again, for a `Draft` with decisions needed |
+| `design` | the spec, the vision, the code; the project's consult agents for a technical point it cannot settle | `docs/designs/DESIGN-NNN-slug.md`, the *how*, scaled to the change; ADRs for hard-to-reverse choices; beads with dependency edges, each carrying its acceptance criteria and, where the task is verified through the wired product, the test case and its criteria; or, when the person chose to leave the decisions it set aside for an engineer, a `Draft` carrying them | `implement`; `design` again, for a `Draft` with decisions needed |
 | `implement` | ready beads, an epic, or a design; the project's consult agents when a worker fails | a worktree per task, the test case before the code, verification against the bead's criteria and the project's checks, a pull request per task, walked as a serial stack or in waves on an epic branch until the frontier is empty | `review` and `test` on the epic's work; `implement` again, the next round, when they added children; the human, who merges when the graph is empty; `design`, for a disagreement that moves work, filed as a revision bead |
-| `review` | anything live: uncommitted work, a branch, a PR, a commit range, a path, a document, an epic's work; the project's consult agents for what the reviewer could not settle | `.codefall/reviews/`, a JSON and Markdown pair per review; fixes on the target's branch for the findings the user takes; children of the epic for the deferred ones | the human; `implement`, for the children it filed; `design`, for a deferred finding that moves work |
-| `test` | what the project declares: suites, the changed subset, one case in its `spec` or `agentic` modality, or an epic's work on its branch | `.codefall/tests/`, a report per run; findings triaged, never an edit that makes a run pass | children of the epic on the user's word, then `implement` on the epic again; `fix` or `design` for work outside a delivery; `report`, when the user wants a bug document |
+| `review` | anything live: uncommitted work, a branch, a PR, a commit range, a path, a document, an epic's work; the project's consult agents for what the reviewer could not settle | `.codefall/reviews/`, a JSON and Markdown pair per review; fixes on the target's branch for the findings the user takes; on an epic's work, children of the epic for the problems the person took, built by `implement` in the same session | the human; `implement`, which it runs itself on an epic's work; `design`, for a deferred finding that moves work |
+| `test` | what the project declares: suites, the changed subset, one case in its `spec` or `agentic` modality, or an epic's work on its branch | `.codefall/tests/`, a report per run; findings triaged, never an edit that makes a run pass; on an epic's work, children of the epic for the problems the person took, built by `implement` in the same session | `implement`, which it runs itself on an epic's work; `fix` or `design` for work outside a delivery; `report`, when the user wants a bug document |
 
 A contained fix skips the documents: `design` writes beads only when a change stays inside one
 component and comes to a task or two, and `specify` is for features, not every change. A bug a
@@ -113,8 +117,11 @@ Four verbs sit beside the chain rather than in it:
   The third is the agents: how another harness is called, under `harnessConfig`, and who reviews
   and consults, in the `agents` lists, set up from any harness
   ([ADR-009.4](https://github.com/lividlabs/codefall/blob/main/docs/adrs/ADR-009.4-agents.md)).
-  One run equips one track, and each lands as its own pull request. What a search leaves ambiguous
-  is consulted on once before the one question.
+  The fourth is the document landing: the GitHub Action that merges a document pull request once
+  a verb marks it ready for review, with the branch rule read and reported, never changed
+  ([ADR-014](https://github.com/lividlabs/codefall/blob/main/docs/adrs/ADR-014-upstream-verbs-and-document-landing.md)).
+  One run equips one track, and each lands as its own pull request, which a person merges. What a
+  search leaves ambiguous is consulted on once before the one question.
 - **`refresh`** is what to run instead of pulling by hand, and it ends on `main` wherever it
   starts: leave a feature branch or an implement worktree for the primary checkout, switch it to
   `main` and fast-forward it, delete the branch and remove the worktree it left when their work is
@@ -161,18 +168,17 @@ dependency, a migration, or generated code changes `start` or `update` in the sa
   not empty while a child `review` or `test` filed is open.
 - **Done is read from the graph.** `bd children <epic>` with nothing open but the landed bead, and
   the last test run against the epic passed. No verb declares a delivery done; the chart shows it.
-- **A human performs every merge to `main`.** `implement` ends at open PRs and a reported bottom-up
-  merge order, and the guard hook denies the alternative in every harness.
+- **No verb merges to `main`.** A person merges every code pull request: `implement` ends at open
+  PRs and a reported merge order, and the guard hook denies the alternative in every harness. A
+  GitHub Action the project installs with `equip landing` merges a document pull request once its
+  verb marks it ready for review and its diff holds only document paths; a project without the
+  Action merges those by hand.
 - **Everything short of the merge is the verb's.** A verb that writes to the repository branches
-  before its first file, commits what it wrote by path, pushes, and opens the pull request; a
-  document never sits uncommitted on `main`. `implement` does this per task; the document verbs,
-  `scaffold`, `equip`, and `upgrade` follow the shared `landing.md` beside this file's installed copy.
-- **One delivery's documents are one stack.** The spec's pull request is the bottom layer, the
-  mockups stack on it, the design on top, each branched from the layer below and linked with
-  `gh stack link`. Nobody is asked to merge until `design` is done; merging the design pull request
-  lands the stack. `implement`'s task pull requests stack the same way from `main`. The shared
-  stacks reference says how GitHub stacks work, and a repository that lands its document stacks
-  itself says so in the shared landing customization.
+  from `main` before its first file, commits what it wrote by path, pushes, and opens the pull
+  request; a document never sits uncommitted on `main`. A document verb opens the pull request as
+  a draft and marks it ready when the document is `Ready`; `scaffold`, `equip`, and `upgrade` open
+  one a person merges. `implement` does this per task, as one GitHub stack per epic; documents do
+  not stack. All of them follow the shared `landing.md` beside this file's installed copy.
 - **The context that finds a problem never fixes it.** `review` runs in the first agent this machine
   can run from the review list of the project's entry for the harness the session is in, else its
   `default` entry, a subagent of the current harness with nothing configured, and `via=` overrides
