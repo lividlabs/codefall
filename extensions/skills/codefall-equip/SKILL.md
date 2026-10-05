@@ -1,6 +1,6 @@
 ---
 name: codefall-equip
-description: Equip a project with the four things it has to have before the other verbs work. The local environment — start and update, declared under local in .codefall/settings.json and run by codefall-refresh. The test harness — a spec runner per surface, pointed at the testing root, declared in test.runners, its commands recorded in the testing root's AGENTS.md, which codefall-test runs cases through. The agents — how another harness is called, under harnessConfig, and who reviews and consults, in the agents lists — set up from any harness. The document landing — the GitHub Action that merges a document pull request once a verb marks it ready for review. Each finds what the project already has, or drafts it from what the repository or the session shows, confirms, writes, and declares. Builds and rebuilds; codefall-scaffold and codefall-implement follow the local-scripts procedure.
+description: Equip a project with the four things it has to have before the other verbs work. The local environment — start and update, declared under local in .codefall/settings.json and run by codefall-refresh. The test harness — a spec runner per surface, pointed at the testing root, declared in test.runners, its commands recorded in the testing root's AGENTS.md, which codefall-test runs cases through. The agents — how another harness is called, under harnessConfig, and who reviews and consults, in the agents lists — set up from any harness. The document landing — the GitHub Action that merges a document pull request once a person adds the land label to it. Each finds what the project already has, or drafts it from what the repository or the session shows, confirms, writes, and declares. Builds and rebuilds; codefall-scaffold and codefall-implement follow the local-scripts procedure.
 argument-hint: "[local | test | agents | landing] [path]"
 disable-model-invocation: true
 allowed-tools:
@@ -20,10 +20,10 @@ environment** — `start`, which brings its services up, and `update`, which mak
 environment match the checkout; the **test harness** — the spec runner that collects the specs
 beside the project's test cases; the **agents** — how another harness is called, and who reviews
 and consults; and the **document landing** — the GitHub Action that merges a document pull request
-once a verb marks it ready for review. The first three are declared in `.codefall/settings.json`:
-`local`, which `codefall-refresh` runs; `test.runners`, which `codefall-test` reads;
-`harnessConfig` and the `agents` lists, which `codefall-review` and every consult read. The fourth
-is one file under `.github/workflows/`.
+once a person adds the `land` label to it. The first three are declared in
+`.codefall/settings.json`: `local`, which `codefall-refresh` runs; `test.runners`, which
+`codefall-test` reads; `harnessConfig` and the `agents` lists, which `codefall-review` and every
+consult read. The fourth is one file under `.github/workflows/` and one label.
 
 Equipping is neither refreshing nor testing. This skill finds, drafts, or revises what a project
 runs with and declares it; it runs it only to prove it. Bringing an environment current is
@@ -68,8 +68,7 @@ Read each when its step says to; none is loaded up front.
   the proof. Read at step 1 of the agents track.
 - `reference/landing.md` — the whole document-landing procedure: what the workflow does, the
   branch-rule reading, the one question, the write, the proof. Read at step 1 of the landing track.
-- `templates/codefall-land-documents.yml` — the workflow the landing track installs at
-  `.github/workflows/codefall-land-documents.yml`.
+- `templates/codefall-land-documents.yml` — the workflow the landing track installs.
 - `reference/contract.md` — what `start` and `update` promise, in full. Read at step 2 of the
   local track.
 - `reference/followers.md` — what `codefall-scaffold` and `codefall-implement` do when they follow
@@ -88,7 +87,7 @@ Read each when its step says to; none is loaded up front.
 | Declaring `local`, `test.runners`, `harnessConfig`, and the `agents` lists in `.codefall/settings.json` | Per-branch databases, shared or otherwise | the project |
 | Recording the runner's commands in the testing root's `AGENTS.md` | The testing root, its tree, and the `CODEFALL TESTING` section | `codefall init` |
 | Proving a candidate meets the contract, or an agent answers | Any other settings field | `codefall init` |
-| Installing the workflow that merges document pull requests | Changing a branch rule or any repository setting | the owner |
+| Installing the workflow and the `land` label that merge document pull requests | Changing a branch rule or any other repository setting | the owner |
 
 **Every run does the same thing**, whether what it equips exists or not: read the project, propose
 the draft or the revision, confirm, write, declare. There is no first-time mode.
@@ -209,8 +208,8 @@ stamp not being git-ignored is `codefall upgrade`'s to fix; name it in the repor
 - What was declared, and whether it was found, drafted, or revised.
 - Whether the scripts were proven, and by which run.
 - The landing, per `../../../.codefall/shared/landing.md`: the scripts and the settings committed by
-  path on the branch, and the push and pull request offered — its own pull request, never another
-  verb's. The merge is the user's.
+  path on the branch, pushed, and its pull request opened without asking — its own, never another
+  verb's. A person merges it.
 - **Last, what the user does next**: merge the pull request, run `/codefall-refresh` once so the
   stamp exists, and `codefall upgrade` if doctor warned about `.gitignore`.
 
@@ -274,9 +273,9 @@ as well when the runner is Playwright; no cases yet is a pass. Then `codefall do
 What was declared and whether it was found or installed; where the runner's line went; what
 `update` gained; what the proof showed. Then the landing, per `../../../.codefall/shared/landing.md`:
 the configuration, the settings, `<root>/AGENTS.md`, and the `update` revision committed by path on
-the branch, and the push and pull request offered — its own pull request, never another verb's.
-The merge is the user's. **End with what the user does next**: merge the pull request; the first
-case is written by `/codefall-implement` when a bead names one.
+the branch, pushed, and its pull request opened without asking — its own, never another verb's. A
+person merges it. **End with what the user does next**: merge the pull request; the first case is
+written by `/codefall-implement` when a bead names one.
 
 ## Process — the agents
 
@@ -309,11 +308,12 @@ configuration, one question, one change.
    rule, read with `gh api` and never changed.
 3. **Ask the one question**: install the workflow, shown in full, with the branch-rule finding in a
    sentence. A rule that would block the workflow's token is the owner's to change.
-4. **Write** `.github/workflows/codefall-land-documents.yml` from the template, on `equip/landing`.
-5. **Prove** that the file parses and the allowlist accepts a spec path and rejects a source path.
-   The next document pull request is the full proof.
+4. **Write** `.github/workflows/codefall-land-documents.yml` from the template, on `equip/landing`,
+   and create the `land` label.
+5. **Prove** that the file parses, the allowlist accepts a spec path and rejects a source path, and
+   the label exists.
 6. **Report** what was written, what the owner changes, and the landing: its own pull request, a
-   person's to merge; then the next document verb's pull request lands on its own.
+   person's to merge; then a document pull request merges when a person adds the `land` label.
 
 ## Rules
 
@@ -337,8 +337,8 @@ configuration, one question, one change.
   Flutter — and say which modality remains.
 - **Names in settings, commands in `<root>/AGENTS.md`.** Never the other way around, and never both.
 - **A harness is equipped in its own pull request.** It never rides along in a task's.
-- **The landing track changes no repository setting.** It writes one workflow file and tells the
-  owner what the branch rule has to allow.
+- **The landing track changes no branch rule.** It writes one workflow file, creates the `land`
+  label, and tells the owner what the branch rule has to allow.
 - **Cases are not this skill's.** An empty tree is what proves a harness; writing the first case is
   `/codefall-implement`.
 - **Refresh, test, and review are not this skill.** Say so and stop when the user wants the

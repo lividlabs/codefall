@@ -40,8 +40,8 @@ of its own. Neither path is relative to the user's project.
   before `scaffold.json` existed. Read only when step 2 finds no provenance.
 - `reference/declined.md` — how a declined template is recorded and skipped. Read at step 2 when
   `scaffold.json` holds `declined`, and at step 5 when missing templates are offered.
-- `../../../.codefall/shared/landing.md` — the shared procedure for the branch, the commit, and the
-  offered pull request. Read at step 6, before the first item is applied.
+- `../../../.codefall/shared/landing.md` — the shared procedure for the branch, the commit, the
+  push, and the pull request. Read at step 6, before the first item is applied.
 
 ## Scope — the install, then documents, not code
 
@@ -283,8 +283,8 @@ the documents' changes should be reviewable as one coherent change.
 - Stale references the user chose to keep, so they aren't rediscovered as a surprise.
 - That `scaffold.json`'s `lastGraft` key was renamed to `lastUpgrade`, when this run renamed it.
 - The landing, per `../../../.codefall/shared/landing.md`: what took, committed by path on the
-  branch, and the push and pull request offered. The merge is the user's. A run where nothing took
-  has nothing to land.
+  branch, pushed, and its pull request opened. A person merges it. A run where nothing took has
+  nothing to land.
 - What the user still owes the project: the hand-merges they said they'd do, and — after an
   adoption — the boundary-enforcement obligation, named exactly as `codefall-scaffold` names it after a
   docs-only run.

@@ -325,7 +325,8 @@ and every `AGENTS.md` link resolves.
 - The interview answers, as the decisions now recorded.
 - Any ADR amended, and what changed — this is what `.codefall/scaffold.json` records as `amended`,
   so the report and the file must agree.
-- Files created, landed per `../../../.codefall/shared/landing.md`.
+- Files created, landed per `../../../.codefall/shared/landing.md`: committed, pushed, and the
+  pull request opened, a person's to merge.
 - What the user still owes the project — always including boundary enforcement if it is not wired,
   and `codefall-equip` after a docs-only run.
 - **Last, what the user does next**: merge the pull request, what is owed above, then

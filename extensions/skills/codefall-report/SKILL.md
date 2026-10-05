@@ -38,8 +38,8 @@ Read each when its step says to; none is loaded up front.
 - `templates/bugs/AGENTS.md` — the operative rules this skill installs at `docs/bugs/AGENTS.md`.
 - `trackers/github/PROFILE.md` — the issue shape, the label, creating, refreshing, and archiving.
   Read at step 3 for the duplicate search and at step 9.
-- `../../../.codefall/shared/landing.md` — the branch, the commit, the draft pull request, and
-  marking it ready. Read at step 8.
+- `../../../.codefall/shared/landing.md` — the branch, the commit, the push, and the pull request.
+  Read at step 8.
 
 ## Scope — what is wrong, not why
 
@@ -223,14 +223,14 @@ mirror fails**: give the user the exact command that fixes the tracker and say t
 ### 10. Commit and wrap up
 
 Land it per `../../../.codefall/shared/landing.md`: commit by path — the report, its attachments,
-the `AGENTS.md` — push, open the pull request as a draft with `Relates to #<issue>` in its body,
-and mark it ready for review when the status is `Ready`. The Action merges it; no person is asked
-to.
+the `AGENTS.md` — push, and open the pull request with `Relates to #<issue>` in its body, a draft
+only when the status is `Draft`. Never add the `land` label: a person adds it when they want the
+report merged.
 
 Report the path, identifier, status, severity, the reproduction outcome, every open question, the
-issue with its link, the branch, and the pull request with its state worded as the landing
-procedure says: merged, ready and being merged by the Action, or ready and waiting for a person
-because the project has no Action. **End with one command**: `/codefall-design BUG-NNN`.
+issue with its link, the branch, and the pull request, worded as the landing procedure says: it is
+open at its URL; add the `land` label when you want it merged, or have someone review it first.
+**End with one command**: `/codefall-design BUG-NNN`.
 
 ## Other modes
 

@@ -2,7 +2,8 @@
 
 Read at step 1 of the landing track and follow it. The track installs one file,
 `.github/workflows/codefall-land-documents.yml`, from `../templates/codefall-land-documents.yml`,
-and tells the owner about the one repository setting the file cannot change.
+creates the `land` label in the repository, and tells the owner about the one repository setting
+the file cannot change.
 
 ## Contents
 
@@ -18,9 +19,10 @@ and tells the owner about the one repository setting the file cannot change.
 
 Every codefall verb that writes a document — `codefall-envision`, `codefall-specify`,
 `codefall-report`, `codefall-design`, and `codefall-mock-up` run on its own — opens its pull request
-as a draft and marks it ready for review when the person has signed the document off. The workflow
-listens for that (`ready_for_review`, and `synchronize` so a late commit is checked again), checks
-that every path in the pull request's diff is one of these:
+and tells the person to add the `land` label when they want it merged, or to have someone review
+it first. No verb adds the label. The workflow runs when the label is added (`labeled`, label name
+`land`) and again on a commit pushed to a pull request that already carries it (`synchronize`), so a
+late change is checked again. It checks that every path in the pull request's diff is one of these:
 
 ```
 docs/visions/   docs/specs/   docs/bugs/   docs/mockups/   docs/designs/   docs/adrs/
@@ -28,8 +30,9 @@ docs/visions/   docs/specs/   docs/bugs/   docs/mockups/   docs/designs/   docs/
 ```
 
 and merges it with `gh pr merge --squash` under the default `GITHUB_TOKEN`. One path outside the
-list, and the pull request waits for a person. The check is a list of paths, never a reading of
-content. Code pull requests are not touched; `codefall-implement`'s are a person's to merge.
+list, and the pull request waits for a person. A draft pull request is never merged. The check is a
+list of paths, never a reading of content. Code pull requests are not touched; `codefall-implement`'s
+are a person's to merge, and so are this verb's own.
 
 ## 1. Read the project
 
@@ -41,8 +44,10 @@ nameWithOwner`. No remote on GitHub is a stop: the workflow has nowhere to run.
 ## 2. Find what is already there
 
 - `.github/workflows/codefall-land-documents.yml` exists: read it and compare it with the template.
-  Identical means nothing to do; say so and stop. Different means the project edited it: show the
-  difference and ask whether to keep theirs or take the template, never overwrite it unasked.
+  Identical means nothing to do for the file; say so. Different means the project edited it: show
+  the difference and ask whether to keep theirs or take the template, never overwrite it unasked.
+- The `land` label exists (`gh label list --json name --jq '.[].name'` names it): say so. Missing:
+  the write creates it.
 - Another workflow under `.github/workflows/` that merges pull requests (`gh pr merge`,
   `pull_request_target`, `automerge`): name it, so the owner knows two things would merge.
 - **The branch rule.** Read it, never change it:
@@ -57,14 +62,18 @@ nameWithOwner`. No remote on GitHub is a stop: the workflow has nowhere to run.
   `github-actions` app or for repository admins scoped to this workflow; in classic branch
   protection, the "allow specified actors to bypass required pull requests" list. Say which one
   applies and what documents landing without a second reader means: the person's sign-off in the
-  session is the review. A repository with no rule needs nothing.
+  session and their label on the pull request are the review. A repository with no rule needs
+  nothing.
+
+When the file is identical to the template and the label exists, there is nothing to do; say so and
+stop.
 
 ## 3. Ask the one question
 
-Show the workflow file as it will be written, the branch-rule finding from step 2 in one or two
-sentences, and ask whether to install it. When a rule would block the token, the question says so:
-"Install the workflow now, and change the rule yourself afterwards?" Equip changes no repository
-setting.
+Show the workflow file as it will be written, say that the `land` label will be created, give the
+branch-rule finding from step 2 in one or two sentences, and ask whether to install it. When a rule
+would block the token, the question says so: "Install the workflow now, and change the rule
+yourself afterwards?" Equip changes no branch rule.
 
 ## 4. Write
 
@@ -73,24 +82,35 @@ Take the branch step of `../../../.codefall/shared/landing.md`: standing on the 
 template, byte for byte unless the owner asked for a different allowlist, in which case change the
 `allow` line only.
 
+Then create the label, which lives in the repository and not in the file:
+
+```bash
+gh label create land --description "merge this document pull request" --color 0E8A16
+```
+
+A label that already exists is left as it is; `gh label create` reports that and the run says so.
+
 ## 5. Prove it
 
 The file has nothing to run until it is on the default branch. Prove what can be proved now:
 the YAML parses (`python3 -c 'import yaml,sys; yaml.safe_load(open(sys.argv[1]))' <file>` where
-Python with PyYAML is available, else `gh workflow list` after the merge is the check), and the
-allowlist regular expression accepts `docs/specs/SPEC-001-x.md` and rejects `src/a.js`:
+Python with PyYAML is available, else `gh workflow list` after the merge is the check), the
+allowlist regular expression accepts `docs/specs/SPEC-001-x.md` and rejects `src/a.js`, and the
+label is listed:
 
 ```bash
 printf 'docs/specs/SPEC-001-x.md\nsrc/a.js\n' | grep -vE '<the allow line>'   # prints src/a.js only
+gh label list --json name --jq '.[].name' | grep -x land                        # prints land
 ```
 
-The full proof is the next document pull request a verb marks ready: it merges within a couple of
-minutes, and `gh run list --workflow codefall-land-documents` shows the run.
+The full proof is the next document pull request a person labels `land`: it merges within a couple
+of minutes, and `gh run list --workflow codefall-land-documents` shows the run.
 
 ## 6. Report
 
-What was written and why, the branch-rule finding and what the owner has to change if anything,
-and the landing per `../../../.codefall/shared/landing.md`: the file committed by path on
-`equip/landing`, pushed, and its pull request opened ready for review, a person's to merge. **End
-with what the user does next**: merge the pull request, change the branch rule if step 2 said so,
-and then the next document verb's pull request lands on its own.
+What was written and why, that the `land` label exists, the branch-rule finding and what the owner
+has to change if anything, and the landing per `../../../.codefall/shared/landing.md`: the file
+committed by path on `equip/landing`, pushed, and its pull request opened and named by URL, none of
+it a question, a person's to merge. **End with what the user does next**: merge the pull request,
+change the branch rule if step 2 said so, and then add the `land` label to the next document pull
+request when they want it merged.

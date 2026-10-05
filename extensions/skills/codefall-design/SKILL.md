@@ -289,7 +289,7 @@ persona:
 On **settle now**: pick the default for each — the simplest choice that fits the project's stance
 and what it already uses — say it in one plain sentence, move it into its section, write the ADR
 where one needs it per `reference/adrs.md`, and the status is `Ready`. On **leave them**: `Draft`,
-no beads, steps 9 and 10 skipped, and the pull request stays a draft.
+no beads, steps 9 and 10 skipped, and the pull request is opened as a draft.
 
 **At tier 0, this is the confirmation instead**: the beads you would create, their titles, their
 bodies, and their edges. The user approves the graph, not a document.
@@ -329,8 +329,8 @@ identifier and change nothing else in the file.
 There is no back-link to write into the spec: the design's `spec` label carries the connection.
 
 Then land it per `../../../.codefall/shared/landing.md`, with `.beads/interactions.jsonl` when it
-changed: push, open the pull request as a draft, and mark it ready for review when the status is
-`Ready`. The Action merges it; no person is asked to.
+changed: push, and open the pull request, a draft only when the status is `Draft`. Never add the
+`land` label: a person adds it when they want the design merged.
 
 Report:
 
@@ -342,9 +342,9 @@ Report:
 - the ready set — which tasks `codefall-implement` can start on today;
 - anything left unresolved, the decisions set aside and how many, whether the person had them
   settled now or left for an engineer, and any concern the user overruled;
-- the branch and the pull request, with its state worded as the landing procedure says: merged,
-  ready and being merged by the Action, or ready and waiting for a person because the project has no
-  Action; a `Draft` design keeps a draft pull request;
+- the branch and the pull request, worded as the landing procedure says: it is open at its URL;
+  add the `land` label when you want it merged, or have someone review it first; a `Draft` design
+  has a draft pull request;
 - **last, one command**: `/codefall-implement DESIGN-NNN`, or `/codefall-implement <bead>` at
   tier 0; with decisions left for an engineer, `/codefall-design DESIGN-NNN`.
 

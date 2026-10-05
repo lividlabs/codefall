@@ -49,8 +49,8 @@ Read each when its step says to; none is loaded up front.
   `../../../.codefall/shared/consult.schema.json`.
 - `../../../.codefall/shared/import-mockup.md` — the shared procedure for bringing a user's mockup into the
   repository. Read at step 8 when they have one.
-- `../../../.codefall/shared/landing.md` — the branch, the commit, the draft pull request, and
-  marking it ready. Read at step 11 and step 14.
+- `../../../.codefall/shared/landing.md` — the branch, the commit, the push, and the pull request.
+  Read at step 11 and step 14.
 
 ## Scope — what, not how
 
@@ -365,15 +365,15 @@ If a vision framed this work, add the spec identifier to its `Related` line, and
 amendment the user took at step 10; change nothing else in the file.
 
 Then land it per `../../../.codefall/shared/landing.md`: commit by path — the spec, the mockups,
-the `AGENTS.md` files, the vision — push, open the pull request as a draft with
-`Relates to #<spec-issue>` in its body, and mark it ready for review when the status is `Ready`.
-The Action merges it; no person is asked to.
+the `AGENTS.md` files, the vision — push, and open the pull request with
+`Relates to #<spec-issue>` in its body, a draft only when the status is `Draft`. Never add the
+`land` label: a person adds it when they want the spec merged.
 
 Report the spec path, its identifier, its status, every open question it carries, every consult and
 what it settled, the issues that were created with links, the mockups made and where, any vision
-amendment, the branch, and the pull request with its state worded as the landing procedure says:
-merged, ready and being merged by the Action, or ready and waiting for a person because the project
-has no Action. **End with one command**: `/codefall-design SPEC-NNN`; where the user asked for a
+amendment, the branch, and the pull request, worded as the landing procedure says: it is open at
+its URL; add the `land` label when you want it merged, or have someone review it first.
+**End with one command**: `/codefall-design SPEC-NNN`; where the user asked for a
 sibling spec, say so in a sentence and ask whether to write it now.
 
 ## Other modes

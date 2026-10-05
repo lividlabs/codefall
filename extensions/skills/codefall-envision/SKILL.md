@@ -45,7 +45,7 @@ Read each when its step says to; none is loaded up front.
 - `../../../.codefall/shared/import-mockup.md` — the shared procedure for bringing a mockup into the
   repository. Read from `reference/inputs.md` when the material is a mockup.
 - `../../../.codefall/shared/landing.md` — the shared procedure for the branch, the commit, the
-  draft pull request, and marking it ready. Read at step 6, before the first file is written.
+  push, and the pull request. Read at step 6, before the first file is written.
 
 ## Scope — why, and a loose what
 
@@ -231,15 +231,15 @@ Read `../../../.codefall/shared/landing.md` and take its branch step first: stan
 branch, `git switch -c vision/VISION-NNN-slug`; on another branch, ask once which to use.
 
 Write the vision, the source document if there was one, and `docs/visions/AGENTS.md` if it was
-missing. Then commit those files by path, push, open the pull request as a draft, and mark it
-ready for review when the status is `Ready`, all per the same procedure. The Action merges it; no
-person is asked to.
+missing. Then commit those files by path, push, and open the pull request, all per the same
+procedure; it is a draft only when the status is `Draft`. Never add the `land` label: a person adds
+it when they want the document merged.
 
 Do not create issues. Do not start a specification.
 
 Report the path, the identifier, the status, every open question the document carries, the branch,
-and the pull request with its state as the landing procedure says to word it: merged, ready and
-being merged by the Action, or ready and waiting for a person because the project has no Action.
+and the pull request, worded as the landing procedure says: it is open at its URL; add the `land`
+label when you want it merged, or have someone review it first.
 **End with one command**: `/codefall-scaffold` for a project not yet scaffolded, otherwise
 `/codefall-specify VISION-NNN`.
 

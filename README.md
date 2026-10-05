@@ -189,7 +189,7 @@ them" the design stays `Draft`, creates no beads, and an engineer's `design` run
 engineering verbs, `implement`, `equip`, `refresh`, `scaffold`, and `upgrade`, say so in one
 sentence and ask before running. Every rule a skill carries holds under any persona, and workers
 never see it. What each persona changes is one file, `.codefall/shared/personas.md`;
-[ADR-011](docs/adrs/ADR-011-personas.md) records the decision.
+[ADR-011.2](docs/adrs/ADR-011.2-personas.md) records the decision.
 
 Init also writes into the project's own files. The Beads database it initializes gets
 `audit.enabled: false` written into `.beads/config.yaml`, so bd's interaction log stays off until the
@@ -210,7 +210,8 @@ appended to it merge without a conflict.
 
 Init also registers two hooks with each harness that reads them, merged into the harness's own hook
 file beside whatever the project already registered. A `PreToolUse` guard denies any command that
-would merge or push to the default branch. A `SessionStart` notice says what the project needs done
+would merge or push to the default branch, `gh stack merge` included, because a stack's trunk is
+the default branch. A `SessionStart` notice says what the project needs done
 — the checkout behind the default branch, an environment that has not been refreshed since `HEAD`
 moved, a testing root or a runner nobody has declared, a Beads precondition that is blocking — and
 prints nothing when everything is current. It reports and names the verb that fixes each thing; it
@@ -256,7 +257,7 @@ TODO: rename the skill names to the actual
 | [`implement`](extensions/skills/codefall-implement/SKILL.md) | Execute the graph: claim ready beads, build each in an isolated worker worktree with tests as part of done, write the test case a bead's criteria name before the code, verify against acceptance criteria, open PRs, and walk the waves until the frontier is empty. Never merges to `main`, and never sets a test harness up. | in progress |
 | [`review`](extensions/skills/codefall-review/SKILL.md) | Review something and fix what the user accepts: uncommitted work, a branch, an open pull request, a commit range, a path, a document, or a description of what to look at. A subagent or another harness reviews, the session triages with you and applies what you take, and every finding is committed under `.codefall/reviews/`. | in progress |
 | [`test`](extensions/skills/codefall-test/SKILL.md) | Run what the project declares: every suite, the subset your changed files reach, a named subset, or one test case in its `spec` or `agentic` modality. A spec case runs through the project's own runner; an agentic case is driven step by step through a browser or the shell and judged against the case's criteria. Every run is reported under `.codefall/tests/`. | in progress |
-| [`equip`](extensions/skills/codefall-equip/SKILL.md) | Equip a project with what the other verbs need it to have: the local-environment scripts `refresh` runs — `start`, which brings its services up, and `update`, which makes the local environment match the checkout — the test harness `test` runs cases through, a spec runner per surface pointed at the testing root, and the agents `review` and every consult reach for, set up from any harness. Finds what the project already has or drafts it from what the repository or the session shows, then declares it in `.codefall/settings.json`. The fourth track is the document landing: the GitHub Action that merges a document pull request once a verb marks it ready for review. | in progress |
+| [`equip`](extensions/skills/codefall-equip/SKILL.md) | Equip a project with what the other verbs need it to have: the local-environment scripts `refresh` runs — `start`, which brings its services up, and `update`, which makes the local environment match the checkout — the test harness `test` runs cases through, a spec runner per surface pointed at the testing root, and the agents `review` and every consult reach for, set up from any harness. Finds what the project already has or drafts it from what the repository or the session shows, then declares it in `.codefall/settings.json`. The fourth track is the document landing: the GitHub Action that merges a document pull request once a person adds the `land` label to it, and the label itself. | in progress |
 | [`refresh`](extensions/skills/codefall-refresh/SKILL.md) | Bring the checkout, the beads, and the local environment current: fetch, fast-forward `main` when that is safe, sync the Beads database with its Dolt remote, run the declared `start` and `update`, record the commit the environment now matches, and turn a failure into a sentence that says what to do. The routine before starting new work. | in progress |
 
 ### Visions
@@ -332,13 +333,14 @@ spec and a child issue per requirement, carrying that requirement's story and cr
 nobody has to click through to work the ticket. Re-running `specify` regenerates those bodies. The
 spec's own `Status` is `Draft`, `Ready`, or `Archived` and describes the document only — whether the
 work is queued, underway, or done is the tracker's to say. The spec lands on its own branch, committed
-once the mirror has written the issue number back, pushed, and opened as a draft pull request that
-`specify` marks ready for review once you have signed the spec off. A GitHub Action the project
-installs with `/codefall-equip landing` merges a ready pull request that touches only document
-paths, so you are never asked to merge a document; a project without the Action gets the same pull
-request and a person merges it. That holds for every verb that writes a document, and
-[`docs/landing-documents.md`](docs/landing-documents.md) explains it. Document pull requests do not
-stack on each other; each branches from `main` and lands on its own.
+once the mirror has written the issue number back, pushed, and opened as a pull request without
+asking you. The report gives you its address and says: add the `land` label when you want it
+merged, or have someone review it first. A GitHub Action the project installs with
+`/codefall-equip landing` merges a labelled pull request that touches only document paths, so the
+label is the one thing you do to land a document, and no verb ever adds it; a project without the
+Action gets the same pull request and a person merges it. That holds for every verb that writes a
+document, and [`docs/landing-documents.md`](docs/landing-documents.md) explains it. Document pull
+requests do not stack on each other; each branches from `main` and lands on its own.
 
 A feature too large for one cohesive spec becomes sibling specs rather than a parent and children.
 The vision above them is what groups them, which is why a vision's `Related` line holds a list.
@@ -694,9 +696,10 @@ one `scaffold` writes them at code depth. Both are idempotent and never destruct
 project up to date?" has to be a question anyone can always answer yes to. The scripts are one of
 `equip`'s four tracks — the test harness above, the agents, and the document landing are the
 others — and one run equips one of them. The landing track writes the one workflow file,
-`.github/workflows/codefall-land-documents.yml`, that merges a document pull request once a verb
-marks it ready, and tells you what your branch rule has to allow; it changes no repository setting
-itself ([`docs/landing-documents.md`](docs/landing-documents.md)).
+`.github/workflows/codefall-land-documents.yml`, that merges a document pull request once you add
+the `land` label to it, creates that label in the repository, and tells you what your branch rule
+has to allow; it changes no branch rule itself
+([`docs/landing-documents.md`](docs/landing-documents.md)).
 
 **`refresh` runs them, and is the thing to run instead of pulling by hand.** It fetches,
 fast-forwards `main` when the tree is clean and the move is safe, syncs the Beads database with its

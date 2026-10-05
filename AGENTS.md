@@ -27,7 +27,7 @@ runs `bd sync`.
 `upgrade` and `equip` are invoked deliberately by a user; every other verb may also be run by an
 agent, and a verb runs the verb upstream of it when the work needs it. Every verb applies only what the user takes; no verb merges to `main`, and a hook denies the
 attempt. A person merges code pull requests; a GitHub Action a project installs with `equip landing`
-merges a document pull request once its verb marks it ready for review.
+merges a document pull request once a person adds the `land` label to it.
 [`docs/workflow.md`](docs/workflow.md) holds the full chain, what each verb reads and writes, and
 who is authoritative for what.
 

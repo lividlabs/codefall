@@ -2,7 +2,7 @@
 
 The shared procedure for putting a verb's files into git: a branch of their own, a commit of those
 files and nothing else, a push, and a pull request. Every verb that writes to the repository follows
-it — `codefall-envision`, `codefall-scaffold`, `codefall-specify`, `codefall-report`,
+it in full — `codefall-envision`, `codefall-scaffold`, `codefall-specify`, `codefall-report`,
 `codefall-mock-up`, `codefall-design`, `codefall-equip`, `codefall-upgrade` — except
 `codefall-implement`, which lands one branch and one pull request per task on its own terms, and
 `codefall-review`, whose fixes land on the branch under review.
@@ -11,16 +11,16 @@ No verb merges to the default branch, and the guard hook denies the attempt. Eve
 that — branching, committing, pushing, opening the pull request — is the verb's to do, and a
 document never sits uncommitted on the default branch.
 
-**Two kinds of pull request leave this procedure.**
+**Two kinds of pull request leave this procedure, and a person decides when each one merges.**
 
 - **A document pull request** comes from `codefall-envision`, `codefall-specify` (its mockups
   included), `codefall-report`, `codefall-design`, and `codefall-mock-up` run on its own. It is
-  opened as a draft, marked ready for review when the person has signed the document off, and
-  merged by a GitHub Action the project installs with `/codefall-equip landing`, which merges a
-  ready pull request that touches only document paths. A project without the Action gets the same
-  pull request, and a person merges it.
+  opened as an ordinary pull request, and a GitHub Action the project installs with
+  `/codefall-equip landing` merges it when a person adds the `land` label to it, provided it touches
+  only document paths. No verb adds the label. A project without the Action gets the same pull
+  request, and a person merges it by hand.
 - **A pull request from `codefall-equip`, `codefall-scaffold`, or `codefall-upgrade`** changes
-  scripts, settings, or templates, so it is opened ready for review and a person merges it.
+  scripts, settings, or templates, so a person merges it; the Action never touches it.
 
 Document pull requests do not stack. Each one branches from the default branch and targets it. The
 one verb that stacks pull requests is `codefall-implement`, for code; the stacks reference beside
@@ -31,7 +31,7 @@ this file (stacks.md) is its.
 - Before the first file: the branch
 - After the last file: the commit
 - Then: push and pull request
-- Marking a document pull request ready
+- A draft pull request for a `Draft` document
 - What to report
 
 ## Before the first file: the branch
@@ -84,18 +84,18 @@ git commit -m "<type>(<scope>): <what>"
 
 ## Then: push and pull request
 
-After the commit, push and open the pull request, and say so. The document was confirmed before it
-was written, and the pull request is how it reaches the next verb; neither is a question.
+After the commit, push, open the pull request, and say so. This holds for every verb that follows
+this procedure, `codefall-equip`, `codefall-scaffold`, and `codefall-upgrade` included. The files
+were confirmed before they were written, and the pull request is how they reach the next verb or
+the person who merges them; neither the push nor the pull request is a question.
 
 ```bash
 git push -u origin <branch>
-gh pr create --base <default-branch> --title "<the commit line>" --body-file <tempfile> --draft   # a document pull request
-gh pr create --base <default-branch> --title "<the commit line>" --body-file <tempfile>           # equip, scaffold, upgrade
+gh pr create --base <default-branch> --title "<the commit line>" --body-file <tempfile>
 ```
 
-The base is always the default branch. A document pull request is opened as a draft every time,
-whatever the document's status; marking it ready is the last step of the run, below, so that the
-Action never merges a run that is still writing.
+The base is always the default branch. The pull request is an ordinary one, not a draft, with one
+exception: a document whose status is `Draft` gets `--draft`, as the next section says.
 
 The body says what the document is and its status, and carries `Relates to #<issue>` when the run
 created or refreshed a tracker issue, so the issue and the pull request find each other. The title
@@ -105,40 +105,38 @@ is the commit line: a squash merge takes it as the commit message.
   pull request is named rather than opened again.
 - **No remote** (`git remote` prints nothing): say so, skip the push, and report the branch. The
   commit is the deliverable on this machine.
-- **Never merge, and never push the default branch.**
+- **Never merge, never push the default branch, and never add the `land` label.** The label is a
+  person's way of saying a document pull request may merge; a verb that added it would be merging.
+- **Changes the person asks for after the pull request is open** are new commits on the same
+  branch, pushed the same way.
 
-## Marking a document pull request ready
+## A draft pull request for a `Draft` document
 
-When every file of the run is committed and pushed and the document's status is `Ready`, mark the
-pull request ready for review:
-
-```bash
-gh pr ready <number>
-```
-
-This is the sign-off reaching GitHub: the person confirmed the document before it was written, and
-marking the pull request ready is what tells the Action to merge it. A document whose status is
-`Draft` — the person is stopping and coming back, or a design still carries decisions it set
-aside — keeps a draft pull request, and the run that later promotes the document marks it ready.
-
-Then read the state once before reporting:
+A document whose status is `Draft` — the person is stopping and coming back, or a design still
+carries decisions it set aside for an engineer — is opened as a draft pull request:
 
 ```bash
-gh pr view <number> --json state,mergedAt
+gh pr create --base <default-branch> --title "<the commit line>" --body-file <tempfile> --draft
 ```
 
-Which of three things to say is decided by what comes back and by whether the project has the
-Action, which is the file `.github/workflows/codefall-land-documents.yml`:
-
-| State | Project has the Action | Say |
-| --- | --- | --- |
-| `MERGED` | either | the pull request is merged |
-| `OPEN`, ready | yes | the pull request is ready and the Action is merging it; it takes a minute or two |
-| `OPEN`, ready | no | the pull request is ready and waits for a person to merge it; `/codefall-equip landing` installs the Action |
-| `OPEN`, draft | either | the pull request is a draft because the document is `Draft`, and what promotes it |
+The draft state follows the document's status and nothing else. When a later run promotes the
+document to `Ready`, that run marks the pull request ready for review with `gh pr ready <number>`
+before it pushes the commit, because GitHub does not merge a draft and because the push is what
+makes the Action look at the pull request again if the `land` label is already on it. Marking the
+pull request ready is not the signal to merge; the `land` label is, and a person adds it.
 
 ## What to report
 
-The branch, the commit's subject line, the pull request URL, and the pull request's state in one of
-the four sentences above. For an `equip`, `scaffold`, or `upgrade` pull request: that it is open
-and a person merges it. When there was no remote, that the work is committed locally and where.
+The branch, the commit's subject line, and the pull request's URL. Then one sentence saying how it
+merges, chosen by the kind of pull request and by whether the project has the Action, which is the
+file `.github/workflows/codefall-land-documents.yml`:
+
+| Pull request | Project has the Action | Say |
+| --- | --- | --- |
+| document, `Ready` | yes | the pull request is open at <url>; add the `land` label when you want it merged, or have someone review it first |
+| document, `Ready` | no | the pull request is open at <url> and waits for a person to merge it; `/codefall-equip landing` installs the Action that merges a labelled document pull request |
+| document, `Draft` | either | the pull request is a draft at <url> because the document is `Draft`, and what promotes it |
+| `equip`, `scaffold`, or `upgrade` | either | the pull request is open at <url>, and a person merges it because it changes code or settings |
+
+Then the one next command the verb's own report names. When there was no remote, say that the work
+is committed locally and where.

@@ -14,7 +14,7 @@ the issue it files on the user's word, and as a child of the epic inside a deliv
 a project, `upgrade` brings its install and documents current, and `equip` and `refresh` keep the
 local environment level with the checkout. No verb merges to `main`: a person merges code pull
 requests, and a GitHub Action the project installs with `equip landing` merges a document pull
-request once its verb marks it ready for review. Documents in the repository are canonical for the
+request once a person adds the `land` label to it. Documents in the repository are canonical for the
 why, the what, and the how; the tracker mirrors specs and bug reports; Beads holds task state. `.codefall/shared/workflow.md` has the chain, what each verb reads
 and writes, and who is authoritative for what.
 

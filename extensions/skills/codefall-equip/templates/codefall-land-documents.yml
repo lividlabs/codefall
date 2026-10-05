@@ -1,19 +1,23 @@
-# Merges a document pull request once a codefall verb marks it ready for review.
+# Merges a document pull request when a person adds the `land` label to it.
 #
 # codefall's document verbs (envision, specify, report, design, and mock-up) open their pull
-# request as a draft and mark it ready when the person has signed the document off. This workflow
-# is that sign-off reaching the default branch: it merges a ready pull request whose diff touches
-# only document paths. A pull request with any other path in it waits for a person.
+# request and tell the person to add the `land` label when they want it merged, or to have someone
+# review it first. No verb adds the label. This workflow is the person's label reaching the default
+# branch: it merges a labelled pull request whose diff touches only document paths. A pull request
+# with any other path in it waits for a person.
 #
-# Installed by `/codefall-equip landing`. The allowlist below is the one codefall's verbs write
-# into; change it only if this project keeps those documents somewhere else. The token is the
-# default GITHUB_TOKEN. A repository whose default branch requires a review has to let this
-# workflow through, and that is a repository setting the owner makes, not a line in this file;
-# docs/landing-documents.md in the codefall repository says which setting.
+# Installed by `/codefall-equip landing`, which also creates the `land` label in the repository.
+# The allowlist below is the one codefall's verbs write into; change it only if this project keeps
+# those documents somewhere else. The token is the default GITHUB_TOKEN. A repository whose default
+# branch requires a review has to let this workflow through, and that is a repository setting the
+# owner makes, not a line in this file; docs/landing-documents.md in the codefall repository says
+# which setting.
 name: codefall-land-documents
 on:
   pull_request:
-    types: [ready_for_review, synchronize]
+    # `labeled` is the person adding `land`; `synchronize` is a commit pushed afterwards, so a
+    # late change is checked again before it merges.
+    types: [labeled, synchronize]
 permissions:
   contents: write
   pull-requests: write
@@ -22,7 +26,15 @@ concurrency:
   cancel-in-progress: false
 jobs:
   land:
-    if: github.event.pull_request.draft == false
+    # Run when the label being added is `land`, or when a commit lands on a pull request that
+    # already carries it. A draft pull request is never merged: GitHub refuses, and a draft means
+    # the document is still `Draft`.
+    if: >-
+      github.event.pull_request.draft == false &&
+      (
+        (github.event.action == 'labeled' && github.event.label.name == 'land') ||
+        (github.event.action == 'synchronize' && contains(github.event.pull_request.labels.*.name, 'land'))
+      )
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

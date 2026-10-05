@@ -83,9 +83,10 @@ the status: "I set aside N technical decisions. Settle them with sensible defaul
 can start, or leave them for an engineer?" On "settle now", the run picks the simplest default that
 fits the project's stance, says each choice in one plain sentence, writes an ADR where the choice
 needs one, and continues to `Ready` and the beads in the same run. On "leave them", the design stays
-`Draft`, creates no beads, keeps a draft pull request, and an engineer's run settles them, as
+`Draft`, creates no beads, gets a draft pull request, and an engineer's run settles them, as
 ADR-011 described. ADR-011's rule that no ADR is written under the product-manager persona gives
 way to the person's explicit answer: a default the run chose and told them is a decision they made.
+ADR-011.2 is the edition of the personas decision that records this.
 
 ### Review and test fix what the person takes
 
@@ -100,30 +101,44 @@ the verb.
 
 Each document verb — `envision`, `specify` with its mockups, `report`, `design`, and `mock-up` run
 alone — branches from the default branch, writes the document, works with the person until they
-sign it off, commits, pushes, opens the pull request as a draft, and marks it ready for review with
-`gh pr ready` when the document's status is `Ready`. A GitHub Action in the project merges a ready
-pull request whose diff touches only document paths: `docs/visions/`, `docs/specs/`, `docs/bugs/`,
-`docs/mockups/`, `docs/designs/`, `docs/adrs/`, `.codefall/reviews/`, `.codefall/tests/`, and
-`.beads/interactions.jsonl`. Any other path means the pull request waits for a person. The
-Action's trigger is `ready_for_review`, with `synchronize` so a late commit is checked again; its
-merge is `gh pr merge --squash` under the default token. A document that stays `Draft` keeps a draft
-pull request and blocks nothing.
+sign it off, commits, pushes, and opens an ordinary pull request. A GitHub Action in the project
+merges that pull request when a person adds the label `land` to it, provided its diff touches only
+document paths: `docs/visions/`, `docs/specs/`, `docs/bugs/`, `docs/mockups/`, `docs/designs/`,
+`docs/adrs/`, `.codefall/reviews/`, `.codefall/tests/`, and `.beads/interactions.jsonl`. Any
+other path means the pull request waits for a person. The Action's trigger is the `pull_request`
+event of type `labeled` with the label named `land`, plus `synchronize` while the label is present,
+so a late commit is checked again before the merge; its merge is `gh pr merge --squash` under the
+default token. No verb adds the label, and no verb marks a pull request ready for review as a
+signal: the label is the person's decision, made after the report, after a colleague's review, or
+not at all.
 
-The report of each of those verbs says the pull request is merged, or that it is ready and the
-Action is merging it, or that it is ready and waits for a person because the project has no Action,
-and ends with one next command: `envision` → `/codefall-specify VISION-NNN`, `specify` →
-`/codefall-design SPEC-NNN`, `report` → `/codefall-design BUG-NNN`, `design` →
-`/codefall-implement DESIGN-NNN`.
+A document whose status is `Draft` gets a draft pull request. The run that later promotes it to
+`Ready` marks the pull request ready for review before pushing, because GitHub does not merge a
+draft; the pull request still waits for the label.
 
-Documents do not stack. `equip`, `scaffold`, and `upgrade` keep their landing: a pull request a
-person merges. Push and pull request stop being a question for every verb.
+The report of each of those verbs says the pull request is open at its URL, that the person adds
+the `land` label when they want it merged or has someone review it first, and ends with one next
+command: `envision` → `/codefall-specify VISION-NNN`, `specify` → `/codefall-design SPEC-NNN`,
+`report` → `/codefall-design BUG-NNN`, `design` → `/codefall-implement DESIGN-NNN`. A project
+without the Action hears that the pull request waits for a person to merge it.
+
+Documents do not stack. `equip`, `scaffold`, and `upgrade` push and open their pull request the same
+way, without asking, and a person merges those because they change code and settings. Push and pull
+request stop being a question for every verb.
+
+A first version of this decision had each document verb open a draft pull request and mark it
+ready for review when the document reached `Ready`, with the Action merging on that event. It was
+changed before this record merged: marking a pull request ready for review is a routine GitHub
+state that people and tools set for other reasons, and a verb setting it would have been the verb
+merging the document. A label a person adds is a deliberate act with one meaning.
 
 ### The Action ships with codefall, installed by `equip`
 
 `codefall-equip` gains a fourth track, `landing`, which writes
-`.github/workflows/codefall-land-documents.yml` from a template the extension ships, reads the
-default branch's protection and rulesets with `gh api`, tells the owner what the rule has to allow
-for the workflow's token to merge, and changes no repository setting. A repository that requires a
+`.github/workflows/codefall-land-documents.yml` from a template the extension ships, creates the
+`land` label in the repository, reads the default branch's protection and rulesets with `gh api`,
+tells the owner what the rule has to allow for the workflow's token to merge, and changes no other
+repository setting. A repository that requires a
 review on its default branch has to let the Action through; that is the owner's decision, made in
 the open. `codefall init` does not install the workflow: the installer rewrites its subtrees on
 every upgrade, and the workflow is a file the owner may edit.
@@ -148,10 +163,11 @@ engineer persona is unchanged.
 - A spec effort is one run and one pull request, mockups included, and a person is never handed a
   verb to run between two verbs the agent could have run itself.
 - A product manager can take a feature from `envision` to merged code with one typed command per
-  verb and no merge clicks for documents: `design` settles its own decisions when asked to, and
-  `review` and `test` build their own fixes.
+  verb and one label per document: `design` settles its own decisions when asked to, and `review`
+  and `test` build their own fixes.
 - "A human performs every merge" becomes "no verb merges": a person merges every code pull request,
-  and the project's Action merges document pull requests. The guard hook is unchanged.
+  and the project's Action merges a document pull request on a person's label. The guard hook is
+  unchanged, and the label is the one thing a verb never adds.
 - A project without the Action sees the same pull requests and merges them by hand; the report
   names `/codefall-equip landing`.
 - Six more descriptions sit in every session's listing. ADR-004.3 records the new count.
@@ -168,8 +184,8 @@ engineer persona is unchanged.
 - [ADR-004.3](ADR-004.3-skill-length-guidelines.md) — which skills carry the invocation flag.
 - [ADR-008](ADR-008-upstream-amendments.md) — text amendments; this ADR adds running the upstream
   verb before beads exist, and leaves ADR-008's limit standing after.
-- [ADR-011](ADR-011-personas.md) — personas; the product-manager report rule and the design
-  paragraph change here.
+- [ADR-011.2](ADR-011.2-personas.md) — personas; the edition that records the product-manager
+  report rule and the design paragraph as this ADR changed them.
 - [ADR-013.3](ADR-013.3-deliveries.md) — deliveries; integration moves to `gh stack`, and review
   and test run implement.
 - `extensions/shared/landing.md` — the landing procedure every document verb follows.

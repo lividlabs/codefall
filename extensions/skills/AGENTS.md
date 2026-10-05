@@ -34,11 +34,13 @@ writing and changing a skill; the extension-wide rules, ADR immutability, prose,
   the fact occurs and reports that it did — `codefall-implement` flipping a vision to `Active` at first
   claim is this shape. Judgment transitions — promote, archive, revise — stay offer-only.
 - A skill that writes to the repository lands its files per `../shared/landing.md`: the branch,
-  the commit, the push, and the pull request are part of the write the user already confirmed, and
-  the merge is never the skill's. A document verb — `codefall-envision`, `codefall-specify`,
-  `codefall-report`, `codefall-design`, `codefall-mock-up` on its own — opens a draft pull request
-  and marks it ready when the document is `Ready`; the GitHub Action `codefall-equip`'s landing
-  track installs merges it. `codefall-equip`, `codefall-scaffold`, and `codefall-upgrade` open a
+  the commit, the push, and the pull request are part of the write the user already confirmed, none
+  of them is a question, and the merge is never the skill's. A document verb — `codefall-envision`,
+  `codefall-specify`, `codefall-report`, `codefall-design`, `codefall-mock-up` on its own — opens
+  an ordinary pull request, a draft only while the document is `Draft`, and its report says to add
+  the `land` label when the person wants it merged; the GitHub Action `codefall-equip`'s landing
+  track installs merges a labelled pull request, and no skill adds the label or marks a pull request
+  ready for review as a signal. `codefall-equip`, `codefall-scaffold`, and `codefall-upgrade` open a
   pull request a person merges. Document pull requests never stack; `codefall-implement`'s code pull
   requests do. No skill says "do not commit"; the one prohibition is the default branch, and the
   guard hook holds it.
