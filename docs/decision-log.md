@@ -1842,6 +1842,19 @@ Decided at scaffold, 2026-08-16.
   guard hook denying `gh issue create -R` (the guards read git pushes, the flag is right when
   `issuesRepo` is not the remote, and a hook for one flag buys little over the rule); the rule in
   `shared/landing.md` (it binds the verbs that land files in git, and `test` does not follow it).
+- **A project chooses the prefix its installed skills use, 2026-10-06.** Recorded as `ADR-015`.
+  Every skill is `codefall-<verb>` in the directory name, the frontmatter, and the slash command, and
+  a project asked for a shorter one. The source tree keeps one spelling and the installer rewrites
+  it to the project's `skillPrefix` while copying, `codefall`, `cf`, or `cfall`, absent meaning
+  `codefall`; the set of verbs comes from the skill directories in the embedded tree, a match is a
+  whole name, and with the default the install is byte for byte what it was. The manifest records
+  the prefix the last run installed with, and upgrade treats a difference from the settings as work
+  the way it treats an old harness spelling, with the cleanup step reporting the change as a rename.
+  Seen and not taken: renaming the source tree (settles nothing for the next project that wants a
+  different name); a skill composing its own name at run time (no harness composes a directory
+  name, and 540 references in prose would each become an instruction); free text for the prefix (a
+  closed set is what lets the installer recognise a skill under any prefix a project could have
+  used, which is what makes the change a rename and makes it reversible).
 
 ## Open
 

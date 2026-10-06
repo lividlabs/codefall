@@ -8,6 +8,11 @@ writing and changing a skill; the extension-wide rules, ADR immutability, prose,
 
 - Named as **verbs** (`codefall-scaffold`, `codefall-upgrade`), one directory each:
   `<verb>/SKILL.md`.
+- **A skill names another skill `codefall-<verb>`, written whole** — in prose, in a slash command,
+  and in a relative path — never split across a line or a variable, never under another prefix, and
+  never shortened to the verb where the full name is meant. `codefall init` rewrites that name to
+  the project's `skillPrefix` while installing, and finds only what is written this way (ADR-015).
+  The `name:` in a skill's frontmatter is its directory name.
 - `codefall-upgrade` and `codefall-equip` carry `disable-model-invocation: true`; a user invokes
   each deliberately, because each changes the install or the settings. Every other skill carries no
   such line, so an agent may run it. Each still reports, offers, and applies only what the user
