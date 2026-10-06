@@ -235,5 +235,6 @@ The configuration again, in the shape above, as it now stands. Then the probe's 
 line. Then the landing, per `../../../../.codefall/shared/landing.md`: settings committed by path
 on the branch, pushed, and the pull request opened and named by its URL, none of it a question. A
 person merges it, because it changes settings.
-**End with what the user does next**: merge the pull request, and run `/codefall-equip agents`
-again for any harness that still says `not set up`.
+**End with what the user does next**: merge the pull request, and nothing after it. A harness that
+still says `not set up` is named as a fact, with `/codefall-equip agents` as what sets it up once
+the merge is done, never as a second step.

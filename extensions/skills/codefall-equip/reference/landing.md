@@ -115,5 +115,6 @@ What was written and why, that the `auto-merge` label exists, the branch-rule fi
 has to change if anything, and the landing per `../../../.codefall/shared/landing.md`: the file
 committed by path on `equip/landing`, pushed, and its pull request opened and named by URL, none of
 it a question, a person's to merge. **End with what the user does next**: merge the pull request,
-change the branch rule if step 2 said so, and then add the `auto-merge` label to the next document
-pull request when they want it merged, or have someone approve it.
+and nothing after it. The branch-rule change, when step 2 found one, is said above as the owner's;
+and once the pull request is merged, a document pull request merges when a person adds the
+`auto-merge` label to it or approves it, which the report states as a fact, not as a step.

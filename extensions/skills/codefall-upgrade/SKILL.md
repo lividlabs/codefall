@@ -113,9 +113,9 @@ difference between the two strings counts as behind.
 - **No `codefall` on PATH** — say so, name the installed version, and continue to step 2: the
   documents need no binary.
 - **Level, or the manifest ahead** — say which in one line and continue.
-- **Behind** — name both versions and offer to run `codefall upgrade` first. Never run it unasked.
-  On no, continue to step 2. On yes, run it in the directory holding the manifest, never with
-  `--yes`, and put its own question to the user, since the session has no terminal to show it:
+- **Behind** — name both versions and offer to run `codefall upgrade` first. On no, continue to
+  step 2. On yes, run it in the directory holding the manifest and put its own question to the
+  user, since the session has no terminal to show it:
   1. `printf 'n\n' | ACCESSIBLE=1 codefall upgrade --location here` prints the breaking changes
      between the two versions and asks whether to continue; the `n` declines and nothing changes.
   2. Show the user what it printed, the breaking changes verbatim, and ask its question.
@@ -285,11 +285,11 @@ the documents' changes should be reviewable as one coherent change.
 - The landing, per `../../../.codefall/shared/landing.md`: what took, committed by path on the
   branch, pushed, and its pull request opened. A person merges it. A run where nothing took has
   nothing to land.
-- What the user still owes the project: the hand-merges they said they'd do, and — after an
-  adoption — the boundary-enforcement obligation, named exactly as `codefall-scaffold` names it after a
-  docs-only run.
-- **Last, what the user does next**: commit the install's changes when `codefall upgrade` ran,
-  merge the pull request, then what is owed above. Nothing else.
+- What the user still owes the project: the install's changes to commit when `codefall upgrade`
+  ran, the hand-merges they said they'd do, and — after an adoption — the boundary-enforcement
+  obligation, named exactly as `codefall-scaffold` names it after a docs-only run.
+- **Last, what the user does next**: merge the pull request, and nothing after it. What is owed is
+  said above, never as a step after the merge.
 
 ## Rules
 
