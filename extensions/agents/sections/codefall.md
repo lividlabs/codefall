@@ -17,5 +17,8 @@ repository are canonical for the why, the what, and the how; the tracker mirrors
 reports; Beads holds task state. `.codefall/shared/workflow.md` has the chain, what each verb reads
 and writes, and who is authoritative for what.
 
+Speak plainly. Use everyday words, full sentences, and the active voice. Omit needless words. Say
+the concrete thing, not the category it belongs to.
+
 Instructions from the user or elsewhere in this file take precedence over this section.
 <!-- END CODEFALL PROCESS -->
