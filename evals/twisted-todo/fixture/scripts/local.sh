@@ -17,8 +17,10 @@ PORT=${PORT:-3000}
 BASE_URL=${BASE_URL:-http://localhost:$PORT}
 PID_FILE=data/server.pid
 LOG_FILE=data/server.log
+START_TIMEOUT=${START_TIMEOUT:-10}
 
-healthy() { curl -fsS "$BASE_URL/health" >/dev/null 2>&1; }
+# Each check gives up after 2s, so a process that holds the port and never answers cannot stall it.
+healthy() { curl -fsS --max-time 2 "$BASE_URL/health" >/dev/null 2>&1; }
 
 start() {
   mkdir -p data
@@ -27,28 +29,47 @@ start() {
     return 0
   fi
   nohup node src/main.js >"$LOG_FILE" 2>&1 &
-  echo $! >"$PID_FILE"
-  for _ in $(seq 1 20); do
+  pid=$!
+  echo "$pid" >"$PID_FILE"
+  deadline=$((SECONDS + START_TIMEOUT))
+  while [ "$SECONDS" -lt "$deadline" ]; do
     if healthy; then
-      echo "server up at $BASE_URL (pid $(cat "$PID_FILE"))"
+      echo "server up at $BASE_URL (pid $pid)"
       return 0
+    fi
+    if ! kill -0 "$pid" 2>/dev/null; then
+      rm -f "$PID_FILE"
+      echo "server exited before answering at $BASE_URL/health; port $PORT may be in use by another process (lsof -i :$PORT shows it); see $LOG_FILE" >&2
+      return 1
     fi
     sleep 0.5
   done
-  echo "server did not answer at $BASE_URL/health within 10s; see $LOG_FILE" >&2
+  echo "server did not answer at $BASE_URL/health within ${START_TIMEOUT}s; port $PORT may be in use by another process (lsof -i :$PORT shows it); see $LOG_FILE" >&2
   return 1
+}
+
+# The manifest and, when there is one, the lockfile, hashed together.
+deps_stamp() {
+  {
+    cat package.json
+    if [ -f package-lock.json ]; then cat package-lock.json; fi
+  } | shasum | cut -d' ' -f1
 }
 
 update() {
   # Runtime: Node 24 or newer, for node:sqlite.
   node -e 'const [maj] = process.versions.node.split("."); if (Number(maj) < 24) { console.error(`Node ${process.versions.node} is too old; Forfeit needs Node 24 or newer.`); process.exit(1) }'
 
-  # Dependencies: reinstall only when the manifest or the lockfile changed.
+  # Dependencies: reinstall only when the manifest or the lockfile changed. Without a lockfile the
+  # stamp covers the manifest alone, and npm install writes the lockfile; the stamp is taken after
+  # the install, so it covers the lockfile the install wrote.
   mkdir -p node_modules
-  stamp=$(cat package.json package-lock.json 2>/dev/null | shasum | cut -d' ' -f1)
-  if [ "$stamp" != "$(cat node_modules/.codefall-stamp 2>/dev/null || true)" ]; then
+  if [ ! -f package-lock.json ]; then
+    echo "no package-lock.json; npm install will write one"
+  fi
+  if [ "$(deps_stamp)" != "$(cat node_modules/.codefall-stamp 2>/dev/null || true)" ]; then
     npm install --no-audit --no-fund
-    echo "$stamp" >node_modules/.codefall-stamp
+    deps_stamp >node_modules/.codefall-stamp
   fi
 
   # Browsers for the Playwright runner. Exits 0 quickly when they are already present.
