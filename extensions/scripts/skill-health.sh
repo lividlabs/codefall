@@ -31,8 +31,9 @@
 #
 # A reference is a markdown link target or a backticked path with a file
 # extension. Bare paths that do not resolve are taken to be the user's project
-# and ignored; paths with placeholders, and anything inside a fenced code block,
-# are ignored. Files under templates/ are
+# and ignored; paths with placeholders are ignored. Inside a fenced code block a
+# bare ./ or ../ path with a file extension is a reference too. A ../blob/ or
+# ../tree/ path is a GitHub link, not a file, and is ignored. Files under templates/ are
 # installed into projects, not read as instruction, so depth and contents skip
 # them, and a supporting file may name one without counting as nested.
 # NOTES.md is never loaded by a skill and is exempt from everything.
@@ -82,15 +83,20 @@ fi
 tmp="$(mktemp -d)"
 trap 'rm -rf "$tmp"' EXIT
 
-# Every relative reference a markdown file names, one per line, unique. A fenced code block
-# holds example text, such as an issue body with its own relative links, and is skipped.
+# Every relative reference a markdown file names, one per line, unique.
+#
+# Inside a fenced code block a command names a path bare, so there a ./ or ../ path with a file
+# extension counts as well. A ../ path whose first segment after the ../ run is blob or tree is
+# a GitHub link relative to an issue or pull request page, as in the tracker profiles' example
+# issue bodies, not a file relative to the one naming it, and is skipped wherever it appears.
 refs() {
-  local text
-  text="$(awk '/^[ \t]*(```|~~~)/ {f = !f; next} !f' "$1" 2>/dev/null)"
   {
-    printf '%s\n' "$text" | grep -o -E '\]\([^)]+\)' | sed -E 's/^\]\(//; s/\)$//; s/ .*$//; s/#.*$//'
-    printf '%s\n' "$text" | grep -o -E '`[^` ]+\.(md|sh|json|skeleton|txt|yml|yaml)`' | tr -d '`'
-  } | grep -v -E '^(https?:|/|~|$)' | grep -v -E '[<>{}*$]' | sort -u
+    grep -o -E '\]\([^)]+\)' "$1" 2>/dev/null | sed -E 's/^\]\(//; s/\)$//; s/ .*$//; s/#.*$//'
+    grep -o -E '`[^` ]+\.(md|sh|json|skeleton|txt|yml|yaml)`' "$1" 2>/dev/null | tr -d '`'
+    awk '/^[ \t]*(```|~~~)/ {f = !f; next} f' "$1" 2>/dev/null \
+      | grep -o -E "[^] \`\"'()=:[]+\.(md|sh|json|skeleton|txt|yml|yaml)" | grep -E '^\.\.?/'
+  } | grep -v -E '^(https?:|/|~|$)' | grep -v -E '[<>{}*$]' \
+    | grep -v -E '^(\./)?(\.\./)+(blob|tree)/' | sort -u
 }
 
 # True when every component of a relative path names a directory entry spelled with exactly
@@ -147,10 +153,17 @@ root_prefix() {
   printf '%s\n' "$prefix"
 }
 
-# The lines of a file that name a reference, as a backticked path or a link target,
-# comma-separated.
+# The lines of a file that name a reference where it starts a path, so ../../.codefall/x is not
+# found inside ../../../.codefall/x; comma-separated.
 lines_of() {
-  grep -n -F -e "\`$2\`" -e "]($2" "$1" | cut -d: -f1 | paste -s -d, -
+  awk -v r="$2" '{
+    s = $0
+    while ((i = index(s, r)) > 0) {
+      c = (i > 1) ? substr(s, i - 1, 1) : ""
+      if (c !~ /[A-Za-z0-9_.\/-]/) { print NR; break }
+      s = substr(s, i + 1)
+    }
+  }' "$1" | paste -s -d, -
 }
 
 has_toc() {
