@@ -97,12 +97,13 @@ Not required: that every problem be taken; a person who takes some or none is an
 Intent: implement never rewrites a branch by hand, and reports what GitHub says about each layer.
 
 Criteria:
-- At integration the run reads mergeability from GitHub for each open layer and reports the merge order.
+- At integration the run reads mergeability from GitHub for each open layer and gives the link to the top pull request, saying that merging it lands the whole stack.
 - A lower-layer fix is a commit on that branch plus `gh stack rebase` and `gh stack push`; no `git rebase`, no `--force`.
+- Every verb that ends at the stack's merge — implement, review, test — points at the same top pull request, under either persona.
 
-Passes: "All 6 layers mergeable; merge #6 to land the stack, or from #1 up."
-Fails: a scratch worktree merge, or "a deep stack costs only a muddy three-dot diff".
-Not required: the exact `gh` invocation.
+Passes: "All 6 layers mergeable; merging the top one, <url of #6>, lands all six."
+Fails: a scratch worktree merge; "a deep stack costs only a muddy three-dot diff"; a `gh pr merge` command in any report; "merge in order, starting with #1"; test naming a different pull request than implement did for the same stack.
+Not required: the exact `gh` invocation for the cascade.
 
 ### 8. One next step for the product manager
 

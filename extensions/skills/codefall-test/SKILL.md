@@ -49,6 +49,8 @@ Read each when its step says to; none is loaded up front.
   under the epic. Read at step 6 for an epic target.
 - `../../../.codefall/shared/delivery.sh <epic>` — the delivery's one-line chart. Run at the
   confirmation and in the report for an epic target.
+- `../../../.codefall/shared/stacks.md` — *Pointing at a stack*: how a report names the pull
+  request a person merges. Read at step 7 when an epic target's last test passed.
 
 ## Scope
 
@@ -270,7 +272,10 @@ issue holds goes in a `bd comment` on the epic; the report then says it is safe 
 is now running `codefall-implement <epic>` to fix them, then run that skill with the epic as its
 argument, through the `Skill` tool, in this session; its go gate reopens the children, and its
 report ends the session with its own one command. When nothing was filed, this run is the last
-test passed, and the merge order from the implement report is what remains. Otherwise per class: a real bug with an issue filed goes
+test passed, and the merge is what remains: give the link to the pull request the person merges —
+the top of the stack, or the aggregate pull request on an epic branch — and say that merging it on
+GitHub lands the whole stack, per *Pointing at a stack* in `../../../.codefall/shared/stacks.md`;
+never a merge command, never a list of pull requests to merge in order. Otherwise per class: a real bug with an issue filed goes
 to `/codefall-fix #<issue>` when the change is contained and `/codefall-design #<issue>` otherwise,
 or to `/codefall-report <run report path>` when the user wants a bug document first; a real bug not
 filed waits for the user's word; a wrong expectation goes to the decision that supersedes the

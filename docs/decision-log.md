@@ -1795,6 +1795,19 @@ Decided at scaffold, 2026-08-16.
   asks first and never overwrites a drifted file); a "speak plainly" rule that forbids any term the
   person has not used (the plain-language guides say explain on first use, not avoid); and running
   `design` from `specify` (the next step is the person's one button).
+- **A report points at a stack by its top pull request, 2026-10-06.** Recorded as `ADR-013.4`,
+  for issue #176. In the twisted-todo run of 2026-10-05, `test` under the product-manager persona
+  ended with `gh pr merge 13` and "merge in order", while `implement`'s report for the same stack
+  said merging #18 lands all five. Two verbs disagreed, and a merge command is not a product
+  manager's step. The rule is stated once, as the last section of `shared/stacks.md`, the one
+  codefall rule in a file that is otherwise GitHub's documentation: the link to the top pull
+  request, and that merging it on GitHub lands the whole stack; never a `gh` command, never a
+  bottom-up list; the same link for every persona. `implement`, `review`, and `test` point at that
+  section, and "merge order" leaves the skills, the workflow description, and the README. The
+  bottom-up merge stays in `stacks.md`'s *Merging* section as something GitHub permits, not as what
+  a report says. Seen and not taken: the rule in `personas.md` (it holds for the engineer too, and
+  that file changes nothing for the engineer); a copy of the rule in each verb (a copy drifts, which
+  is how the two reports came to disagree).
 
 ## Open
 

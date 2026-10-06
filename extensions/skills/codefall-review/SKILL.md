@@ -50,6 +50,7 @@ Read each when its step says to; none is loaded up front.
   agent list, `via=`. Read at step 1. `../../../.codefall/shared/run-agent.sh` runs one agent.
 - `../../../.codefall/shared/delivery.sh <epic>` — the delivery's one-line chart. Run at the
   confirmation and in the report when the target is an epic's work.
+- `../../../.codefall/shared/stacks.md` — *Pointing at a stack*, read at step 7.
 
 ## Targets
 
@@ -69,9 +70,6 @@ The argument's shape decides what is being reviewed.
 **The default branch** is `git symbolic-ref --short refs/remotes/origin/HEAD` with the `origin/`
 prefix stripped, falling back to `git remote show origin` when that ref was never set locally, and
 to the current checkout's initial branch when there is no remote. Resolve it once per run.
-
-An epic's work, several pull requests, a document identifier, and a prose argument are each
-resolved per `reference/targets.md`.
 
 ### What is not reviewable
 
@@ -137,8 +135,8 @@ are held to; read them there, never restate them.
 
 ## Calibration
 
-- **Be certain before calling something a bug.** Investigate. If still unsure, it is not a finding —
-  it goes in `notChecked`, which is where everything the review could not settle belongs.
+- **Be certain before calling something a bug.** Investigate. If still unsure, it goes in
+  `notChecked`, with everything else the review could not settle.
 - **Review the target, nothing else.** Where the target has a diff, the scope is the changed lines,
   and pre-existing code the diff did not touch is out of bounds. Where it does not — a path, a
   document — the scope is the whole of what was named.
@@ -160,7 +158,7 @@ set. A `REVIEW.md` at the project root, if present, states what the project care
 The `review` list of the `agents` entry for this harness, else of the `default` entry, resolved and
 walked per `../../../.codefall/shared/running-agents.md`; the first agent that answers is the
 reviewer. `current` is a subagent of this harness, and with no `agents` configured it is the whole
-list, as before. `via=` replaces the list for one run. This session reviews only when the work came
+list. `via=` replaces the list for one run. This session reviews only when the work came
 from somewhere else. The lens groups, how each reviewer runs them, and the external call are in
 `reference/reviewers.md`. Every reviewer runs read-only, and every agent tried is named in the
 report and the findings file.
@@ -207,7 +205,7 @@ point, not a script — apply the intent, matching the surrounding code. Fixes a
 here. **On an epic's work, a taken code finding is not fixed here**: it is
 filed as a `deferred` child of the epic in the `code` form below, or the `design` form where the
 design caused it, its status is `deferred` with the bead's ID, and step 8 runs `codefall-implement`
-on the epic to build every one of them in this session. Document fixes on an epic's work still land
+on the epic to build them in this session. Document fixes on an epic's work still land
 here as text, under the rule below. **A code fix that changes behaviour the design or spec describes amends
 that document in the same commit**, under the rule below: the document is part of the fix, not a
 second finding.
@@ -287,10 +285,11 @@ run, and say so.
    bead, and the report says it is safe to `/clear`. **End with what the user does next**: on an
    epic's work, that this run is now running `codefall-implement <epic>` to fix the problems the
    person took, or `/codefall-test <epic>` when none were taken; on another pull request or branch,
-   push the fixes and merge; on uncommitted work, the findings files are left unstaged to commit
-   with the work or not at all; otherwise nothing is pending. Where revision beads were filed,
-   `/codefall-design DESIGN-NNN` comes first, so the document is corrected while the work that found
-   it wrong is still in view.
+   push the fixes and give the link to the pull request to merge, per *Pointing at a stack* in
+   `../../../.codefall/shared/stacks.md`; on uncommitted work, the findings files are left unstaged
+   to commit with the work or not at all; otherwise nothing is pending. Where revision beads were
+   filed, `/codefall-design DESIGN-NNN` comes first, so the document is corrected while the work
+   that found it wrong is still in view.
 8. **Fix the epic's problems.** On an epic's work, when the person took at least one code finding,
    run the `codefall-implement` skill with the epic as its argument, through the `Skill` tool, in
    this session. Its go gate reopens the children this run filed, its workers build them, and its

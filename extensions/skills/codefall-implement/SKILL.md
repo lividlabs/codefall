@@ -18,10 +18,10 @@ allowed-tools:
 Walk the graph `codefall-design` created. Claim what is ready, build it, verify it, open a pull
 request, and let each close unblock the next task until the frontier is empty.
 
-Implementing is not merging. A run ends at open pull requests and a reported merge order — **a human
-performs every merge to `main`, and this skill never does**, in any mode, under any instruction
-short of the user editing this file. Merges into an epic branch are the one exception; the human
-gate sits at its aggregate PR.
+Implementing is not merging. A run ends at open pull requests and a link to the stack's top —
+**a human performs every merge to `main`, and this skill never does**, in any mode, under any
+instruction short of the user editing this file. Merges into an epic branch are the one exception;
+the human gate sits at its aggregate PR.
 
 Paths that start with `reference/` or `../` are relative to this skill's directory, not the user's
 project. A path through `../../../.codefall/` is the one that leaves the skills directory: it names
@@ -39,7 +39,8 @@ Read each when its step says to; none is loaded up front.
   landed bead and its gates, discovered work as children of the epic, session end. Read at step 5.
 - `../../../.codefall/shared/delivery.sh <epic>` — the chart line. Run at the go gate, each wave
   boundary, and the report.
-- `../../../.codefall/shared/stacks.md` — how GitHub stacks work. Read at step 4 and step 7.
+- `../../../.codefall/shared/stacks.md` — how GitHub stacks work, and how a report points at one.
+  Read at steps 4, 7, and 8.
 - `reference/workers.md` — launching a worker, the worktree seeding rule, chain sequencing, the
   result JSON, failure handling, and consulting. Read at step 6. Names
   `../../../.codefall/shared/running-agents.md`, `../../../.codefall/shared/run-agent.sh`,
@@ -173,8 +174,9 @@ run against the epic passed.
 denial from that hook is the system working as designed. What the root does merge: worker PRs into
 the **epic branch**, one at a time, at wave boundaries.
 
-At close-out the run reports the **merge order** — merge the top PR to land the stack, or from the
-bottom up — and stops. `bd gate check` turns the merges into bead state next session.
+At close-out the run points at the stack per *Pointing at a stack* in
+`../../../.codefall/shared/stacks.md` — the link to the top PR, never a command or a bottom-up
+list — and stops.
 
 The spec's tracker issue walks the work's state per `reference/mirror.md`. Every PR body carries
 `Relates to #<spec-issue>`.
@@ -296,7 +298,7 @@ Single-bead scope is one iteration of the same loop, in one worktree.
 
 When the frontier is empty: ask GitHub whether every open layer is mergeable, per *Integration* in
 `reference/landing.md`, and report it. A layer that is not is fixed on its own branch and cascaded
-with `gh stack`; nothing is rebased by hand. Epic branch, first round: open the aggregate PR to
+with `gh stack`. Epic branch, first round: open the aggregate PR to
 `main`, titled as a release-worthy conventional commit, and gate the landed bead with it — `Closes`
 nothing; the gate owns the epic's close. A later round reuses the aggregate PR that exists.
 
@@ -306,7 +308,8 @@ Do not merge, and do not wait for merges; the next session's `bd gate check` fin
 
 - The chart line.
 - Every bead built, with PR, branch, and what its close reason verified.
-- The merge order, bottom-up, and what is blocked on the user.
+- The link to the pull request the person merges, per *Pointing at a stack*, and what is blocked
+  on the user.
 - Upstream amendments, by document and PR, each with its `design-amended` bead, and every
   `design` item sent back to its worker; then discovered work filed, in two buckets: code
   follow-ups, and what was handed back to design — "DESIGN-NNN has N revision beads" — with the
@@ -322,8 +325,8 @@ Do not merge, and do not wait for merges; the next session's `bd gate check` fin
 - Final `bd dolt push`.
 - **Last, what the user does next**: `/codefall-review <epic>` on the stack top or the epic
   branch, then `/codefall-test <epic>`; `/codefall-design DESIGN-NNN` where revision beads were
-  filed; and the merge, in the order above, only once every child but the landed bead is closed
-  and the last test run passed — otherwise `/codefall-implement <epic>` for the next round.
+  filed; and that merge, only once every child but the landed bead is closed and the last test run
+  passed — otherwise `/codefall-implement <epic>` for the next round.
 
 ## Other modes
 
@@ -332,7 +335,7 @@ Do not merge, and do not wait for merges; the next session's `bd gate check` fin
 - **Abandon** a run: unclaim what is claimed and unbuilt, note why on each bead, report branches
   and PRs left standing. The user decides their fate; delete nothing.
 - **Drain assistance is reporting only.** After merges, `bd gate check` and the mirror update are
-  welcome; performing merges is not, and the hook enforces it.
+  welcome; performing merges is not.
 
 ## Rules
 

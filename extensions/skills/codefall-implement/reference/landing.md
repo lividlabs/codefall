@@ -39,8 +39,8 @@ has, is read as the epic branch, and the report says so.
 **Prediction is verified at integration, never trusted.** When the frontier is empty, ask GitHub:
 `gh pr view <number> --json mergeable,mergeStateStatus,statusCheckRollup` for every open layer.
 Branch protection and the checks run on each layer, so a clean answer on every one is the
-verification. Report the merge order and stop: merging the top PR lands every layer, or the person
-merges from the bottom and GitHub rebases what is above each.
+verification. Report the stack per *Pointing at a stack* in `../../../../.codefall/shared/stacks.md`
+— the link to the top PR, and that merging it on GitHub lands every layer — and stop.
 
 A layer GitHub reports as conflicting, or whose checks fail, is fixed on the branch that owns the
 change, and the fix is cascaded with `gh stack rebase` then `gh stack push`, which pushes each
@@ -68,7 +68,7 @@ The go gate renders the plan as a branch diagram built from the actual graph. Se
 
 ```
 main ── T1 ── T2 ── T3 ── T4 ── T5 ── T6
-         one stack of 6 · merge T6 to land all, or from T1 up
+         one stack of 6 · merging T6 lands all six
 ```
 
 Epic branch:
