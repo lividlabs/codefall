@@ -2,8 +2,9 @@
 // each a fresh session in the project directory, with the PM simulator answering. Between
 // sessions it does what the person would: merges the equip pull requests, adds the `auto-merge` label to
 // each document pull request and waits for the Action to merge it, returns the checkout to main,
-// and merges the code stack after test. Then it gathers evidence and runs the judge through
-// .codefall/shared/run-agent.sh.
+// and merges the code stack after test. When the chain ends, however it ends, it stops the fixture
+// servers and removes the worker worktrees (cleanup.ts). Then it gathers evidence and runs the
+// judge through .codefall/shared/run-agent.sh.
 //
 //   node run.ts                      the whole chain, then the judge
 //   node run.ts --from implement     resume a run from a verb (pass --run <dir> to reuse a run dir)
@@ -20,6 +21,7 @@ import { Simulator } from "./simulator.ts";
 import { runSession, type SessionOutcome } from "./session.ts";
 import { makeGh } from "./github.ts";
 import { judgeRun } from "./judge.ts";
+import { cleanUpProject, describeCleanup, type CleanupReport } from "./cleanup.ts";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const evalRoot = resolve(here, "..");
@@ -72,6 +74,34 @@ if (args.run && args.from && existsSync(join(runDir, "summary.json"))) {
   }
 }
 
+// The end of a run, however it ends: the chain finishing or stopping, the driver throwing, or
+// SIGINT or SIGTERM. Stops the fixture servers the run started and removes implement's worker
+// worktrees, once, and records what it did as `cleanup` in summary.json. A `--judge-only` run
+// started nothing and cleans nothing.
+let cleanup: CleanupReport | undefined;
+function cleanUp(reason: string): CleanupReport | undefined {
+  if (args["judge-only"] || cleanup) return cleanup;
+  try {
+    cleanup = cleanUpProject(projectDir, reason, log);
+  } catch (error: any) {
+    log(`cleanup failed: ${error.stack ?? error.message}`);
+    cleanup = { reason, at: new Date().toISOString(), serversStopped: [], serversLeft: [], worktreesRemoved: [], worktreesPruned: [], worktreesLeft: [{ path: projectDir, error: `cleanup failed: ${error.message}` }] };
+  }
+  summary.cleanup = cleanup;
+  writeFileSync(join(runDir, "summary.json"), JSON.stringify(summary, null, 2) + "\n");
+  return cleanup;
+}
+
+for (const signal of ["SIGINT", "SIGTERM"] as const) {
+  process.once(signal, () => {
+    log(`received ${signal}; stopping the run`);
+    summary.interruptedBy = signal;
+    summary.finishedAt = new Date().toISOString();
+    cleanUp(`interrupted by ${signal}`);
+    process.exit(signal === "SIGINT" ? 130 : 143);
+  });
+}
+
 async function runVerb(verb: Verb): Promise<SessionOutcome> {
   const s = step(verb);
   const firstMessage = `${s.skill} ${s.argument(projectDir)}`.trim();
@@ -97,15 +127,28 @@ async function main(): Promise<void> {
     const verbs = CHAIN.slice(CHAIN.indexOf(from));
     if (!verbs.length) fail(`--from must be one of ${CHAIN.join(", ")}`);
 
-    setPersona("product-manager");
-    for (const verb of verbs) {
-      const outcome = await runVerb(verb);
-      if (outcome.status !== "done") {
-        log(`stopping the chain: ${verb} ended ${outcome.status}`);
-        break;
+    let ended = "the driver threw an error";
+    try {
+      setPersona("product-manager");
+      ended = "the chain finished";
+      for (const verb of verbs) {
+        const outcome = await runVerb(verb);
+        if (outcome.status !== "done") {
+          log(`stopping the chain: ${verb} ended ${outcome.status}`);
+          ended = `${verb} ended ${outcome.status}`;
+          break;
+        }
+        const goOn = await afterVerb(verb);
+        if (!goOn) {
+          ended = `the chain stopped after ${verb}`;
+          break;
+        }
       }
-      const goOn = await afterVerb(verb);
-      if (!goOn) break;
+    } catch (error: any) {
+      ended = `the driver threw: ${error.message}`;
+      throw error;
+    } finally {
+      cleanUp(ended);
     }
   }
 
@@ -119,6 +162,7 @@ async function main(): Promise<void> {
   writeFileSync(join(runDir, "summary.json"), JSON.stringify(summary, null, 2) + "\n");
   log(`run directory: ${runDir}`);
   log(`overall: ${record.verdict?.overall ?? "see verdict.json"} (judged by ${record.judgedBy ?? "nobody"})`);
+  if (cleanup) log(describeCleanup(cleanup));
 }
 
 // What the person would do once a verb's session is over. Returns false when the chain should stop.
@@ -251,5 +295,6 @@ function fail(message: string): never {
 
 main().catch((error) => {
   log(`driver error: ${error.stack ?? error.message}`);
+  cleanUp(`the driver threw: ${error.message}`);
   process.exit(1);
 });

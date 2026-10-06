@@ -116,6 +116,14 @@ driver runs `git fetch`, `git checkout main`, `git pull --ff-only` in the projec
 person would, and records it as not a deviation. It does this with plain git rather than a
 `/codefall-refresh` session so the run spends no tokens on it.
 
+**Cleaning up when the run ends.** Whether the chain passes, fails, or is interrupted (`SIGINT`,
+`SIGTERM`, or an error in the driver), the driver stops every fixture server the run left
+listening and removes implement's worker worktrees before it gathers evidence or exits. A server
+is matched by its working directory, the project directory or one of its worktrees, so nothing
+outside the throwaway is touched; the worktrees go with `git worktree remove` and `git worktree
+prune`. `summary.json` records what was stopped and removed under `cleanup`. The driver's README
+has the details.
+
 ## Merging, in plain words
 
 The person is away, and no human merges. Documents land through the Action described in
