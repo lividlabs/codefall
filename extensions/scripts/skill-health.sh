@@ -20,14 +20,19 @@
 #   name          frontmatter name matches the directory
 #   invocation    disable-model-invocation: true, except for the skills listed in
 #                 MODEL_INVOCABLE, which carry no such line
-#   references    every ./ or ../ path SKILL.md names resolves
+#   references    every ./ or ../ path SKILL.md names resolves, and every one a file it
+#                 names does
+#   shared        a path to a shared file climbs from the file that names it, as
+#                 installed, to the project root: ../../../.codefall/ from SKILL.md,
+#                 one more ../ for each directory below it
 #   depth         a referenced file names no further file that SKILL.md does not also name
 #   contents      a referenced file over 100 lines has a table of contents
 #   unreferenced  files in the skill directory nothing names — informational, never a failure
 #
 # A reference is a markdown link target or a backticked path with a file
 # extension. Bare paths that do not resolve are taken to be the user's project
-# and ignored; paths with placeholders are ignored. Files under templates/ are
+# and ignored; paths with placeholders, and anything inside a fenced code block,
+# are ignored. Files under templates/ are
 # installed into projects, not read as instruction, so depth and contents skip
 # them, and a supporting file may name one without counting as nested.
 # NOTES.md is never loaded by a skill and is exempt from everything.
@@ -63,6 +68,10 @@ done
 
 here="$(cd "$(dirname "$0")" && pwd -P)"
 ext_root="$(cd "$here/.." && pwd -P)"
+# extensions/skills/<skill>/ sits as far below the repository root as .claude/skills/<skill>/
+# sits below an installed project's root, so a .codefall/ prefix that reaches one from a file
+# reaches the other from the same file.
+repo_root="$(cd "$ext_root/.." && pwd -P)"
 skills_root="$ext_root/skills"
 if [ ${#dirs[@]} -eq 0 ]; then
   for d in "$skills_root"/*/; do
@@ -73,11 +82,14 @@ fi
 tmp="$(mktemp -d)"
 trap 'rm -rf "$tmp"' EXIT
 
-# Every relative reference a markdown file names, one per line, unique.
+# Every relative reference a markdown file names, one per line, unique. A fenced code block
+# holds example text, such as an issue body with its own relative links, and is skipped.
 refs() {
+  local text
+  text="$(awk '/^[ \t]*(```|~~~)/ {f = !f; next} !f' "$1" 2>/dev/null)"
   {
-    grep -o -E '\]\([^)]+\)' "$1" 2>/dev/null | sed -E 's/^\]\(//; s/\)$//; s/ .*$//; s/#.*$//'
-    grep -o -E '`[^` ]+\.(md|sh|json|skeleton|txt|yml|yaml)`' "$1" 2>/dev/null | tr -d '`'
+    printf '%s\n' "$text" | grep -o -E '\]\([^)]+\)' | sed -E 's/^\]\(//; s/\)$//; s/ .*$//; s/#.*$//'
+    printf '%s\n' "$text" | grep -o -E '`[^` ]+\.(md|sh|json|skeleton|txt|yml|yaml)`' | tr -d '`'
   } | grep -v -E '^(https?:|/|~|$)' | grep -v -E '[<>{}*$]' | sort -u
 }
 
@@ -102,8 +114,8 @@ exact_case() {
   done
 }
 
-# Absolute path of a reference relative to a directory, or nothing when no file of exactly that
-# name exists.
+# Absolute path of a reference relative to a directory. Returns 1 when no file of exactly that
+# name exists, and 2 when a .codefall/ path's prefix does not reach the project root.
 #
 # A skill names a shared file by the path it has once installed —
 # ../../../.codefall/shared/<file> from a skill directory, one level deeper from a supporting
@@ -112,7 +124,9 @@ exact_case() {
 resolve() {
   local base="$1" ref="$2" target
   case "$ref" in
-    */.codefall/*) base="$ext_root"; ref="${ref#*.codefall/}" ;;
+    */.codefall/*)
+      [ "$(cd "$base/${ref%%.codefall/*}" 2>/dev/null && pwd -P)" = "$repo_root" ] || return 2
+      base="$ext_root"; ref="${ref#*.codefall/}" ;;
   esac
   target="$base/$ref"
   [ -e "$target" ] || return 1
@@ -122,6 +136,21 @@ resolve() {
   else
     (cd "$(dirname "$target")" && printf '%s/%s\n' "$(pwd -P)" "$(basename "$target")")
   fi
+}
+
+# The prefix that reaches the project root from a directory: one ../ per directory below it.
+root_prefix() {
+  local rel="${1#"$repo_root"/}" prefix="../"
+  while [ "$rel" != "${rel#*/}" ]; do
+    rel="${rel#*/}"; prefix="../$prefix"
+  done
+  printf '%s\n' "$prefix"
+}
+
+# The lines of a file that name a reference, as a backticked path or a link target,
+# comma-separated.
+lines_of() {
+  grep -n -F -e "\`$2\`" -e "]($2" "$1" | cut -d: -f1 | paste -s -d, -
 }
 
 has_toc() {
@@ -216,28 +245,25 @@ for dir in "${dirs[@]}"; do
   # References named by SKILL.md.
   : > "$tmp/resolved"
   unresolved=()
+  misplaced=()
   named=0
   while IFS= read -r ref; do
     [ -n "$ref" ] || continue
-    if abs="$(resolve "$dir" "$ref")"; then
+    abs="$(resolve "$dir" "$ref")"; rc=$?
+    if [ "$rc" -eq 0 ]; then
       [ "$abs" = "$skill" ] && continue
       named=$((named + 1))
       printf '%s\n' "$abs" >> "$tmp/resolved"
+    elif [ "$rc" -eq 2 ]; then
+      named=$((named + 1))
+      misplaced+=("SKILL.md:$(lines_of "$skill" "$ref") $ref (expected $(root_prefix "$dir").codefall/)")
     elif [[ "$ref" == ./* || "$ref" == ../* ]]; then
       named=$((named + 1))
       unresolved+=("$ref")
     fi
   done < <(refs "$skill")
 
-  if [ ${#unresolved[@]} -eq 0 ]; then
-    row "references" "$(printf '%5d   ok' "$named")"
-  else
-    row "references" "$(printf '%5d   %d unresolved:' "$named" "${#unresolved[@]}")"
-    for u in "${unresolved[@]}"; do printf '                %s\n' "$u"; done
-    bad=1
-  fi
-
-  # Depth and contents, over the referenced files the skill reads.
+  # References, shared paths, depth, and contents, over the referenced files the skill reads.
   nested=()
   notoc=()
   while IFS= read -r abs; do
@@ -247,13 +273,18 @@ for dir in "${dirs[@]}"; do
     base="$(dirname "$abs")"
     while IFS= read -r ref; do
       [ -n "$ref" ] || continue
-      if sub="$(resolve "$base" "$ref")"; then
+      sub="$(resolve "$base" "$ref")"; rc=$?
+      if [ "$rc" -eq 0 ]; then
         [ "$sub" = "$abs" ] && continue
         [ "$sub" = "$skill" ] && continue
         case "$sub" in */templates/*) continue ;; esac
         if ! grep -q -x -F "$sub" "$tmp/resolved"; then
           nested+=("$(show "$abs") -> $ref")
         fi
+      elif [ "$rc" -eq 2 ]; then
+        misplaced+=("$(show "$abs"):$(lines_of "$abs" "$ref") $ref (expected $(root_prefix "$base").codefall/)")
+      elif [[ "$ref" == ./* || "$ref" == ../* ]]; then
+        unresolved+=("$(show "$abs") -> $ref")
       fi
     done < <(refs "$abs")
     n=$(wc -l < "$abs" | tr -d ' ')
@@ -261,6 +292,22 @@ for dir in "${dirs[@]}"; do
       notoc+=("$(show "$abs") ($n lines)")
     fi
   done < <(sort -u "$tmp/resolved")
+
+  if [ ${#unresolved[@]} -eq 0 ]; then
+    row "references" "$(printf '%5d   ok' "$named")"
+  else
+    row "references" "$(printf '%5d   %d unresolved:' "$named" "${#unresolved[@]}")"
+    for u in "${unresolved[@]}"; do printf '                %s\n' "$u"; done
+    bad=1
+  fi
+
+  if [ ${#misplaced[@]} -eq 0 ]; then
+    row "shared" "ok"
+  else
+    row "shared" "${#misplaced[@]} named from the wrong depth:"
+    for x in "${misplaced[@]}"; do printf '                %s\n' "$x"; done
+    bad=1
+  fi
 
   if [ ${#nested[@]} -eq 0 ]; then
     row "depth" "ok"
