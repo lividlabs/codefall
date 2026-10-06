@@ -23,9 +23,10 @@ gh pr list --state open --json headRefName,baseRefName,number --limit 200
 
 - **An epic branch** — an open PR from `epic/<epic>-*` — is the target as a branch: its diff against
   the default branch holds every wave the root merged into it.
-- **A serial stack** — open PRs from `feat/<epic>-*` — has one top: the branch that is no other open
-  PR's `baseRefName`. The top is the target, as a branch; its three-dot diff against the default
-  branch holds every link's change.
+- **A serial stack** — open PRs from `feat/<epic>-*`, linked as a GitHub stack — has one top: the
+  branch that is no other open PR's `baseRefName`. The top is the target, as a branch; the range
+  from its merge-base with the default branch to its tip holds every layer's change, since each
+  PR's own view shows only its layer.
 - **Nothing open** means every PR has merged or none was opened: say which, and stop. A merged PR
   is not reviewable.
 
@@ -46,6 +47,18 @@ share nothing and are one invocation each, in the order the implement report lis
 Document identifiers are the ones the other verbs define. Resolve one by globbing its directory and
 stop if it matches nothing or more than one. Never guess at a near miss, and never invent a form
 those verbs do not define.
+
+A document is read with the document upstream of it:
+
+| Target | Upstream | Found by |
+| --- | --- | --- |
+| vision | none | — |
+| spec | its vision, when it has one | the `**Vision:**` header row |
+| design | its spec, or its vision when there is no spec | the `**Related:**` row |
+| ADR | the design that cites it, and every other accepted ADR | `grep -rl 'ADR-007' docs/designs/`, substituting the identifier, plus `docs/adrs/` |
+
+Links point one way: reaching a design from a spec or an ADR is a grep for the identifier. A
+vision has no upstream and is reviewed for internal consistency alone.
 
 ## A prose argument
 

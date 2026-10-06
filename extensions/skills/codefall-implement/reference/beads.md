@@ -92,6 +92,13 @@ does not pick it up, with the parent set in a second call because `--id` and `--
 combine. The next round's go reopens it. At single-bead scope there is no epic: the edge alone, and
 status `open`. `codefall-review` and `codefall-test` file what they find in the same two forms.
 
+The `-p 2` in both forms below is `codefall-implement`'s own priority for what a worker discovers
+in the code. When `codefall-review` or `codefall-test` files a bead in either form, `-p` is the
+finding's own priority, from the Priority table in that verb's own reference: for review, the
+findings-file reference (blocker P1, important P2, minor P3); for test, the triage reference (a real
+bug P1, a wrong expectation P2, variance and anomalies P3, a flake P4). P0 is a person's to set by
+hand; no verb assigns it.
+
 **`code`** — a tangent in the code: a bug, a missing test, a refactor. A task under the epic,
 linked to the bead that found it.
 

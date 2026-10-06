@@ -5,8 +5,10 @@ Two files per invocation, sharing one stem. Read at step 4, before the first wri
 ## Contents
 
 - Naming
+- Priority
 - The Markdown shape
 - Where they are committed
+- Kept out of codebase search
 - `revision`
 
 ## Naming
@@ -37,6 +39,21 @@ conditional rule is rejected by some harnesses' schema flags, and triage checks 
 **The files are written three times** — after the review, after triage, after the fixes. An
 interrupted session resumes from them rather than starting over.
 
+## Priority
+
+Every finding carries a Beads priority beside its severity, and a bead filed for the finding is
+created with `-p <n>` set to it. The severity word stays; the priority is what `bd ready` sorts by.
+
+| Finding | Priority |
+| --- | --- |
+| blocker | P1 |
+| important | P2 |
+| minor | P3 |
+
+P0 is a person's to set by hand on a bead they judge urgent; no verb assigns it. The JSON carries
+the priority as `priority`, one of `P0` to `P4`, and the Markdown shows it first on the finding's
+line.
+
 ## The Markdown shape
 
 ```markdown
@@ -49,7 +66,7 @@ interrupted session resumes from them rather than starting over.
 
 ## Findings
 
-### 1. <claim> — `blocker` · `correctness` · fixed
+### 1. <claim> — P1 · `blocker` · `correctness` · fixed
 `path/to/file.go:120-134`
 
 <conditions, when there are any, then the claim in full>
@@ -64,7 +81,8 @@ interrupted session resumes from them rather than starting over.
 Findings are ordered most severe first, matching the triage list. A review with none says so under
 the heading rather than dropping it. A deferred finding filed as a bead — a revision bead, or a code
 bead under the epic — carries the bead's ID after its status — `deferred ·
-booking-design-007-stagestore` — and the JSON carries it as `bead`. A finding promoted from
+booking-design-007-stagestore` — and the JSON carries it as `bead`; the bead was created with `-p`
+set to the finding's priority. A finding promoted from
 `notChecked` after a consult carries a line after its location —
 *consulted `codex:gpt-5-codex`: the retry loop re-reads the offset it just committed* — and the
 JSON carries it as `consult`; an entry a consult left in `notChecked` carries the consult's view
@@ -77,6 +95,17 @@ With the fixes, on whatever branch the fixes landed on — one commit carrying b
 **Except for uncommitted work**, where committing the findings would put them in the diff under
 review. There the files are written and left unstaged, and the report says they are uncommitted and
 where they are. The user commits them with their own work or not at all.
+
+## Kept out of codebase search
+
+`codefall init` writes the `.ignore` line and `codefall doctor` warns when it is missing. Before
+the review, when it is missing, offer:
+
+> `.ignore` doesn't list `.codefall/reviews/`, so findings from this review will show up in
+> codebase searches. Add the line?
+
+On yes, append it — never replace the file. On no, carry on and say nothing further. Say nothing at
+all when the line is already there.
 
 ## `revision`
 

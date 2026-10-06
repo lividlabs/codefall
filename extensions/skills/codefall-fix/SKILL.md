@@ -2,7 +2,6 @@
 name: codefall-fix
 description: Fix something small in one run — a bead, a bug report, an issue, or a description. Establish one bead at tier 0 with its cause and acceptance criteria, build it in a worktree with tests as part of done, and open a pull request, behind a single confirmation. Stops and names codefall-design when the work needs a design document, an ADR, or more than one bead. Never merges to main.
 argument-hint: "[a bead, a bug report, an issue, or what to fix]"
-disable-model-invocation: true
 allowed-tools:
   - Read
   - Glob
@@ -169,7 +168,7 @@ merge the pull request, then `/codefall-test <area>/<slug>` when the bead named 
 
 - **One bead at tier 0, or an exit** naming `/codefall-design`.
 - **One confirmation, and nothing written before it.**
-- **A human performs every merge to `main`; fix performs none.**
+- **A person merges every code PR to `main`; fix performs none.**
 - **A ticket must not change under someone holding it.**
 - **Scope is exactly the bead.** A tangent becomes a `discovered-from` bead, never a change in passing.
 - **Tests are part of done.** A test case the criteria name is written first, from the criteria alone.

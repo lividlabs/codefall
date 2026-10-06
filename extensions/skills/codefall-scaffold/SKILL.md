@@ -2,7 +2,6 @@
 name: codefall-scaffold
 description: Start a new project on the Clean + package-by-component stance — interview for the calls a template can't make (bounded contexts, app topology, per-surface architecture), then emit ratified ADRs, scoped AGENTS.md files, and optionally the project files and boundary-lint wiring.
 argument-hint: "[project-name] [path]"
-disable-model-invocation: true
 allowed-tools:
   - Read
   - Glob
@@ -306,8 +305,8 @@ config, it enforces all five rules.
 Docs-only output leaves the boundary-enforcement obligation unmet. Say so plainly in the report and
 name it as the first task the user owes the project.
 
-**Either code tier also equips the project**, per the `codefall-equip` skill's section *When
-another verb follows this skill* and the profile's depth notes: draft from what this run emitted,
+**Either code tier also equips the project**, per `../codefall-equip/reference/followers.md` and
+the profile's depth notes: draft from what this run emitted,
 `start` exits `0` with nothing to bring up yet, and declare both under `local` in
 `.codefall/settings.json` when it exists — otherwise report the declaration as owed once
 `codefall init` has run. Docs-only output writes no scripts and names `codefall-equip` as owed.
@@ -326,7 +325,8 @@ and every `AGENTS.md` link resolves.
 - The interview answers, as the decisions now recorded.
 - Any ADR amended, and what changed — this is what `.codefall/scaffold.json` records as `amended`,
   so the report and the file must agree.
-- Files created, landed per `../../../.codefall/shared/landing.md`.
+- Files created, landed per `../../../.codefall/shared/landing.md`: committed, pushed, and the
+  pull request opened, a person's to merge.
 - What the user still owes the project — always including boundary enforcement if it is not wired,
   and `codefall-equip` after a docs-only run.
 - **Last, what the user does next**: merge the pull request, what is owed above, then

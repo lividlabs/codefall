@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 # PreToolUse guard: deny any shell command that would merge or push to the default branch.
 #
-# A human performs every merge to main; no codefall verb ever does. A denial from this
-# hook is the system working as designed. For Claude Code and Codex a deny is exit 2 with
+# No codefall verb merges to main. A person merges a code pull request, and the
+# land-documents workflow merges a document pull request on the `auto-merge` label or an
+# approving review when the project has it installed. A denial from this hook is the system working as designed. For Claude Code and Codex a deny is exit 2 with
 # the reason on stderr, shown to the model. Antigravity needs a JSON decision on stdout,
 # which --antigravity selects. Exit 0 raises no objection; the normal permission flow
 # still applies.
@@ -14,7 +15,8 @@
 # Deliberate limits: this inspects the command string plus, for `gh pr merge`, the PR's
 # actual base branch. It prefers a rare false denial over a false allow, and it is a
 # guard, not the only line — a repository ruleset protecting the default branch remains
-# the backstop.
+# the backstop. `gh stack merge` is denied on the command string alone, without reading
+# the stack, because a stack's trunk is the default branch in every codefall use.
 set -u
 
 antigravity=
@@ -36,7 +38,7 @@ fi
 [ -z "$cmd" ] && exit 0
 
 deny() {
-  reason="codefall: $1 A human performs every merge to '$2' — report the merge order and stop."
+  reason="codefall: $1 No verb merges to '$2': a person merges a code pull request, and the land-documents workflow merges a document pull request on the 'auto-merge' label or an approving review. Report and stop."
   if [ -n "$antigravity" ]; then
     python3 -c 'import json,sys; print(json.dumps({"decision": "deny", "reason": sys.argv[1]}))' "$reason"
     exit 0
@@ -48,6 +50,11 @@ deny() {
 # The protected branch: origin's default, else main.
 protected=$(git symbolic-ref --quiet --short refs/remotes/origin/HEAD 2>/dev/null | sed 's|^origin/||')
 [ -z "$protected" ] && protected=main
+
+# --- gh stack merge: lands every layer of a stack on its trunk, which is the default branch. ---
+if printf '%s' "$cmd" | grep -qE '(^|[;&|[:space:]])gh[[:space:]]+stack[[:space:]]+merge([[:space:]]|$)'; then
+  deny "denied: 'gh stack merge' lands a stack on '$protected'." "$protected"
+fi
 
 # --- gh pr merge: the PR's base decides; an undetermined base is denied, not allowed. ---
 if printf '%s' "$cmd" | grep -qE '(^|[;&|[:space:]])gh[[:space:]]+pr[[:space:]]+merge([[:space:]]|$)'; then

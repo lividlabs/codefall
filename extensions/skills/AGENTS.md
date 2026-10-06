@@ -8,16 +8,23 @@ writing and changing a skill; the extension-wide rules, ADR immutability, prose,
 
 - Named as **verbs** (`codefall-scaffold`, `codefall-upgrade`), one directory each:
   `<verb>/SKILL.md`.
-- `codefall-envision`, `codefall-specify`, `codefall-report`, `codefall-fix`, `codefall-mock-up`,
-  `codefall-scaffold`, `codefall-upgrade`, and `codefall-equip` carry `disable-model-invocation:
-  true`; a user invokes each deliberately. `codefall-design`, `codefall-implement`, `codefall-test`,
-  `codefall-review`, and `codefall-refresh` carry no such line, so an agent may also run them. Each
-  still reports, offers, and applies only what the user takes; a human still performs every merge.
-  A delivery — one epic from design to merge — runs as rounds of implement, review, and test, and
+- `codefall-upgrade` and `codefall-equip` carry `disable-model-invocation: true`; a user invokes
+  each deliberately, because each changes the install or the settings. Every other skill carries no
+  such line, so an agent may run it. Each still reports, offers, and applies only what the user
+  takes; no skill merges to the default branch.
+- **A verb runs the verb upstream of it** when the work needs that verb's judgment, in the same run
+  and on the same branch, under the confirmation it already holds: `specify` runs `mock-up` for a
+  requirement that needs one, `design` runs `specify` on a `Draft` spec and `mock-up` on a
+  requirement still waiting, `specify` runs `envision` when a vision needs more than a text
+  amendment, `review` and `test` run `implement` on the epic to build the problems the person took.
+  It asks the person only for a product decision. It never tells the person to run a verb and come
+  back. `design` with technical decisions it set aside asks once whether to settle them with
+  defaults now or leave them for an engineer, and on "now" reaches `Ready` and beads in the same
+  run. `implement`, `design`, and `specify` run refresh when preflight reports the environment
+  stale. Running a skill needs `Skill` in `allowed-tools`.
+- A delivery — one epic from design to merge — runs as rounds of implement, review, and test, and
   every handoff is an artifact, so a verb never relies on the conversation that ran the one before
-  it; its report ends with the next command and says it is safe to `/clear`.
-  `implement`, `design`, and `specify` run refresh when preflight reports the environment stale.
-  No other skill invokes another through the harness.
+  it; its report ends with one next step and says it is safe to `/clear`.
 - **`codefall-fix` restates parts of `codefall-design` and `codefall-implement`** for one bead at
   tier 0; its `NOTES.md` has the table of which parts and where. A change to any of those parts
   checks `codefall-fix` in the same pull request, and a change to `codefall-fix` checks that it
@@ -26,10 +33,17 @@ writing and changing a skill; the extension-wide rules, ADR immutability, prose,
   Recording an observable fact is the exception: a skill that owns a status transition sets it when
   the fact occurs and reports that it did — `codefall-implement` flipping a vision to `Active` at first
   claim is this shape. Judgment transitions — promote, archive, revise — stay offer-only.
-- A skill that writes to the repository lands its files per `../shared/landing.md`: the branch and
-  the commit are part of the write the user already confirmed, the push and the pull request are
-  one offer, and the merge is never the skill's. No skill says "do not commit"; the one prohibition
-  is the default branch, and the guard hook holds it.
+- A skill that writes to the repository lands its files per `../shared/landing.md`: the branch,
+  the commit, the push, and the pull request are part of the write the user already confirmed, none
+  of them is a question, and the merge is never the skill's. A document verb — `codefall-envision`,
+  `codefall-specify`, `codefall-report`, `codefall-design`, `codefall-mock-up` on its own — opens
+  an ordinary pull request, a draft only while the document is `Draft`, and its report says to add
+  the `auto-merge` label when the person wants it merged or to have someone approve it; the GitHub
+  Action `codefall-equip`'s landing track installs merges a labelled or approved pull request, and
+  no skill adds the label, approves, or marks a pull request ready for review as a signal. `codefall-equip`, `codefall-scaffold`, and `codefall-upgrade` open a
+  pull request a person merges. Document pull requests never stack; `codefall-implement`'s code pull
+  requests do. No skill says "do not commit"; the one prohibition is the default branch, and the
+  guard hook holds it.
 - **Refuse only what you cannot do.** A missing surface profile, a missing tool, an unsupported
   tracker — those are exits. Disagreeing about size, altitude, or fit is not: say what you think and
   why, then do what the user asks. `codefall-envision`'s floor and `codefall-specify`'s cohesion check are both

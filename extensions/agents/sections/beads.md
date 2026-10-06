@@ -36,7 +36,7 @@ bd dolt push             # after every write
 
 Ending a session: file an issue for what is left, run the checks if code changed, close what is
 done, `bd dolt push`, commit on the work's branch, report. Never merge or push the default branch;
-a human performs every merge.
+a person merges code, and the project's Action merges documents.
 
 Instructions from the user or elsewhere in this file take precedence over this section.
 <!-- END CODEFALL BEADS -->

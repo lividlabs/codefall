@@ -180,14 +180,16 @@ file it cannot read. The schema is
 
 **The persona changes how the verbs talk to you, never what they may do.** `engineer` is the
 default and changes nothing. Under `product-manager`, every verb speaks in product vocabulary, the
-interviews in `envision` and `specify` get the room, and `design` parks every technical judgment you
-decline or cannot settle in a **Decisions needed** section instead of deciding it for you or reading
-your silence as a choice: the design stays `Draft`, creates no beads, and its report ends by handing
-it to an engineer's `design` run, which settles each decision and then creates the graph. The
+interviews in `envision` and `specify` get the room, and `design` sets every technical judgment you
+decline or cannot settle aside in a **Decisions needed** section instead of deciding it for you or
+reading your silence as a choice. It then asks you one question: settle them with sensible defaults
+now so building can start, or leave them for an engineer? On "now" it picks each default, tells
+you each in one plain sentence, and goes on to `Ready` and the beads in the same run; on "leave
+them" the design stays `Draft`, creates no beads, and an engineer's `design` run settles them. The
 engineering verbs, `implement`, `equip`, `refresh`, `scaffold`, and `upgrade`, say so in one
 sentence and ask before running. Every rule a skill carries holds under any persona, and workers
 never see it. What each persona changes is one file, `.codefall/shared/personas.md`;
-[ADR-011](docs/adrs/ADR-011-personas.md) records the decision.
+[ADR-011.2](docs/adrs/ADR-011.2-personas.md) records the decision.
 
 Init also writes into the project's own files. The Beads database it initializes gets
 `audit.enabled: false` written into `.beads/config.yaml`, so bd's interaction log stays off until the
@@ -208,7 +210,8 @@ appended to it merge without a conflict.
 
 Init also registers two hooks with each harness that reads them, merged into the harness's own hook
 file beside whatever the project already registered. A `PreToolUse` guard denies any command that
-would merge or push to the default branch. A `SessionStart` notice says what the project needs done
+would merge or push to the default branch, `gh stack merge` included, because a stack's trunk is
+the default branch. A `SessionStart` notice says what the project needs done
 — the checkout behind the default branch, an environment that has not been refreshed since `HEAD`
 moved, a testing root or a runner nobody has declared, a Beads precondition that is blocking — and
 prints nothing when everything is current. It reports and names the verb that fixes each thing; it
@@ -254,7 +257,7 @@ TODO: rename the skill names to the actual
 | [`implement`](extensions/skills/codefall-implement/SKILL.md) | Execute the graph: claim ready beads, build each in an isolated worker worktree with tests as part of done, write the test case a bead's criteria name before the code, verify against acceptance criteria, open PRs, and walk the waves until the frontier is empty. Never merges to `main`, and never sets a test harness up. | in progress |
 | [`review`](extensions/skills/codefall-review/SKILL.md) | Review something and fix what the user accepts: uncommitted work, a branch, an open pull request, a commit range, a path, a document, or a description of what to look at. A subagent or another harness reviews, the session triages with you and applies what you take, and every finding is committed under `.codefall/reviews/`. | in progress |
 | [`test`](extensions/skills/codefall-test/SKILL.md) | Run what the project declares: every suite, the subset your changed files reach, a named subset, or one test case in its `spec` or `agentic` modality. A spec case runs through the project's own runner; an agentic case is driven step by step through a browser or the shell and judged against the case's criteria. Every run is reported under `.codefall/tests/`. | in progress |
-| [`equip`](extensions/skills/codefall-equip/SKILL.md) | Equip a project with what the other verbs need it to have: the local-environment scripts `refresh` runs — `start`, which brings its services up, and `update`, which makes the local environment match the checkout — the test harness `test` runs cases through, a spec runner per surface pointed at the testing root, and the agents `review` and every consult reach for, set up from any harness. Finds what the project already has or drafts it from what the repository or the session shows, then declares it in `.codefall/settings.json`. | in progress |
+| [`equip`](extensions/skills/codefall-equip/SKILL.md) | Equip a project with what the other verbs need it to have: the local-environment scripts `refresh` runs — `start`, which brings its services up, and `update`, which makes the local environment match the checkout — the test harness `test` runs cases through, a spec runner per surface pointed at the testing root, and the agents `review` and every consult reach for, set up from any harness. Finds what the project already has or drafts it from what the repository or the session shows, then declares it in `.codefall/settings.json`. The fourth track is the document landing: the GitHub Action that merges a document pull request once a person adds the `auto-merge` label to it or approves it, and the label itself. | in progress |
 | [`refresh`](extensions/skills/codefall-refresh/SKILL.md) | Bring the checkout, the beads, and the local environment current: fetch, fast-forward `main` when that is safe, sync the Beads database with its Dolt remote, run the declared `start` and `update`, record the commit the environment now matches, and turn a failure into a sentence that says what to do. The routine before starting new work. | in progress |
 
 ### Visions
@@ -329,23 +332,31 @@ Numbering is append-only at every level. A retired number is never reused, so a 
 spec and a child issue per requirement, carrying that requirement's story and criteria in full so
 nobody has to click through to work the ticket. Re-running `specify` regenerates those bodies. The
 spec's own `Status` is `Draft`, `Ready`, or `Archived` and describes the document only — whether the
-work is queued, underway, or done is the tracker's to say. The spec lands on its own branch, committed
-once the mirror has written the issue number back, and the pull request that carries it to `main` is
-offered, never merged: that holds for every verb that writes a document, and only the merge is yours.
+work is queued, underway, or done is the tracker's to say. The spec lands on its own branch,
+committed once the mirror has written the issue number back, pushed, and opened as a pull request
+without asking you. The report gives you its address and says: add the `auto-merge` label when you
+want it merged, or have someone approve it; either one merges it. A GitHub Action the project
+installs with `/codefall-equip landing` merges a labelled or approved pull request that touches only
+document paths, so the label or the approval is the one thing anyone does to land a document, and no
+verb ever adds the label or approves; a project without the Action gets the same pull request and a
+person merges it. That holds for every verb that writes a document, and
+[`docs/landing-documents.md`](docs/landing-documents.md) explains it. Document pull
+requests do not stack on each other; each branches from `main` and lands on its own.
 
 A feature too large for one cohesive spec becomes sibling specs rather than a parent and children.
 The vision above them is what groups them, which is why a vision's `Related` line holds a list.
 
-`codefall-envision`, `codefall-specify`, `codefall-report`, `codefall-fix`, `codefall-mock-up`,
-`codefall-scaffold`, `codefall-upgrade`, and `codefall-equip` are **explicitly invoked** —
-`/scaffold`, `/specify`, and so on. Each carries `disable-model-invocation: true`, so none of them
-fire on their own; scaffolding a project or filing an issue is a deliberate act, not something
-inferred from a passing remark. `codefall-design`, `codefall-implement`, `codefall-test`,
-`codefall-review`, and `codefall-refresh` carry no such line, so an agent may run them too. Each
-still reports, offers, and applies only what the user takes, and a human still performs every
-merge. The work on one epic from design to merge is a **delivery**, taken in **rounds** of
-`implement`, `review`, and `test`; every handoff is a bead, a document, a report, or a pull
-request, so a `/clear` between verbs loses nothing and each report ends with the next command.
+`codefall-upgrade` and `codefall-equip` are **explicitly invoked** and carry
+`disable-model-invocation: true`, because each changes the install or the project's settings. Every
+other verb an agent may run too, and a verb runs the verb upstream of it when the work needs it: a
+spec that needs a mockup gets one from `mock-up` inside the `specify` run, a design that finds its
+spec still `Draft` runs `specify` to settle it, `review` and `test` run `implement` on the epic to
+build the problems you took, and nobody is told to go run a command and come back. Each verb still
+reports, offers, and applies only what the user takes; no verb merges to `main`, a person merges
+every code pull request, and the project's Action merges document pull requests. The work on one
+epic from design to merge is a **delivery**, taken in
+**rounds** of `implement`, `review`, and `test`; every handoff is a bead, a document, a report, or
+a pull request, so a `/clear` between verbs loses nothing and each report ends with one next step.
 
 A question of fact you cannot answer in the interview, how the existing system behaves in a case the
 audit did not settle, is put to the project's consult agents once and comes back as a proposal you
@@ -392,8 +403,10 @@ and outlives all of them, so a mockup filed under whichever spec arrived first m
 either duplicate it or reach into another spec's directory. Specs reference mockups by path under
 their **Design notes**.
 
-When `specify` records a requirement whose surface has no picture yet, its tracker issue is labelled
-`requires-mockup` and `design` refuses to act on it. Landing the mockup clears the label.
+When `specify` records a requirement whose surface has no picture yet, it runs `mock-up` for that
+surface in the same run and on the same branch, so the spec and its mockups arrive together. Only a
+requirement whose mockup you chose to skip is labelled `requires-mockup`, and `design` then runs
+`mock-up` for it before it starts rather than refusing. Landing the mockup clears the label.
 
 ### Bug reports
 
@@ -522,13 +535,14 @@ overnight run possible, and the consult is what keeps a run from stopping on som
 reading would have settled.
 
 **Work lands one of two ways.** The default is a serial stack: every bead in topological order,
-one branch atop the previous, one pull request each, workers one at a time. The other is an epic
-branch, for work that must not land on `main` in increments or when you want parallel waves:
-workers branch off it in waves, the root merges them at each wave boundary, and one aggregate pull
-request reaches `main`. There is no depth cap — a deep stack costs only a muddy three-dot diff
-until it drains bottom-up. When the frontier is empty the run merges the stack top onto current
-`main` in a scratch worktree and verifies there; nothing is rebased or force-pushed, and a conflict
-is settled by merging `main` forward as an ordinary merge commit.
+one branch atop the previous, one pull request each, workers one at a time, linked into a GitHub
+stack as they open. The other is an epic branch, for work that must not land on `main` in increments
+or when you want parallel waves: workers branch off it in waves, the root merges them at each wave
+boundary, and one aggregate pull request reaches `main`. There is no depth cap: each layer of a
+stack shows only its own diff, merging the top lands every layer, and GitHub rebases what is above a
+layer you merge alone. Nothing is rebased or force-pushed by hand; a fix to a lower layer is
+cascaded with `gh stack`. Documents do not stack: each document pull request branches from `main`
+and the project's Action merges it on its own.
 
 **A task bead closes at done — acceptance criteria verified, checks green, PR open — not at
 merge.** That is Beads' own semantics, and it is what lets a stacked dependent start the moment its
@@ -537,8 +551,9 @@ the epic, so the epic cannot close until you have merged everything, and the nex
 `bd gate check` turns your merges into bead state.
 
 **The delivery is done when the graph says so.** `review` and `test` run against the epic's work
-before you merge, and what they find — a deferred finding, a bug a run found — becomes a child of
-the epic on your word, so the epic stays open and the next round of `implement` picks it up. Every
+before you merge, and each ends with one question — "I found N problems. Fix them all?" — and what
+you take becomes a child of the epic, which that same session then builds by running `implement`
+on the epic; you typed one command. Every
 verb prints the delivery's one-line chart as it starts and as it ends, and appends one line to the
 epic's notes as it finishes, so `bd show <epic>` reads as the delivery's history:
 
@@ -555,8 +570,8 @@ round 1 (test) [2026-09-30]: FAIL 2/7, 1 child filed
 Nothing open but the landed bead, and the last test run passed: that is done, and the merge order
 is what remains. [ADR-013.2](docs/adrs/ADR-013.2-deliveries.md) holds the rule.
 
-**A human performs every merge to `main`.** The run ends at open PRs and a reported bottom-up merge
-order, and the plugin ships a hook that mechanically denies the alternative. Tests are part of done
+**A person merges every code pull request.** The run ends at open PRs and a reported merge order,
+and the plugin ships a hook that mechanically denies the alternative. Tests are part of done
 — the ones the design planned and the ones the work turned out to need — while the round's
 end-to-end run, regression, and fresh-context retesting are the `test` verb's.
 
@@ -680,7 +695,12 @@ On an existing project `equip` searches first, consults the project's agents onc
 left ambiguous, and asks one question with what it found; on a new
 one `scaffold` writes them at code depth. Both are idempotent and never destructive: "bring the
 project up to date?" has to be a question anyone can always answer yes to. The scripts are one of
-`equip`'s two tracks — the test harness above is the other — and one run equips one of them.
+`equip`'s four tracks — the test harness above, the agents, and the document landing are the
+others — and one run equips one of them. The landing track writes the one workflow file,
+`.github/workflows/codefall-land-documents.yml`, that merges a document pull request once you add
+the `auto-merge` label to it or a colleague approves it, creates that label in the repository, and tells you what your branch rule
+has to allow; it changes no branch rule itself
+([`docs/landing-documents.md`](docs/landing-documents.md)).
 
 **`refresh` runs them, and is the thing to run instead of pulling by hand.** It fetches,
 fast-forwards `main` when the tree is clean and the move is safe, syncs the Beads database with its

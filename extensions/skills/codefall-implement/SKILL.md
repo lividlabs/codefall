@@ -39,6 +39,7 @@ Read each when its step says to; none is loaded up front.
   landed bead and its gates, discovered work as children of the epic, session end. Read at step 5.
 - `../../../.codefall/shared/delivery.sh <epic>` — the chart line. Run at the go gate, each wave
   boundary, and the report.
+- `../../../.codefall/shared/stacks.md` — how GitHub stacks work. Read at step 4 and step 7.
 - `reference/workers.md` — launching a worker, the worktree seeding rule, chain sequencing, the
   result JSON, failure handling, and consulting. Read at step 6. Names
   `../../../.codefall/shared/running-agents.md`, `../../../.codefall/shared/run-agent.sh`,
@@ -172,8 +173,8 @@ run against the epic passed.
 denial from that hook is the system working as designed. What the root does merge: worker PRs into
 the **epic branch**, one at a time, at wave boundaries.
 
-At close-out the run reports the **merge order** — bottom-up per stack; GitHub retargets each PR as
-its base merges — and stops. `bd gate check` turns the merges into bead state next session.
+At close-out the run reports the **merge order** — merge the top PR to land the stack, or from the
+bottom up — and stops. `bd gate check` turns the merges into bead state next session.
 
 The spec's tracker issue walks the work's state per `reference/mirror.md`. Every PR body carries
 `Relates to #<spec-issue>`.
@@ -190,8 +191,8 @@ line is touched, ever.
 
 ## Picking up an interrupted run
 
-A resumed session reconciles beads, git, and GitHub rather than re-running anything. The table,
-and how a crashed round is told from the next one, are in `reference/resume.md`.
+A resumed session reconciles beads, git, and GitHub. The table, and how a crashed round is told
+from the next one, are in `reference/resume.md`.
 
 ## Project customizations and persona
 
@@ -293,12 +294,11 @@ Single-bead scope is one iteration of the same loop, in one worktree.
 
 ### 7. Integrate
 
-When the frontier is empty: merge the stack top, or the epic branch, onto current `main` in a
-scratch worktree and run verification there, per *Integration* in `reference/landing.md`. Push
-nothing; a conflict is reported and the merge-forward offered, never a rebase. Epic branch, first
-round: open the aggregate PR to `main`, titled as a release-worthy conventional commit, and gate
-the landed bead with it — `Closes` nothing; the gate owns the epic's close. A later round reuses
-the aggregate PR that exists.
+When the frontier is empty: ask GitHub whether every open layer is mergeable, per *Integration* in
+`reference/landing.md`, and report it. A layer that is not is fixed on its own branch and cascaded
+with `gh stack`; nothing is rebased by hand. Epic branch, first round: open the aggregate PR to
+`main`, titled as a release-worthy conventional commit, and gate the landed bead with it — `Closes`
+nothing; the gate owns the epic's close. A later round reuses the aggregate PR that exists.
 
 ### 8. Report and stop
 
@@ -336,7 +336,7 @@ Do not merge, and do not wait for merges; the next session's `bd gate check` fin
 
 ## Rules
 
-- **A human performs every merge to `main`; this skill performs none, in any mode.**
+- **A person merges every code PR to `main`; this skill performs none, in any mode.**
 - **Every `bd` write is the root's, in the primary checkout.** Workers never run `bd`.
 - **Closed means done — criteria verified, checks green, PR open.** Merged is the gates' to say.
 - **Publish the claim before the work.** `bd dolt push` follows every claim and every close.
@@ -345,7 +345,7 @@ Do not merge, and do not wait for merges; the next session's `bd gate check` fin
   `discovered-from` edge, filed by the root and taken at the next round's go, never fixed in
   passing; a design or spec found wrong is amended in the PR or becomes a `design-revision` bead,
   never a quiet workaround.
-- **Nothing is rebased or force-pushed.** Integration merges; a later round builds on top.
+- **Nothing is rebased or force-pushed by hand.** `gh stack` cascades; GitHub rebases on merge.
 - **The epic's `round` is the one metadata key implement writes.**
 - **Bead IDs ride every commit message.**
 - **Verify workers, never trust them.**

@@ -4,7 +4,7 @@ Shared procedure. Every verb follows it. A persona describes the person at the k
 project: it is read from `.codefall/user.json`, a file that is never checked in, so two people
 running the same verb on the same project can be answered differently. The rule about what a persona
 may and may not change is stated once, here.
-[ADR-011](https://github.com/lividlabs/codefall/blob/main/docs/adrs/ADR-011-personas.md) holds
+[ADR-011.2](https://github.com/lividlabs/codefall/blob/main/docs/adrs/ADR-011.2-personas.md) holds
 the reasoning.
 
 ## Contents
@@ -26,7 +26,7 @@ below before step 1, say which persona this run follows, and follow it.
 
 A persona changes the register a verb speaks in, what it leads with, and where it sends a decision
 the person cannot make. It extends the skill and never relaxes it: the skill's **Rules** hold
-regardless, nothing is written without confirmation, and a human still performs every merge. A
+regardless, nothing is written without confirmation, and no verb merges to the default branch. A
 persona that would suspend a rule is asking for a different skill; say so and stop.
 
 Workers and subagents never see the persona. It describes the person in the session, not the task,
@@ -36,8 +36,10 @@ so a prompt rendered for another agent carries nothing about it.
 
 **Every verb.** Reports and questions are in product vocabulary: what a user gets, what changes for
 them, what is still open. No file paths, component names, or command output in prose unless the
-person asks. The one exception is the last line of every report, which still names the exact next
-command, because that line is how the person continues.
+person asks. The last line of every report says in one plain sentence what happens next and names
+**exactly one command** when there is a step for the person to start — the button they press. Never
+a list of commands: anything else the verb could do, it did in this run or asks about in a
+sentence.
 
 **`envision`, `specify`.** The interview is the main event and gets the room. The code audit still
 runs, and what it finds is stated as a product fact ("the profile screen has three tabs today")
@@ -51,13 +53,23 @@ person would see on the screen, not by the driver or the commands it ran.
 
 **`design`.** The person confirms what they can judge: the tier, the task cut against the spec,
 and the case criteria, all in product terms. Every technical judgment the person declines or cannot
-settle is parked in the document's **Decisions needed** section, per `codefall-design`'s
-`reference/document.md`: the run never decides it, and never takes the person's silence or a shrug
-as consent. Research before parking, since the person cannot fill the gap; park only what stays a
-judgment call afterwards. No ADR is written under this persona: a choice that would trigger one is
-parked with a note that it will need an ADR. A design with parked decisions is `Draft` and creates
-no beads. The report names how many decisions were parked and ends by handing the document to an
-engineer's run.
+settle is set aside in the document's **Decisions needed** section, per `codefall-design`'s
+`reference/document.md`: the run never decides it on its own, and never takes the person's silence
+or a shrug as consent. Research before setting a decision aside, since the person cannot fill the
+gap; set aside only what stays a judgment call afterwards. Then, once, at the end of the draft, ask
+one question:
+
+> I set aside N technical decisions. Settle them with sensible defaults now so building can start,
+> or leave them for an engineer?
+
+On **settle now**, the run picks the default for each one — the simplest choice that fits the
+project's stance and what it already uses — says each choice in one plain sentence, moves it into
+the section of the document it belongs to, and carries on to `Ready` and the beads in the same
+run. A decision that needs an ADR gets one, written from the default; the report says so in a
+sentence, so an engineer knows where to look. On **leave them**, the design stays `Draft`, creates
+no beads, its pull request is a draft, and the report says an engineer's run of
+`/codefall-design DESIGN-NNN` settles them. The report names how many decisions were set aside and
+which answer the person gave.
 
 **`implement`, `fix`, `equip`, `refresh`, `scaffold`, `upgrade`.** Say up front, in one sentence, that the
 verb is engineering work, and ask whether to continue. On yes, run unchanged: the work is the same

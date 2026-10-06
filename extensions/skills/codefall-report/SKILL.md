@@ -2,7 +2,6 @@
 name: codefall-report
 description: Turn a bug someone ran into into a report another session can fix — interview the person who saw it for the steps, the expected and actual result, screenshots, and the environment, push back on vague answers, try to reproduce it on the spot, then write a bug report with acceptance criteria into the repository, mirrored to the issue tracker.
 argument-hint: "[what went wrong, or a test run's report]"
-disable-model-invocation: true
 allowed-tools:
   - Read
   - Glob
@@ -39,7 +38,7 @@ Read each when its step says to; none is loaded up front.
 - `templates/bugs/AGENTS.md` — the operative rules this skill installs at `docs/bugs/AGENTS.md`.
 - `trackers/github/PROFILE.md` — the issue shape, the label, creating, refreshing, and archiving.
   Read at step 3 for the duplicate search and at step 9.
-- `../../../.codefall/shared/landing.md` — the branch, the commit, and the offered pull request.
+- `../../../.codefall/shared/landing.md` — the branch, the commit, the push, and the pull request.
   Read at step 8.
 
 ## Scope — what is wrong, not why
@@ -224,11 +223,15 @@ mirror fails**: give the user the exact command that fixes the tracker and say t
 ### 10. Commit and wrap up
 
 Land it per `../../../.codefall/shared/landing.md`: commit by path — the report, its attachments,
-the `AGENTS.md` — and offer the push and pull request, its body carrying `Relates to #<issue>`.
+the `AGENTS.md` — push, and open the pull request with `Relates to #<issue>` in its body, a draft
+only when the status is `Draft`. Never add the `auto-merge` label: a person adds it when they want
+the report merged.
 
 Report the path, identifier, status, severity, the reproduction outcome, every open question, the
-issue with its link, the branch, and the pull request if one was opened. **End with what the user
-does next**: merge the pull request, then `/codefall-design BUG-NNN`.
+issue with its link, the branch, and the pull request, worded as the landing procedure says: it is
+open at its URL; add the `auto-merge` label when you want it merged, or have someone approve it;
+either one merges it.
+**End with one command**: `/codefall-design BUG-NNN`.
 
 ## Other modes
 

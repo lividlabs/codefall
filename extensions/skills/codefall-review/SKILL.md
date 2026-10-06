@@ -11,6 +11,7 @@ allowed-tools:
   - Edit
   - Bash
   - Agent
+  - Skill
 ---
 
 # Review
@@ -123,25 +124,16 @@ conventions alone, and record which hop was missing in `notChecked`.
 
 **A path or prose target**: every file in the resolved set, in full, plus item 4 above.
 
-**A document target**: the document and the document upstream of it. The question is whether the
-target faithfully refines what came before it, and what it added that nobody asked for.
-
-| Target | Upstream | Found by |
-| --- | --- | --- |
-| vision | none | — |
-| spec | its vision, when it has one | the `**Vision:**` header row |
-| design | its spec, or its vision when there is no spec | the `**Related:**` row |
-| ADR | the design that cites it, and every other accepted ADR | `grep -rl 'ADR-007' docs/designs/`, substituting the identifier, plus `docs/adrs/` |
-
-Links point one way: reaching a design from a spec or an ADR is a grep for the identifier. A
-vision has no upstream and is reviewed for internal consistency alone.
+**A document target**: the document and the document upstream of it, found as the *Document
+identifiers* section of `reference/targets.md` says. The question is whether the target faithfully
+refines what came before it, and what it added that nobody asked for.
 
 ## The lenses
 
 Eleven code lenses — `correctness`, `failures`, `behaviour`, `tests`, `types`, `conventions`,
 `comments`, `docs`, `simplify`, `local`, `security` — and, for documents, `structure` and `status` plus the
-lenses for the document's kind. What each asks is in `reference/lenses.md`. Each verb owns the rules
-its documents are held to; read them there when a lens needs the detail, never restate them.
+lenses for the document's kind, all in `reference/lenses.md`. Each verb owns the rules its documents
+are held to; read them there, never restate them.
 
 ## Calibration
 
@@ -158,9 +150,10 @@ its documents are held to; read them there when a lens needs the detail, never r
 - **Do not overstate severity or inflate the count.**
 - **No flattery.** No summary of what the work does well.
 
-Severity: a **blocker** is wrong and will be observed; **important** is wrong under conditions that
-will occur; **minor** is worth fixing and costs nothing to leave. A `REVIEW.md` at the project root,
-if present, states what the project cares about and wins.
+Severity, with the Beads priority a finding's bead takes: a **blocker** (P1) is wrong and will be
+observed; **important** (P2) is wrong under conditions that will occur; **minor** (P3) is worth
+fixing and costs nothing to leave. `reference/findings-file.md` has the table; P0 is a person's to
+set. A `REVIEW.md` at the project root, if present, states what the project cares about and wins.
 
 ## Who reviews
 
@@ -182,22 +175,23 @@ report and the findings file.
 | A branch | That branch |
 | An open pull request | That PR's branch |
 | A commit range | The branch whose tip is `<to>`; if no branch has it, stop and ask |
-| An epic's work | The stack's top branch, or the epic branch |
+| An epic's work | A document fix: the stack's top branch, or the epic branch. A code fix: a child of the epic, built by `codefall-implement` in this session |
 | A document or path, when something is already checked out for it | There |
 | A document or path on the default branch | A new worktree, branched from the default branch |
 
 **Getting there.** A branch, PR, or range target that is not already checked out is fetched and
-checked out before any fix is applied — `git fetch origin` then `git checkout <branch>`, taking the
-branch name from `headRefName` for a pull request and the branch whose tip is `<to>` for a range. A new worktree is `git worktree add` off the default branch.
+checked out before any fix is applied — `git fetch origin` then `git checkout <branch>`. A new
+worktree is `git worktree add` off the default branch.
 
-**A dirty working tree stops the move.** When the tree is dirty and the fixes belong somewhere else,
-report the findings, say the fixes were not applied and why, and leave the tree exactly as it is.
-Uncommitted work is never moved.
+**A dirty working tree stops the move.** When the fixes belong somewhere else, report the findings,
+say the fixes were not applied and why, and leave the tree as it is.
 
 ## Triage and fixes
 
-Present the findings as one numbered list, most severe first, each with its location, its claim, and
-the conditions under which it matters. Then ask which to fix.
+Present the findings as one numbered list, most severe first, each with its priority and severity,
+its location, its claim, and the conditions under which it matters. Then ask which to fix. **On an
+epic's work the question is one line** — "I found N problems. Fix them all? (I recommend yes.)" — and the person may take all,
+some, or none.
 
 | Status | Meaning |
 | --- | --- |
@@ -205,13 +199,16 @@ the conditions under which it matters. Then ask which to fix.
 | `dismissed` | The user rejected it, with a reason |
 | `deferred` | Real, but not now |
 
-A dismissed finding is written with its `reason`. The schema does not require it, because a
-conditional rule there is rejected by Bedrock's structured output and by Muse's schema flag, so
-this step is where the rule lives: a dismissal with no reason is asked for one before the write.
+A dismissed finding is written with its `reason`; a dismissal with no reason is asked for one
+before the write.
 
-Apply the accepted fixes with this session's tools, code and documents alike. A finding's proposed
-`patch` is a starting point, not a script — apply the intent, matching the surrounding code. Fixes
-are not re-reviewed here. **A code fix that changes behaviour the design or spec describes amends
+Apply the accepted fixes, code and documents alike. A finding's proposed `patch` is a starting
+point, not a script — apply the intent, matching the surrounding code. Fixes are not re-reviewed
+here. **On an epic's work, a taken code finding is not fixed here**: it is
+filed as a `deferred` child of the epic in the `code` form below, or the `design` form where the
+design caused it, its status is `deferred` with the bead's ID, and step 8 runs `codefall-implement`
+on the epic to build every one of them in this session. Document fixes on an epic's work still land
+here as text, under the rule below. **A code fix that changes behaviour the design or spec describes amends
 that document in the same commit**, under the rule below: the document is part of the fix, not a
 second finding.
 
@@ -233,8 +230,8 @@ the design's path, the label `design-revision` — for a finding the design caus
 cannot settle because it moves work, the document is frozen, or the user deferred it; the `code`
 form for a `deferred` finding whose cause is the code. Either carries a `discovered-from` edge to
 the bead the branch names when there is one, and is a `deferred` child of that bead's epic, read
-from `bd show <bead> --json`, when there is one. On yes, create it, `bd dolt push`, and record its
-ID as the finding's `bead`. Never file one unasked.
+from `bd show <bead> --json`, when there is one. On yes, create it with `-p` set to the finding's
+priority, `bd dolt push`, and record its ID as the finding's `bead`. Never file one unasked.
 
 ## The findings file
 
@@ -246,16 +243,9 @@ Naming, the Markdown shape, and `revision` are in `reference/findings-file.md`.
 ### Kept out of codebase search
 
 A `.ignore` file beside `.codefall/` holds one line, `.codefall/reviews/`, so ripgrep-backed
-harnesses skip old findings. `codefall init` writes it and `codefall doctor` warns when it is
-missing.
-
-**Check it before the review, and offer:**
-
-> `.ignore` doesn't list `.codefall/reviews/`, so findings from this review will show up in
-> codebase searches. Add the line?
-
-On yes, append it — never replace the file. On no, carry on and say nothing further. Say nothing at
-all when the line is already there.
+harnesses skip old findings. When the line is missing, offer to append it before the review, in
+the words `reference/findings-file.md` gives; never replace the file, and say nothing when the line
+is there.
 
 ## Project customizations and persona
 
@@ -295,12 +285,16 @@ run, and say so.
    `../codefall-implement/reference/beads.md`. Anything decided here that no bead, file, or PR
    holds — a dismissal's reason is already in the file — goes in a `bd comment` on the epic or the
    bead, and the report says it is safe to `/clear`. **End with what the user does next**: on an
-   epic's work,
-   `/codefall-implement <epic>` when children were filed, else `/codefall-test <epic>`; on another
-   pull request or branch, push the fixes and merge; on uncommitted work, the findings files are
-   left unstaged to commit with the work or not at all; otherwise nothing is pending. Where revision
-   beads were filed, `/codefall-design DESIGN-NNN` comes first, so the document is corrected while
-   the work that found it wrong is still in view.
+   epic's work, that this run is now running `codefall-implement <epic>` to fix the problems the
+   person took, or `/codefall-test <epic>` when none were taken; on another pull request or branch,
+   push the fixes and merge; on uncommitted work, the findings files are left unstaged to commit
+   with the work or not at all; otherwise nothing is pending. Where revision beads were filed,
+   `/codefall-design DESIGN-NNN` comes first, so the document is corrected while the work that found
+   it wrong is still in view.
+8. **Fix the epic's problems.** On an epic's work, when the person took at least one code finding,
+   run the `codefall-implement` skill with the epic as its argument, through the `Skill` tool, in
+   this session. Its go gate reopens the children this run filed, its workers build them, and its
+   report ends the session with its own one command.
 
 **Three runs end early, and each ends cleanly.**
 
@@ -330,13 +324,15 @@ run, and say so.
 - **The target decides where fixes land**, never where the session started.
 - **Uncommitted work is never moved to a worktree**, and a dirty tree stops a move rather than
   carrying changes onto another branch.
-- **Every finding ends with a status**, and the files are written even when nothing was found and
-  even when nothing was fixed.
-- **Refuse what is not reviewable** — a merged or closed pull request, a merged branch, a superseded
-  ADR, an archived document, a specific commit — and say which.
+- **Every finding ends with a status**, and the files are written even when nothing was found or
+  fixed.
+- **Refuse what is not reviewable**, and say which of the five it is.
 - **An identifier that resolves to nothing is a stop**, not a guess.
 - **Only `fixed` and `deferred` findings reach a pull request.** A dismissed one was judged wrong.
 - **A bead is offered, never filed unasked**: a `design-revision` bead for a finding the design
   caused that a fix here cannot settle, a `code` bead for a deferred finding the code caused, each a
   `deferred` child of the epic when there is one.
+- **On an epic's work, the problems the person takes are built by `codefall-implement`**, run by
+  this session after the report, never fixed by hand on the stack. The person's one typed command
+  was the review.
 - **The `.ignore` entry is offered, never added unasked**, and appended rather than written over.

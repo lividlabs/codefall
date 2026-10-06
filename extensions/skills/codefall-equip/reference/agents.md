@@ -233,6 +233,7 @@ also say. Then run `codefall doctor` and report its **Agents** section in one li
 
 The configuration again, in the shape above, as it now stands. Then the probe's line and doctor's
 line. Then the landing, per `../../../../.codefall/shared/landing.md`: settings committed by path
-on the branch, and the push and pull request offered in one question. The merge is the user's.
+on the branch, pushed, and the pull request opened and named by its URL, none of it a question. A
+person merges it, because it changes settings.
 **End with what the user does next**: merge the pull request, and run `/codefall-equip agents`
 again for any harness that still says `not set up`.

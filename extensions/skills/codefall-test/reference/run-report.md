@@ -65,10 +65,15 @@ search.
 
 ## Triage
 
-<class per finding, the issue and the bead filed when the user asked, and where the notes were written>
+- <subject> — P1 · real bug · issue #<n> · bead <id>
+- <subject> — P3 · agent variance, 2 of 6 runs
+
+<where the notes were written>
 ```
 
-One section per variant. A run of one variant has one.
+One section per variant. A run of one variant has one. Each Triage line opens with the finding's
+Beads priority from the table in `triage.md`, then its class, then the issue and the bead filed
+when the user asked for them.
 
 ## An agentic run
 

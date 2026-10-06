@@ -18,18 +18,22 @@ This directory is the extension. Everything above it is packaging.
 | [`codefall-implement`](skills/codefall-implement/SKILL.md) | Execute the graph: claim ready beads, build each in an isolated worker worktree with tests as part of done, write the test case a bead's criteria name before the code, verify against acceptance criteria, open PRs, and walk the waves until the frontier is empty. Never merges to `main`, and never sets a test harness up. |
 | [`codefall-review`](skills/codefall-review/SKILL.md) | Review something and fix what the user accepts: uncommitted work, a branch, an open PR, a path, a document, or a description of what to look at. A subagent or another harness reviews, the session triages with the user and applies what they take, and every finding is committed under `.codefall/reviews/`. |
 | [`codefall-test`](skills/codefall-test/SKILL.md) | Run what the project declares: every suite, the subset the changed files reach, a named subset, or one test case in its `spec` or `agentic` modality. A spec case runs through the project's own runner; an agentic case is driven step by step and judged against the case's criteria. Every run is reported under `.codefall/tests/`, and findings are triaged rather than turned into edits that make a run pass. |
-| [`codefall-equip`](skills/codefall-equip/SKILL.md) | Equip a project with the three things the other verbs need it to have: the local-environment scripts `codefall-refresh` runs — `start` and `update`, declared under `local`; the test harness `codefall-test` runs cases through — a spec runner per surface, its configuration pointed at the testing root, declared in `test.runners` and with its commands recorded in the testing root's `AGENTS.md`; and the agents `codefall-review` and every consult reach for — how a harness is called, under `harnessConfig`, and the `agents` lists, set up from any harness. Finds what the project already has or drafts it from what the repository or the session shows. One track per run; scaffold and implement follow the local one as the procedure. |
+| [`codefall-equip`](skills/codefall-equip/SKILL.md) | Equip a project with the four things the other verbs need it to have: the local-environment scripts `codefall-refresh` runs — `start` and `update`, declared under `local`; the test harness `codefall-test` runs cases through — a spec runner per surface, its configuration pointed at the testing root, declared in `test.runners` and with its commands recorded in the testing root's `AGENTS.md`; the agents `codefall-review` and every consult reach for — how a harness is called, under `harnessConfig`, and the `agents` lists, set up from any harness; and the document landing — the GitHub Action that merges a document pull request once a person adds the `auto-merge` label to it or approves it, and the label itself. Finds what the project already has or drafts it from what the repository or the session shows. One track per run; scaffold and implement follow the local one as the procedure. |
 | [`codefall-refresh`](skills/codefall-refresh/SKILL.md) | Take the user from wherever they are to the default branch, current: leave a feature branch or an implement worktree for the primary checkout, switch to the default branch and fast-forward it, clean up the branch and worktree whose work has merged, sync the Beads database with its Dolt remote, run the declared `start` and `update`, record the commit the environment now matches, and turn a failure into a sentence that says what to do. Safe to run at any time. |
 
-`codefall-envision`, `codefall-specify`, `codefall-report`, `codefall-fix`, `codefall-mock-up`,
-`codefall-scaffold`, `codefall-upgrade`, and `codefall-equip` are explicitly invoked and carry
-`disable-model-invocation: true`, so none of them fire on their own. `codefall-design`,
-`codefall-implement`, `codefall-test`, `codefall-review`, and `codefall-refresh` carry no such line,
-so an agent may run these too; a delivery runs as rounds of implement, review, and test, each
-handoff a bead, a document, a report, or a pull request, with a `/clear` between verbs. The
-extension also ships hooks per harness, defined under
-[`hooks/`](hooks/): a `PreToolUse` guard that denies merges and pushes to the default branch
-everywhere, plus, for the harnesses that have the event (Claude Code, Codex, and OpenCode), a
+`codefall-upgrade` and `codefall-equip` are explicitly invoked and carry
+`disable-model-invocation: true`, since each changes the install or the settings. Every other verb
+an agent may run too, and a verb runs the verb upstream of it when the work needs it, so a person is
+never told to run a command and come back: `specify` runs `mock-up`, `design` runs `specify` and
+`mock-up`, and `review` and `test` run `implement` on the epic for the problems the person took. A
+delivery runs as rounds of implement, review, and test, each handoff a bead, a document, a report,
+or a pull request, with a `/clear` between verbs. A document verb pushes and opens its pull request
+without asking and tells the person to add the `auto-merge` label when they want it merged or to
+have someone approve it; the GitHub Action `codefall-equip landing` installs merges a labelled or
+approved pull request, and no verb adds the label or approves. A person merges every code pull request. The extension also ships hooks per harness, defined
+under [`hooks/`](hooks/): a `PreToolUse` guard that denies merges and pushes to the default branch
+everywhere, `gh stack merge` among them, plus, for the harnesses that have the event (Claude Code,
+Codex, and OpenCode), a
 `SessionStart` prime on what Beads knows and a notice naming what the project needs done — the
 checkout behind the default branch, an environment that has not been refreshed since `HEAD` moved, a
 testing root or a runner nobody has declared, a Beads precondition that is blocking. The notice

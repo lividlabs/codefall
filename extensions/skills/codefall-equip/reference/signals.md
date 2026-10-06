@@ -9,6 +9,7 @@ at step 3 while drafting.
 - [Entry points a project may already have](#entry-points-a-project-may-already-have)
 - [Signals and what they map to](#signals-and-what-they-map-to)
 - [What fails the contract](#what-fails-the-contract)
+- [Drafting](#drafting)
 - [Consulting before the one question](#consulting-before-the-one-question)
 
 ## Entry points a project may already have
@@ -96,8 +97,21 @@ The list holds two kinds of candidate, and the report says which. The first thre
 `npm install` beside a lockfile, are wrong for any caller: a script that resets, drops, or deletes
 costs someone data whoever runs it. A pull or a prompt is usually a script written for a different
 caller — a first-clone setup that asks for secrets once, a sync that someone runs by hand after
-fetching — and it is correct for that caller. SKILL.md step 2 says how to name each kind, and what
-the draft takes from the second.
+fetching — and it is correct for that caller. Name the first kind by the line and why it costs
+data. Name the second in those words, and say what `codefall-refresh` needs instead:
+"`scripts/sync.sh` is right for what it does; refresh needs the same steps without the git ones."
+The draft takes the second kind's steps verbatim, minus the git steps and the prompt, and the
+question names them.
+
+## Drafting
+
+Each step in `update` is the tool's own idempotent form: `npm ci` not `npm install`, `migrate
+deploy` not `migrate reset`. A step with no cheap no-op — `npm ci` reinstalls every run — is
+guarded the way `templates/local.sh` shows. The sample env file is copied to the file the tooling
+loads only when that file is missing, before any step that reads it. `start` uses the compose
+file's own wait (`up -d --wait`) where it has one. Every step carries a one-line comment on what it
+brings current. Two targets in the project's own task-runner idiom read like the project's other
+commands, and the declaration points at each.
 
 ## Consulting before the one question
 

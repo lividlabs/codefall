@@ -10,6 +10,7 @@ allowed-tools:
   - Write
   - Edit
   - Bash
+  - Skill
   - WebSearch
   - WebFetch
 ---
@@ -33,8 +34,12 @@ init` installed in the project's own `.codefall/`.
 
 Read each when its step says to; none is loaded up front.
 
+- `reference/lifecycle.md` — the three statuses, where each lives, and what each allows. Read at
+  step 7 and for the other modes.
 - `reference/document.md` — the design document's shape: header, sections and their triggers, the
   Technical Context and Hard Constraints blocks, the Task Plan and its callout. Read before step 5.
+- `reference/adrs.md` — when a design writes an ADR, how it is numbered, and the template. Read at
+  step 4 and step 7.
 - `reference/beads.md` — what gets created in Beads, the test case a bead's criteria name, the plan
   file, the edge direction, and how to verify the graph. Read before step 9.
 - `reference/bugs.md` — a fix for a bug: the report, reproducing it, the cause, the tier. Read at
@@ -100,43 +105,20 @@ blocks, and the Task Plan's callout are in `reference/document.md`.
 
 ## ADRs
 
-A separate artifact, `docs/adrs/ADR-NNN-title.md`, in the Nygard shape — Status, Context, Decision,
-Consequences, Related — written from `../codefall-scaffold/templates/adrs/_TEMPLATE.md`.
-
-- **The number continues the project's own sequence:** the highest bare `ADR-NNN` in `docs/adrs/`
-  plus one, starting at `ADR-001`. The prefixed sequences — `ADR-BASE-NN`, `ADR-<PREFIX>-NN` — are
-  inherited stance and are never continued here.
-- **The trigger** is the design's Alternatives Considered holding a choice that is hard to reverse
-  or that other components will build on: a new dependency; a schema or protocol decision other
-  components will be written against; a rejected alternative that cost real analysis. Most designs
-  need none.
-- **One home for the rationale.** The design names the choice and points at the ADR from the `adr`
-  label on `Related`; the ADR carries the reasoning.
-- **A ratified ADR is never rewritten.** A revision is a new, superseding ADR; the only in-place
-  edit is the Status line, to `Superseded by <id> — <date>`.
-- Draft the ADR and show it before writing. It ships `Accepted` with a real date once the user
-  confirms it.
+A separate artifact, `docs/adrs/ADR-NNN-title.md`, for a choice that is hard to reverse or that
+other components will build on; most designs need none. The number continues the project's own
+sequence, a ratified ADR is never rewritten, and the ADR is shown before it is written. The
+trigger, the numbering, and the template are in `reference/adrs.md`.
 
 ## Status and lifecycle
 
-Three states, one word plus a date.
-
-| Status | Meaning | Lives in |
-| --- | --- | --- |
-| `Draft — <date>` | Being written. The user stopped and is coming back | `docs/designs/` |
-| `Ready — <date>` | Written and agreed, beads created. The normal end of a session | `docs/designs/` |
-| `Archived — <date>` | Superseded or dropped | `docs/designs/archive/` |
-
-- **Status describes the document, never the work.** Work state is Beads' — `bd list` and
-  `bd ready`.
-- `Archived` moves the file to `docs/designs/archive/` under the same name; citations still resolve.
-- A design that no longer describes the code is revised or archived, not labelled. Revising
-  reconciles the graph — `reference/revising.md`.
+`Draft`, `Ready`, or `Archived`, one word plus a date, describing the document and never the work.
+The table and the rules are in `reference/lifecycle.md`.
 
 ## The designs directory
 
-`codefall-design` maintains `docs/designs/AGENTS.md` from `templates/designs/AGENTS.md`: written when
-the directory is created, added on a later run if it is missing.
+`docs/designs/AGENTS.md` is written from `templates/designs/AGENTS.md` when the directory is created,
+and added on a later run if it is missing.
 
 ## Beads
 
@@ -190,14 +172,14 @@ has no written target and offer `/specify`. On no, continue.
 
 **A bug report is a target the way a spec is**: read `reference/bugs.md` for one.
 
-**A spec that is not ready is a stop.** Two gates:
+**A spec that is not ready is finished here, not refused.** Two cases:
 
-- The spec document, or the bug report, says `Status: Draft`.
-- Its tracker issues carry `requires-mockup`. Read the labels from the tracker per
-  `../codefall-specify/trackers/<name>/PROFILE.md`; if the tracker is unreachable, say so and ask
-  whether the mockups exist rather than guessing.
-
-Name the gate, say what clears it, and stop.
+- The spec, or the bug report, says `Status: Draft`: run `codefall-specify` on it in this run, on
+  its branch, to settle what is open and promote it. Stop only on a question the person cannot
+  settle.
+- Its tracker issues carry `requires-mockup` (read per `../codefall-specify/trackers/<name>/PROFILE.md`;
+  an unreachable tracker is asked about, never guessed): run `codefall-mock-up` for each such
+  requirement in this run, on this run's branch, before designing.
 
 **Then read what frames it.** The spec's vision, if it names one. `docs/visions/` if no spec
 framed the work. A vision's **Environment & constraints** section is written for this moment.
@@ -296,16 +278,26 @@ asks for it.
 
 Show the ADR too, if there is one; it ships `Accepted`.
 
-Then set the status: `Ready`, unless they are stopping and coming back, or **Decisions needed** is
-non-empty; both are `Draft`. A `Draft` carrying decisions creates no beads: skip steps 9 and 10.
+Then set the status: `Ready`, unless they are stopping and coming back, which is `Draft`.
+
+**When Decisions needed is not empty**, ask one question before setting the status, under any
+persona:
+
+> I set aside N technical decisions. Settle them with sensible defaults now so building can start,
+> or leave them for an engineer?
+
+On **settle now**: pick the default for each — the simplest choice that fits the project's stance
+and what it already uses — say it in one plain sentence, move it into its section, write the ADR
+where one needs it per `reference/adrs.md`, and the status is `Ready`. On **leave them**: `Draft`,
+no beads, steps 9 and 10 skipped, and the pull request is opened as a draft.
 
 **At tier 0, this is the confirmation instead**: the beads you would create, their titles, their
 bodies, and their edges. The user approves the graph, not a document.
 
 ### 8. Branch, then write the document
 
-Branch first, per `../../../.codefall/shared/landing.md` — `design/DESIGN-NNN-slug` — unless this
-is a tier 0 run with no ADR, which writes no file.
+Branch first, per `../../../.codefall/shared/landing.md` — `design/DESIGN-NNN-slug`, from the
+default branch — unless this is a tier 0 run with no ADR, which writes no file.
 
 Write `docs/designs/DESIGN-NNN-slug.md` with the Task Plan **staged**, the ADR if there is one,
 `docs/designs/AGENTS.md` if it was missing, and the amendments the user took: a spec's mirrored, a
@@ -337,7 +329,8 @@ identifier and change nothing else in the file.
 There is no back-link to write into the spec: the design's `spec` label carries the connection.
 
 Then land it per `../../../.codefall/shared/landing.md`, with `.beads/interactions.jsonl` when it
-changed.
+changed: push, and open the pull request, a draft only when the status is `Draft`. Never add the
+`auto-merge` label: a person adds it when they want the design merged.
 
 Report:
 
@@ -347,11 +340,13 @@ Report:
 - every upstream amendment written, and any the user declined;
 - every consult: the point, who answered, what it changed;
 - the ready set — which tasks `codefall-implement` can start on today;
-- anything left unresolved, the decisions parked and how many, and any concern the user overruled;
-- the branch and the pull request;
-- **last, what the user does next**: merge the pull request, then `/codefall-implement DESIGN-NNN`,
-  or `/codefall-implement <bead>` at tier 0; with decisions parked, have an engineer run
-  `/codefall-design DESIGN-NNN` to settle them.
+- anything left unresolved, the decisions set aside and how many, whether the person had them
+  settled now or left for an engineer, and any concern the user overruled;
+- the branch and the pull request, worded as the landing procedure says: it is open at its URL;
+  add the `auto-merge` label when you want it merged, or have someone approve it; either one merges
+  it; a `Draft` design has a draft pull request;
+- **last, one command**: `/codefall-implement DESIGN-NNN`, or `/codefall-implement <bead>` at
+  tier 0; with decisions left for an engineer, `/codefall-design DESIGN-NNN`.
 
 ## Other modes
 
@@ -377,7 +372,8 @@ your own initiative.
   the beads.
 - **Scale the artifact to the work.** Tier 0 is a real outcome, not a failure to write a document.
 - **Never fill a heading.** An empty conditional section is deleted.
-- **A design carrying Decisions needed is `Draft`** and has no beads until they are settled.
+- **A design still carrying Decisions needed is `Draft`** and has no beads. The one question at
+  step 7 is how they are settled in this run; silence never settles them.
 - **Design within the project's ADRs.** Changing the stance is a superseding ADR, said out loud; a
   ratified ADR is never rewritten.
 - **Identifiers are append-only** — design numbers, and local task IDs within a design.

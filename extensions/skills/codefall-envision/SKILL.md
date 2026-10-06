@@ -2,7 +2,6 @@
 name: codefall-envision
 description: Get an idea onto paper before anyone specifies or scaffolds it — take whatever the user arrived with, from a sentence to a folder of mockups, organize it into one or more numbered vision documents under docs/visions/, and record what is still unknown rather than inventing answers.
 argument-hint: "[the idea, or a path to a document you already have]"
-disable-model-invocation: true
 allowed-tools:
   - Read
   - Glob
@@ -45,8 +44,8 @@ Read each when its step says to; none is loaded up front.
   is adopted as the vision. Read at step 2 when they point at anything.
 - `../../../.codefall/shared/import-mockup.md` — the shared procedure for bringing a mockup into the
   repository. Read from `reference/inputs.md` when the material is a mockup.
-- `../../../.codefall/shared/landing.md` — the shared procedure for the branch, the commit, and the
-  offered pull request. Read at step 6, before the first file is written.
+- `../../../.codefall/shared/landing.md` — the shared procedure for the branch, the commit, the
+  push, and the pull request. Read at step 6, before the first file is written.
 
 ## Scope — why, and a loose what
 
@@ -232,14 +231,16 @@ Read `../../../.codefall/shared/landing.md` and take its branch step first: stan
 branch, `git switch -c vision/VISION-NNN-slug`; on another branch, ask once which to use.
 
 Write the vision, the source document if there was one, and `docs/visions/AGENTS.md` if it was
-missing. Then commit those files by path and offer the push and the pull request, per the same
-procedure. The merge is the user's.
+missing. Then commit those files by path, push, and open the pull request, all per the same
+procedure; it is a draft only when the status is `Draft`. Never add the `auto-merge` label: a person
+adds it when they want the document merged.
 
 Do not create issues. Do not start a specification.
 
 Report the path, the identifier, the status, every open question the document carries, the branch,
-and the pull request if one was opened. **End with what the user does next**: merge the pull
-request, then `/codefall-scaffold` for a project not yet scaffolded, otherwise
+and the pull request, worded as the landing procedure says: it is open at its URL; add the
+`auto-merge` label when you want it merged, or have someone approve it; either one merges it.
+**End with one command**: `/codefall-scaffold` for a project not yet scaffolded, otherwise
 `/codefall-specify VISION-NNN`.
 
 ## Other modes

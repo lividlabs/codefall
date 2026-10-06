@@ -1,7 +1,7 @@
 ---
 name: codefall-equip
-description: Equip a project with the three things it has to have before the other verbs work. The local environment — start, which brings the services the project develops against up, and update, which makes the local environment match the checkout — declared under local in .codefall/settings.json and run by codefall-refresh. The test harness — a spec runner per surface, its configuration pointed at the testing root, its name declared in test.runners and its commands recorded in the testing root's AGENTS.md — which codefall-test runs cases through. The agents — how another harness is called, declared under harnessConfig, and who reviews and consults, in the agents lists — set up from any harness, with the parameters read from where each harness keeps them. Each finds what the project already has, or drafts it from what the repository or the session shows, confirms, writes, and declares. Builds and rebuilds; codefall-scaffold and codefall-implement follow the local-scripts procedure.
-argument-hint: "[local | test | agents] [path]"
+description: Equip a project with the four things it has to have before the other verbs work. The local environment — start and update, declared under local in .codefall/settings.json and run by codefall-refresh. The test harness — a spec runner per surface, pointed at the testing root, declared in test.runners, its commands recorded in the testing root's AGENTS.md, which codefall-test runs cases through. The agents — how another harness is called, under harnessConfig, and who reviews and consults, in the agents lists — set up from any harness. The document landing — the GitHub Action that merges a document pull request once a person adds the land label to it. Each finds what the project already has, or drafts it from what the repository or the session shows, confirms, writes, and declares. Builds and rebuilds; codefall-scaffold and codefall-implement follow the local-scripts procedure.
+argument-hint: "[local | test | agents | landing] [path]"
 disable-model-invocation: true
 allowed-tools:
   - Read
@@ -15,36 +15,41 @@ allowed-tools:
 
 # Equip
 
-Equip a repository with what the other verbs need it to have. Three things: the **local
+Equip a repository with what the other verbs need it to have. Four things: the **local
 environment** — `start`, which brings its services up, and `update`, which makes the local
 environment match the checkout; the **test harness** — the spec runner that collects the specs
-beside the project's test cases; and the **agents** — how another harness is called, and who
-reviews and consults. All are declared in `.codefall/settings.json`: `local`, which
-`codefall-refresh` runs; `test.runners`, which `codefall-test` reads; `harnessConfig` and the
-`agents` lists, which `codefall-review` and every consult read.
+beside the project's test cases; the **agents** — how another harness is called, and who reviews
+and consults; and the **document landing** — the GitHub Action that merges a document pull request
+once a person labels it `auto-merge` or approves it. The first three are declared in
+`.codefall/settings.json`: `local`, which `codefall-refresh` runs; `test.runners`, which
+`codefall-test` reads; `harnessConfig` and the `agents` lists, which `codefall-review` and every
+consult read. The fourth is one file under `.github/workflows/` and one label.
 
 Equipping is neither refreshing nor testing. This skill finds, drafts, or revises what a project
-runs with and declares it; it runs it only to prove it. Bringing an environment current on an
-ordinary day is `codefall-refresh`; running a suite or a case is `codefall-test`.
+runs with and declares it; it runs it only to prove it. Bringing an environment current is
+`codefall-refresh`; running a suite or a case is `codefall-test`.
 
 Paths that start with `reference/`, `templates/`, or `../` are relative to this skill's directory,
 not the user's project. A path through `../../../.codefall/` is the one that leaves the skills
 directory: it names a file `codefall init` installed in the project's own `.codefall/`.
 
-## The three tracks
+## The four tracks
 
-One run equips one of the three. Each has its own search, its own question, its own declaration,
-and its own proof, and in the user's project each lands as its own pull request.
+One run equips one of the four. Each has its own search, its own question, its own declaration,
+and its own proof, and in the user's project each lands as its own pull request, which a person
+merges.
 
 | Argument | Track | Procedure |
 | --- | --- | --- |
 | `local`, or a path alone | the two local-environment scripts | [Process — the local scripts](#process--the-local-scripts) |
 | `test` | the test harness | [Process — the test harness](#process--the-test-harness) |
 | `agents` | how this harness is called, and who reviews and consults | [Process — the agents](#process--the-agents) |
+| `landing` | the Action that merges document pull requests | [Process — the document landing](#process--the-document-landing) |
 
 A path may follow any word; it is the project directory, and the working directory is the default.
-With no word at all, read `.codefall/settings.json`, say what `local`, `test`, `harnessConfig`, and
-`agents` declare today, and ask which of the three to equip before anything else.
+With no word at all, read `.codefall/settings.json` and `.github/workflows/`, say what `local`,
+`test`, `harnessConfig`, `agents`, and the landing declare today, and ask which of the four to
+equip before anything else.
 
 ## Files beside this one
 
@@ -61,10 +66,15 @@ Read each when its step says to; none is loaded up front.
   proven. Read at step 1 of the testing track.
 - `reference/agents.md` — the whole agents procedure: the display, the one question, the writes,
   the proof. Read at step 1 of the agents track.
+- `reference/landing.md` — the whole document-landing procedure: what the workflow does, the
+  branch-rule reading, the one question, the write, the proof. Read at step 1 of the landing track.
+- `templates/codefall-land-documents.yml` — the workflow the landing track installs.
 - `reference/contract.md` — what `start` and `update` promise, in full. Read at step 2 of the
   local track.
-- `../../../.codefall/shared/landing.md` — the shared procedure for the branch, the commit, and the
-  offered pull request. Read before the first write on either track.
+- `reference/followers.md` — what `codefall-scaffold` and `codefall-implement` do when they follow
+  the local track. Read by those verbs, not by a run of this one.
+- `../../../.codefall/shared/landing.md` — the shared procedure for the branch, the commit, the
+  push, and the pull request. Read before the first write on any track.
 
 ## Scope — what a project runs with, not the running
 
@@ -77,9 +87,10 @@ Read each when its step says to; none is loaded up front.
 | Declaring `local`, `test.runners`, `harnessConfig`, and the `agents` lists in `.codefall/settings.json` | Per-branch databases, shared or otherwise | the project |
 | Recording the runner's commands in the testing root's `AGENTS.md` | The testing root, its tree, and the `CODEFALL TESTING` section | `codefall init` |
 | Proving a candidate meets the contract, or an agent answers | Any other settings field | `codefall init` |
+| Installing the workflow and label that merge document pull requests | Changing a branch rule or any other repository setting | the owner |
 
-**Every run does the same thing**, whether what it equips exists or not: read the project, read what
-is there, propose the draft or the revision, confirm, write, declare. There is no first-time mode.
+**Every run does the same thing**, whether what it equips exists or not: read the project, propose
+the draft or the revision, confirm, write, declare. There is no first-time mode.
 
 ## The contract
 
@@ -95,14 +106,10 @@ before asking anything, name what was found, and ask one question:
 > I found `make dev-up`, which starts Postgres and Redis through compose, and `npm run db:migrate`.
 > Are these the start and update commands, or should I draft new ones?
 
-A user who knows corrects it; one who does not takes what was found. A repository with nothing,
-or whose scripts were written for a different caller — a first-clone setup that prompts, a sync
-that pulls — gets the draft offer, with the steps the draft keeps from those scripts named. **Never ask whether something exists before looking**: the
-repository answers that faster than the person, and the person may not know.
-
-The testing track works the same way: a project that already runs end-to-end tests has a runner
-configuration and a directory holding them, found and named before the question. The agents track
-reads the session's own record instead of the repository, and shows it before asking.
+**Never ask whether something exists before looking**: the repository answers that faster than the
+person, and the person may not know. Every track works this way: the testing track finds the
+runner configuration and the test directory, the agents track reads the session's own record, and
+the landing track reads `.github/workflows/` and the branch rule, each shown before the question.
 
 **What the search leaves ambiguous is consulted on once** before the question, per
 `reference/signals.md` for the local track and `reference/testing.md` for the testing track, and the
@@ -110,21 +117,9 @@ answer becomes the proposed option. The user still chooses; a consult never decl
 
 ## When another verb follows this skill
 
-`codefall-scaffold` and `codefall-implement` read this file as the procedure; nothing invokes it
-through the harness. Both follow the local track only: **a test harness is never set up inside
-another verb's pull request.** When a task needs a case and no runner is declared,
-`codefall-implement` says so, names this skill, and leaves those beads unstarted.
-
-- **`codefall-scaffold`, at runnable-skeleton depth.** Nothing exists to search for; skip step 2.
-  Draft from what scaffold emitted — its manifest, its compose file if any, its migration tool —
-  declare, and prove the scripts as part of scaffold's own verification. At docs-only depth write
-  nothing and name this skill in scaffold's report as owed work.
-- **`codefall-implement`, on a task that introduces infrastructure, a dependency, a migration, or
-  generated code.** The bead's acceptance criteria name the script change; the bead is the
-  confirmation. Read the declared scripts, revise them per step 3 for what the task introduced,
-  keep the contract, and change the declaration only when an entry point moved. The change lands
-  in the task's own pull request and is named in its body.
-- **Neither follows the agents track.**
+`codefall-scaffold` and `codefall-implement` follow the local track as a procedure, never through
+the harness, and never the other tracks: **a test harness is never set up inside another verb's
+pull request.** What each does, and what it skips, is in `reference/followers.md`.
 
 ## Project customizations and persona
 
@@ -154,12 +149,9 @@ Read `reference/signals.md`. Two searches:
   a candidate has to cover.
 
 Read `reference/contract.md`. Check each candidate against it by reading the candidate, not by
-running it, and say which of two things a candidate that does not keep it is. A candidate that resets, drops, or
-deletes is **wrong** for any caller; say which line and why. A candidate that prompts, or that
-pulls before it migrates, is **written for a different caller** — a first-clone setup, a sync
-someone runs by hand — and is correct for that caller; say so in those words, and say what
-`codefall-refresh` needs instead: "`scripts/sync.sh` is right for what it does; refresh needs the
-same steps without the git ones." Never tell the user their scripts are broken when they are not.
+running it, and say which of the two kinds a candidate that does not keep it is — **wrong for any
+caller**, or **written for a different caller** — in the words *What fails the contract* in
+`reference/signals.md` gives. Never tell the user their scripts are broken when they are not.
 
 Then ask the one question, with what was found beside it. Three answers:
 
@@ -170,27 +162,16 @@ Then ask the one question, with what was found beside it. Three answers:
 
 When no candidate keeps the contract, the first answer is not offered. Ask draft or revise only —
 revise only when a `local` block is declared — and name the steps of the existing scripts the
-draft reuses verbatim, so the user sees what they keep: "the draft takes your sync script's
-compose, install, and `prisma migrate deploy` steps, minus the git steps and the dirty-tree guard."
+draft reuses verbatim, so the user sees what they keep.
 
 ### 3. Draft or revise
 
-Read `templates/local.sh`. The shape follows the project:
-
-- A project with a **task runner idiom** — a Makefile, a justfile, package scripts everyone runs —
-  gets two targets in that idiom, so the commands read like the project's others.
-- A project with **none** gets `scripts/local.sh` from the template, with `start` and `update` as
-  its subcommands and the declaration pointing at each.
-
-Each step in `update` is the tool's own idempotent form: `npm ci` not `npm install`, `migrate
-deploy` not `migrate reset`. A step with no cheap no-op — `npm ci` reinstalls every run — is
-guarded the way the template shows. The sample env file is copied to the file the tooling loads
-only when that file is missing, before any step that reads it. `start` uses the compose file's own
-wait (`up -d --wait`) where it has one. Every step carries a one-line comment on what it brings
-current.
-
-A **revision** changes only what the introduced tool needs and leaves the rest of the script as
-the project wrote it. Show the diff, not the whole file.
+Read `templates/local.sh`. A project with a **task runner idiom** — a Makefile, a justfile,
+package scripts everyone runs — gets two targets in that idiom; a project with **none** gets
+`scripts/local.sh` from the template, with `start` and `update` as its subcommands. Each step in
+`update` is the tool's own idempotent form, guarded where it has no cheap no-op, per *Drafting* in
+`reference/signals.md`. A **revision** changes only what the introduced tool needs and leaves the
+rest as the project wrote it; show the diff, not the whole file.
 
 Show the full draft, or the diff, and confirm before writing anything. Then, before the first
 write, take the branch step of `../../../.codefall/shared/landing.md`: standing on the default
@@ -216,7 +197,7 @@ Offer to run them; running `start` brings real services up on the user's machine
 yes-or-no rather than a step. On yes: `start`, then `update`, then `update` again. The second
 `update` must exit `0` quickly, and that is the proof of the contract. A failure is fixed in the
 script and the proof re-run; a failure that is the environment's — Docker not running — is
-reported as such with what to do.
+reported with what to do.
 
 Then run `codefall doctor` when the CLI is on `PATH` and read its **Local environment** section:
 both checks pass, or the declaration is wrong and step 4 is repeated. A warning about the refresh
@@ -227,8 +208,8 @@ stamp not being git-ignored is `codefall upgrade`'s to fix; name it in the repor
 - What was declared, and whether it was found, drafted, or revised.
 - Whether the scripts were proven, and by which run.
 - The landing, per `../../../.codefall/shared/landing.md`: the scripts and the settings committed by
-  path on the branch, and the push and pull request offered — its own pull request, never another
-  verb's. The merge is the user's.
+  path on the branch, pushed, and its pull request opened without asking — its own, never another
+  verb's. A person merges it.
 - **Last, what the user does next**: merge the pull request, run `/codefall-refresh` once so the
   stamp exists, and `codefall upgrade` if doctor warned about `.gitignore`.
 
@@ -292,9 +273,9 @@ as well when the runner is Playwright; no cases yet is a pass. Then `codefall do
 What was declared and whether it was found or installed; where the runner's line went; what
 `update` gained; what the proof showed. Then the landing, per `../../../.codefall/shared/landing.md`:
 the configuration, the settings, `<root>/AGENTS.md`, and the `update` revision committed by path on
-the branch, and the push and pull request offered — its own pull request, never another verb's.
-The merge is the user's. **End with what the user does next**: merge the pull request; the first
-case is written by `/codefall-implement` when a bead names one.
+the branch, pushed, and its pull request opened without asking — its own, never another verb's. A
+person merges it. **End with what the user does next**: merge the pull request; the first case is
+written by `/codefall-implement` when a bead names one.
 
 ## Process — the agents
 
@@ -316,6 +297,23 @@ configuration, one question, one change.
    non-empty out-file; then `codefall doctor`.
 6. **Report** the configuration as it now stands, land it as its own pull request, and end with what
    the user does next: merge, and rerun it for any harness not yet set up.
+
+## Process — the document landing
+
+`reference/landing.md` carries this track in full. Read it at step 1 and follow it.
+
+1. **Read** `.codefall/settings.json`, the default branch, and the GitHub repository; no settings
+   file means `codefall init` comes first, and no GitHub remote is a stop.
+2. **Find what is already there**: the workflow file, any other merging workflow, and the branch
+   rule, read with `gh api` and never changed.
+3. **Ask the one question**: install the workflow, shown in full, with the branch-rule finding in a
+   sentence. A rule that would block the workflow's token is the owner's to change.
+4. **Write** `.github/workflows/codefall-land-documents.yml` from the template, on `equip/landing`,
+   and create the `auto-merge` label.
+5. **Prove** that the file parses, the allowlist accepts a spec path and rejects a source path, and
+   the label exists.
+6. **Report** what was written, what the owner changes, and the landing: its own pull request, a
+   person's to merge; then a document pull request merges on the `auto-merge` label or an approval.
 
 ## Rules
 
@@ -339,6 +337,8 @@ configuration, one question, one change.
   Flutter — and say which modality remains.
 - **Names in settings, commands in `<root>/AGENTS.md`.** Never the other way around, and never both.
 - **A harness is equipped in its own pull request.** It never rides along in a task's.
+- **The landing track changes no branch rule.** It writes one workflow file, creates the
+  `auto-merge` label, and tells the owner what the branch rule has to allow.
 - **Cases are not this skill's.** An empty tree is what proves a harness; writing the first case is
   `/codefall-implement`.
 - **Refresh, test, and review are not this skill.** Say so and stop when the user wants the
