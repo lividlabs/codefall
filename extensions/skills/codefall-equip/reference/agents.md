@@ -21,6 +21,7 @@ change they chose.
 - [Writing](#writing)
 - [Proving it](#proving-it)
 - [The report](#the-report)
+- [Rules](#rules)
 
 ## Which harness this is
 
@@ -238,3 +239,10 @@ person merges it, because it changes settings.
 **End with what the user does next**: merge the pull request, and nothing after it. A harness that
 still says `not set up` is named as a fact, with `/codefall-equip agents` as what sets it up once
 the merge is done, never as a second step.
+
+## Rules
+
+The rules that hold for every track are in `../SKILL.md`. This one holds for this track:
+
+- **The agents track sets up any harness from any harness.** Parameters come from that harness's
+  own records and config, and are written once the user confirms them.

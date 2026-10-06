@@ -14,6 +14,7 @@ the file cannot change.
 - 4. Write
 - 5. Prove it
 - 6. Report
+- Rules
 
 ## What the workflow does
 
@@ -118,3 +119,10 @@ it a question, a person's to merge. **End with what the user does next**: merge 
 and nothing after it. The branch-rule change, when step 2 found one, is said above as the owner's;
 and once the pull request is merged, a document pull request merges when a person adds the
 `auto-merge` label to it or approves it, which the report states as a fact, not as a step.
+
+## Rules
+
+The rules that hold for every track are in `../SKILL.md`. This one holds for this track:
+
+- **The landing track changes no branch rule.** It writes one workflow file, creates the
+  `auto-merge` label, and tells the owner what the branch rule has to allow.
