@@ -567,12 +567,13 @@ round 1 (review) [2026-09-30]: 3 fixed, 2 deferred as children
 round 1 (test) [2026-09-30]: FAIL 2/7, 1 child filed
 ```
 
-Nothing open but the landed bead, and the last test run passed: that is done, and the merge order
-is what remains. [ADR-013.2](docs/adrs/ADR-013.2-deliveries.md) holds the rule.
+Nothing open but the landed bead, and the last test run passed: that is done, and the merge is what
+remains. [ADR-013.2](docs/adrs/ADR-013.2-deliveries.md) holds the rule.
 
-**A person merges every code pull request.** The run ends at open PRs and a reported merge order,
-and the plugin ships a hook that mechanically denies the alternative. Tests are part of done
-— the ones the design planned and the ones the work turned out to need — while the round's
+**A person merges every code pull request.** The run ends at open PRs and the link to the top of
+the stack, which lands every layer when merged on GitHub — never a merge command or a list to merge
+in order — and the plugin ships a hook that mechanically denies the alternative. Tests are part of
+done — the ones the design planned and the ones the work turned out to need — while the round's
 end-to-end run, regression, and fresh-context retesting are the `test` verb's.
 
 **A design the work proves wrong is amended by the work, not worked around.** A worker that can

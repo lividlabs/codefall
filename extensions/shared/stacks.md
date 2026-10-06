@@ -1,11 +1,13 @@
 # Stacked pull requests on GitHub
 
 Shared reference. Read before opening a pull request whose base is another pull request's branch,
-and before merging or changing one. Everything here is from GitHub's own documentation of the
-feature; nothing is codefall's rule. One verb stacks pull requests: `codefall-implement`, whose
-task pull requests form one stack per epic, and whose landing reference says how it links them.
-Document pull requests do not stack; each targets the default branch, per the landing procedure
-beside this file.
+before merging or changing one, and before a report points a person at one. Everything here is
+from GitHub's own documentation of the feature, except the last section, which is codefall's one
+rule about stacks: how a report points at one. One verb stacks pull requests: `codefall-implement`,
+whose task pull requests form one stack per epic, and whose landing reference says how it links
+them; `codefall-review` and `codefall-test` point at that stack when their run on an epic's work
+ends with the merge. Document pull requests do not stack; each targets the default branch, per the
+landing procedure beside this file.
 
 **Written 2026-10-05 against the public preview.** GitHub shipped stacked pull requests on
 2026-07-30 and still marks them "subject to change". A model's training may predate the feature,
@@ -19,6 +21,7 @@ so this file, not memory, is the source.
 - Merging
 - Changing a lower layer
 - What is not supported
+- Pointing at a stack
 - Sources
 
 ## What a stack is
@@ -103,6 +106,21 @@ is the extension's job, not a hand-run `git rebase`.
   to land layers without a click each.
 - **Cross-fork stacks.**
 - **Merging a mid-stack layer alone.**
+
+## Pointing at a stack
+
+Codefall's rule, the one in this file. A report whose next step is the merge of a stack gives the
+link to the **top pull request** — the most recent one, the one no other open pull request bases
+on — and says that merging it on GitHub lands the whole stack. GitHub's stack view merges every
+layer from that pull request, atomically, per *Merging* above. That is the whole instruction:
+
+> The work is in a stack of five pull requests. Merging the top one, <url>, lands all five.
+
+Never a `gh` command, and never a list of pull requests to merge in order from the bottom. Both
+work on GitHub and both are the wrong instruction: the command adds nothing the link does not, and
+the bottom-up list turns one click into five. The rule holds for every persona; an engineer gets
+the same link. A single pull request — a one-task run, or an epic branch's aggregate pull request —
+gets the same sentence with its one link.
 
 ## Sources
 

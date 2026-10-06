@@ -8,7 +8,7 @@ than re-running anything:
 | Found | Meaning | Do |
 | --- | --- | --- |
 | Bead closed, PR merged | Finished and landed | `bd gate check` records it; nothing else |
-| Bead closed, PR open | Done, awaiting the human | Leave it; it is in the merge order |
+| Bead closed, PR open | Done, awaiting the human | Leave it; merging the stack's top lands it |
 | Bead claimed, branch pushed, no PR | Worker stopped before `gh pr create` | Verify the branch, open the PR from the root — do not re-run the work |
 | Bead claimed, no branch | Work never started or never landed anywhere | Relaunch the worker with the same rendered prompt |
 | Bead unclaimed but `bd ready` says ready | Never started | Normal flow |

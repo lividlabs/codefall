@@ -172,10 +172,11 @@ dependency, a migration, or generated code changes `start` or `update` in the sa
 - **Done is read from the graph.** `bd children <epic>` with nothing open but the landed bead, and
   the last test run against the epic passed. No verb declares a delivery done; the chart shows it.
 - **No verb merges to `main`.** A person merges every code pull request: `implement` ends at open
-  PRs and a reported merge order, and the guard hook denies the alternative in every harness. A
-  GitHub Action the project installs with `equip landing` merges a document pull request once a
-  person adds the `auto-merge` label to it or approves it and its diff holds only document paths; no
-  verb adds the label or approves, and a project without the Action merges those by hand.
+  PRs and the link to the top of the stack, which lands every layer when merged on GitHub, `review`
+  and `test` point at the stack the same way, and the guard hook denies the alternative in every
+  harness. A GitHub Action the project installs with `equip landing` merges a document pull request
+  once a person adds the `auto-merge` label to it or approves it and its diff holds only document
+  paths; no verb adds the label or approves, and a project without the Action merges those by hand.
 - **Everything short of the merge is the verb's.** A verb that writes to the repository branches
   from `main` before its first file, commits what it wrote by path, pushes, and opens the pull
   request without asking; a document never sits uncommitted on `main`. A document verb opens an
