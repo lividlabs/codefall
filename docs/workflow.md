@@ -102,7 +102,7 @@ the epic, written by `implement` alone. Each verb prints the delivery's one-line
 children closed over the children in all, counted as `bd epic status` counts them — appends one
 line to the epic's notes (`round N (verb) [date]: what happened`), records in a `bd comment`
 anything decided in conversation that no artifact holds, and then says it is safe to `/clear`.
-[ADR-013.2](https://github.com/lividlabs/codefall/blob/main/docs/adrs/ADR-013.2-deliveries.md)
+[ADR-013.4](https://github.com/lividlabs/codefall/blob/main/docs/adrs/ADR-013.4-deliveries.md)
 records the rule.
 
 ## Keeping the project current

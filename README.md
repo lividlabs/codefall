@@ -568,7 +568,7 @@ round 1 (test) [2026-09-30]: FAIL 2/7, 1 child filed
 ```
 
 Nothing open but the landed bead, and the last test run passed: that is done, and the merge is what
-remains. [ADR-013.2](docs/adrs/ADR-013.2-deliveries.md) holds the rule.
+remains. [ADR-013.4](docs/adrs/ADR-013.4-deliveries.md) holds the rule.
 
 **A person merges every code pull request.** The run ends at open PRs and the link to the top of
 the stack, which lands every layer when merged on GitHub — never a merge command or a list to merge
