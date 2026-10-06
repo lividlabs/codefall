@@ -76,6 +76,33 @@ merged, is recorded as a deviation, because only the person adds that label. Ret
 the checkout to `main` is plain `git fetch`, `git checkout main`, `git pull --ff-only`, recorded in
 `deviations.txt` as not a deviation.
 
+## When a run ends
+
+However the chain ends (finished, stopped by a verb's status, the driver throwing, or `SIGINT` or
+`SIGTERM`), the driver cleans up the laptop before it gathers evidence or exits. That is
+`cleanup.ts`, and it does two things:
+
+- **Stops the fixture servers.** Verbs start the server with `scripts/local.sh start` in the project
+  directory and in implement's worker worktrees, sometimes on another port, and a worker may start
+  one by hand, so neither the port nor `data/server.pid` finds them all. The driver takes every
+  process listening on a TCP port, plus any process a `data/server.pid` names, and stops the ones
+  whose working directory is the project directory or one of its worktrees (or a directory under
+  either): `SIGTERM`, then `SIGKILL` after five seconds. A process anywhere else on the machine is
+  never a match, and Beads' Dolt server is left to bd.
+- **Removes the worker worktrees.** Every linked worktree of the throwaway repository is the run's
+  own; the driver runs `git worktree remove --force --force` on each (a worker stopped mid-task
+  leaves uncommitted work or a lock), then `git worktree prune`. The branches stay.
+
+`summary.json` records what it did under `cleanup`: the reason it ran, each server stopped (pid,
+command line, working directory, listening addresses, the signal that stopped it), each worktree
+removed or pruned, and anything it could not stop or remove. The driver log says the same in one
+line, once when the cleanup runs and again as the last line of the run. An interrupted run also
+records `interruptedBy`. `--judge-only` starts nothing and cleans nothing.
+
+`npm test` runs `cleanup.test.ts`, which checks the cleanup against a scratch repository with
+worktrees and dummy servers, beside a server outside the project and a project process that does
+not listen, which it must leave running.
+
 ## What a run writes
 
 `evals/twisted-todo/runs/<timestamp>/`:
@@ -87,7 +114,7 @@ the checkout to `main` is plain `git fetch`, `git checkout main`, `git pull --ff
 | `driver.log` | the driver's own log |
 | `deviations.txt` | what the driver did in the person's place; `(not a deviation)` lines are what the plan expects |
 | `evidence/` | pull requests, issues, Action runs, the git log of `main`, the document tree, the settings, the Beads epic and children, the review and test records, the test cases |
-| `summary.json` | per-session status, PM turns, and cost; `total_cost_usd` is the SDK's own estimate; `judgedBy` is the harness that answered |
+| `summary.json` | per-session status, PM turns, and cost; `total_cost_usd` is the SDK's own estimate; `judgedBy` is the harness that answered; `cleanup` is what the driver stopped and removed when the run ended |
 | `rubric.md`, `brief.md` | copies, so the run directory is self-contained for the judge |
 | `judge-prompt.rendered.md`, `judge.<agent>.out` | the prompt the judge was given and each agent's raw answer |
 | `verdict.md`, `verdict.json` | the judge's verdict, rendered and raw, with the list of agents tried |
