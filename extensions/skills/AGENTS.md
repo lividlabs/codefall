@@ -106,7 +106,8 @@ the reasons and the sources.
   deeper from a supporting file. `codefall init` installs `shared/` once, into the project's
   `.codefall/`, whatever harnesses it was run for (ADR-006), and that path reaches it identically
   from `.claude/skills/<verb>/` and `.agents/skills/<verb>/`. In this repository the same file is at
-  `extensions/shared/`, which is where `../scripts/skill-health.sh` resolves the `.codefall/` prefix.
+  `extensions/shared/`, which is where `../scripts/skill-health.sh` resolves the `.codefall/` prefix,
+  after checking that the `../` in front of it reaches the project root from the file that names it.
 
 ## Templates and ownership
 

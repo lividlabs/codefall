@@ -90,7 +90,7 @@ the harness uses, writes the block, and adds the agent to the lists you choose.
 Run each agent, from the first, with the script beside this file:
 
 ```
-../../../.codefall/shared/run-agent.sh <harness>[:<model>] <prompt-file> <schema-file> <out-file>
+../../.codefall/shared/run-agent.sh <harness>[:<model>] <prompt-file> <schema-file> <out-file>
 ```
 
 Read its exit code and act on it:
