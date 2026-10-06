@@ -1,7 +1,7 @@
 // The PM simulator: a model call given the brief and the transcript so far, answering in character.
 // It has two jobs. `answerQuestions` answers an AskUserQuestion call; `nextMove` reads the end of a
-// turn and decides whether the verb asked something in prose (reply), finished (done), or stopped
-// on something the person cannot fix (stuck).
+// turn and decides whether the verb asked something in prose (reply), is still working with nothing
+// to answer (wait), finished (done), or stopped on something the person cannot fix (stuck).
 //
 // It runs through the Agent SDK with no tools and no project settings, so it uses the same login
 // as the sessions under test and needs no separate API key.
@@ -17,6 +17,7 @@ export type Question = {
 
 export type Move =
   | { kind: "reply"; text: string; reason: string }
+  | { kind: "wait"; reason: string }
   | { kind: "done"; reason: string }
   | { kind: "stuck"; reason: string };
 
@@ -59,10 +60,11 @@ ${JSON.stringify(questions, null, 2)}`;
   async nextMove(turnText: string, transcriptTail: string): Promise<Move> {
     const task = `The agent's turn just ended. Decide what you do. Reply as JSON in one of these shapes:
 - {"kind": "reply", "text": "<what you say next>", "reason": "<one sentence>"} when the agent asked you something, is waiting for a confirmation or a go-ahead, or showed you a document to approve.
-- {"kind": "done", "reason": "<one sentence>"} when the agent gave its final report: it says what happens next, names at most one command for you, or says it is safe to clear. Also "done" when the agent says it has stopped and the remedy is a command for you to run or an install to do.
+- {"kind": "wait", "reason": "<one sentence>"} when the agent is still working and asked you nothing: it says a builder, worker, or check is running in the background and that it will report back when it finishes, or that nothing needs you right now. You say nothing and let it work.
+- {"kind": "done", "reason": "<one sentence>"} when the agent gave its final report and nothing it started is still running: it says what happens next, names at most one command for you, or says it is safe to clear. Also "done" when the agent says it has stopped and the remedy is a command for you to run or an install to do.
 - {"kind": "stuck", "reason": "<one sentence>"} when the agent is looping, asked the same thing a third time, or is asking for something the brief cannot answer and parking it is not offered.
 
-Never reply "done" while the agent is clearly waiting for your answer. Never reply with a command or a merge.
+Never reply "done" while the agent is clearly waiting for your answer, and never reply "done" while the agent says it is still working or will post an update later; that is "wait". Never reply with a command or a merge.
 
 The agent's last turn:
 ---
@@ -72,6 +74,10 @@ ${turnText.trim() || "(no text; the agent ended its turn without saying anything
     if (out?.kind === "reply" && typeof out.text === "string") {
       this.opts.log?.(`reply — ${out.reason ?? ""}`);
       return { kind: "reply", text: out.text, reason: String(out.reason ?? "") };
+    }
+    if (out?.kind === "wait") {
+      this.opts.log?.(`wait — ${out.reason ?? ""}`);
+      return { kind: "wait", reason: String(out.reason ?? "") };
     }
     if (out?.kind === "done") return { kind: "done", reason: String(out.reason ?? "") };
     if (out?.kind === "stuck") return { kind: "stuck", reason: String(out.reason ?? "") };

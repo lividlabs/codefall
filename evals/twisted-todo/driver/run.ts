@@ -54,9 +54,23 @@ const effort = (args.effort as any) ?? undefined;
 const maxPmTurns = Number(args["max-pm-turns"] ?? 60);
 const maxMinutes = Number(args["max-minutes"] ?? 90);
 const landMinutes = Number(args["land-minutes"] ?? 10);
+const waitMinutes = Number(args["wait-minutes"] ?? 20);
 const brief = readFileSync(join(evalRoot, "brief.md"), "utf8");
 const gh = makeGh(repo, runDir, log);
 const summary: Record<string, unknown> = { repo, projectDir, model, simModel, judgeAgents, startedAt: new Date().toISOString(), sessions: [] as unknown[] };
+// Resuming into an existing run directory keeps the records of the sessions before `--from`.
+if (args.run && args.from && existsSync(join(runDir, "summary.json"))) {
+  try {
+    const earlier = JSON.parse(readFileSync(join(runDir, "summary.json"), "utf8"));
+    const before = CHAIN.slice(0, CHAIN.indexOf(args.from as Verb));
+    summary.sessions = (earlier.sessions ?? []).filter((s: any) => before.includes(s.verb));
+    summary.startedAt = earlier.startedAt ?? summary.startedAt;
+    summary.resumedAt = new Date().toISOString();
+    summary.resumedFrom = args.from;
+  } catch {
+    // an unreadable summary is replaced
+  }
+}
 
 async function runVerb(verb: Verb): Promise<SessionOutcome> {
   const s = step(verb);
@@ -70,7 +84,7 @@ async function runVerb(verb: Verb): Promise<SessionOutcome> {
     scratchDir: runDir,
     log: (line) => log(`[PM-sim ${verb}] ${line}`),
   });
-  const outcome = await runSession({ projectDir, runDir, verb, firstMessage, simulator, model, effort, maxPmTurns, maxMinutes, log });
+  const outcome = await runSession({ projectDir, runDir, verb, firstMessage, simulator, model, effort, maxPmTurns, maxMinutes, waitMinutes, log });
   log(`${verb} ended: ${outcome.status}, ${outcome.pmTurns} PM turns, $${outcome.costUsd.toFixed(2)}`);
   (summary.sessions as unknown[]).push({ verb, status: outcome.status, pmTurns: outcome.pmTurns, costUsd: outcome.costUsd, sessionId: outcome.sessionId });
   writeFileSync(join(runDir, "summary.json"), JSON.stringify(summary, null, 2) + "\n");

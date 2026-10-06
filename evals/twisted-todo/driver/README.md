@@ -56,7 +56,8 @@ Flags: `--model` (sessions, default `opus`), `--sim-model` (default `sonnet`), `
 (default `muse,opencode`; any `run-agent.sh` agent names, tried in order), `--effort`,
 `--max-pm-turns` (default 60 per session), `--max-minutes` (default 90 per session),
 `--land-minutes` (how long to wait for the Action per document pull request, default 10),
-`--project` and `--repo` (override `.throwaway.env`).
+`--wait-minutes` (how long to let a verb work in the background before asking for an update,
+default 20), `--project` and `--repo` (override `.throwaway.env`).
 
 ## What the driver does between sessions
 
@@ -96,8 +97,12 @@ the checkout to `main` is plain `git fetch`, `git checkout main`, `git pull --ff
 After every turn the simulator classifies the agent's last text: a question or a document shown for
 approval is a `reply`; a final report that names what happens next or says it is safe to `/clear` is
 `done`; a stop whose remedy is a command for the person (install something, run `codefall upgrade`)
-is also `done`, and the chain stops there because the next verb would hit the same wall. `stuck` is a
-loop or an unanswerable question with no way forward offered. A session also ends on the SDK's own
+is also `done`, and the chain stops there because the next verb would hit the same wall. A turn
+that ends with the verb still working and nothing asked, such as implement saying a builder is
+running in the background and it will report when the task finishes, is `wait`: the driver sends
+nothing and the next turn starts when the background work reports back; after `--wait-minutes`
+with no turn, the driver asks "Any update on the build?" as the person would. `stuck` is a loop or
+an unanswerable question with no way forward offered. A session also ends on the SDK's own
 error result, on `--max-pm-turns`, or on `--max-minutes`.
 
 ## Permissions and the guard hook

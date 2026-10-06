@@ -40,7 +40,7 @@ export async function judgeRun(opts: {
   const promptPath = join(opts.runDir, "judge-prompt.rendered.md");
   writeFileSync(
     promptPath,
-    `${instructions}\n\n## The run directory\n\nYou are running inside it: \`${opts.runDir}\`. Read \`rubric.md\` first, then every transcript in chain order, then \`evidence/\` and \`deviations.txt\`.\n\n## The shape of your answer\n\nReply with one JSON object and nothing else, matching this schema:\n\n\`\`\`json\n${schema}\n\`\`\`\n`,
+    `${instructions}\n\n## The run directory\n\nYou are running inside it: \`${opts.runDir}\`. Read \`rubric.md\` first, then every transcript in chain order, then \`evidence/\` and \`deviations.txt\`.\n\n## The shape of your answer\n\nReply with one JSON object and nothing else: an instance of this schema, with \`overall\`, \`overall_reason\`, and \`blocks\` at the top level, not a copy of the schema itself:\n\n\`\`\`json\n${schema}\n\`\`\`\n`,
   );
 
   const tried: JudgeRecord["tried"] = [];
@@ -87,7 +87,7 @@ function runAgent(script: string, agent: string, prompt: string, schema: string,
   }
 }
 
-function parseJson(text: string): any {
+export function parseJson(text: string): any {
   // Muse has been seen to print its final object twice; take the last complete object.
   const fenced = [...text.matchAll(/```(?:json)?\s*([\s\S]*?)```/g)].map((m) => m[1]);
   const candidates = fenced.length ? fenced.reverse() : [text];
@@ -96,7 +96,7 @@ function parseJson(text: string): any {
     const end = candidate.lastIndexOf("}");
     if (start < 0 || end < 0) continue;
     try {
-      return JSON.parse(candidate.slice(start, end + 1));
+      return unwrap(JSON.parse(candidate.slice(start, end + 1)));
     } catch {
       // try the next candidate
     }
@@ -104,7 +104,16 @@ function parseJson(text: string): any {
   return null;
 }
 
-function renderVerdict(v: any, judgedBy: string | null, tried: JudgeRecord["tried"]): string {
+// A judge has been seen to answer with a copy of the schema whose `properties` hold the values
+// (`properties.overall`, `properties.blocks`) instead of a plain object. Read that shape too.
+function unwrap(parsed: any): any {
+  if (parsed && typeof parsed === "object" && parsed.overall === undefined && typeof parsed.properties?.overall === "string") {
+    return parsed.properties;
+  }
+  return parsed;
+}
+
+export function renderVerdict(v: any, judgedBy: string | null, tried: JudgeRecord["tried"]): string {
   const lines: string[] = ["# Verdict", ""];
   lines.push(`Judged by: ${judgedBy ?? "nobody answered"}. Tried: ${tried.map((t) => `${t.agent} (${t.note})`).join("; ")}.`, "");
   if (!v) {

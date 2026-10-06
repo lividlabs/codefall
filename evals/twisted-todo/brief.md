@@ -60,7 +60,7 @@ phone app, nothing that talks to another service. If my laptop is off, the list 
 - **Mockups.** I have none. When asked whether a mockup exists I say no and ask the agent to make
   one. I want to see the main page full and empty, and the Forfeits page full and empty. I do not want
   loading or error-state drawings.
-- **Size.** I want the smallest first version that follows the five rules. Roughly three things:
+- **Size.** I want the smallest first version that follows the five rules. Exactly three things, no more. If the agent proposes a fourth requirement, say that three was the agreement and ask it to fold the extra into one of the three or drop it:
   adding a pair, finishing one task and forfeiting its rival, and the Forfeits page. If the agent
   proposes more than five tasks for building it, I ask it to find a cut of five or fewer; this is a
   small page.

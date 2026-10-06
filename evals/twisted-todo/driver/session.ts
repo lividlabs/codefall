@@ -1,7 +1,10 @@
 // One verb, one fresh session. The first message is the slash command. AskUserQuestion calls are
 // answered through `canUseTool`; every other tool is allowed, so the run never waits on a person.
-// When a turn ends, the simulator reads it and either replies, declares the session done, or says
-// it is stuck. Streaming input keeps the session alive between turns.
+// When a turn ends, the simulator reads it and either replies, waits (the verb is still working, a
+// builder is running in the background, and nothing was asked), declares the session done, or says
+// it is stuck. Streaming input keeps the session alive between turns, and on a wait the driver
+// pushes nothing: the next result arrives when the background work reports back. If nothing arrives
+// within `waitMinutes`, the driver asks for an update as the person would.
 
 import { query, type SDKUserMessage, type SDKMessage } from "@anthropic-ai/claude-agent-sdk";
 import { Simulator, type Question } from "./simulator.ts";
@@ -17,6 +20,8 @@ export type SessionOptions = {
   effort?: "low" | "medium" | "high" | "xhigh" | "max";
   maxPmTurns: number;
   maxMinutes: number;
+  /** How long to wait for a verb that said it is still working before asking for an update. */
+  waitMinutes?: number;
   log: (line: string) => void;
 };
 
@@ -80,6 +85,8 @@ export async function runSession(opts: SessionOptions): Promise<SessionOutcome> 
   let sessionId: string | undefined;
   let status: SessionOutcome["status"] = "done";
   let settling = false;
+  let nudge: ReturnType<typeof setTimeout> | undefined;
+  const waitMs = (opts.waitMinutes ?? 20) * 60_000;
 
   queue.push(opts.firstMessage);
 
@@ -116,6 +123,10 @@ export async function runSession(opts: SessionOptions): Promise<SessionOutcome> 
       if (message.type !== "result") continue;
 
       const result = message as any;
+      if (nudge) {
+        clearTimeout(nudge);
+        nudge = undefined;
+      }
       costUsd = Number(result.total_cost_usd ?? costUsd);
       if (result.subtype !== "success") {
         transcript.note("driver", `the session ended with ${result.subtype}; stopping this verb`);
@@ -145,6 +156,19 @@ export async function runSession(opts: SessionOptions): Promise<SessionOutcome> 
         queue.close();
         break;
       }
+      if (move.kind === "wait") {
+        transcript.note("PM-sim", `waiting — ${move.reason}`);
+        nudge = setTimeout(() => {
+          nudge = undefined;
+          const text = "Any update on the build?";
+          transcript.note("driver", `nothing arrived for ${opts.waitMinutes ?? 20} minutes; asking for an update as the person would`);
+          transcript.note("PM", text);
+          transcript.newTurn();
+          pmTurns += 1;
+          queue.push(text);
+        }, waitMs);
+        continue;
+      }
       pmTurns += 1;
       if (pmTurns > opts.maxPmTurns) {
         transcript.note("driver", `turn limit of ${opts.maxPmTurns} reached; stopping this verb`);
@@ -157,6 +181,7 @@ export async function runSession(opts: SessionOptions): Promise<SessionOutcome> 
       queue.push(move.text);
     }
   } finally {
+    if (nudge) clearTimeout(nudge);
     queue.close();
     abort.abort();
   }
