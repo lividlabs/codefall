@@ -1,0 +1,7 @@
+# One run's throwaway repository and checkout; written by fixture/setup.sh.
+.throwaway.env
+# Run transcripts and verdicts. Commit one by hand when it is worth keeping.
+runs/
+# The driver's dependencies.
+driver/node_modules/
+driver/package-lock.json
