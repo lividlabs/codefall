@@ -50,7 +50,9 @@ writing and changing a skill; the extension-wide rules, ADR immutability, prose,
   this shape.
 - **A report ends with what the user does next** — merge the pull request, run the next verb,
   answer a question — as its last line, and a stop that hands over a remedy says to rerun the verb
-  after it. A user should never have to work out the next step from what was produced.
+  after it. A user should never have to work out the next step from what was produced. One step,
+  never a sequence: for `codefall-equip`, `codefall-scaffold`, and `codefall-upgrade` that step is
+  the merge, and what follows it is stated as what happens once the pull request is merged.
 - Never present an option that would be refused — unsupported stacks and planned profiles are
   exits, not menu choices. See the stack question in `codefall-scaffold`'s SKILL.md.
 - Every verb except `codefall-scaffold` and `codefall-upgrade` reads

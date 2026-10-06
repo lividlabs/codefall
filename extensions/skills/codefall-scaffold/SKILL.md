@@ -314,10 +314,9 @@ the profile's depth notes: draft from what this run emitted,
 ### 6. Verify
 
 Whatever you emitted must actually work. If there are project files, run install, lint, and test —
-and confirm the boundary rules **fail on a deliberate violation**, because a lint config that catches
-nothing is the common failure here. Do not assume; run it. Prove the local scripts too: `update`
-twice, the second exiting `0` and quickly. If there are only docs, check that every ADR cross-link
-and every `AGENTS.md` link resolves.
+and confirm the boundary rules **fail on a deliberate violation**. Do not assume; run it. Prove the
+local scripts too: `update` twice, the second exiting `0` and quickly. If there are only docs, check
+that every ADR cross-link and every `AGENTS.md` link resolves.
 
 ### 7. Report
 
@@ -329,8 +328,8 @@ and every `AGENTS.md` link resolves.
   pull request opened, a person's to merge.
 - What the user still owes the project — always including boundary enforcement if it is not wired,
   and `codefall-equip` after a docs-only run.
-- **Last, what the user does next**: merge the pull request, what is owed above, then
-  `/codefall-specify VISION-NNN`.
+- **Last, what the user does next**: merge the pull request, and nothing after it. What is owed is
+  said above; `/codefall-specify VISION-NNN` is what follows once it is merged, not a second step.
 
 ## Rules
 

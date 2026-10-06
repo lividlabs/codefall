@@ -1808,6 +1808,16 @@ Decided at scaffold, 2026-08-16.
   a report says. Seen and not taken: the rule in `personas.md` (it holds for the engineer too, and
   that file changes nothing for the engineer); a copy of the rule in each verb (a copy drifts, which
   is how the two reports came to disagree).
+- **Equip, scaffold, and upgrade end on the merge alone, 2026-10-06.** For issue #178. In the same
+  twisted-todo run, `codefall-equip test` under the product-manager persona ended with two steps:
+  merge pull request #2, then run `/codefall-implement`. ADR-014's rule is one plain sentence and
+  exactly one command, and the skills' own closing lines were what produced the second step: each
+  read "merge the pull request, then ..." with a verb or an owed item after the comma. Those lines
+  now say the merge is the one step and nothing follows it; what comes after is stated as what
+  happens once the pull request is merged, a fact beside the step, never a step of its own. The
+  convention is one clause in `skills/AGENTS.md`'s report rule, and equip carries it as a rule
+  across its four tracks. No ADR changes: ADR-014 already says it. Seen and not taken: naming no
+  next verb at all (the person then has to work it out, which the report rule forbids).
 
 ## Open
 
