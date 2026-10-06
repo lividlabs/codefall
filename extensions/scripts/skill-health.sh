@@ -81,7 +81,29 @@ refs() {
   } | grep -v -E '^(https?:|/|~|$)' | grep -v -E '[<>{}*$]' | sort -u
 }
 
-# Absolute path of a reference relative to a directory, or nothing when it does not exist.
+# True when every component of a relative path names a directory entry spelled with exactly
+# that case. A case-insensitive filesystem, macOS's default, answers -e for AGENTS.md when only
+# agents.md is there; Linux does not, and the report has to be the same on both.
+exact_case() {
+  local at="$1" rest="$2" part entry found
+  while [ -n "$rest" ]; do
+    part="${rest%%/*}"
+    if [ "$part" = "$rest" ]; then rest=""; else rest="${rest#*/}"; fi
+    case "$part" in
+      ""|.) continue ;;
+      ..) at="$at/.."; continue ;;
+    esac
+    found=0
+    for entry in "$at"/* "$at"/.*; do
+      [ "${entry##*/}" = "$part" ] && { found=1; break; }
+    done
+    [ "$found" -eq 1 ] || return 1
+    at="$at/$part"
+  done
+}
+
+# Absolute path of a reference relative to a directory, or nothing when no file of exactly that
+# name exists.
 #
 # A skill names a shared file by the path it has once installed —
 # ../../../.codefall/shared/<file> from a skill directory, one level deeper from a supporting
@@ -90,10 +112,11 @@ refs() {
 resolve() {
   local base="$1" ref="$2" target
   case "$ref" in
-    */.codefall/*) target="$ext_root/${ref#*.codefall/}" ;;
-    *) target="$base/$ref" ;;
+    */.codefall/*) base="$ext_root"; ref="${ref#*.codefall/}" ;;
   esac
+  target="$base/$ref"
   [ -e "$target" ] || return 1
+  exact_case "$base" "$ref" || return 1
   if [ -d "$target" ]; then
     (cd "$target" && pwd -P)
   else
