@@ -136,9 +136,10 @@ export default defineConfig({
 - **The base URL is the project's**, taken from what the declared `start` command brings up.
 
 Commands, as the Runners line will carry them: all specs `npx playwright test`; one case
-`npx playwright test testing/test-cases/<area>/<slug>.e2e.ts`; the list `npx playwright test --list`.
-A project whose idiom is package scripts gets `"e2e": "playwright test"` and the lines name
-`npm run e2e` instead.
+`npx playwright test testing/test-cases/<area>/<slug>.e2e.ts`; the list
+`npx playwright test --list --pass-with-no-tests`. The flag is what lets the list exit `0` on a tree
+with no specs yet; without it Playwright exits `1` with `No tests found`. A project whose idiom is
+package scripts gets `"e2e": "playwright test"` and the lines name `npm run e2e` instead.
 
 ## Setting up `go test`
 
@@ -213,10 +214,12 @@ the local track does.
 
 In order, and all four:
 
-1. **The runner's list command against the empty tree.** Playwright exits `0` and lists no specs,
-   which is what shows the configuration collects from where it says. `go test` has no package to
-   compile until the first spec exists and answers `matched no packages`; that is the expected
-   answer here, and the command's real proof is the first spec `codefall-implement` writes.
+1. **The runner's list command against the empty tree.** Playwright, run with
+   `--pass-with-no-tests`, exits `0` and lists no specs, which is what shows the configuration
+   collects from where it says; without the flag it exits `1` with `No tests found` on the same
+   tree, which proves nothing either way. `go test` has no package to compile until the first spec
+   exists and answers `matched no packages`; that is the expected answer here, and the command's
+   real proof is the first spec `codefall-implement` writes.
 2. **`../../../../.codefall/shared/check-cases.sh`.** Zero cases is a pass; what it proves now is
    that the root it reads from settings is the root the configuration points at.
 3. **`../../../../.codefall/shared/check-cases-playwright.sh`**, when Playwright is declared.
