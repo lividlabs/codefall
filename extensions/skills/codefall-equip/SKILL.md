@@ -53,7 +53,7 @@ equip before anything else.
 
 Read each when its track says to; none is loaded up front.
 
-- `reference/local.md`, `reference/testing.md`, `reference/agents.md`, `reference/landing.md` —
+- `reference/local.md`, `reference/testing.md`, `reference/agent-setup.md`, `reference/landing.md` —
   one track each, in full: every step, what it searches for, the one question, the shape of every
   write, the proof, the report, and the rules that hold for that track alone. Read before step 1
   of the track.
@@ -172,7 +172,7 @@ and follow it. `<root>` is the testing root `test.dir` declares. The track ends 
 
 ## Process — the agents
 
-`reference/agents.md` carries this track in full. Read it at step 1 and follow it. Every reply fits
+`reference/agent-setup.md` carries this track in full. Read it at step 1 and follow it. Every reply fits
 on one screen: the configuration, one question, one change.
 
 1. **Read** `harnesses`, `harnessConfig`, and `agents`; no settings file means `codefall init`

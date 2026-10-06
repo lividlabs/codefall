@@ -18,7 +18,7 @@ local track and follow it. `signals.md` and `contract.md` are read at the steps 
 
 The target is the path argument, or the working directory. Read `.codefall/settings.json` and note
 whether a `local` block is declared; read the declared scripts when it is. Read the project's
-AGENTS.md files, root and scoped, for verify commands and conventions. If there is no
+`AGENTS.md`, root and scoped, for verify commands and conventions. If there is no
 `.codefall/settings.json` at all, stop and say `codefall init` comes first.
 
 ## 2. Find what is already there

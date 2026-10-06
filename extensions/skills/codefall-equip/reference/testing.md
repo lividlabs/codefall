@@ -31,7 +31,7 @@ The sections after this one carry what each step searches for, writes, and prove
 The target is the path argument, or the working directory. Read the `test` block in
 `.codefall/settings.json`, per [The declaration](#the-declaration). No block, or no
 `.codefall/settings.json` at all: stop and say `codefall init` declares the testing root first.
-Then read the project's root AGENTS.md, and `<root>/AGENTS.md`.
+Then read the project's root `AGENTS.md`, and `<root>/AGENTS.md`.
 
 ### 2. Find what is already there
 

@@ -73,7 +73,7 @@ recent sessions are read from outside. ADR-009.4 dropped the requirement.
 **The local and test steps written out in `SKILL.md`.** They were, until the file sat at the
 5,000-token guideline and every fix had to cut a sentence to make room. One run follows one track,
 so the other three tracks' steps are weight a run never reads. Each track now keeps its steps in its
-own reference file — `reference/local.md`, `reference/testing.md`, `reference/agents.md`,
+own reference file — `reference/local.md`, `reference/testing.md`, `reference/agent-setup.md`,
 `reference/landing.md` — with a numbered outline in `SKILL.md` that says to read the file before
 step 1. The rules that hold for one track alone moved with it; `SKILL.md`'s Rules are the ones that
 hold on every track. Moving a track's steps back into `SKILL.md` buys nothing a run needs and costs
