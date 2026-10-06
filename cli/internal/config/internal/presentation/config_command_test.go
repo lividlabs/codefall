@@ -28,6 +28,7 @@ type fakeConfig struct {
 	agents          []settings.Agent
 	cleared         bool
 	posting         mo.Option[bool]
+	prefix          string
 	set             string
 	key             string
 	block           mo.Option[settings.HarnessConfig]
@@ -68,6 +69,12 @@ func (f *fakeConfig) ClearList(_, active, feature string) (domain.Write, error) 
 
 func (f *fakeConfig) SetPosting(_ string, on bool) (domain.Write, error) {
 	f.posting = mo.Some(on)
+
+	return f.write, f.err
+}
+
+func (f *fakeConfig) SetSkillPrefix(_, prefix string) (domain.Write, error) {
+	f.prefix = prefix
 
 	return f.write, f.err
 }
@@ -139,6 +146,7 @@ func TestShowPrintsTheEffectiveConfiguration(t *testing.T) {
 		"    review: claude, then codex:gpt-5-codex\n" +
 		"    consult: same as default\n" +
 		"review posting: on\n" +
+		"skill prefix: codefall (codefall-design, /codefall-implement)\n" +
 		"persona: product-manager (from .codefall/user.json)\n"
 	if out != want {
 		t.Errorf("output =\n%q\nwant\n%q", out, want)
@@ -162,6 +170,7 @@ func TestShowSaysWhenTheListIsTheDefault(t *testing.T) {
 		"    review: this harness\n" +
 		"    consult: this harness\n" +
 		"review posting: off\n" +
+		"skill prefix: codefall (codefall-design, /codefall-implement)\n" +
 		"persona: engineer (default)\n"
 	if out != want {
 		t.Errorf("output =\n%q\nwant\n%q", out, want)
@@ -299,6 +308,7 @@ func TestShowPrintsHowEachHarnessIsCalled(t *testing.T) {
 		"    consult: this harness\n" +
 		harnessBlockLines +
 		"review posting: off\n" +
+		"skill prefix: codefall (codefall-design, /codefall-implement)\n" +
 		"persona: engineer (default)\n"
 	if out != want {
 		t.Errorf("output =\n%q\nwant\n%q", out, want)
@@ -511,5 +521,39 @@ func TestBareCommandWithoutATerminalPrintsTheConfigurationAndAHint(t *testing.T)
 		if !strings.Contains(out, want) {
 			t.Errorf("output = %q, want it to hold %q", out, want)
 		}
+	}
+}
+
+// The prefix prints with no argument and is handed over with one; the sentence the write reports is
+// the use case's, which names the command that renames the install.
+func TestSkillPrefixPrintsOrSets(t *testing.T) {
+	config := &fakeConfig{shown: domain.Configuration{SkillPrefix: settings.SkillPrefixCf, Persona: domain.Persona{Name: "engineer"}}}
+
+	out, err := run(t, config, "skill-prefix")
+	if err != nil {
+		t.Fatalf("Execute: %v", err)
+	}
+
+	if want := "skill prefix: cf (cf-design, /cf-implement)\n"; out != want {
+		t.Errorf("output = %q, want %q", out, want)
+	}
+
+	config = &fakeConfig{write: domain.Changed("set skill prefix cfall in .codefall/settings.json; run codefall upgrade to rename the installed skills")}
+
+	out, err = run(t, config, "skill-prefix", "cfall")
+	if err != nil {
+		t.Fatalf("Execute cfall: %v", err)
+	}
+
+	if config.prefix != settings.SkillPrefixCfall {
+		t.Errorf("SetSkillPrefix was given %q, want %q", config.prefix, settings.SkillPrefixCfall)
+	}
+
+	if want := "✓ set skill prefix cfall in .codefall/settings.json; run codefall upgrade to rename the installed skills\n"; out != want {
+		t.Errorf("output = %q, want %q", out, want)
+	}
+
+	if _, err := run(t, &fakeConfig{}, "skill-prefix", "cf", "cfall"); err == nil {
+		t.Error("two prefixes were accepted, want a refusal")
 	}
 }

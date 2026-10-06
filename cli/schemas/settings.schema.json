@@ -19,6 +19,11 @@
         "enum": ["agy", "claude", "codex", "muse", "opencode"]
       }
     },
+    "skillPrefix": {
+      "description": "The prefix the installed skills are named with: codefall-design, cf-design, or cfall-design, and the slash command with it. Absent means codefall. codefall init writes it; changing it and running codefall upgrade installs the skills under the new names and removes the old ones (ADR-015).",
+      "type": "string",
+      "enum": ["cf", "cfall", "codefall"]
+    },
     "agents": {
       "description": "Who codefall reaches for when a verb needs another reader, by the harness the session is running in (ADR-009.2). Each entry is for one active agent, one of the five harness names or default, and holds a review list and a consult list, each the agents to try in order until one answers. A list left out means the default entry's list; a default entry left out means the current harness's own subagent. Absent means one default entry whose two lists each hold current, which codefall init writes explicitly.",
       "type": "array",

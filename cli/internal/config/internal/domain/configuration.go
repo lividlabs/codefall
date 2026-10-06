@@ -16,7 +16,10 @@ type Configuration struct {
 	HarnessConfigs map[string]settings.HarnessConfig
 	// Posting is whether codefall-review may post its findings to a pull request.
 	Posting bool
-	Persona Persona
+	// SkillPrefix is what the installed skills are called, the default when the settings say nothing
+	// (ADR-015).
+	SkillPrefix string
+	Persona     Persona
 }
 
 // Persona is who the person at the keyboard works as, and whether the user file said so or the

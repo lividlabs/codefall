@@ -167,7 +167,7 @@ func (i *Initialize) settings(_ context.Context, request Request) (domain.StepRe
 		return domain.SettingsStep.Skipped(settingsName + " already exists"), nil
 	}
 
-	chosen, err := domain.NewSettings(request.Tracker, request.Harnesses, request.IssuesRepo,
+	chosen, err := domain.NewSettings(request.Tracker, request.Harnesses, skillPrefix(request), request.IssuesRepo,
 		request.IssuesProject,
 		domain.ReviewSettings{PostToPullRequest: request.ReviewPostToPullRequest.OrElse(false)})
 	if err != nil {
@@ -229,6 +229,12 @@ func describe(chosen domain.Settings) string {
 		parts = append(parts, "review posts to pull requests")
 	}
 
+	// The default prefix is what every reader expects, as the review default is, so only a choice
+	// is worth a clause.
+	if chosen.SkillPrefix != settings.DefaultSkillPrefix {
+		parts = append(parts, "skill prefix: "+chosen.SkillPrefix)
+	}
+
 	return strings.Join(parts, ", ")
 }
 
@@ -240,14 +246,17 @@ func describe(chosen domain.Settings) string {
 // The test block is not here: it is written by the testing step, into whatever settings the project
 // has, because most projects get theirs on a rerun over a file this step skipped (ADR-007).
 type settingsDocument struct {
-	Schema    string                    `json:"$schema"`
-	Version   int                       `json:"version"`
-	Tracker   string                    `json:"tracker"`
-	Harnesses []string                  `json:"harnesses"`
-	Agents    []entryDocument           `json:"agents"`
-	Beads     mo.Option[beadsDocument]  `json:"beads,omitzero"`
-	GitHub    mo.Option[gitHubDocument] `json:"github,omitzero"`
-	Review    reviewDocument            `json:"review"`
+	Schema    string   `json:"$schema"`
+	Version   int      `json:"version"`
+	Tracker   string   `json:"tracker"`
+	Harnesses []string `json:"harnesses"`
+	// SkillPrefix is always written, the default included, for the reason the review block and the
+	// agents list are: a file that states the setting shows there is something to change (ADR-015).
+	SkillPrefix string                    `json:"skillPrefix"`
+	Agents      []entryDocument           `json:"agents"`
+	Beads       mo.Option[beadsDocument]  `json:"beads,omitzero"`
+	GitHub      mo.Option[gitHubDocument] `json:"github,omitzero"`
+	Review      reviewDocument            `json:"review"`
 }
 
 // entryDocument is one entry of the agents list: who a session in the active agent's harness
@@ -297,12 +306,13 @@ func (gitHubDocument) IsZero() bool { return false }
 // newline, so the result is what a person would have written by hand and diffs a line at a time.
 func encodeSettings(chosen domain.Settings) ([]byte, error) {
 	document := settingsDocument{
-		Schema:    settings.SchemaID,
-		Version:   settings.Version,
-		Tracker:   chosen.Tracker,
-		Harnesses: chosen.Harnesses,
-		Agents:    defaultAgents(),
-		Review:    reviewDocument{PostToPullRequest: chosen.Review.PostToPullRequest},
+		Schema:      settings.SchemaID,
+		Version:     settings.Version,
+		Tracker:     chosen.Tracker,
+		Harnesses:   chosen.Harnesses,
+		SkillPrefix: chosen.SkillPrefix,
+		Agents:      defaultAgents(),
+		Review:      reviewDocument{PostToPullRequest: chosen.Review.PostToPullRequest},
 	}
 
 	// One case per tracker, so adding a tracker is a case here and a block above rather than a

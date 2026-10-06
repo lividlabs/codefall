@@ -1,6 +1,7 @@
 package application
 
 import (
+	"context"
 	"fmt"
 	"path"
 	"slices"
@@ -20,8 +21,13 @@ import (
 // removed, whichever entry listed it, because four harnesses share one skills directory and a file
 // one entry has stopped naming may be another's. A record with nothing to compare — an entry with no
 // file list, a harness with no entry — removes nothing for that entry and says so.
-func (i *Initialize) cleanup(request Request, previous manifest.Document, written installed) (domain.StepResult, error) {
+func (i *Initialize) cleanup(ctx context.Context, request Request, previous manifest.Document, written installed) (domain.StepResult, error) {
 	dests, err := skillsDirs(request)
+	if err != nil {
+		return domain.StepResult{}, err
+	}
+
+	rename, err := i.skillRename(request)
 	if err != nil {
 		return domain.StepResult{}, err
 	}
@@ -65,21 +71,32 @@ func (i *Initialize) cleanup(request Request, previous manifest.Document, writte
 
 	notes := strings.Join(unread, "; ")
 
+	// A run that moved the skills from one prefix to another has more to say than what it removed:
+	// what the project's own files still call them, which it never rewrites (ADR-015).
+	var moved []string
+
+	if former := previous.InstalledSkillPrefix(); former != rename.Prefix() {
+		moved, err = i.formerPrefixReport(ctx, request, former, rename, dests)
+		if err != nil {
+			return domain.StepResult{}, err
+		}
+	}
+
 	if len(removed) == 0 {
 		detail := "nothing to remove"
 		if notes != "" {
 			detail += "; " + notes + ", so nothing was compared there"
 		}
 
-		return domain.CleanupStep.Skipped(detail), nil
+		return domain.CleanupStep.Skipped(strings.Join(append([]string{detail}, moved...), "; ")), nil
 	}
 
-	detail := "removed " + sentenceList(i.describeRemovals(removed, written, dests))
+	detail := "removed " + sentenceList(i.describeRemovals(removed, written, dests, rename))
 	if notes != "" {
 		detail += "; " + notes + ", so nothing was compared there"
 	}
 
-	return domain.CleanupStep.Done(detail), nil
+	return domain.CleanupStep.Done(strings.Join(append([]string{detail}, moved...), "; ")), nil
 }
 
 // removal is one path the record lists and this run did not write, and the directory the install it
@@ -170,9 +187,16 @@ func (i *Initialize) remove(dir string, candidates []removal) ([]removal, error)
 }
 
 // describeRemovals is what the step reports: a skill directory this run wrote nothing into is named
-// once, as a rename when the tree renamed it and as no longer shipped otherwise, and every other file
-// is named on its own.
-func (i *Initialize) describeRemovals(removed []removal, written installed, dests map[string]string) []string {
+// once, as a rename when the tree renamed it or the project's prefix moved it, and as no longer
+// shipped otherwise, and every other file is named on its own.
+//
+// The two renames compose. A directory the tree knows under a former name is first taken to the name
+// the tree has for it now, and that name is then taken to the project's prefix, so `codefall-graft/`
+// removed under the prefix cf reads as renamed to `cf-upgrade`, and `codefall-design/` removed for no
+// reason but the prefix reads as renamed to `cf-design` (ADR-015).
+func (i *Initialize) describeRemovals(
+	removed []removal, written installed, dests map[string]string, rename domain.SkillRename,
+) []string {
 	kept := writtenPaths(written)
 
 	var (
@@ -195,7 +219,10 @@ func (i *Initialize) describeRemovals(removed []removal, written installed, dest
 
 		seen[skill] = true
 
-		if current, renamed := i.source.RenamedSkill(path.Base(skill)).Get(); renamed {
+		name := path.Base(skill)
+		current := rename.Text(i.source.RenamedSkill(name).OrElse(name))
+
+		if current != name {
 			described = append(described, skill+"/ (renamed to "+current+")")
 		} else {
 			described = append(described, skill+"/ (no longer shipped)")

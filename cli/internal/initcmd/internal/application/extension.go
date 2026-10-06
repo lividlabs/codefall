@@ -42,6 +42,9 @@ type installed struct {
 // copy. It also hands back every path it installed, which the run records in the manifest once the
 // last step has succeeded.
 //
+// Both copies go through the skill rename, so a project that chose a prefix other than the source's
+// receives every skill, and every mention of one, under that prefix (ADR-015).
+//
 // It copies twice, for two different reasons. Harnesses share skills directories — four of the five
 // read `.agents/` — so the skills are copied once per directory, and every harness that reads that
 // directory records the same files. Which directory each one is belongs to the shared harness module
@@ -52,6 +55,11 @@ func (i *Initialize) extension(
 	ctx context.Context, request Request,
 ) (domain.StepResult, installed, error) {
 	dests, err := skillsDirs(request)
+	if err != nil {
+		return domain.StepResult{}, installed{}, err
+	}
+
+	rename, err := i.skillRename(request)
 	if err != nil {
 		return domain.StepResult{}, installed{}, err
 	}
@@ -68,7 +76,7 @@ func (i *Initialize) extension(
 		dest := dests[name]
 
 		if _, done := copied[dest]; !done {
-			fetched, err := i.fetchSkills(ctx, request.Dir, dest)
+			fetched, err := i.fetchSkills(ctx, request.Dir, dest, rename)
 			if err != nil {
 				return domain.StepResult{}, installed{}, err
 			}
@@ -80,7 +88,7 @@ func (i *Initialize) extension(
 		written.harnesses[name] = projectPaths(dest, copied[dest])
 	}
 
-	shared, err := i.fetchShared(ctx, request.Dir)
+	shared, err := i.fetchShared(ctx, request.Dir, rename)
 	if err != nil {
 		return domain.StepResult{}, installed{}, err
 	}

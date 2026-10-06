@@ -32,6 +32,7 @@ type fakeInitialize struct {
 	installed   mo.Option[application.Installation]
 	harnesses   mo.Option[[]string]
 	testDir     mo.Option[string]
+	skillPrefix string
 	formers     []string
 	breaking    mo.Option[[]application.BreakingRelease]
 	breakingErr error
@@ -81,6 +82,16 @@ func (f *fakeInitialize) ChosenHarnesses(string) (mo.Option[[]string], error) {
 // for a project with no settings, and for one whose settings predate the block.
 func (f *fakeInitialize) DeclaredTestDir(string) (mo.Option[string], error) {
 	return f.testDir, nil
+}
+
+// DeclaredSkillPrefix reports the prefix a settled project's settings name the skills with: the
+// default unless a test says otherwise, which is what settings written before the field read as.
+func (f *fakeInitialize) DeclaredSkillPrefix(string) (string, error) {
+	if f.skillPrefix == "" {
+		return settings.DefaultSkillPrefix, nil
+	}
+
+	return f.skillPrefix, nil
 }
 
 // FormerHarnessNames reports the old harness spellings a settled project's files carry. None is the
@@ -193,6 +204,7 @@ func TestInitCommandPassesTheFlagsToTheUseCase(t *testing.T) {
 		IssuesProject: mo.Some(3),
 		Harnesses:     []string{harness.Claude},
 		TestDir:       "e2e",
+		SkillPrefix:   settings.DefaultSkillPrefix,
 		CLIVersion:    buildinfo.Version(),
 	}
 
@@ -243,6 +255,11 @@ func TestInitCommandRejects(t *testing.T) {
 			name: "a harness codefall cannot set up yet",
 			args: []string{"--tracker", "beads", "--harness", "cursor"},
 			want: `harness "cursor" is not supported yet (supported: agy, claude, codex, muse, opencode)`,
+		},
+		{
+			name: "a skill prefix outside the closed set",
+			args: []string{"--tracker", "beads", "--harness", harness.Claude, "--skill-prefix", "code"},
+			want: `unknown skill prefix "code" (known prefixes: cf, cfall, codefall)`,
 		},
 		{
 			name: "a repository that is not owner/name",
@@ -772,5 +789,49 @@ func TestAtLeastOneHarness(t *testing.T) {
 
 	if err := atLeastOneHarness([]string{harness.Claude}); err != nil {
 		t.Errorf("atLeastOneHarness of one harness = %v, want nil", err)
+	}
+}
+
+// The prefix is the one answer a script gets by default: given, it is passed as parsed; not given,
+// the run takes the name every project had before there was a choice rather than failing on a flag
+// a script written before the flag existed does not know (ADR-015).
+func TestInitCommandPassesTheSkillPrefixOrItsDefault(t *testing.T) {
+	initialize := newFakeInitialize()
+
+	if _, err := run(t, initialize, "--tracker", "beads", "--harness", harness.Claude,
+		"--test-dir", settings.DefaultTestDir, "--skill-prefix", "cf"); err != nil {
+		t.Fatalf("Execute: %v", err)
+	}
+
+	if initialize.got.SkillPrefix != settings.SkillPrefixCf {
+		t.Errorf("SkillPrefix = %q, want %q", initialize.got.SkillPrefix, settings.SkillPrefixCf)
+	}
+
+	initialize = newFakeInitialize()
+
+	if _, err := run(t, initialize, "--tracker", "beads", "--harness", harness.Claude,
+		"--test-dir", settings.DefaultTestDir); err != nil {
+		t.Fatalf("Execute without the flag: %v", err)
+	}
+
+	if initialize.got.SkillPrefix != settings.DefaultSkillPrefix {
+		t.Errorf("SkillPrefix without the flag = %q, want the default %q", initialize.got.SkillPrefix, settings.DefaultSkillPrefix)
+	}
+}
+
+// A project settled before the manifest existed installs under the prefix its settings declare, read
+// back the way the harnesses and the testing root are.
+func TestInitCommandTakesTheSkillPrefixFromSettledSettings(t *testing.T) {
+	initialize := newFakeInitialize()
+	initialize.exists = true
+	initialize.harnesses = mo.Some([]string{harness.Claude})
+	initialize.skillPrefix = settings.SkillPrefixCfall
+
+	if _, err := run(t, initialize); err != nil {
+		t.Fatalf("Execute: %v", err)
+	}
+
+	if initialize.got.SkillPrefix != settings.SkillPrefixCfall {
+		t.Errorf("SkillPrefix = %q, want the one the settings declare, %q", initialize.got.SkillPrefix, settings.SkillPrefixCfall)
 	}
 }

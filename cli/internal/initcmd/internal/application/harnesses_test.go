@@ -10,6 +10,7 @@ import (
 	"github.com/lividlabs/codefall/cli/internal/initcmd/internal/domain"
 	"github.com/lividlabs/codefall/cli/internal/shared/harness"
 	"github.com/lividlabs/codefall/cli/internal/shared/manifest"
+	"github.com/lividlabs/codefall/cli/internal/shared/settings"
 )
 
 // requestFor is a settled project's run for whichever harnesses the test names.
@@ -115,7 +116,7 @@ func TestExtensionStepCopiesOncePerDirectoryHoweverManyHarnessesShareIt(t *testi
 		harness.Codex:    install,
 		harness.Muse:     install,
 		harness.OpenCode: install,
-	}, Shared: sharedInstall("v1.2.3")}
+	}, Shared: sharedInstall("v1.2.3"), SkillPrefix: settings.DefaultSkillPrefix}
 
 	if got := recordedManifestIn(t, files); !reflect.DeepEqual(got, want) {
 		t.Errorf("manifest = %+v, want %+v", got, want)
@@ -135,7 +136,7 @@ func TestTheManifestRecordsWhereEachHarnessFilesLanded(t *testing.T) {
 	want := manifest.Document{Harnesses: map[string]manifest.Install{
 		harness.Claude: {Version: "v1.2.3", Files: []string{".claude/skills/design/SKILL.md"}},
 		harness.Codex:  {Version: "v1.2.3", Files: []string{".agents/skills/design/SKILL.md"}},
-	}, Shared: sharedInstall("v1.2.3")}
+	}, Shared: sharedInstall("v1.2.3"), SkillPrefix: settings.DefaultSkillPrefix}
 
 	if got := recordedManifestIn(t, files); !reflect.DeepEqual(got, want) {
 		t.Errorf("manifest = %+v, want %+v", got, want)
@@ -158,7 +159,7 @@ func TestTheManifestKeepsWhatAnEarlierRunRecordedForAnotherHarness(t *testing.T)
 	want := manifest.Document{Harnesses: map[string]manifest.Install{
 		harness.Claude: {Version: "v0.1.0", Files: []string{".claude/skills/old/SKILL.md"}},
 		harness.Codex:  {Version: "v1.2.3", Files: []string{".agents/skills/design/SKILL.md"}},
-	}, Shared: sharedInstall("v1.2.3")}
+	}, Shared: sharedInstall("v1.2.3"), SkillPrefix: settings.DefaultSkillPrefix}
 
 	if got := recordedManifestIn(t, files); !reflect.DeepEqual(got, want) {
 		t.Errorf("manifest = %+v, want %+v", got, want)

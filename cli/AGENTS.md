@@ -13,7 +13,7 @@ follows it; `internal/create/` (`codefall create`) is the third, and runs init's
 directory it makes; `internal/config/` (`codefall config`, an interactive editor in a terminal and
 subcommands for scripts, over one use case) is the fourth, and reads and writes the agents list, one
 entry per active agent with its review and consult lists, how each harness is called, whether review
-posts, and the persona. `internal/shared/ui/` holds the palette,
+posts, what the installed skills are called (ADR-015), and the persona. `internal/shared/ui/` holds the palette,
 the marks, the colour-profile writer, the spinner runner, and the reusable Bubble Tea models that are
 generic over their data (`OrderList`); `internal/shared/process/` holds the command runner and the file
 system; `internal/shared/buildinfo/` holds the version the binary reports, for `--version` and for

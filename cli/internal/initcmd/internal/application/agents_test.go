@@ -28,8 +28,8 @@ var agentsDocuments = map[string][]byte{
 	"agents/sections/local.md": []byte(domain.LocalSectionBegin + "\n## Local environment\n\nRun refresh.\n" +
 		domain.LocalSectionEnd + "\n"),
 	"agents/sections/testing.md": []byte(domain.TestingSectionBegin + "\n## Testing\n\nCases live under `" +
-		domain.TestingRootPlaceholder + "/`.\n" + domain.TestingSectionEnd + "\n"),
-	"agents/testing/AGENTS.md": []byte("# Testing\n\n## Runners\n\nNone declared yet.\n"),
+		domain.TestingRootPlaceholder + "/` and run through `/codefall-test`.\n" + domain.TestingSectionEnd + "\n"),
+	"agents/testing/AGENTS.md": []byte("# Testing\n\nCases run through `/codefall-test`.\n\n## Runners\n\nNone declared yet.\n"),
 	"agents/testing/README.md": []byte("# Test cases\n\n| Case ID | Modalities | Variants | Notes |\n"),
 }
 

@@ -156,12 +156,12 @@ func TestUpgradeCommandIsCurrentOnlyForTheHarnessItInstalled(t *testing.T) {
 	}{
 		{
 			name:        "the same harness at the same version",
-			installed:   application.Installation{Versions: map[string]string{harness.Claude: buildinfo.Version()}},
+			installed:   application.Installation{Versions: map[string]string{harness.Claude: buildinfo.Version()}, SkillPrefix: settings.DefaultSkillPrefix},
 			wantCurrent: true,
 		},
 		{
 			name:      "another harness at the same version",
-			installed: application.Installation{Versions: map[string]string{harness.Claude: buildinfo.Version()}},
+			installed: application.Installation{Versions: map[string]string{harness.Claude: buildinfo.Version()}, SkillPrefix: settings.DefaultSkillPrefix},
 			args:      []string{"--harness", harness.Agy},
 		},
 		{
@@ -174,7 +174,7 @@ func TestUpgradeCommandIsCurrentOnlyForTheHarnessItInstalled(t *testing.T) {
 		},
 		{
 			name:      "the same harness at an older version",
-			installed: application.Installation{Versions: map[string]string{harness.Claude: "v0.1.0"}},
+			installed: application.Installation{Versions: map[string]string{harness.Claude: "v0.1.0"}, SkillPrefix: settings.DefaultSkillPrefix},
 			args:      []string{"--yes"},
 		},
 	} {
@@ -214,7 +214,7 @@ func TestUpgradeCommandReportsWhatARunOverACurrentInstallRepaired(t *testing.T) 
 	initialize.harnesses = mo.Some([]string{harness.Claude})
 	initialize.testDir = mo.Some(settings.DefaultTestDir)
 	initialize.installed = mo.Some(application.Installation{
-		Versions: map[string]string{harness.Claude: buildinfo.Version()}})
+		Versions: map[string]string{harness.Claude: buildinfo.Version()}, SkillPrefix: settings.DefaultSkillPrefix})
 	initialize.report = domain.NewReport(
 		domain.SettingsStep.Skipped(".codefall/settings.json already exists"),
 		domain.HookStep.Skipped("codefall's hooks are already in .claude/settings.json"),
@@ -241,7 +241,7 @@ func TestUpgradeCommandSaysACurrentInstallWithNothingMissingIsUpToDate(t *testin
 	initialize.harnesses = mo.Some([]string{harness.Claude})
 	initialize.testDir = mo.Some(settings.DefaultTestDir)
 	initialize.installed = mo.Some(application.Installation{
-		Versions: map[string]string{harness.Claude: buildinfo.Version()}})
+		Versions: map[string]string{harness.Claude: buildinfo.Version()}, SkillPrefix: settings.DefaultSkillPrefix})
 	initialize.report = domain.NewReport(
 		domain.SettingsStep.Skipped(".codefall/settings.json already exists"),
 		domain.IgnoreStep.Skipped(".gitignore already names .codefall/user.json"),
@@ -292,7 +292,7 @@ func TestUpgradeCommandPrintsTheBreakingChangesBeforeItRuns(t *testing.T) {
 	initialize.manifest = true
 	initialize.harnesses = mo.Some([]string{harness.Claude})
 	initialize.testDir = mo.Some(settings.DefaultTestDir)
-	initialize.installed = mo.Some(application.Installation{Versions: map[string]string{harness.Claude: "0.16.0"}})
+	initialize.installed = mo.Some(application.Installation{Versions: map[string]string{harness.Claude: "0.16.0"}, SkillPrefix: settings.DefaultSkillPrefix})
 	initialize.breaking = mo.Some([]application.BreakingRelease{
 		{Version: "0.17.0", Notes: []string{"**skills:** conceptualize is now envision", "**skills:** the Beads section changed"}},
 		{Version: "0.19.0", Notes: []string{"**cli:** harnesses are named for their binaries"}},
@@ -326,7 +326,7 @@ func TestUpgradeCommandSaysWhenTheBreakingChangesCouldNotBeDetermined(t *testing
 	initialize.manifest = true
 	initialize.harnesses = mo.Some([]string{harness.Claude})
 	initialize.testDir = mo.Some(settings.DefaultTestDir)
-	initialize.installed = mo.Some(application.Installation{Versions: map[string]string{harness.Claude: "0.1.0-dev"}})
+	initialize.installed = mo.Some(application.Installation{Versions: map[string]string{harness.Claude: "0.1.0-dev"}, SkillPrefix: settings.DefaultSkillPrefix})
 	initialize.report = domain.NewReport()
 
 	out, err := runUpgradeCommand(t, initialize, "--yes")
@@ -351,7 +351,7 @@ func TestUpgradeCommandPrintsNoBreakingChangesOnACurrentInstall(t *testing.T) {
 	initialize.manifest = true
 	initialize.harnesses = mo.Some([]string{harness.Claude})
 	initialize.testDir = mo.Some(settings.DefaultTestDir)
-	initialize.installed = mo.Some(application.Installation{Versions: map[string]string{harness.Claude: buildinfo.Version()}})
+	initialize.installed = mo.Some(application.Installation{Versions: map[string]string{harness.Claude: buildinfo.Version()}, SkillPrefix: settings.DefaultSkillPrefix})
 	initialize.breaking = mo.Some([]application.BreakingRelease{{Version: "9.9.9", Notes: []string{"never printed"}}})
 
 	out, err := runUpgradeCommand(t, initialize)
@@ -429,7 +429,7 @@ func TestUpgradeCommandIsAFullRunWhileTheTestingRootIsUndeclared(t *testing.T) {
 	initialize.manifest = true
 	initialize.harnesses = mo.Some([]string{harness.Claude})
 	initialize.installed = mo.Some(application.Installation{
-		Versions: map[string]string{harness.Claude: buildinfo.Version()}})
+		Versions: map[string]string{harness.Claude: buildinfo.Version()}, SkillPrefix: settings.DefaultSkillPrefix})
 
 	out, err := runUpgradeCommand(t, initialize)
 	if err != nil {
@@ -452,7 +452,7 @@ func TestUpgradeCommandIsAFullRunWhileAFormerHarnessNameIsRecorded(t *testing.T)
 	initialize.harnesses = mo.Some([]string{harness.Claude})
 	initialize.testDir = mo.Some(settings.DefaultTestDir)
 	initialize.installed = mo.Some(application.Installation{
-		Versions: map[string]string{harness.Claude: buildinfo.Version()}})
+		Versions: map[string]string{harness.Claude: buildinfo.Version()}, SkillPrefix: settings.DefaultSkillPrefix})
 	initialize.formers = []string{"claude-code"}
 
 	out, err := runUpgradeCommand(t, initialize)
@@ -463,5 +463,51 @@ func TestUpgradeCommandIsAFullRunWhileAFormerHarnessNameIsRecorded(t *testing.T)
 	if !initialize.ran || initialize.got.Current {
 		t.Errorf("ran = %v, Current = %v, want a full run to rewrite the old name\n%s",
 			initialize.ran, initialize.got.Current, out)
+	}
+}
+
+// The run installs under the prefix the settings declare, and a prefix the manifest does not record is
+// work however current the version: the skills on disk are named one way and the project has asked for
+// another. No version moves, so nothing is asked (ADR-015).
+func TestUpgradeCommandTreatsAChangedSkillPrefixAsWork(t *testing.T) {
+	for _, tc := range []struct {
+		name        string
+		declared    string
+		recorded    string
+		wantCurrent bool
+	}{
+		{name: "the prefix the manifest records", declared: settings.SkillPrefixCf, recorded: settings.SkillPrefixCf, wantCurrent: true},
+		{name: "settings that declare none over a record of the default", recorded: settings.DefaultSkillPrefix, wantCurrent: true},
+		{name: "a prefix the manifest does not record", declared: settings.SkillPrefixCf, recorded: settings.DefaultSkillPrefix},
+		{name: "a move back to the default", recorded: settings.SkillPrefixCf},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			initialize := newFakeInitialize()
+			initialize.exists = true
+			initialize.manifest = true
+			initialize.harnesses = mo.Some([]string{harness.Claude})
+			initialize.testDir = mo.Some(settings.DefaultTestDir)
+			initialize.skillPrefix = tc.declared
+			initialize.installed = mo.Some(application.Installation{
+				Versions: map[string]string{harness.Claude: buildinfo.Version()}, SkillPrefix: tc.recorded})
+
+			out, err := runUpgradeCommand(t, initialize)
+			if err != nil {
+				t.Fatalf("Execute: %v\n%s", err, out)
+			}
+
+			want := tc.declared
+			if want == "" {
+				want = settings.DefaultSkillPrefix
+			}
+
+			if initialize.got.SkillPrefix != want {
+				t.Errorf("SkillPrefix = %q, want %q", initialize.got.SkillPrefix, want)
+			}
+
+			if initialize.got.Current != tc.wantCurrent {
+				t.Errorf("Current = %v, want %v\n%s", initialize.got.Current, tc.wantCurrent, out)
+			}
+		})
 	}
 }

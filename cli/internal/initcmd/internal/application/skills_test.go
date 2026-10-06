@@ -131,7 +131,7 @@ func TestTheManifestRecordsOnlyARunThatFinished(t *testing.T) {
 
 		want := manifest.Document{Harnesses: map[string]manifest.Install{
 			harness.Claude: {Version: "v1.2.3", Files: []string{".claude/skills/design/SKILL.md"}},
-		}, Shared: sharedInstall("v1.2.3")}
+		}, Shared: sharedInstall("v1.2.3"), SkillPrefix: settings.DefaultSkillPrefix}
 		if !reflect.DeepEqual(recorded, want) {
 			t.Errorf("manifest = %+v, want %+v", recorded, want)
 		}
@@ -165,7 +165,13 @@ func TestInstalledReportsWhatFinishedRunsRecorded(t *testing.T) {
 			name: "a manifest recording two harnesses, each at the version that installed it",
 			body: `{"harnesses": {"claude": {"version": "v1.2.3"}, "codex": {"version": "v1.1.0"}}}`,
 			want: mo.Some(Installation{Versions: map[string]string{
-				harness.Claude: "v1.2.3", harness.Codex: "v1.1.0"}}),
+				harness.Claude: "v1.2.3", harness.Codex: "v1.1.0"}, SkillPrefix: settings.DefaultSkillPrefix}),
+		},
+		{
+			// The prefix comes back as recorded, so the gate can hold it against the settings.
+			name: "a manifest recording the prefix the skills were installed under",
+			body: `{"harnesses": {"claude": {"version": "v1.2.3"}}, "skillPrefix": "cf"}`,
+			want: mo.Some(Installation{Versions: map[string]string{harness.Claude: "v1.2.3"}, SkillPrefix: settings.SkillPrefixCf}),
 		},
 		{name: "no manifest", missing: true, want: mo.None[Installation]()},
 		{

@@ -39,8 +39,9 @@ func NewInitCommand(initialize InitializeUseCase) *cobra.Command {
 			"project uses. Every question is also a flag, so a scripted run passes them and is never " +
 			"prompted. The codefall extension is installed for each harness chosen: Claude Code gets it " +
 			"at project scope into .claude/settings.json, and a harness that reads the .agents/skills " +
-			"convention gets the extension's tree under .agents/. It also asks where the project's " +
-			"test cases live and creates that tree. " +
+			"convention gets the extension's tree under .agents/. It also asks what the installed skills " +
+			"are called, codefall-design or a shorter cf-design or cfall-design, and where the project's " +
+			"test cases live, and creates that tree. " +
 			"Init runs once: a project that already has .codefall/manifest.json is brought current by " +
 			"codefall upgrade, which init names and refuses to repeat. " +
 			"Run below the root of a git repository, init asks whether to install there or at the " +
@@ -64,6 +65,7 @@ type initFlags struct {
 	issuesProject  int
 	reviewPostToPR bool
 	harnesses      []string
+	skillPrefix    string
 	testDir        string
 	location       string
 }
@@ -80,6 +82,13 @@ func (f *initFlags) register(cmd *cobra.Command) {
 	cmd.Flags().BoolVar(&f.reviewPostToPR, "review-post-to-pr", false,
 		"let codefall-review post its findings to a pull request (optional)")
 	registerHarnessFlag(cmd, &f.harnesses, "coding harness to set up")
+	// No default on the flag itself, so the survey can tell an answer from a question still to ask;
+	// a scripted run that gives none takes the default, because it is the name every project had
+	// before there was a choice (ADR-015).
+	cmd.Flags().StringVar(&f.skillPrefix, "skill-prefix", "",
+		"prefix the installed skills are named with, as in "+settings.SkillPrefixCf+"-design and /"+
+			settings.SkillPrefixCf+"-implement ("+strings.Join(settings.SkillPrefixes(), ", ")+"; default "+
+			settings.DefaultSkillPrefix+")")
 	// No default: a project that has not declared a testing root is asked. A default here would
 	// answer for the project on a run that could still ask.
 	cmd.Flags().StringVar(&f.testDir, "test-dir", "",
@@ -172,6 +181,15 @@ func buildRequest(
 		request.TestDir = flags.testDir
 	}
 
+	if flags.skillPrefix != "" {
+		prefix, err := settings.ParseSkillPrefix(flags.skillPrefix)
+		if err != nil {
+			return application.Request{}, false, err
+		}
+
+		request.SkillPrefix = prefix
+	}
+
 	// Same reasoning as the project number below: a bool flag left alone and one set to false are
 	// different answers, and only the flag's own record of being set separates them.
 	if cmd.Flags().Changed("review-post-to-pr") {
@@ -237,10 +255,27 @@ func buildRequest(
 
 			request.TestDir = declared.OrEmpty()
 		}
+
+		// And the prefix, which the settings declare or leave to the default: a run that finishes a
+		// project installs the skills under the names it already has (ADR-015).
+		if request.SkillPrefix == "" {
+			declared, err := initialize.DeclaredSkillPrefix(dir)
+			if err != nil {
+				return application.Request{}, false, initKind.wrap(err)
+			}
+
+			request.SkillPrefix = declared
+		}
 	} else {
 		request, err = collect(cmd.Context(), initialize, request)
 		if err != nil {
 			return application.Request{}, false, err
+		}
+
+		// The one answer with a default a script gets as well as the survey: the prefix every
+		// project had before there was a choice. The survey has offered it already when it ran.
+		if request.SkillPrefix == "" {
+			request.SkillPrefix = settings.DefaultSkillPrefix
 		}
 	}
 
@@ -373,6 +408,11 @@ func survey(
 
 	harnesses := request.Harnesses
 
+	skillPrefix := request.SkillPrefix
+	if skillPrefix == "" {
+		skillPrefix = settings.DefaultSkillPrefix
+	}
+
 	testDir := request.TestDir
 	if testDir == "" {
 		testDir = settings.DefaultTestDir
@@ -384,6 +424,12 @@ func survey(
 	// depends on, and the one only the person answering can settle.
 	if len(request.Harnesses) == 0 {
 		groups = append(groups, huh.NewGroup(harnessField(&harnesses)))
+	}
+
+	// What the skills are called follows the harnesses they are installed for, and is offered with
+	// the default already chosen, so a project with no reason to shorten the names presses enter.
+	if request.SkillPrefix == "" {
+		groups = append(groups, huh.NewGroup(skillPrefixField(&skillPrefix)))
 	}
 
 	if request.Tracker == "" {
@@ -414,6 +460,7 @@ func survey(
 
 	request.ReviewPostToPullRequest = mo.Some(postToPR)
 	request.Harnesses = harnesses
+	request.SkillPrefix = skillPrefix
 	request.TestDir = strings.TrimSpace(testDir)
 
 	return answered(request, tracker, repo, project)
@@ -429,6 +476,26 @@ func testDirField(dir *string) huh.Field {
 		Placeholder(settings.DefaultTestDir).
 		Value(dir).
 		Validate(func(value string) error { return settings.ValidateTestDir(strings.TrimSpace(value)) })
+}
+
+// skillPrefixField asks what the installed skills are called. The default is the starting value, as
+// the testing root's is: the prefix is a convenience, and the name every project had is the answer
+// for one that has no reason to change it (ADR-015).
+func skillPrefixField(prefix *string) huh.Field {
+	options := make([]huh.Option[string], 0, len(settings.SkillPrefixes()))
+
+	// The default first, so it is the highlighted answer, then the shorter forms.
+	for _, name := range append([]string{settings.DefaultSkillPrefix}, settings.SkillPrefixes()...) {
+		if name != settings.DefaultSkillPrefix || len(options) == 0 {
+			options = append(options, huh.NewOption(name+" ("+name+"-design, /"+name+"-implement)", name))
+		}
+	}
+
+	return huh.NewSelect[string]().
+		Title("What should the installed skills be called?").
+		Description("The prefix on every skill's name and slash command. The skills work the same under any of them.").
+		Options(options...).
+		Value(prefix)
 }
 
 // harnessField asks which harnesses the project uses. Nothing is selected to begin with, and at

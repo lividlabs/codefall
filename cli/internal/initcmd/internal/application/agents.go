@@ -63,14 +63,15 @@ var sectionSpecs = []sectionSpec{
 }
 
 // sectionsFor reads every section out of the tree, in the order the step writes them, with the
-// testing root filled in. It takes the root because the last section names it: the other three are
-// the same words in every project, and the path a project's cases live at is the project's own
-// (ADR-007). The placeholder is filled in every section rather than one, so a section that comes
-// to name the root later needs no change here.
+// testing root filled in and the skills named under the project's prefix. It takes the root because
+// the last section names it: the other three are the same words in every project, and the path a
+// project's cases live at is the project's own (ADR-007). The placeholder is filled in every section
+// rather than one, so a section that comes to name the root later needs no change here, and the
+// rename is applied to every section for the same reason (ADR-015).
 //
 // A section the tree does not hold, or one whose markers are not where the splice expects them, is
 // an error naming the file: both are a binary shipped wrong, and neither is worth guessing around.
-func (i *Initialize) sectionsFor(root string) ([]section, error) {
+func (i *Initialize) sectionsFor(root string, rename domain.SkillRename) ([]section, error) {
 	sections := make([]section, 0, len(sectionSpecs))
 
 	for _, spec := range sectionSpecs {
@@ -79,7 +80,7 @@ func (i *Initialize) sectionsFor(root string) ([]section, error) {
 			return nil, fmt.Errorf("read %s: %w", spec.source, err)
 		}
 
-		body := strings.ReplaceAll(string(data), domain.TestingRootPlaceholder, root)
+		body := rename.Text(strings.ReplaceAll(string(data), domain.TestingRootPlaceholder, root))
 
 		if err := marked(body, spec); err != nil {
 			return nil, err
@@ -128,7 +129,12 @@ const (
 // and commits what it staged under its own message, so an edit made before it ran would land in
 // bd's commit rather than the author's.
 func (i *Initialize) agents(_ context.Context, request Request) (domain.StepResult, error) {
-	done, err := i.writeSections(request.Dir, testRoot(request))
+	rename, err := i.skillRename(request)
+	if err != nil {
+		return domain.StepResult{}, err
+	}
+
+	done, err := i.writeSections(request.Dir, testRoot(request), rename)
 	if err != nil {
 		return domain.StepResult{}, err
 	}
@@ -160,8 +166,8 @@ func (i *Initialize) agents(_ context.Context, request Request) (domain.StepResu
 // a file with no markers for a section keeps what it says and gains that section at the end. A file
 // that is already what would be written is not written at all, which is what makes a second run a
 // skip. The file is read once and written once, however many sections change.
-func (i *Initialize) writeSections(dir, root string) ([]string, error) {
-	sections, err := i.sectionsFor(root)
+func (i *Initialize) writeSections(dir, root string, rename domain.SkillRename) ([]string, error) {
+	sections, err := i.sectionsFor(root, rename)
 	if err != nil {
 		return nil, err
 	}

@@ -203,6 +203,7 @@ type fetchCall struct {
 	dir     string
 	sources []string
 	exclude []string
+	rename  domain.SkillRename
 }
 
 // fakeExtensionSource remembers each Fetch and answers success unless the test gave it an error.
@@ -220,6 +221,10 @@ type fakeExtensionSource struct {
 	// files, when set, is the file system the fake copies into, so a test can delete or edit a copied
 	// file and watch the next run put it back.
 	files *fakeFileSystem
+	// skills is what the fake's tree ships under skills/, as the rename is built from it. The default
+	// names the skills the fake sections mention and the one the rename table points at, so a test
+	// about the prefix has something to rename.
+	skills []string
 }
 
 // newFakeExtensionSource answers with the hook definitions and the documents under agents/: the two
@@ -230,7 +235,7 @@ func newFakeExtensionSource() *fakeExtensionSource {
 	maps.Copy(data, hookDefinitions)
 	maps.Copy(data, agentsDocuments)
 
-	return &fakeExtensionSource{data: data}
+	return &fakeExtensionSource{data: data, skills: []string{"codefall-design", "codefall-envision", "codefall-test"}}
 }
 
 // fetched is the one file the fake answers with for each subtree a caller names.
@@ -245,15 +250,17 @@ func shippedBytes(path string) []byte {
 	return []byte("shipped " + path + "\n")
 }
 
+// Fetch on the fake answers with one path per subtree, renamed the way the real copy renames a path,
+// which leaves the fake's own paths alone: none of them is a skill name.
 func (f *fakeExtensionSource) Fetch(
-	_ context.Context, destDir string, sources, exclude []string,
+	_ context.Context, destDir string, sources, exclude []string, rename domain.SkillRename,
 ) (Fetched, error) {
-	f.calls = append(f.calls, fetchCall{dir: destDir, sources: sources, exclude: exclude})
+	f.calls = append(f.calls, fetchCall{dir: destDir, sources: sources, exclude: exclude, rename: rename})
 
 	var result Fetched
 
 	for _, source := range sources {
-		path := fetched[source]
+		path := rename.Text(fetched[source])
 		result.Files = append(result.Files, path)
 
 		// Unbound, the fake writes nothing and reports every file as written, which is what a first
@@ -285,6 +292,11 @@ func (f *fakeExtensionSource) Read(path string) ([]byte, error) {
 		return nil, &fs.PathError{Op: "open", Path: path, Err: fs.ErrNotExist}
 	}
 	return data, nil
+}
+
+// Skills on the fake is the list a test seeded.
+func (f *fakeExtensionSource) Skills() ([]string, error) {
+	return f.skills, nil
 }
 
 // RenamedSkill on the fake knows the one rename the cleanup tests need.
@@ -393,6 +405,7 @@ func TestRunEncodesGitHubSettings(t *testing.T) {
   "harnesses": [
     "claude"
   ],
+  "skillPrefix": "codefall",
   "agents": [
     {
       "activeAgent": "default",
@@ -446,6 +459,7 @@ func TestRunEncodesTheOptionalFieldsTheWayTheSchemaExpects(t *testing.T) {
   "harnesses": [
     "claude"
   ],
+  "skillPrefix": "codefall",
   "agents": [
     {
       "activeAgent": "default",
@@ -480,6 +494,7 @@ func TestRunEncodesTheOptionalFieldsTheWayTheSchemaExpects(t *testing.T) {
   "harnesses": [
     "claude"
   ],
+  "skillPrefix": "codefall",
   "agents": [
     {
       "activeAgent": "default",

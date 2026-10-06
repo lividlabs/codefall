@@ -3,9 +3,9 @@
 // it — initcmd writes the file and doctor
 // reports on what it says — so it lives here rather than in either one's domain (ADR-003).
 //
-// It is a pure shared module: it imports the standard library and the pure harness module, which is
-// what lets domain/ and application/ name it. Adding a dependency here breaks that permission and fails the
-// pure-shared-modules rule in .golangci.yml.
+// It is a pure shared module: it imports the standard library and the pure harness and settings
+// modules, which is what lets domain/ and application/ name it. Adding a dependency here breaks that
+// permission and fails the pure-shared-modules rule in .golangci.yml.
 //
 // What belongs here is the format. What a run installs, and what to do about an entry the settings no
 // longer name, belong to the component that decides it.
@@ -18,6 +18,7 @@ import (
 	"slices"
 
 	"github.com/lividlabs/codefall/cli/internal/shared/harness"
+	"github.com/lividlabs/codefall/cli/internal/shared/settings"
 )
 
 // Name is where the record lives, in .codefall/ beside settings.json. It is written once every step
@@ -37,6 +38,21 @@ type Document struct {
 	// Shared is .codefall/: the files the most recent finished run wrote there. An entry carrying no
 	// version is a file written before this field existed, and says nothing.
 	Shared Install `json:"shared"`
+	// SkillPrefix is the prefix the most recent finished run named the skills with (ADR-015). It is
+	// absent from a file written before the field existed, and every one of those installs used the
+	// default, so InstalledSkillPrefix is how a reader asks; the field itself is omitted when empty
+	// so a record rewritten mid-run for another reason does not come to say "".
+	SkillPrefix string `json:"skillPrefix,omitempty"`
+}
+
+// InstalledSkillPrefix is the prefix the most recent finished run named the skills with: the one it
+// recorded, or the default for a record written before the field existed.
+func (d Document) InstalledSkillPrefix() string {
+	if d.SkillPrefix == "" {
+		return settings.DefaultSkillPrefix
+	}
+
+	return d.SkillPrefix
 }
 
 // Install is one entry: the binary that wrote the files, and the files, relative to the directory
@@ -77,7 +93,7 @@ func Encode(document Document) ([]byte, error) {
 // When a record holds both spellings of one harness, the entry under the current name is kept: only
 // a binary that already knew the new name could have written it, so it is the later of the two.
 func (d Document) Current() (Document, []string) {
-	current := Document{Harnesses: make(map[string]Install, len(d.Harnesses)), Shared: d.Shared}
+	current := Document{Harnesses: make(map[string]Install, len(d.Harnesses)), Shared: d.Shared, SkillPrefix: d.SkillPrefix}
 
 	var moved []string
 

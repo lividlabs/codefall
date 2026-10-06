@@ -78,7 +78,57 @@ const (
 	// directories happen to exist — several harnesses share one, and codefall writes those
 	// directories itself.
 	FieldHarnesses = "harnesses"
+	// FieldSkillPrefix is the prefix the installed skills are named with (ADR-015): the skill the
+	// source tree ships as codefall-design lands as cf-design under the prefix cf. Optional, and
+	// absent means codefall, which is what every project had before the field existed. The set is
+	// closed, because the installer recognises a skill directory under any prefix a project could
+	// have used, and that is what lets a change of prefix read as a rename on the next upgrade.
+	FieldSkillPrefix    = "skillPrefix"
+	SkillPrefixCodefall = "codefall"
+	SkillPrefixCf       = "cf"
+	SkillPrefixCfall    = "cfall"
+	DefaultSkillPrefix  = SkillPrefixCodefall
 )
+
+// skillPrefixes is every prefix a project may choose, as a set, so the validator, the schema test, and
+// the parser read one definition.
+var skillPrefixes = map[string]bool{
+	SkillPrefixCodefall: true,
+	SkillPrefixCf:       true,
+	SkillPrefixCfall:    true,
+}
+
+// SkillPrefixes returns the prefixes a project may choose, sorted.
+func SkillPrefixes() []string {
+	return slices.Sorted(maps.Keys(skillPrefixes))
+}
+
+// ParseSkillPrefix returns the prefix when it is one a project may choose, and an error listing the
+// choices when it is not.
+func ParseSkillPrefix(name string) (string, error) {
+	if skillPrefixes[name] {
+		return name, nil
+	}
+
+	return "", fmt.Errorf("unknown skill prefix %q (known prefixes: %s)", name, strings.Join(SkillPrefixes(), ", "))
+}
+
+// SkillPrefix reports the prefix the installed skills are named with. A missing field, or a value
+// Validate would refuse, reads as the default: the caller has already been told what is wrong with
+// the file, and the default is what every reader fell back to before the field existed.
+func SkillPrefix(doc Document) string {
+	value, ok := lookup(doc, FieldSkillPrefix)
+	if !ok {
+		return DefaultSkillPrefix
+	}
+
+	name, isText := value.(string)
+	if !isText || !skillPrefixes[name] {
+		return DefaultSkillPrefix
+	}
+
+	return name
+}
 
 // FormerSchemaIDs are the schema URLs earlier releases wrote into settings files, none of which
 // resolves now: until 0.26.0 the URL named the repository by its old name and a schemas/ directory
@@ -243,6 +293,7 @@ var topLevelFields = []fieldSpec{
 	{"version", true, isVersion},
 	{"tracker", true, isTracker},
 	{FieldHarnesses, true, isHarnesses},
+	{FieldSkillPrefix, false, isSkillPrefix},
 	{FieldAgents, false, isAgents},
 	{FieldHarnessConfig, false, isObject},
 	{BlockReview, false, isObject},
@@ -740,6 +791,21 @@ func isHarnesses(v any) string {
 		}
 
 		seen[name] = true
+	}
+
+	return ""
+}
+
+// isSkillPrefix accepts one of the prefixes a project may name its skills with. The set is closed,
+// so the message for a value nobody knows offers the whole of it.
+func isSkillPrefix(v any) string {
+	name, ok := v.(string)
+	if !ok {
+		return "must be a string"
+	}
+
+	if !skillPrefixes[name] {
+		return unknownValue(name, SkillPrefixes())
 	}
 
 	return ""

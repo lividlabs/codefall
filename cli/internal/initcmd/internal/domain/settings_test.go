@@ -16,7 +16,7 @@ import (
 var oneHarness = []string{harness.Claude}
 
 func TestNewSettingsForGitHub(t *testing.T) {
-	value, err := NewSettings(settings.TrackerGitHub, oneHarness, mo.Some("lividlabs/codefall-cli"),
+	value, err := NewSettings(settings.TrackerGitHub, oneHarness, settings.DefaultSkillPrefix, mo.Some("lividlabs/codefall-cli"),
 		mo.Some(3), ReviewSettings{})
 	if err != nil {
 		t.Fatalf("NewSettings: %v", err)
@@ -41,7 +41,7 @@ func TestNewSettingsForGitHub(t *testing.T) {
 }
 
 func TestNewSettingsForGitHubWithoutAProject(t *testing.T) {
-	value, err := NewSettings(settings.TrackerGitHub, oneHarness, mo.Some("owner/name"),
+	value, err := NewSettings(settings.TrackerGitHub, oneHarness, settings.DefaultSkillPrefix, mo.Some("owner/name"),
 		mo.None[int](), ReviewSettings{})
 	if err != nil {
 		t.Fatalf("NewSettings: %v", err)
@@ -54,7 +54,7 @@ func TestNewSettingsForGitHubWithoutAProject(t *testing.T) {
 }
 
 func TestNewSettingsForBeadsCarriesNoGitHubBlock(t *testing.T) {
-	value, err := NewSettings(settings.TrackerBeads, oneHarness, mo.None[string](), mo.None[int](),
+	value, err := NewSettings(settings.TrackerBeads, oneHarness, settings.DefaultSkillPrefix, mo.None[string](), mo.None[int](),
 		ReviewSettings{})
 	if err != nil {
 		t.Fatalf("NewSettings: %v", err)
@@ -73,7 +73,7 @@ func TestNewSettingsForBeadsCarriesNoGitHubBlock(t *testing.T) {
 // that does not depend on how the answers were collected.
 func TestNewSettingsSortsTheHarnessesAndDropsRepeats(t *testing.T) {
 	value, err := NewSettings(settings.TrackerBeads,
-		[]string{harness.Codex, harness.Claude, harness.Codex},
+		[]string{harness.Codex, harness.Claude, harness.Codex}, settings.DefaultSkillPrefix,
 		mo.None[string](), mo.None[int](), ReviewSettings{})
 	if err != nil {
 		t.Fatalf("NewSettings: %v", err)
@@ -88,7 +88,7 @@ func TestNewSettingsSortsTheHarnessesAndDropsRepeats(t *testing.T) {
 // it, so settings built from an old answer never carry the old name forward.
 func TestNewSettingsWritesAFormerHarnessNameAsTheCurrentOne(t *testing.T) {
 	value, err := NewSettings(settings.TrackerBeads,
-		[]string{"claude-code", "antigravity", harness.Claude},
+		[]string{"claude-code", "antigravity", harness.Claude}, settings.DefaultSkillPrefix,
 		mo.None[string](), mo.None[int](), ReviewSettings{})
 	if err != nil {
 		t.Fatalf("NewSettings: %v", err)
@@ -174,7 +174,7 @@ func TestNewSettingsRejects(t *testing.T) {
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			value, err := NewSettings(tc.tracker, tc.harnesses, tc.repo, tc.project, ReviewSettings{})
+			value, err := NewSettings(tc.tracker, tc.harnesses, settings.DefaultSkillPrefix, tc.repo, tc.project, ReviewSettings{})
 			if err == nil {
 				t.Fatalf("NewSettings = %+v, want an error", value)
 			}
@@ -183,5 +183,24 @@ func TestNewSettingsRejects(t *testing.T) {
 				t.Errorf("NewSettings error = %q, want it to mention %q", err, tc.want)
 			}
 		})
+	}
+}
+
+// The prefix is written as given when it is one of the format's closed set, and refused otherwise in
+// the format's own words (ADR-015).
+func TestNewSettingsCarriesTheSkillPrefix(t *testing.T) {
+	value, err := NewSettings(settings.TrackerBeads, oneHarness, settings.SkillPrefixCf, mo.None[string](), mo.None[int](),
+		ReviewSettings{})
+	if err != nil {
+		t.Fatalf("NewSettings: %v", err)
+	}
+
+	if value.SkillPrefix != settings.SkillPrefixCf {
+		t.Errorf("SkillPrefix = %q, want %q", value.SkillPrefix, settings.SkillPrefixCf)
+	}
+
+	_, err = NewSettings(settings.TrackerBeads, oneHarness, "code", mo.None[string](), mo.None[int](), ReviewSettings{})
+	if err == nil || !strings.Contains(err.Error(), `unknown skill prefix "code"`) {
+		t.Errorf("NewSettings with an unknown prefix error = %v, want the prefix named", err)
 	}
 }

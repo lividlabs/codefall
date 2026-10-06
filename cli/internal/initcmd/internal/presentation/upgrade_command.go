@@ -28,7 +28,8 @@ func NewUpgradeCommand(initialize InitializeUseCase) *cobra.Command {
 		Long: "Reinstalls the codefall extension, its shared files, and its hooks for the harnesses " +
 			".codefall/settings.json records, replaces the sections codefall wrote into AGENTS.md, " +
 			"rewrites a harness name the settings or the manifest still spell the old way, points a " +
-			"$schema URL an earlier release wrote at the current one, and records " +
+			"$schema URL an earlier release wrote at the current one, installs the skills under the " +
+			"prefix the settings' skillPrefix names and removes the ones under the prefix they had, and records " +
 			"the run in .codefall/manifest.json, removing what the previous install wrote that this " +
 			"one does not ship. Before it changes anything it prints the breaking changes recorded " +
 			"between the installed version and this one and asks to continue. Every run reinstalls " +
@@ -166,6 +167,14 @@ func buildUpgradeRequest(
 
 	request.TestDir = declaredTest.OrEmpty()
 
+	// The prefix the settings name the skills with, the default when they name none. The run
+	// installs under it, and the gate below holds it against the prefix the manifest records
+	// (ADR-015).
+	request.SkillPrefix, err = initialize.DeclaredSkillPrefix(dir)
+	if err != nil {
+		return application.Request{}, upgradeKind.wrap(err)
+	}
+
 	previous, err := initialize.Installed(dir)
 	if err != nil {
 		return application.Request{}, upgradeKind.wrap(err)
@@ -187,13 +196,16 @@ func buildUpgradeRequest(
 	// version that installed the others is — and so is a project that has never declared a testing
 	// root, because the tree is what this run would make and doctor's remedy for an undeclared root
 	// is this command. A harness still recorded under an old spelling is work for the same reason:
-	// doctor's remedy for it is this command too.
+	// doctor's remedy for it is this command too. So is a settings prefix the manifest does not
+	// record: the skills on disk are named one way and the project has asked for another, and this
+	// run is what renames them (ADR-015).
 	//
 	// A current install still runs every step but Beads, and is not asked about a version that does
 	// not move: the copy out of the binary and the repair steps put back what a person may have
 	// removed since the last run, such as a skill, a shared script, an ignore line, or a section of
 	// AGENTS.md, which doctor's remedies send them here to put back.
 	if declaredTest.IsPresent() && len(formers) == 0 && !unrecorded &&
+		installation.SkillPrefix == request.SkillPrefix &&
 		installedEverything(installation, request.Harnesses, request.CLIVersion) {
 		request.Current = true
 

@@ -55,14 +55,19 @@ type CommandResult struct {
 // the hook step's per-harness definitions.
 type ExtensionSource interface {
 	// Fetch mirrors the named subtrees of the extension's tree onto destDir, each file keeping the
-	// path it has in the tree, and returns every path it installed, relative to destDir, so the
-	// caller can put it on record, and the ones that were missing or held other bytes, so the caller
-	// can say whether the copy changed anything. A file that already holds the tree's bytes is left
-	// as it is. A path under exclude is left behind: an entry holding a slash names a path in the
-	// tree, and an entry that is a bare file name matches that file wherever it sits.
-	Fetch(ctx context.Context, destDir string, sources, exclude []string) (Fetched, error)
+	// path it has in the tree with rename applied to it and to its contents, and returns every path
+	// it installed, relative to destDir and as renamed, so the caller can put it on record, and the
+	// ones that were missing or held other bytes, so the caller can say whether the copy changed
+	// anything. A file that already holds the renamed bytes is left as it is. A path under exclude
+	// is left behind: an entry holding a slash names a path in the tree, and an entry that is a bare
+	// file name matches that file wherever it sits.
+	Fetch(ctx context.Context, destDir string, sources, exclude []string, rename domain.SkillRename) (Fetched, error)
 	// Read returns one file from the tree.
 	Read(path string) ([]byte, error)
+	// Skills returns the name of every skill directory the tree ships, sorted, as the tree names
+	// them. It is what the rename is built from, so a skill added to the tree is renamed without
+	// anyone remembering to list it (ADR-015).
+	Skills() ([]string, error)
 	// RenamedSkill returns the name a skill directory has now when former is a name it used to have,
 	// or None when former is no skill the tree has ever renamed. It is what lets an upgrade report a
 	// removed directory as a rename rather than a deletion.
@@ -116,6 +121,11 @@ type Request struct {
 	// settled before the block existed — and the run takes the format's default, which is the same
 	// answer the survey offers.
 	TestDir string
+
+	// SkillPrefix is what the installed skills are named with (ADR-015), one of the format's closed
+	// set. Empty means nobody was asked — a run over settings written before the field existed — and
+	// the run takes the format's default, which is the name every project had until then.
+	SkillPrefix string
 
 	IssuesProject mo.Option[int]
 	// ReviewPostToPullRequest is whether codefall-review may post its findings to a pull request.
@@ -211,8 +221,8 @@ func (i *Initialize) Run(ctx context.Context, request Request, observer Observer
 	}
 
 	if upgrading {
-		steps = append(steps, step{Step: domain.CleanupStep, run: func(_ context.Context, request Request) (domain.StepResult, error) {
-			return i.cleanup(request, previous, written)
+		steps = append(steps, step{Step: domain.CleanupStep, run: func(ctx context.Context, request Request) (domain.StepResult, error) {
+			return i.cleanup(ctx, request, previous, written)
 		}})
 	}
 
@@ -255,7 +265,7 @@ func (i *Initialize) Run(ctx context.Context, request Request, observer Observer
 	// Every run writes it, a run over a current install included. There it comes out byte for byte
 	// as it went in unless the cleanup or the settings step changed the record, and the file is not a
 	// step, so writing it says nothing.
-	if err := i.writeManifest(request.Dir, request.CLIVersion, written); err != nil {
+	if err := i.writeManifest(request.Dir, request.CLIVersion, skillPrefix(request), written); err != nil {
 		return domain.Report{}, fmt.Errorf("record the installation to %s: %w", manifest.Name, err)
 	}
 

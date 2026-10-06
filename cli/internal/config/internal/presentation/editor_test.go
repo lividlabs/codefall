@@ -224,8 +224,8 @@ func TestEditorQuitsFromTheMenuWithoutWriting(t *testing.T) {
 		t.Error("ctrl+c on the menu did not quit")
 	}
 
-	// Quit is the last item.
-	e = send(t, e, down, down, down)
+	// Quit is the last item, after Agents, Reviews, Persona, and Skills.
+	e = send(t, e, down, down, down, down)
 	if !quits(e, enter) {
 		t.Error("enter on Quit did not quit")
 	}
@@ -439,5 +439,31 @@ func TestEditorViewSpeaksPlainly(t *testing.T) {
 		if strings.Contains(strings.ToLower(view), banned) {
 			t.Errorf("list view holds %q, want plain words", banned)
 		}
+	}
+}
+
+// Skills is the fourth item and opens the prefix form on the prefix the settings hold; the option
+// chosen is handed to the use case and the editor returns to the menu with the write recorded.
+func TestEditorSetsTheSkillPrefix(t *testing.T) {
+	shown := twoEntries()
+	shown.SkillPrefix = settings.DefaultSkillPrefix
+
+	config := &fakeConfig{shown: shown, write: domain.Changed("set skill prefix cf in .codefall/settings.json; run codefall upgrade to rename the installed skills")}
+	e := newTestEditor(t, config)
+
+	e = send(t, e, down, down, down, enter)
+	if e.screen != screenSkillPrefix || e.form == nil {
+		t.Fatalf("after enter on Skills: screen = %v, form nil = %v", e.screen, e.form == nil)
+	}
+
+	// The options are the closed set in order, cf, cfall, codefall, opened on codefall; up twice is cf.
+	e = send(t, e, press(tea.KeyUp, "", 0), press(tea.KeyUp, "", 0), enter)
+
+	if config.prefix != settings.SkillPrefixCf {
+		t.Errorf("SetSkillPrefix was given %q, want cf", config.prefix)
+	}
+
+	if e.screen != screenMenu || len(e.writes) != 1 {
+		t.Errorf("after setting the prefix: screen = %v, writes = %d", e.screen, len(e.writes))
 	}
 }

@@ -10,6 +10,8 @@ import (
 	"testing"
 	"testing/fstest"
 	"time"
+
+	"github.com/lividlabs/codefall/cli/internal/initcmd/internal/domain"
 )
 
 // The walk mirrors the whole source tree. The promise "everything that is in the source, nothing
@@ -24,7 +26,7 @@ func TestEmbeddedExtensionFetcherCopiesTheTree(t *testing.T) {
 	fetcher := NewEmbeddedExtensionFetcher(src, nil)
 	dest := t.TempDir()
 
-	installed, err := fetcher.Fetch(context.Background(), dest, []string{"."}, nil)
+	installed, err := fetcher.Fetch(context.Background(), dest, []string{"."}, nil, domain.SkillRename{})
 	if err != nil {
 		t.Fatalf("Fetch: %v", err)
 	}
@@ -54,7 +56,7 @@ func TestEmbeddedExtensionFetcherSkipsTheExcludedPrefixes(t *testing.T) {
 	dest := t.TempDir()
 
 	installed, err := fetcher.Fetch(context.Background(), dest,
-		[]string{"hooks", "skills"}, []string{"hooks/claude", "hooks/opencode"})
+		[]string{"hooks", "skills"}, []string{"hooks/claude", "hooks/opencode"}, domain.SkillRename{})
 	if err != nil {
 		t.Fatalf("Fetch: %v", err)
 	}
@@ -99,7 +101,7 @@ func TestEmbeddedExtensionFetcherCopiesOnlyTheNamedSubtrees(t *testing.T) {
 	dest := t.TempDir()
 
 	installed, err := NewEmbeddedExtensionFetcher(src, nil).
-		Fetch(context.Background(), dest, []string{"hooks/shared", "shared"}, nil)
+		Fetch(context.Background(), dest, []string{"hooks/shared", "shared"}, nil, domain.SkillRename{})
 	if err != nil {
 		t.Fatalf("Fetch: %v", err)
 	}
@@ -129,7 +131,7 @@ func TestEmbeddedExtensionFetcherExcludesAFileNameWhereverItSits(t *testing.T) {
 	dest := t.TempDir()
 
 	installed, err := NewEmbeddedExtensionFetcher(src, nil).Fetch(context.Background(), dest,
-		[]string{"skills"}, []string{"skills/AGENTS.md", "NOTES.md"})
+		[]string{"skills"}, []string{"skills/AGENTS.md", "NOTES.md"}, domain.SkillRename{})
 	if err != nil {
 		t.Fatalf("Fetch: %v", err)
 	}
@@ -158,7 +160,7 @@ func TestEmbeddedExtensionFetcherReportsOnlyWhatDiffered(t *testing.T) {
 	dest := t.TempDir()
 	all := []string{"shared/preflight.sh", "skills/x/SKILL.md", "skills/y/SKILL.md"}
 
-	first, err := fetcher.Fetch(context.Background(), dest, []string{"shared", "skills"}, nil)
+	first, err := fetcher.Fetch(context.Background(), dest, []string{"shared", "skills"}, nil, domain.SkillRename{})
 	if err != nil {
 		t.Fatalf("Fetch: %v", err)
 	}
@@ -174,7 +176,7 @@ func TestEmbeddedExtensionFetcherReportsOnlyWhatDiffered(t *testing.T) {
 		t.Fatalf("Chtimes: %v", err)
 	}
 
-	second, err := fetcher.Fetch(context.Background(), dest, []string{"shared", "skills"}, nil)
+	second, err := fetcher.Fetch(context.Background(), dest, []string{"shared", "skills"}, nil, domain.SkillRename{})
 	if err != nil {
 		t.Fatalf("Fetch again: %v", err)
 	}
@@ -191,7 +193,7 @@ func TestEmbeddedExtensionFetcherReportsOnlyWhatDiffered(t *testing.T) {
 		t.Fatalf("WriteFile: %v", err)
 	}
 
-	third, err := fetcher.Fetch(context.Background(), dest, []string{"shared", "skills"}, nil)
+	third, err := fetcher.Fetch(context.Background(), dest, []string{"shared", "skills"}, nil, domain.SkillRename{})
 	if err != nil {
 		t.Fatalf("Fetch a third time: %v", err)
 	}
@@ -245,7 +247,7 @@ func TestEmbeddedExtensionFetcherHonoursTheContext(t *testing.T) {
 	cancel()
 
 	_, err := NewEmbeddedExtensionFetcher(fstest.MapFS{"one.txt": &fstest.MapFile{}}, nil).
-		Fetch(ctx, t.TempDir(), []string{"."}, nil)
+		Fetch(ctx, t.TempDir(), []string{"."}, nil, domain.SkillRename{})
 	if !errors.Is(err, context.Canceled) {
 		t.Errorf("Fetch err = %v, want context.Canceled", err)
 	}
@@ -264,7 +266,7 @@ func TestEmbeddedExtensionFetcherMakesCopiedScriptsRunnable(t *testing.T) {
 	fetcher := NewEmbeddedExtensionFetcher(src, nil)
 	dest := t.TempDir()
 
-	if _, err := fetcher.Fetch(context.Background(), dest, []string{"."}, nil); err != nil {
+	if _, err := fetcher.Fetch(context.Background(), dest, []string{"."}, nil, domain.SkillRename{}); err != nil {
 		t.Fatalf("Fetch: %v", err)
 	}
 
@@ -283,7 +285,7 @@ func TestEmbeddedExtensionFetcherMakesCopiedScriptsRunnable(t *testing.T) {
 		t.Fatalf("Chmod: %v", err)
 	}
 
-	if _, err := fetcher.Fetch(context.Background(), dest, []string{"."}, nil); err != nil {
+	if _, err := fetcher.Fetch(context.Background(), dest, []string{"."}, nil, domain.SkillRename{}); err != nil {
 		t.Fatalf("Fetch again: %v", err)
 	}
 
@@ -301,4 +303,74 @@ func modeOf(t *testing.T, path string) fs.FileMode {
 	}
 
 	return info.Mode().Perm()
+}
+
+// The rename reaches a copied file's path and its contents alike, the installed paths come back
+// renamed so the manifest records what is on disk, and a second copy over the renamed install finds
+// its bytes already there. The exclusions are read on the tree's own paths, before the rename.
+func TestEmbeddedExtensionFetcherRenamesPathsAndContents(t *testing.T) {
+	src := fstest.MapFS{
+		"skills/codefall-design/SKILL.md":    &fstest.MapFile{Data: []byte("---\nname: codefall-design\n---\nThen `/codefall-implement`.\n")},
+		"skills/codefall-design/NOTES.md":    &fstest.MapFile{Data: []byte("lineage\n")},
+		"skills/codefall-implement/SKILL.md": &fstest.MapFile{Data: []byte("---\nname: codefall-implement\n---\nSee ../codefall-design/.\n")},
+		"skills/AGENTS.md":                   &fstest.MapFile{Data: []byte("rules\n")},
+		"shared/preflight.sh":                &fstest.MapFile{Data: []byte("# run /codefall-implement; `.codefall/` stays\n")},
+	}
+	fetcher := NewEmbeddedExtensionFetcher(src, nil)
+
+	skills, err := fetcher.Skills()
+	if err != nil {
+		t.Fatalf("Skills: %v", err)
+	}
+
+	if want := []string{"codefall-design", "codefall-implement"}; !slices.Equal(skills, want) {
+		t.Errorf("Skills() = %q, want the directories under skills/ and not the file beside them, %q", skills, want)
+	}
+
+	rename, err := domain.NewSkillRename("cf", skills)
+	if err != nil {
+		t.Fatalf("NewSkillRename: %v", err)
+	}
+
+	dest := t.TempDir()
+
+	installed, err := fetcher.Fetch(context.Background(), dest, []string{"skills", "shared"},
+		[]string{"skills/AGENTS.md", "NOTES.md"}, rename)
+	if err != nil {
+		t.Fatalf("Fetch: %v", err)
+	}
+
+	want := []string{"shared/preflight.sh", "skills/cf-design/SKILL.md", "skills/cf-implement/SKILL.md"}
+	if !slices.Equal(installed.Files, want) {
+		t.Errorf("installed = %q, want the renamed paths %q", installed.Files, want)
+	}
+
+	if got := readAllFiles(t, dest); !slices.Equal(got, want) {
+		t.Errorf("dest holds %q, want %q", got, want)
+	}
+
+	for path, body := range map[string]string{
+		"skills/cf-design/SKILL.md":    "---\nname: cf-design\n---\nThen `/cf-implement`.\n",
+		"skills/cf-implement/SKILL.md": "---\nname: cf-implement\n---\nSee ../cf-design/.\n",
+		"shared/preflight.sh":          "# run /cf-implement; `.codefall/` stays\n",
+	} {
+		got, err := os.ReadFile(filepath.Join(dest, path))
+		if err != nil {
+			t.Fatalf("read %s: %v", path, err)
+		}
+
+		if string(got) != body {
+			t.Errorf("%s =\n%s\nwant\n%s", path, got, body)
+		}
+	}
+
+	again, err := fetcher.Fetch(context.Background(), dest, []string{"skills", "shared"},
+		[]string{"skills/AGENTS.md", "NOTES.md"}, rename)
+	if err != nil {
+		t.Fatalf("Fetch again: %v", err)
+	}
+
+	if len(again.Changed) != 0 {
+		t.Errorf("a second copy changed %q, want nothing: every file already held the renamed bytes", again.Changed)
+	}
 }

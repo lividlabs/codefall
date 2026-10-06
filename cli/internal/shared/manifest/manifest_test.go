@@ -5,6 +5,8 @@ import (
 	"slices"
 	"strings"
 	"testing"
+
+	"github.com/lividlabs/codefall/cli/internal/shared/settings"
 )
 
 const twoHarnesses = `{
@@ -205,5 +207,53 @@ func TestEncodeAndDecodeAgree(t *testing.T) {
 
 	if !strings.Contains(string(data), "\n  \"harnesses\"") {
 		t.Errorf("Encode wrote %s, want it indented the way a person would write it", data)
+	}
+}
+
+// The prefix the last run named the skills with is read back as recorded, and a record written before
+// the field existed reads as the default, because every install before then used it (ADR-015). Current
+// carries the field along with the entries it moves.
+func TestInstalledSkillPrefixReadsTheRecordOrTheDefault(t *testing.T) {
+	older, err := Decode([]byte(twoHarnesses))
+	if err != nil {
+		t.Fatalf("Decode: %v", err)
+	}
+
+	if got := older.InstalledSkillPrefix(); got != settings.DefaultSkillPrefix {
+		t.Errorf("InstalledSkillPrefix() of an older record = %q, want %q", got, settings.DefaultSkillPrefix)
+	}
+
+	recorded, err := Decode([]byte(`{"harnesses": {"claude-code": {"version": "v1.2.3", "files": []}}, "skillPrefix": "cf"}`))
+	if err != nil {
+		t.Fatalf("Decode: %v", err)
+	}
+
+	if got := recorded.InstalledSkillPrefix(); got != settings.SkillPrefixCf {
+		t.Errorf("InstalledSkillPrefix() = %q, want %q", got, settings.SkillPrefixCf)
+	}
+
+	current, _ := recorded.Current()
+	if got := current.InstalledSkillPrefix(); got != settings.SkillPrefixCf {
+		t.Errorf("Current().InstalledSkillPrefix() = %q, want the field carried along, %q", got, settings.SkillPrefixCf)
+	}
+
+	// Encoded without a prefix the field stays out of the file, so a record rewritten mid-run for a
+	// harness rename does not come to claim a prefix of "".
+	data, err := Encode(older)
+	if err != nil {
+		t.Fatalf("Encode: %v", err)
+	}
+
+	if strings.Contains(string(data), "skillPrefix") {
+		t.Errorf("Encode of a record with no prefix wrote %s, want the field left out", data)
+	}
+
+	data, err = Encode(Document{SkillPrefix: settings.SkillPrefixCfall})
+	if err != nil {
+		t.Fatalf("Encode: %v", err)
+	}
+
+	if !strings.Contains(string(data), `"skillPrefix": "cfall"`) {
+		t.Errorf("Encode wrote %s, want the prefix recorded", data)
 	}
 }

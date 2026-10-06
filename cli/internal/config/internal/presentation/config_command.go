@@ -30,6 +30,7 @@ type ConfigUseCase interface {
 	SetList(dir, active, feature string, agents []settings.Agent) (domain.Write, error)
 	ClearList(dir, active, feature string) (domain.Write, error)
 	SetPosting(dir string, on bool) (domain.Write, error)
+	SetSkillPrefix(dir, prefix string) (domain.Write, error)
 	HarnessConfigs(dir string) (map[string]settings.HarnessConfig, error)
 	SetHarnessConfig(dir, key string, block settings.HarnessConfig) (domain.Write, error)
 	ClearHarnessConfig(dir, key string) (domain.Write, error)
@@ -50,11 +51,11 @@ const settingsName = ".codefall/settings.json"
 func NewConfigCommand(config ConfigUseCase) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "config",
-		Short: "Edit who reviews and consults for this project, how each harness is called, and your persona",
-		Long: "With no arguments in a terminal, opens an editor over the agents, reviews, and your persona. " +
+		Short: "Edit who reviews and consults for this project, how each harness is called, what the skills are called, and your persona",
+		Long: "With no arguments in a terminal, opens an editor over the agents, reviews, the skill prefix, and your persona. " +
 			"The agents are who codefall asks to review or for a second opinion, chosen by the harness you " +
-			"are running in; they, how each harness is called, and the review settings live in " + settingsName +
-			", which is checked in. " +
+			"are running in; they, how each harness is called, the review settings, and the prefix the " +
+			"installed skills are named with live in " + settingsName + ", which is checked in. " +
 			"The persona lives in " + userfile.Name + ", which is yours alone and kept out of version " +
 			"control. The subcommands change one value each, take every value as an argument, and never " +
 			"prompt, so a script can run them. A write the settings would not accept is refused, in the " +
@@ -87,6 +88,7 @@ func NewConfigCommand(config ConfigUseCase) *cobra.Command {
 		newAgentsCommand(config),
 		newHarnessCommand(config),
 		newReviewCommand(config),
+		newSkillPrefixCommand(config),
 		newPersonaCommand(config),
 	)
 
@@ -96,7 +98,7 @@ func NewConfigCommand(config ConfigUseCase) *cobra.Command {
 func newShowCommand(config ConfigUseCase) *cobra.Command {
 	return &cobra.Command{
 		Use:   "show",
-		Short: "Print who reviews and consults, how each harness is called, whether review posts, and your persona",
+		Short: "Print who reviews and consults, how each harness is called, whether review posts, what the skills are called, and your persona",
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			dir, err := os.Getwd()
@@ -131,8 +133,19 @@ func configurationLines(shown domain.Configuration) []string {
 	}
 
 	lines = append(lines, "review posting: "+posting)
+	lines = append(lines, "skill prefix: "+skillPrefixLine(shown.SkillPrefix))
 
 	return append(lines, "persona: "+personaLine(shown.Persona))
+}
+
+// skillPrefixLine is the prefix as show prints it, with an example of a name under it, since the
+// value on its own is a word and the reader wants to know what it does.
+func skillPrefixLine(prefix string) string {
+	if prefix == "" {
+		prefix = settings.DefaultSkillPrefix
+	}
+
+	return prefix + " (" + prefix + "-design, /" + prefix + "-implement)"
 }
 
 // harnessConfigLines is how each harness is called, one block per heading in key order and one
@@ -475,6 +488,44 @@ func newReviewCommand(config ConfigUseCase) *cobra.Command {
 	})
 
 	return cmd
+}
+
+// newSkillPrefixCommand is `codefall config skill-prefix`: print what the installed skills are called,
+// or set it. Setting it writes the settings alone; the rename on disk is upgrade's, and the write's
+// own sentence says so (ADR-015).
+func newSkillPrefixCommand(config ConfigUseCase) *cobra.Command {
+	return &cobra.Command{
+		Use:   "skill-prefix [" + strings.Join(settings.SkillPrefixes(), "|") + "]",
+		Short: "Print what the installed skills are called, or set the prefix they are installed under",
+		Long: "With no argument, prints the prefix the installed skills are named with, as in codefall-design " +
+			"and /codefall-implement. With one, records it in " + settingsName + "; the skills on disk keep " +
+			"their names until codefall upgrade runs, which installs them under the new prefix and removes " +
+			"the old ones.",
+		Args:      cobra.MaximumNArgs(1),
+		ValidArgs: settings.SkillPrefixes(),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			dir, err := os.Getwd()
+			if err != nil {
+				return fmt.Errorf("config: %w", err)
+			}
+
+			if len(args) == 0 {
+				shown, err := config.Show(dir)
+				if err != nil {
+					return err
+				}
+
+				return writeLines(cmd.OutOrStdout(), []string{"skill prefix: " + skillPrefixLine(shown.SkillPrefix)})
+			}
+
+			write, err := config.SetSkillPrefix(dir, args[0])
+			if err != nil {
+				return err
+			}
+
+			return writeResults(cmd.OutOrStdout(), write)
+		},
+	}
 }
 
 func newPersonaCommand(config ConfigUseCase) *cobra.Command {

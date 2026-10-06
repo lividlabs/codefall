@@ -162,6 +162,13 @@ func (i *Initialize) writeTestingTree(request Request, root string) ([]string, e
 		body string
 	}, 0, 3)
 
+	// The skeletons name the verbs that write and run the cases, so they are spliced under the
+	// project's prefix the way the AGENTS.md sections are (ADR-015).
+	rename, err := i.skillRename(request)
+	if err != nil {
+		return nil, err
+	}
+
 	for _, skeleton := range []struct {
 		name   string
 		source string
@@ -177,7 +184,7 @@ func (i *Initialize) writeTestingTree(request Request, root string) ([]string, e
 		documents = append(documents, struct {
 			name string
 			body string
-		}{skeleton.name, string(body)})
+		}{skeleton.name, rename.Text(string(body))})
 	}
 
 	// The pointer is the same one line the root of the project gets, and for the same reason: Claude

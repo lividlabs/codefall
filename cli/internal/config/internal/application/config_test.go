@@ -711,3 +711,65 @@ func TestSetPersonaRefuses(t *testing.T) {
 		})
 	}
 }
+
+// --- skill prefix --------------------------------------------------------------------------------
+
+// The prefix is written as the last member when the settings have none and replaced in place when
+// they do, a value already as asked is left alone, a value outside the closed set is refused before
+// the file is read, and the sentence says the install is renamed by upgrade rather than here.
+func TestSetSkillPrefixWritesTheFieldAndNamesUpgrade(t *testing.T) {
+	files := project(twoEntries)
+	config := NewConfig(files)
+
+	write, err := config.SetSkillPrefix(workingDir, settings.SkillPrefixCf)
+	if err != nil {
+		t.Fatalf("SetSkillPrefix: %v", err)
+	}
+
+	if want := domain.Changed("set skill prefix cf in .codefall/settings.json; run codefall upgrade to rename the installed skills"); write != want {
+		t.Errorf("write = %+v, want %+v", write, want)
+	}
+
+	want := strings.Replace(twoEntries, "  \"review\": {\"postToPullRequest\": false}\n}", "  \"review\": {\"postToPullRequest\": false},\n  \"skillPrefix\": \"cf\"\n}", 1)
+	if got := string(files.files[settingsFull]); got != want {
+		t.Errorf("settings.json =\n%s\nwant\n%s", got, want)
+	}
+
+	write, err = config.SetSkillPrefix(workingDir, settings.SkillPrefixCf)
+	if err != nil {
+		t.Fatalf("SetSkillPrefix again: %v", err)
+	}
+
+	if want := domain.Unchanged(".codefall/settings.json already has skill prefix cf"); write != want {
+		t.Errorf("write = %+v, want %+v", write, want)
+	}
+
+	if _, err := config.SetSkillPrefix(workingDir, settings.SkillPrefixCfall); err != nil {
+		t.Fatalf("SetSkillPrefix to cfall: %v", err)
+	}
+
+	if got := string(files.files[settingsFull]); !strings.Contains(got, "\"skillPrefix\": \"cfall\"") || strings.Contains(got, "\"cf\"") {
+		t.Errorf("settings.json =\n%s\nwant the prefix replaced in place", got)
+	}
+
+	if _, err := config.SetSkillPrefix(workingDir, "code"); err == nil || !strings.Contains(err.Error(), `unknown skill prefix "code"`) {
+		t.Errorf("SetSkillPrefix(code) error = %v, want the format's refusal", err)
+	}
+
+	if _, err := NewConfig(newFakeFileSystem(nil)).SetSkillPrefix(workingDir, settings.SkillPrefixCf); !errors.Is(err, errNotSetUp) {
+		t.Errorf("SetSkillPrefix with no settings error = %v, want %v", err, errNotSetUp)
+	}
+
+	shown, err := config.Show(workingDir)
+	if err != nil {
+		t.Fatalf("Show: %v", err)
+	}
+
+	if shown.SkillPrefix != settings.SkillPrefixCfall {
+		t.Errorf("Show().SkillPrefix = %q, want %q", shown.SkillPrefix, settings.SkillPrefixCfall)
+	}
+
+	if shown, _ := NewConfig(project(twoEntries)).Show(workingDir); shown.SkillPrefix != settings.DefaultSkillPrefix {
+		t.Errorf("Show().SkillPrefix with no field = %q, want the default", shown.SkillPrefix)
+	}
+}

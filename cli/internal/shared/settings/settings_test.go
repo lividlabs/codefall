@@ -670,3 +670,55 @@ func without(doc Document, key string) Document {
 
 	return doc
 }
+
+// The prefix is a closed set, so a value nobody knows is refused with the whole set in the message,
+// and absence reads as the default every project had before the field existed (ADR-015).
+func TestSkillPrefix(t *testing.T) {
+	if got, want := SkillPrefixes(), []string{SkillPrefixCf, SkillPrefixCfall, SkillPrefixCodefall}; !slices.Equal(got, want) {
+		t.Errorf("SkillPrefixes() = %q, want %q", got, want)
+	}
+
+	for _, prefix := range SkillPrefixes() {
+		if got, err := ParseSkillPrefix(prefix); err != nil || got != prefix {
+			t.Errorf("ParseSkillPrefix(%q) = %q, %v, want %q, nil", prefix, got, err, prefix)
+		}
+
+		if problems := Validate(with(complete(), FieldSkillPrefix, prefix)); len(problems) != 0 {
+			t.Errorf("Validate with %s %q = %q, want none", FieldSkillPrefix, prefix, problems)
+		}
+
+		if got := SkillPrefix(with(complete(), FieldSkillPrefix, prefix)); got != prefix {
+			t.Errorf("SkillPrefix() = %q, want %q", got, prefix)
+		}
+	}
+
+	_, err := ParseSkillPrefix("code")
+	if err == nil {
+		t.Fatal(`ParseSkillPrefix("code") = nil error, want an error`)
+	}
+
+	for _, want := range append([]string{"code"}, SkillPrefixes()...) {
+		if !strings.Contains(err.Error(), want) {
+			t.Errorf("ParseSkillPrefix(%q) error = %q, want it to mention %q", "code", err, want)
+		}
+	}
+
+	if got := SkillPrefix(complete()); got != DefaultSkillPrefix {
+		t.Errorf("SkillPrefix() of settings without the field = %q, want the default %q", got, DefaultSkillPrefix)
+	}
+
+	// A value the validator refuses reads as the default, as the posting field does: the caller has
+	// been told what is wrong with the file, and the default is what every reader fell back to.
+	if got := SkillPrefix(with(complete(), FieldSkillPrefix, "code")); got != DefaultSkillPrefix {
+		t.Errorf("SkillPrefix() of an unknown value = %q, want the default %q", got, DefaultSkillPrefix)
+	}
+
+	want := []string{`skillPrefix: unknown value "code" (expected "cf", "cfall", "codefall")`}
+	if got := Validate(with(complete(), FieldSkillPrefix, "code")); !slices.Equal(got, want) {
+		t.Errorf("Validate with an unknown prefix = %q, want %q", got, want)
+	}
+
+	if got := Validate(with(complete(), FieldSkillPrefix, 3.0)); !slices.Equal(got, []string{"skillPrefix: must be a string"}) {
+		t.Errorf("Validate with a number for the prefix = %q, want a type complaint", got)
+	}
+}

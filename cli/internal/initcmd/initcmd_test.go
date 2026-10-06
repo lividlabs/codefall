@@ -1,8 +1,12 @@
 package initcmd_test
 
 import (
+	"bytes"
 	"encoding/json"
 	"io/fs"
+	"os"
+	"path"
+	"path/filepath"
 	"regexp"
 	"slices"
 	"strings"
@@ -11,6 +15,9 @@ import (
 	"github.com/samber/do/v2"
 
 	"github.com/lividlabs/codefall/cli/internal/initcmd"
+	"github.com/lividlabs/codefall/cli/internal/initcmd/internal/domain"
+	"github.com/lividlabs/codefall/cli/internal/initcmd/internal/infrastructure"
+	"github.com/lividlabs/codefall/cli/internal/shared/settings"
 	"github.com/lividlabs/codefall/extensions"
 )
 
@@ -411,4 +418,172 @@ func scriptName(rest string) string {
 		return rest[len("hooks/shared/"):cut]
 	}
 	return strings.TrimSuffix(rest[len("hooks/shared/"):], "\n")
+}
+
+// installTree is the real embedded tree installed the way the extension step installs it, into one
+// skills directory and one .codefall/, under one prefix: what a project on that prefix has on disk.
+func installTree(t *testing.T, prefix string) (string, []string) {
+	t.Helper()
+
+	fetcher := infrastructure.NewEmbeddedExtensionFetcher(extensions.Files(), extensions.SkillRenames())
+
+	skills, err := fetcher.Skills()
+	if err != nil {
+		t.Fatalf("Skills: %v", err)
+	}
+
+	rename, err := domain.NewSkillRename(prefix, skills)
+	if err != nil {
+		t.Fatalf("NewSkillRename(%q): %v", prefix, err)
+	}
+
+	root := t.TempDir()
+
+	var files []string
+
+	for _, install := range []struct {
+		dest    string
+		sources []string
+		exclude []string
+	}{
+		{".claude", []string{"skills"}, []string{"skills/AGENTS.md", "NOTES.md"}},
+		{installDir, []string{"hooks/shared", "shared"}, nil},
+	} {
+		fetched, err := fetcher.Fetch(t.Context(), filepath.Join(root, install.dest), install.sources, install.exclude, rename)
+		if err != nil {
+			t.Fatalf("Fetch into %s: %v", install.dest, err)
+		}
+
+		for _, file := range fetched.Files {
+			files = append(files, path.Join(install.dest, file))
+		}
+	}
+
+	return root, files
+}
+
+// skillName matches a skill name under any prefix a project may choose, bounded the way the rename
+// bounds one, so a test can ask what the installed files still call the skills.
+var skillName = regexp.MustCompile(`(?:^|[^A-Za-z0-9_-])((?:` + strings.Join(settings.SkillPrefixes(), "|") + `)-[a-z][a-z-]*)`)
+
+// relativeReference is a `./` or `../` path in prose or a command, as skill-health.sh reads one.
+var relativeReference = regexp.MustCompile(`\.\.?/[A-Za-z0-9._/-]+`)
+
+// Installed under the prefix cf, nothing in the tree still names a skill under codefall-: not a
+// directory, not a frontmatter name, not a slash command, not a sentence. The verbs come from the
+// skills the tree ships, so a skill mentioned in a form the authoring rule forbids — split, under
+// another prefix, shortened — is what this fails on (ADR-015).
+//
+// And the rename breaks no relative path: every `./` or `../` reference that reaches a file in the
+// default install reaches one in this install too, the ones into another skill
+// (`../cf-scaffold/templates/…`) because both ends were renamed, and the ones into .codefall/
+// because neither was. A reference that reaches nothing under either prefix is not the rename's
+// doing — an example path in prose, or a file the tree does not embed — and is not this test's to
+// report. The sections init splices and the skeleton it writes are read from the tree rather than
+// copied, so they are held to the same rule through the rename directly.
+func TestInstallUnderAnotherPrefixLeavesNoSourceNameAndEveryPathResolves(t *testing.T) {
+	root, files := installTree(t, settings.SkillPrefixCf)
+	_, defaultFiles := installTree(t, settings.DefaultSkillPrefix)
+
+	skills, err := infrastructure.NewEmbeddedExtensionFetcher(extensions.Files(), nil).Skills()
+	if err != nil {
+		t.Fatalf("Skills: %v", err)
+	}
+
+	back, err := domain.NewSkillRename(settings.DefaultSkillPrefix, skills)
+	if err != nil {
+		t.Fatalf("NewSkillRename: %v", err)
+	}
+
+	verbs := map[string]bool{}
+	for _, skill := range skills {
+		verbs[strings.TrimPrefix(skill, settings.DefaultSkillPrefix+"-")] = true
+	}
+
+	if len(verbs) < 10 {
+		t.Fatalf("the tree ships %d skills, want the verbs this test is about", len(verbs))
+	}
+
+	installed := map[string]bool{}
+	for _, file := range files {
+		installed[file] = true
+
+		if name := path.Base(path.Dir(file)); strings.HasPrefix(file, ".claude/skills/") &&
+			strings.HasPrefix(name, settings.DefaultSkillPrefix+"-") {
+			t.Errorf("%s is installed under the source prefix", file)
+		}
+	}
+
+	installedByDefault := map[string]bool{}
+	for _, file := range defaultFiles {
+		installedByDefault[file] = true
+	}
+
+	resolved := 0
+
+	for _, file := range files {
+		body, err := os.ReadFile(filepath.Join(root, filepath.FromSlash(file)))
+		if err != nil {
+			t.Fatalf("read %s: %v", file, err)
+		}
+
+		text := string(body)
+
+		for _, match := range skillName.FindAllStringSubmatch(text, -1) {
+			prefix, verb, _ := strings.Cut(match[1], "-")
+
+			// A tail the tree ships no verb for is not a skill name — codefall-lineage, or a former
+			// name in a lineage table — and the rename is right to leave it.
+			if prefix != settings.SkillPrefixCf && verbs[verb] {
+				t.Errorf("%s still names %s", file, match[1])
+			}
+		}
+
+		for _, reference := range relativeReference.FindAllString(text, -1) {
+			target := path.Clean(path.Join(path.Dir(file), reference))
+
+			if installed[target] {
+				resolved++
+
+				continue
+			}
+
+			if installedByDefault[back.Text(target)] {
+				t.Errorf("%s names %s, which reaches %s under the default prefix and nothing here", file, reference, back.Text(target))
+			}
+		}
+	}
+
+	if resolved < 20 {
+		t.Errorf("%d relative references resolve, want the cross-skill and shared paths exercised", resolved)
+	}
+}
+
+// Under the default prefix the install is the tree, byte for byte: the rename changes nothing a
+// project that set nothing has today.
+func TestInstallUnderTheDefaultPrefixIsTheTreeByteForByte(t *testing.T) {
+	root, files := installTree(t, settings.DefaultSkillPrefix)
+	tree := extensions.Files()
+
+	if len(files) < 60 {
+		t.Fatalf("installed %d files, want the whole tree", len(files))
+	}
+
+	for _, file := range files {
+		got, err := os.ReadFile(filepath.Join(root, filepath.FromSlash(file)))
+		if err != nil {
+			t.Fatalf("read %s: %v", file, err)
+		}
+
+		source := strings.TrimPrefix(strings.TrimPrefix(file, ".claude/"), installDir+"/")
+
+		want, err := fs.ReadFile(tree, source)
+		if err != nil {
+			t.Fatalf("%s is installed and %s is not in the tree: %v", file, source, err)
+		}
+
+		if !bytes.Equal(got, want) {
+			t.Errorf("%s differs from the tree's %s under the default prefix", file, source)
+		}
+	}
 }

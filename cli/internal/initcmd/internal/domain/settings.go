@@ -41,8 +41,12 @@ type Settings struct {
 	// Harnesses is what the project is set up for: at least one, sorted and without repeats, so the
 	// file records them in a stable order however they were collected.
 	Harnesses []string
-	GitHub    mo.Option[GitHubSettings]
-	Review    ReviewSettings
+	// SkillPrefix is what the installed skills are named with (ADR-015), always one of the format's
+	// closed set: the file states it even when it is the default, so a reader sees there is something
+	// to change.
+	SkillPrefix string
+	GitHub      mo.Option[GitHubSettings]
+	Review      ReviewSettings
 }
 
 // NewSettings builds settings from the values a survey or a set of flags collected, and is the only
@@ -50,7 +54,7 @@ type Settings struct {
 // acceptable is the format's to say; which combinations of them make sense for a run is initcmd's,
 // and that is what this constructor adds.
 func NewSettings(
-	tracker string, harnesses []string, repo mo.Option[string], project mo.Option[int],
+	tracker string, harnesses []string, skillPrefix string, repo mo.Option[string], project mo.Option[int],
 	review ReviewSettings,
 ) (Settings, error) {
 	name, err := settings.ParseTracker(tracker)
@@ -59,6 +63,11 @@ func NewSettings(
 	}
 
 	chosen, err := newHarnesses(harnesses)
+	if err != nil {
+		return Settings{}, err
+	}
+
+	prefix, err := settings.ParseSkillPrefix(skillPrefix)
 	if err != nil {
 		return Settings{}, err
 	}
@@ -72,7 +81,7 @@ func NewSettings(
 			return Settings{}, fmt.Errorf("a project number is only used when the tracker is %q, not %q", settings.TrackerGitHub, name)
 		}
 
-		return Settings{Tracker: name, Harnesses: chosen, Review: review}, nil
+		return Settings{Tracker: name, Harnesses: chosen, SkillPrefix: prefix, Review: review}, nil
 	}
 
 	github, err := newGitHubSettings(repo, project)
@@ -80,7 +89,7 @@ func NewSettings(
 		return Settings{}, err
 	}
 
-	return Settings{Tracker: name, Harnesses: chosen, GitHub: mo.Some(github), Review: review}, nil
+	return Settings{Tracker: name, Harnesses: chosen, SkillPrefix: prefix, GitHub: mo.Some(github), Review: review}, nil
 }
 
 // newHarnesses is the set a project is set up for, sorted and without repeats. A project needs at

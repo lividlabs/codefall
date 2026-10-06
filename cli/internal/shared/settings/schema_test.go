@@ -438,3 +438,23 @@ func schemaRequiredList(t *testing.T, parent map[string]any, key string) []strin
 
 	return schemaList(t, parent, key)
 }
+
+// The prefix is a closed set in the schema as in the validator, and optional at the top level:
+// settings written before the field existed are still valid settings (ADR-015).
+func TestSchemaClosesTheSkillPrefix(t *testing.T) {
+	schema := loadSchema(t)
+	properties := schemaObject(t, schema, "properties")
+
+	if got, want := schemaList(t, schemaObject(t, properties, FieldSkillPrefix), "enum"), SkillPrefixes(); !slices.Equal(got, want) {
+		t.Errorf("properties.%s.enum = %q, want %q", FieldSkillPrefix, got, want)
+	}
+
+	if slices.Contains(schemaList(t, schema, "required"), FieldSkillPrefix) {
+		t.Errorf("required contains %q, want the prefix to stay optional", FieldSkillPrefix)
+	}
+
+	description := schemaText(t, schemaObject(t, properties, FieldSkillPrefix), "description")
+	if !strings.Contains(description, DefaultSkillPrefix) {
+		t.Errorf("properties.%s.description = %q, want it to say what absent means", FieldSkillPrefix, description)
+	}
+}

@@ -13,6 +13,7 @@ import (
 	"github.com/samber/mo"
 
 	"github.com/lividlabs/codefall/cli/internal/initcmd/internal/application"
+	"github.com/lividlabs/codefall/cli/internal/initcmd/internal/domain"
 	"github.com/lividlabs/codefall/cli/internal/shared/process"
 )
 
@@ -44,14 +45,16 @@ func (f *EmbeddedExtensionFetcher) RenamedSkill(former string) mo.Option[string]
 // Fetch mirrors the named subtrees of the embedded tree onto destDir, except the excluded paths, and
 // returns the relative paths it installed (a manifest-of-one-copy) and the ones it had to write, both
 // sorted so two sequential runs produce the same record. Each file keeps the path it has in the
-// tree, so a caller that asks for "hooks/shared" gets it back at destDir/hooks/shared.
+// tree with the rename applied, so a caller that asks for "hooks/shared" gets it back at
+// destDir/hooks/shared, and one that asks for "skills" under the prefix cf gets skills/codefall-design
+// back as skills/cf-design, its contents renamed the same way (ADR-015).
 func (f *EmbeddedExtensionFetcher) Fetch(
-	ctx context.Context, destDir string, sources, exclude []string,
+	ctx context.Context, destDir string, sources, exclude []string, rename domain.SkillRename,
 ) (application.Fetched, error) {
 	var fetched application.Fetched
 
 	for _, source := range sources {
-		if err := f.mirror(ctx, destDir, source, exclude, &fetched); err != nil {
+		if err := f.mirror(ctx, destDir, source, exclude, rename, &fetched); err != nil {
 			sort.Strings(fetched.Files)
 			sort.Strings(fetched.Changed)
 
@@ -68,11 +71,12 @@ func (f *EmbeddedExtensionFetcher) Fetch(
 // mirror copies one subtree into fetched. A source the tree does not hold is an error rather than
 // nothing copied: the caller named a subtree this binary was meant to ship.
 //
-// A file already holding the tree's bytes is not written again, so a copy over an unchanged install
+// A file already holding the renamed bytes is not written again, so a copy over an unchanged install
 // reports no change. A file that is missing, holds other bytes, or cannot be read is written; one
-// that cannot be read then fails at the write, with the reason.
+// that cannot be read then fails at the write, with the reason. The exclusion is decided on the path
+// the tree has, before the rename, because the exclusions are written in the tree's terms.
 func (f *EmbeddedExtensionFetcher) mirror(
-	ctx context.Context, destDir, source string, exclude []string, fetched *application.Fetched,
+	ctx context.Context, destDir, source string, exclude []string, rename domain.SkillRename, fetched *application.Fetched,
 ) error {
 	return fs.WalkDir(f.src, source, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
@@ -94,10 +98,15 @@ func (f *EmbeddedExtensionFetcher) mirror(
 			return nil
 		}
 
-		data, err := fs.ReadFile(f.src, path)
+		source, err := fs.ReadFile(f.src, path)
 		if err != nil {
 			return fmt.Errorf("read %s: %w", path, err)
 		}
+
+		// The tree holds text alone, so its contents are renamed as its paths are; a file with no
+		// skill name in it comes back as the same bytes.
+		data := []byte(rename.Text(string(source)))
+		path = rename.Text(path)
 
 		target := filepath.Join(destDir, path)
 
@@ -157,3 +166,27 @@ func excluded(path string, exclude []string) bool {
 func (f *EmbeddedExtensionFetcher) Read(path string) ([]byte, error) {
 	return fs.ReadFile(f.src, path)
 }
+
+// Skills returns the name of every directory under skills/, sorted: the skills the tree ships, as it
+// names them. A file beside them, the maintainers' AGENTS.md, is not a skill and is left out.
+func (f *EmbeddedExtensionFetcher) Skills() ([]string, error) {
+	entries, err := fs.ReadDir(f.src, skillsDir)
+	if err != nil {
+		return nil, fmt.Errorf("read %s/: %w", skillsDir, err)
+	}
+
+	var skills []string
+
+	for _, entry := range entries {
+		if entry.IsDir() {
+			skills = append(skills, entry.Name())
+		}
+	}
+
+	sort.Strings(skills)
+
+	return skills, nil
+}
+
+// skillsDir is where the tree keeps the skills, the same subtree the extension step asks Fetch for.
+const skillsDir = "skills"

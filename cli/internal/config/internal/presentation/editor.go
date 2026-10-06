@@ -23,7 +23,7 @@ import (
 )
 
 // The editor is `codefall config` with no arguments in a terminal: a menu over what a person
-// configures, Agents, Reviews, and Persona, each screen showing its current value and offering its
+// configures, Agents, Reviews, Skills, and Persona, each screen showing its current value and offering its
 // edits, and Esc bringing the person back a step. It is the shell that owns arrangement and
 // navigation for this component (ADR-012). It decides nothing the scripted subcommands do not: every
 // edit goes through the same use case, and the one line each write earns is printed after the program
@@ -45,6 +45,8 @@ const (
 	// screenReviews holds the review settings that do not vary by harness: posting.
 	screenReviews
 	screenPersona
+	// screenSkillPrefix holds what the installed skills are called (ADR-015).
+	screenSkillPrefix
 	// screenQuit is the menu's last item rather than a screen: choosing it ends the program.
 	screenQuit
 )
@@ -111,11 +113,12 @@ type editor struct {
 }
 
 // formFields is where a form writes what the person typed or chose: the add-agent form's two fields,
-// the posting form's one, or the persona form's one.
+// the posting form's one, the persona form's one, or the skill prefix form's one.
 type formFields struct {
 	harness, model string
 	posting        bool
 	persona        string
+	skillPrefix    string
 }
 
 // runEditor opens the editor, and, once it has left the screen, prints the writes the session made
@@ -197,7 +200,7 @@ func (e editor) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return e.updateEntry(msg)
 	case screenList:
 		return e.updateList(msg)
-	case screenAdd, screenReviews, screenPersona:
+	case screenAdd, screenReviews, screenPersona, screenSkillPrefix:
 		return e.updateForm(msg)
 	}
 
@@ -245,6 +248,12 @@ func (e editor) open(to screen) (tea.Model, tea.Cmd) {
 	case screenPersona:
 		e.fields = &formFields{persona: e.shown.Persona.Name}
 		e.form = e.personaForm()
+		e.screen = to
+
+		return e, e.form.Init()
+	case screenSkillPrefix:
+		e.fields = &formFields{skillPrefix: e.shown.SkillPrefix}
+		e.form = e.skillPrefixForm()
 		e.screen = to
 
 		return e, e.form.Init()
@@ -442,8 +451,8 @@ func (e editor) updateForm(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return e, cmd
 }
 
-// completeForm acts on a finished form: an added agent joins the list on screen, unsaved; posting
-// and the persona are written at once, since each is one value.
+// completeForm acts on a finished form: an added agent joins the list on screen, unsaved; posting,
+// the skill prefix, and the persona are written at once, since each is one value.
 func (e editor) completeForm() (tea.Model, tea.Cmd) {
 	switch e.screen {
 	case screenAdd:
@@ -459,6 +468,14 @@ func (e editor) completeForm() (tea.Model, tea.Cmd) {
 
 		return e.apply(func() ([]domain.Write, error) {
 			write, err := e.config.SetPosting(e.dir, on)
+
+			return []domain.Write{write}, err
+		}, screenMenu)
+	case screenSkillPrefix:
+		prefix := e.fields.skillPrefix
+
+		return e.apply(func() ([]domain.Write, error) {
+			write, err := e.config.SetSkillPrefix(e.dir, prefix)
 
 			return []domain.Write{write}, err
 		}, screenMenu)
@@ -561,7 +578,7 @@ func (e editor) View() tea.View {
 		body.WriteString(ui.Style(ui.ToneFaint).Render(
 			"Tried in this order until one answers. Move an agent with shift and the arrows; enter saves.") + "\n\n")
 		body.WriteString(e.agents.View())
-	case screenAdd, screenReviews, screenPersona:
+	case screenAdd, screenReviews, screenPersona, screenSkillPrefix:
 		if e.form != nil {
 			body.WriteString(e.form.View())
 		}
@@ -640,6 +657,21 @@ func (e editor) postingForm() *huh.Form {
 	)).WithShowHelp(true).WithWidth(min(e.width, 72))
 }
 
+// skillPrefixForm is the form that picks what the installed skills are called. The write records the
+// choice; the rename on disk waits for upgrade, and the description says so.
+func (e editor) skillPrefixForm() *huh.Form {
+	options := make([]huh.Option[string], 0, len(settings.SkillPrefixes()))
+	for _, name := range settings.SkillPrefixes() {
+		options = append(options, huh.NewOption(name+" ("+name+"-design, /"+name+"-implement)", name))
+	}
+
+	return huh.NewForm(huh.NewGroup(
+		huh.NewSelect[string]().Title("Skill prefix").
+			Description("What the installed skills are called. The choice is recorded here; codefall upgrade renames the installed skills.").
+			Options(options...).Value(&e.fields.skillPrefix),
+	)).WithShowHelp(true).WithWidth(min(e.width, 72))
+}
+
 // personaForm is the form that picks the persona.
 func (e editor) personaForm() *huh.Form {
 	options := make([]huh.Option[string], 0, len(userfile.Personas()))
@@ -665,6 +697,7 @@ func newMenu(shown domain.Configuration) list.Model {
 		row{title: "Agents", detail: "Who reviews and consults, by the harness you run codefall in", leads: screenEntries},
 		row{title: "Reviews", detail: "Posting findings to the pull request: " + posting, leads: screenReviews},
 		row{title: "Persona", detail: personaLine(shown.Persona), leads: screenPersona},
+		row{title: "Skills", detail: "What the installed skills are called: " + skillPrefixLine(shown.SkillPrefix), leads: screenSkillPrefix},
 		row{title: "Quit", detail: "Leave the editor", leads: screenQuit},
 	}
 

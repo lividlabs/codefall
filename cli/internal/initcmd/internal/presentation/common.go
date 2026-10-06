@@ -53,6 +53,11 @@ type InitializeUseCase interface {
 	// no settings or they declare none. A run over settled settings works with the root the project
 	// already declared and never moves it (ADR-007).
 	DeclaredTestDir(dir string) (mo.Option[string], error)
+	// DeclaredSkillPrefix reads the prefix .codefall/settings.json names the skills with, or the
+	// format's default when there are no settings or they name none. A run over settled settings
+	// installs under the prefix the project chose, and upgrade holds it against the one the manifest
+	// records (ADR-015).
+	DeclaredSkillPrefix(dir string) (string, error)
 	// FormerHarnessNames reads the old harness spellings .codefall/settings.json and
 	// .codefall/manifest.json still carry. An upgrade that finds one has a rewrite to make, so it is
 	// never a no-op.

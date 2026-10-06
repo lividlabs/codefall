@@ -9,14 +9,15 @@ import (
 
 	"github.com/samber/mo"
 
+	"github.com/lividlabs/codefall/cli/internal/initcmd/internal/domain"
 	"github.com/lividlabs/codefall/cli/internal/shared/manifest"
 )
 
 // fetchSkills copies the skills into one skills directory, minus the maintainer documents a project
-// has no reader for, and hands back what it installed and what it changed, relative to that
-// directory.
-func (i *Initialize) fetchSkills(ctx context.Context, dir, dest string) (Fetched, error) {
-	fetched, err := i.source.Fetch(ctx, filepath.Join(dir, dest), []string{skillsSource}, maintainerDocs)
+// has no reader for, under the project's prefix, and hands back what it installed and what it
+// changed, relative to that directory.
+func (i *Initialize) fetchSkills(ctx context.Context, dir, dest string, rename domain.SkillRename) (Fetched, error) {
+	fetched, err := i.source.Fetch(ctx, filepath.Join(dir, dest), []string{skillsSource}, maintainerDocs, rename)
 	if err != nil {
 		return Fetched{}, fmt.Errorf("install the embedded extension: %w", err)
 	}
@@ -26,9 +27,11 @@ func (i *Initialize) fetchSkills(ctx context.Context, dir, dest string) (Fetched
 
 // fetchShared copies the files a path reaches into .codefall/: the scripts every harness's hooks
 // run, and the files the skills read. It runs once per install rather than once per harness, because
-// one copy is what every path codefall writes points at.
-func (i *Initialize) fetchShared(ctx context.Context, dir string) (Fetched, error) {
-	fetched, err := i.source.Fetch(ctx, filepath.Join(dir, codefallDir), []string{hooksSource, sharedSource}, nil)
+// one copy is what every path codefall writes points at. The rename reaches their contents — the
+// session notice says "run /codefall-refresh", and a file the skills read names them — and leaves
+// their names alone, because no file there is named for a skill.
+func (i *Initialize) fetchShared(ctx context.Context, dir string, rename domain.SkillRename) (Fetched, error) {
+	fetched, err := i.source.Fetch(ctx, filepath.Join(dir, codefallDir), []string{hooksSource, sharedSource}, nil, rename)
 	if err != nil {
 		return Fetched{}, fmt.Errorf("install codefall's shared files: %w", err)
 	}
@@ -37,11 +40,14 @@ func (i *Initialize) fetchShared(ctx context.Context, dir string) (Fetched, erro
 }
 
 // Installation is what finished runs recorded, as presentation reads it back: the version each
-// harness was installed at. The gate compares it per harness, because a current version for one
-// harness says nothing about a project that has never been set up for the harness in front of it
-// (ADR-001).
+// harness was installed at, and the prefix the skills were named with. The gate compares the version
+// per harness, because a current version for one harness says nothing about a project that has never
+// been set up for the harness in front of it, and compares the prefix with the settings, because a
+// project that changed its answer has a rename waiting however current the version (ADR-001,
+// ADR-015).
 type Installation struct {
-	Versions map[string]string
+	Versions    map[string]string
+	SkillPrefix string
 }
 
 // ManifestExists reports whether a finished run has recorded itself in .codefall/manifest.json. It
@@ -75,17 +81,18 @@ func (i *Initialize) Installed(dir string) (mo.Option[Installation], error) {
 		return mo.None[Installation](), nil
 	}
 
-	return mo.Some(Installation{Versions: versions}), nil
+	return mo.Some(Installation{Versions: versions, SkillPrefix: current.InstalledSkillPrefix()}), nil
 }
 
 // writeManifest records this run in .codefall/manifest.json. The run calls it once every step has
-// succeeded: the entries it writes say an install of this version, for those harnesses, is complete,
-// and the upgrade gate takes them at their word.
+// succeeded: the entries it writes say an install of this version, for those harnesses, under that
+// prefix, is complete, and the upgrade gate takes them at their word.
 //
 // It merges into what is already recorded rather than replacing it. A run for one harness has done
 // nothing to another harness's install and has no business erasing the record of it. The .codefall/
-// entry is replaced rather than merged, because every run writes that directory whole.
-func (i *Initialize) writeManifest(dir, version string, written installed) error {
+// entry is replaced rather than merged, because every run writes that directory whole, and so is the
+// prefix, because every run installs every skills directory it is for under the one prefix.
+func (i *Initialize) writeManifest(dir, version, prefix string, written installed) error {
 	previous, _, err := i.recordedManifest(dir)
 	if err != nil {
 		return err
@@ -104,6 +111,7 @@ func (i *Initialize) writeManifest(dir, version string, written installed) error
 	}
 
 	recorded.Shared = manifest.Install{Version: version, Files: written.shared}
+	recorded.SkillPrefix = prefix
 
 	body, err := manifest.Encode(recorded)
 	if err != nil {

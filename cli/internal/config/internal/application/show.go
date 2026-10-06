@@ -10,7 +10,7 @@ import (
 )
 
 // Show reads the effective configuration: the agents list as the settings module reads it, whether
-// review may post, and the persona as the user file module reads it. It reads the way every other
+// review may post, what the skills are called, and the persona as the user file module reads it. It reads the way every other
 // reader does, so a value Validate would refuse shows as the default it falls back to; doctor is what
 // reports it.
 func (c *Config) Show(dir string) (domain.Configuration, error) {
@@ -29,6 +29,7 @@ func (c *Config) Show(dir string) (domain.Configuration, error) {
 		Default:        !listsAgents(project.doc),
 		HarnessConfigs: settings.HarnessConfigs(project.doc),
 		Posting:        settings.PostToPullRequest(project.doc),
+		SkillPrefix:    settings.SkillPrefix(project.doc),
 		Persona:        persona,
 	}, nil
 }
