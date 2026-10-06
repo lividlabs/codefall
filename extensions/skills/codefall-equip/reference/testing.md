@@ -228,7 +228,11 @@ In order, and all four:
 
 A failure is fixed in the configuration and the proof re-run. A failure that belongs to the
 environment rather than the configuration — a package manager that cannot reach the network — is
-reported as that, with what to do.
+reported as that, with what to do. A failure in a script codefall installed — `check-cases.sh`,
+`check-cases-playwright.sh` — is codefall's, not the project's: say so, finish the proof on what
+passes, and hand the person the issue, a title and a body ready to paste on codefall's repository.
+It is never filed from here, and never offered; the tracker a verb files on is the project's own,
+per *Who is authoritative for what* in `../../../../.codefall/shared/workflow.md`.
 
 ## What the user owes
 

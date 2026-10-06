@@ -2,8 +2,10 @@
 
 **Status:** supported.
 
-GitHub Issues, in a single repository, optionally placed on a GitHub Project. This is the profile
-`codefall-specify` uses when the mirror's home is the same forge as the code.
+GitHub Issues, in the project's own repository — `github.issuesRepo` in `.codefall/settings.json`,
+the one tracker a verb files on, per *Who is authoritative for what* in
+`../../../../../.codefall/shared/workflow.md` — optionally placed on a GitHub Project. This is the
+profile `codefall-specify` uses when the mirror's home is the same forge as the code.
 
 **The spec document is canonical.** This profile creates and refreshes a mirror of it. Nothing here
 holds a fact the document does not, and a hand-edited issue body is overwritten on the next run.

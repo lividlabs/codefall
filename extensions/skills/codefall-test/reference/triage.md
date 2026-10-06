@@ -63,9 +63,11 @@ in a line, and the occurrence count where the class carries one.
 
 ## Issues
 
-**A finding becomes a tracker issue only on the user's explicit word.** Search for an existing issue
-first, and offer to comment on it rather than opening a second. Present the candidates as a list and
-wait; nothing is filed because a run found it.
+**A finding becomes a tracker issue only on the user's explicit word**, and only on the project's own
+tracker, per *Who is authoritative for what* in `../../../../.codefall/shared/workflow.md`: a bug in
+codefall itself, or in any other repository, is handed to the person as issue text and never filed.
+Search for an existing issue first, and offer to comment on it rather than opening a second. Present
+the candidates as a list and wait; nothing is filed because a run found it.
 
 ```bash
 gh issue list --search "<keywords>" --state all --json number,title,state,url,labels --limit 10

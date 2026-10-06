@@ -217,8 +217,10 @@ writes the issue number into the document.
 
 ### 9. Mirror to the tracker
 
-Follow the creation sequence in `trackers/github/PROFILE.md`. **The report is written even when the
-mirror fails**: give the user the exact command that fixes the tracker and say the mirror is pending.
+Follow the creation sequence in `trackers/github/PROFILE.md`, on the project's own tracker per *Who
+is authoritative for what* in `../../../.codefall/shared/workflow.md`. **The report is written even
+when the mirror fails**: give the user the exact command that fixes the tracker and say the mirror
+is pending.
 
 ### 10. Commit and wrap up
 

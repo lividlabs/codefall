@@ -111,13 +111,13 @@ the question.
 
 **What the search leaves ambiguous is consulted on once** before the question, per
 `reference/signals.md` for the local track and `reference/testing.md` for the testing track, and the
-answer becomes the proposed option. The user still chooses; a consult never declares or installs.
+answer becomes the proposed option.
 
 ## When another verb follows this skill
 
 `codefall-scaffold` and `codefall-implement` follow the local track as a procedure, never through
-the harness, and never the other tracks: **a test harness is never set up inside another verb's
-pull request.** What each does, and what it skips, is in `reference/followers.md`.
+the harness, and never the other tracks. What each does, and what it skips, is in
+`reference/followers.md`.
 
 ## Project customizations and persona
 
@@ -158,9 +158,9 @@ Then ask the one question, with what was found beside it. Three answers:
 - **Revise what is declared.** The block already exists and the user says the tools changed. Go to
   step 3 with the declared scripts open.
 
-When no candidate keeps the contract, the first answer is not offered. Ask draft or revise only —
-revise only when a `local` block is declared — and name the steps of the existing scripts the
-draft reuses verbatim, so the user sees what they keep.
+When no candidate keeps the contract, the first answer is not offered. Ask draft or revise only,
+and name the steps of the existing scripts the draft reuses verbatim, so the user sees what they
+keep.
 
 ### 3. Draft or revise
 
@@ -275,9 +275,8 @@ first case when a bead names one; that is a fact, not a second step.
 
 ## Process — the agents
 
-`reference/agents.md` carries this track in full. Read it at step 1 and follow it. Any harness
-can be set up from any other; the track finds the parameters. Every reply fits on one screen: the
-configuration, one question, one change.
+`reference/agents.md` carries this track in full. Read it at step 1 and follow it. Every reply fits
+on one screen: the configuration, one question, one change.
 
 1. **Read** `harnesses`, `harnessConfig`, and `agents`; no settings file means `codefall init`
    comes first. Answer which harness this is per
@@ -320,6 +319,9 @@ configuration, one question, one change.
 - **The contract is not negotiable.** A candidate that drops, resets, or deletes is reported and
   never declared, however convenient it is.
 - **Nothing is written without confirmation.** The full draft or the diff, shown first.
+- **A bug in codefall is reported, never filed.** A failing shared script is codefall's; the issue
+  text goes to the person, ready to paste. The one tracker a verb files on is the project's, per
+  *Who is authoritative for what* in `../../../.codefall/shared/workflow.md`.
 - **Every run is the same procedure**, first draft and revision alike. No one-time mode.
 - **Revise the smallest thing.** A revision touches what the introduced tool needs and leaves the
   project's own lines alone.
@@ -327,8 +329,7 @@ configuration, one question, one change.
   command.
 - **Proving runs real services, so it is offered.** Never started on the user's machine unasked.
 - **Only the `local` block, the `test` block's `runners`, `harnessConfig`, and the `agents` lists.**
-  No other settings field is this skill's to touch — the testing root, the tree under it, and the
-  `CODEFALL TESTING` section are `codefall init`'s.
+  No other settings field is this skill's to touch.
 - **The runner follows the surface.** Playwright for a browser front end, an Electron shell, or an
   HTTP API; `go test` for a Go surface.
 - **Refuse the `spec` modality where this version has no runner** — React Native, Tauri,
