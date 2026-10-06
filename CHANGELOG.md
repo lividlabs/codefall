@@ -6,6 +6,39 @@ below were written by hand, before that was wired up.
 Tags are bare version numbers (`0.1.2`), not `v`-prefixed, so they match the `ref` the marketplace
 pins. A `v0.1.1` tag also exists from before that convention was settled.
 
+## [0.28.0](https://github.com/lividlabs/codefall/compare/v0.27.0...v0.28.0) (2026-10-06)
+
+
+### ⚠ BREAKING CHANGES
+
+* **skills:** a project that ran `/codefall-equip landing` before this change has the workflow listening for `land`; re-run the track to take the new template and create the `auto-merge` label.
+
+### Features
+
+* **skills:** a verb runs the verb upstream of it, and documents land on their own ([#172](https://github.com/lividlabs/codefall/issues/172)) ([c96b23b](https://github.com/lividlabs/codefall/commit/c96b23b8d5dcecc859d5c36083402bcb5e977807))
+
+
+### Bug Fixes
+
+* **evals:** the driver stops the fixture servers and removes worker worktrees when a run ends ([#187](https://github.com/lividlabs/codefall/issues/187)) ([4924d27](https://github.com/lividlabs/codefall/commit/4924d277e3f6943a2bacd1e62be9434c1f53fc39)), closes [#181](https://github.com/lividlabs/codefall/issues/181)
+* **evals:** the fixture's start gives up on a held port, and update runs without a lockfile ([#186](https://github.com/lividlabs/codefall/issues/186)) ([7485037](https://github.com/lividlabs/codefall/commit/7485037aaa9b126ffd3d3527faf46d32746d5e45)), closes [#180](https://github.com/lividlabs/codefall/issues/180)
+* **hooks:** the merge guard reads a push's own refspecs ([#177](https://github.com/lividlabs/codefall/issues/177)) ([#185](https://github.com/lividlabs/codefall/issues/185)) ([3adc13b](https://github.com/lividlabs/codefall/commit/3adc13b203e7fbe526e58365024e3abec28c8c92))
+* **shared:** list Playwright specs with --pass-with-no-tests so an empty tree is a pass ([#183](https://github.com/lividlabs/codefall/issues/183)) ([23eda92](https://github.com/lividlabs/codefall/commit/23eda929def165ae0f3831abc971d0092401793c)), closes [#175](https://github.com/lividlabs/codefall/issues/175)
+* **skills:** a report points at a stack by its top pull request, never a merge command or a merge order ([#184](https://github.com/lividlabs/codefall/issues/184)) ([d979f9c](https://github.com/lividlabs/codefall/commit/d979f9ca9a82a6b3836603888f0e8274a096862d))
+* **skills:** a verb files on the project's own tracker and nowhere else ([#179](https://github.com/lividlabs/codefall/issues/179)) ([#189](https://github.com/lividlabs/codefall/issues/189)) ([89359e7](https://github.com/lividlabs/codefall/commit/89359e797514bec90269a0bf7b43fb7ace2c7bf3))
+* **skills:** equip, scaffold, and upgrade end on the merge as the one step ([#188](https://github.com/lividlabs/codefall/issues/188)) ([75ef9c1](https://github.com/lividlabs/codefall/commit/75ef9c136c6781e731b6dd722d76d7a76354ec81)), closes [#178](https://github.com/lividlabs/codefall/issues/178)
+* **skills:** skill-health matches names by case and checks the depth a shared file is named from, and equip's landing reference reaches the shared file ([#191](https://github.com/lividlabs/codefall/issues/191)) ([d28e8af](https://github.com/lividlabs/codefall/commit/d28e8af3dc6783686adf1e7d7d4ba8edebd951bf))
+
+
+### Documentation
+
+* a shared reference for GitHub stacked pull requests, a recipe for landing document stacks, and a plain-speech line ([#171](https://github.com/lividlabs/codefall/issues/171)) ([7edcf33](https://github.com/lividlabs/codefall/commit/7edcf33e89c9d5f457dd51ffe649551ff8a08476))
+
+
+### Refactoring
+
+* **skills:** equip keeps each track's steps in its own reference file ([#190](https://github.com/lividlabs/codefall/issues/190)) ([f1cb184](https://github.com/lividlabs/codefall/commit/f1cb184bcc222e1d526eef2213f7a8989f4c19b8))
+
 ## [0.27.0](https://github.com/lividlabs/codefall/compare/v0.26.0...v0.27.0) (2026-10-01)
 
 
