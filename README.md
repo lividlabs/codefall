@@ -67,9 +67,18 @@ codefall create
 ### Existing Projects
 
 Running the `init` command installs configuration for codefall, and the extension for each harness you
-choose. It asks which harnesses the project uses and where the project's test cases live, and records
-both in `.codefall/settings.json`. It runs once: a project that already has `.codefall/manifest.json`
-is `upgrade`'s, and `init` says so rather than repeating itself.
+choose. It asks which harnesses the project uses, what the installed skills are called, and where the
+project's test cases live, and records all three in `.codefall/settings.json`. It runs once: a project
+that already has `.codefall/manifest.json` is `upgrade`'s, and `init` says so rather than repeating
+itself.
+
+The skills are named `codefall-<verb>` — `codefall-design`, `/codefall-implement` — unless the project
+chooses a shorter prefix, `cf` or `cfall`, with `--skill-prefix` or in the survey; a scripted run that
+passes nothing gets `codefall`. The source tree has one spelling and `init` rewrites it while
+installing, in the directory names, the frontmatter, the slash commands, the relative paths one skill
+follows into another, and the sections it writes into `AGENTS.md`, so a project on `cf` reads and runs
+`cf-design` everywhere. The choice is `skillPrefix` in `settings.json`; absent means `codefall`.
+[ADR-015](docs/adrs/ADR-015-skill-prefix.md) records the decision.
 
 ```
 codefall init
@@ -78,7 +87,8 @@ codefall init
 Running the `upgrade` command brings an installed project level with the binary: it reinstalls the
 skills, shared files, and hooks for the harnesses the settings record, replaces the sections codefall
 wrote into `AGENTS.md`, rewrites a harness name still spelled the old way, points a `$schema` URL an
-earlier release wrote at the current one, and records the run in the manifest. It changes nothing it did not write, and asks before moving the installed version unless
+earlier release wrote at the current one, installs the skills under the prefix `skillPrefix` names and
+removes the ones under the prefix they had, and records the run in the manifest. It changes nothing it did not write, and asks before moving the installed version unless
 `--yes` answers. It reinstalls the extension on every run, the binary's own version included, so a
 skill, shared file, ignore entry, `AGENTS.md` section, hook registration, or testing file that has
 gone missing or been edited is put back and reported, and it says "already up to date" only when
@@ -95,7 +105,10 @@ the binary no longer ships, or ships under a new name, comes out of every skills
 installs for, with the directory it emptied, and the report names each one and says which were
 renames. It compares only the harnesses the settings name, only the files the manifest lists, and
 nothing outside the install directories; a manifest with no file lists gives it nothing to compare,
-and it says so.
+and it says so. A change of `skillPrefix` lands the same way — `codefall config skill-prefix cf`,
+then `codefall upgrade` — and reads as a rename of each skill; the project's own files that still
+say `codefall-<verb>` are named in the report and left as they are, and so is a
+`.codefall/skills/codefall-<verb>/CUSTOMIZE.md` to move by hand.
 
 ```
 codefall upgrade
@@ -156,15 +169,16 @@ once.
 }
 ```
 
-`codefall config` in a terminal opens an editor over it: a menu of Agents, Reviews, and Persona.
+`codefall config` in a terminal opens an editor over it: a menu of Agents, Reviews, Persona, and Skills.
 Agents lists the active agents, `default` first and then each harness; open one and its Review and
 Consult lists are there to reorder with shift and the arrows, add to with `a`, trim with `d`, hand
 back to the default with `c`, and save with enter. Reviews holds whether review posts its findings
-to the pull request. Esc goes back, `q` quits, and every write is reported once the editor closes,
+to the pull request, and Skills what the installed skills are called. Esc goes back, `q` quits, and every write is reported once the editor closes,
 in the same line a subcommand prints. The subcommands are for scripts:
 `codefall config agents muse review claude codex:gpt-5-codex` sets one list, `--clear` in place of
 the agents removes it, `codefall config agents` prints them all, and `codefall config review posting
-on|off` sets posting, and `codefall config harness codex --provider amazon-bedrock-runtime --env
+on|off` sets posting, `codefall config skill-prefix cf` records the prefix for the next `codefall
+upgrade` to install under, and `codefall config harness codex --provider amazon-bedrock-runtime --env
 "aws configure export-credentials --format env"` sets a block (`--clear` removes it). `codefall config
 show` prints all of it, and so does the bare command when there is no terminal to draw on.
 [ADR-009.3](docs/adrs/ADR-009.3-agents.md) records the shape.

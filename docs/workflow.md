@@ -17,7 +17,10 @@ installs, by `extensions/scripts/workflow-sync.sh --write`, and CI fails when th
 installs for each:
 
 - the skills, into the harness's own skills directory (`.claude/skills/`, `.agents/skills/`), because
-  that is the one place a harness finds them by convention;
+  that is the one place a harness finds them by convention, under the prefix the project chose —
+  `codefall-<verb>` unless `skillPrefix` in `settings.json` says `cf` or `cfall`, in which case every
+  name, slash command, and path is rewritten on the way in
+  ([ADR-015](adrs/ADR-015-skill-prefix.md));
 - `.codefall/`, once for all harnesses: `settings.json` (what the project told `init`, read back by
   the verbs), `manifest.json` (what the last run wrote), `hooks/shared/` (the guard scripts), and
   `shared/` (the files every skill reads and the scripts a verb runs);
@@ -35,8 +38,8 @@ installs for each:
   the file does not already name it.
 
 `codefall doctor` checks that all of it is present and runnable. [ADR-006](adrs/ADR-006-install-layout.md)
-records the layout. `codefall config` changes who reviews and consults in `settings.json` and the persona in
-`user.json` afterwards, one command at a time and without prompting.
+records the layout. `codefall config` changes who reviews and consults and what the skills are called in
+`settings.json` and the persona in `user.json` afterwards, one command at a time and without prompting.
 
 ## The chain
 
@@ -142,7 +145,9 @@ Four verbs sit beside the chain rather than in it:
   binary's and asks to continue, then reinstalls the skills, shared files, and hooks for the harnesses
   the settings record, replaces its own marked sections and registrations, rewrites a harness name
   still spelled the old way, points a `$schema` URL an earlier release wrote at the current one,
-  removes what the previous install wrote that this one does not ship, and touches nothing else.
+  installs the skills under the prefix `skillPrefix` names and removes the ones under the prefix
+  they had, removes what the previous install wrote that this one does not ship, and touches
+  nothing else.
   `codefall init` runs once and refuses a project that has a manifest, naming
   `upgrade`
   ([ADR-010](https://github.com/lividlabs/codefall/blob/main/docs/adrs/ADR-010-upgrade.md)).
