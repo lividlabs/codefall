@@ -44,6 +44,10 @@ writing and changing a skill; the extension-wide rules, ADR immutability, prose,
   pull request a person merges. Document pull requests never stack; `codefall-implement`'s code pull
   requests do. No skill says "do not commit"; the one prohibition is the default branch, and the
   guard hook holds it.
+- **A verb files on the project's own tracker and nowhere else.** A bug it finds in codefall, or in
+  any other repository, is handed to the person as issue text, never filed and never offered. The
+  rule is stated once, under *Who is authoritative for what* in [`docs/workflow.md`](../../docs/workflow.md);
+  a skill that touches the tracker points at the installed copy and never restates it.
 - **Refuse only what you cannot do.** A missing surface profile, a missing tool, an unsupported
   tracker — those are exits. Disagreeing about size, altitude, or fit is not: say what you think and
   why, then do what the user asks. `codefall-envision`'s floor and `codefall-specify`'s cohesion check are both

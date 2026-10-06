@@ -156,7 +156,13 @@ dependency, a migration, or generated code changes `start` or `update` in the sa
 - **Documents in the repository** are canonical for the why (vision), the what (spec), what is
   wrong (bug report), and the how (design). Each carries a `Status` that describes the document only.
 - **The tracker** (GitHub Issues in this version) mirrors specs and bug reports so people can see
-  what is ready, in progress, and done; the document stays canonical.
+  what is ready, in progress, and done; the document stays canonical. It is the project's own — the
+  repository `github.issuesRepo` names in `.codefall/settings.json` — and the only tracker a verb
+  files on, comments on, or edits; a `gh issue` command names it with `-R` when it is not the
+  checkout's remote. A bug a verb finds in codefall itself, or in any other repository, is handed to
+  the person as a finished issue — a title and a body, ready to paste — and named in the verb's
+  report. No verb files it, and no verb offers to: a yes given inside a run reaches this project and
+  nothing beyond it, and filing on another repository is the person's own act, on their own account.
 - **Beads** is authoritative for task state from the moment a design's staged task plan is approved
   and becomes beads. A design keeps its task table — the tasks, edges, and design refs it decided,
   under the epic's ID — and never a copy of work state.
@@ -184,7 +190,7 @@ dependency, a migration, or generated code changes `start` or `update` in the sa
   `auto-merge` label when the person wants it merged or to have someone approve it; `scaffold`,
   `equip`, and `upgrade` open one a
   person merges. `implement` does this per task, as one GitHub stack per epic; documents do not
-  stack. All of them follow the shared `landing.md` beside this file's installed copy.
+  stack. All of them follow `.codefall/shared/landing.md`, the shared landing procedure.
 - **The context that finds a problem never fixes it.** `review` runs in the first agent this machine
   can run from the review list of the project's entry for the harness the session is in, else its
   `default` entry, a subagent of the current harness with nothing configured, and `via=` overrides

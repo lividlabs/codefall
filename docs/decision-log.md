@@ -1818,6 +1818,30 @@ Decided at scaffold, 2026-08-16.
   convention is one clause in `skills/AGENTS.md`'s report rule, and equip carries it as a rule
   across its four tracks. No ADR changes: ADR-014 already says it. Seen and not taken: naming no
   next verb at all (the person then has to work it out, which the report rule forbids).
+- **A verb files on the project's tracker and nowhere else, 2026-10-06.** For issue #179. In the
+  twisted-todo run of 2026-10-05, `equip test` found that `check-cases-playwright.sh` failed on an
+  empty tree (fixed since, #183), offered to file it on `lividlabs/codefall` as a recommendation,
+  and on the product manager's yes — "I can't judge the technical side" — filed it there under
+  their account with `gh issue create -R`. No instruction said where a verb may file. The
+  offer-and-apply rule has no boundary on what a yes reaches; the tracker profiles said "a single
+  repository" and ran `gh issue create` against whatever remote the checkout had; `github.issuesRepo`
+  in settings was written by `init` and read by no skill; and `equip`'s proof named two kinds of
+  failure, the configuration's and the environment's, so a failure in codefall's own script had no
+  row and the verb improvised one. Every verb with Bash could do the same by the same reasoning;
+  `test`, `report`, and `specify` are the three that file by procedure. The rule is stated once, in
+  the tracker bullet of *Who is authoritative for what* in `docs/workflow.md` and its installed copy:
+  the project's tracker is the repository `issuesRepo` names, it is the only tracker a verb files
+  on, comments on, or edits, a `gh issue` command names it with `-R` when it is not the checkout's
+  remote, and a bug found in codefall or any other repository is handed to the person as a finished
+  issue, never filed and never offered. `equip`, `test`, `report`, and `specify` point at it from
+  the place each touches the tracker; the Codefall section of a project's `AGENTS.md` carries a
+  clause (chars/4: 480 → 492 tokens); `skills/AGENTS.md` carries the convention. No ADR says where a
+  verb files, so none is superseded. Seen and not taken: a verb or CLI command that files upstream
+  with the person's consent (a yes inside a project run cannot authorize a write outside the
+  project, and a person under a persona may not be able to judge what they are consenting to); a
+  guard hook denying `gh issue create -R` (the guards read git pushes, the flag is right when
+  `issuesRepo` is not the remote, and a hook for one flag buys little over the rule); the rule in
+  `shared/landing.md` (it binds the verbs that land files in git, and `test` does not follow it).
 
 ## Open
 

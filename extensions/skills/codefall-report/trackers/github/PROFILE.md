@@ -2,8 +2,10 @@
 
 **Status:** supported.
 
-GitHub Issues, in a single repository. **The bug report is canonical.** This profile creates and
-refreshes one issue generated from it; nothing here holds a fact the document does not.
+GitHub Issues, in the project's own repository — `github.issuesRepo` in `.codefall/settings.json`,
+the one tracker a verb files on, per *Who is authoritative for what* in
+`../../../../../.codefall/shared/workflow.md`. **The bug report is canonical.** This profile creates
+and refreshes one issue generated from it; nothing here holds a fact the document does not.
 
 ## Contents
 

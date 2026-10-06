@@ -627,8 +627,9 @@ under the testing root's `.artifacts/`.
 
 **A failing run produces a finding, never an edit to the criterion.** Findings are classified as a
 real bug, a wrong expectation, a flake, or agent variance with an occurrence count, and they become
-tracker issues only when you say so. Setting the runner up is `equip`'s job, writing the case is
-`implement`'s, and `test` names the remedy when either is missing rather than doing it for you.
+issues on your project's tracker only when you say so. Setting the runner up is `equip`'s job,
+writing the case is `implement`'s, and `test` names the remedy when either is missing rather than
+doing it for you.
 
 **`equip` sets the runner up, as its own pull request.** It reads the testing root, searches for a
 runner configuration and for wherever your end-to-end tests live today, and asks one question with
