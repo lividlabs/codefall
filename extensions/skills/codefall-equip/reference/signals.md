@@ -1,8 +1,8 @@
 # Signals, entry points, and what they map to
 
 What a repository says about the tools its local environment needs, where a project may already
-keep the commands, and what each signal becomes in `start` and `update`. Read at step 2, and again
-at step 3 while drafting.
+keep the commands, and what each signal becomes in `start` and `update`. Read at step 2 of the
+local track, and again at step 3 while drafting.
 
 ## Contents
 

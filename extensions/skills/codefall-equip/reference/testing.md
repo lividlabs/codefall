@@ -1,11 +1,13 @@
 # Setting up the test harness
 
-The testing track in full: what the declaration says, what to search for, the runner each surface
-takes, what setting one up means, what is written where, and how the result is proven. `<root>` is
-the testing root `test.dir` declares in `.codefall/settings.json`.
+The testing track in full: the eight steps, what the declaration says, what to search for, the
+runner each surface takes, what setting one up means, what is written where, and how the result is
+proven. Read before step 1 of the testing track and follow it. `<root>` is the testing root
+`test.dir` declares in `.codefall/settings.json`.
 
 ## Contents
 
+- [The steps](#the-steps)
 - [The declaration](#the-declaration)
 - [What to search for](#what-to-search-for)
 - [The one question](#the-one-question)
@@ -18,6 +20,76 @@ the testing root `test.dir` declares in `.codefall/settings.json`.
 - [Revising `update`](#revising-update)
 - [Proving it](#proving-it)
 - [What the user owes](#what-the-user-owes)
+- [Rules](#rules)
+
+## The steps
+
+The sections after this one carry what each step searches for, writes, and proves.
+
+### 1. Read the declaration
+
+The target is the path argument, or the working directory. Read the `test` block in
+`.codefall/settings.json`, per [The declaration](#the-declaration). No block, or no
+`.codefall/settings.json` at all: stop and say `codefall init` declares the testing root first.
+Then read the project's root `AGENTS.md`, and `<root>/AGENTS.md`.
+
+### 2. Find what is already there
+
+Search for a runner configuration and for the directories the project keeps end-to-end tests in,
+per [What to search for](#what-to-search-for), and read each hit rather than counting it. Name the
+surfaces the repository shows.
+
+### 3. Ask the one question
+
+One question, with the evidence beside it: declare what exists, or set up the default runner for
+each surface, per [The one question](#the-one-question). A surface this version has no spec runner
+for — React Native, Tauri, Flutter — is refused for the `spec` modality here, with the reason, and
+the refusal is said before it is asked about. Agentic cases stay available for it wherever
+`codefall-test` has a driver.
+
+### 4. Set the runner up
+
+Install or declare it per [Setting up Playwright](#setting-up-playwright) or
+[Setting up `go test`](#setting-up-go-test): the dependency, and a configuration whose test
+directory is `<root>/test-cases` and whose match is the runner's suffix, with retries off and one
+worker. Show the configuration and confirm before writing anything. Then, before the first write,
+take the branch step of `../../../../.codefall/shared/landing.md`: standing on the default branch,
+`git switch -c equip/test-harness`; on another branch, ask once which to use.
+
+### 5. Declare and record
+
+Write `test.runners` into `.codefall/settings.json`, keeping every other key and the file's
+formatting, per [Declaring the runner](#declaring-the-runner). Write the runner's line into the
+Runners section of `<root>/AGENTS.md`, per [The Runners line](#the-runners-line): its name, the
+command that runs every spec, and the command that runs one case. Names go to settings because
+programs read them; commands go to `<root>/AGENTS.md` because agents and people run them.
+
+### 6. Revise `update`
+
+The runner's own install is part of making the environment match the checkout — Playwright's
+browsers, a Go tool the specs build with. Revise the declared `update` by step 3 of the local
+track, per [Revising `update`](#revising-update), keeping
+[the contract](../SKILL.md#the-contract), and say what changed.
+
+### 7. Prove it
+
+Run the runner's list command on the empty tree: Playwright, with `--pass-with-no-tests`, exits
+`0` and lists no specs, which shows the configuration collects from where it says; `go test`
+answers `matched no packages`, its expected answer until a spec exists. Then run
+`../../../../.codefall/shared/check-cases.sh`, and
+`../../../../.codefall/shared/check-cases-playwright.sh` as well when the runner is Playwright; no
+cases yet is a pass. Then `codefall doctor`, whose **Testing** checks must all pass.
+[Proving it](#proving-it) has the order, and what each kind of failure is.
+
+### 8. Report
+
+What was declared and whether it was found or installed; where the runner's line went; what
+`update` gained; what the proof showed. Then the landing, per
+`../../../../.codefall/shared/landing.md`: the configuration, the settings, `<root>/AGENTS.md`, and
+the `update` revision committed by path on the branch, pushed, and its pull request opened without
+asking. A person merges it. **End with what the user does next**: merge the pull request. Once it
+is merged, `/codefall-implement` writes the first case when a bead names one; that is a fact, not a
+second step.
 
 ## The declaration
 
@@ -242,3 +314,16 @@ pull request never carries harness setup, and no verb sets one up on the way to 
 
 The first case comes afterwards, through `/codefall-implement`, from criteria `/codefall-design`
 put in the bead.
+
+## Rules
+
+The rules that hold for every track are in `../SKILL.md`. These hold for this one:
+
+- **The runner follows the surface.** Playwright for a browser front end, an Electron shell, or an
+  HTTP API; `go test` for a Go surface.
+- **Refuse the `spec` modality where this version has no runner** — React Native, Tauri,
+  Flutter — and say which modality remains.
+- **Names in settings, commands in `<root>/AGENTS.md`.** Never the other way around, and never both.
+- **A harness is equipped in its own pull request.** It never rides along in a task's.
+- **Cases are not this skill's.** An empty tree is what proves a harness; writing the first case is
+  `/codefall-implement`.
