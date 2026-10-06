@@ -81,7 +81,7 @@ yourself afterwards?" Equip changes no branch rule.
 
 ## 4. Write
 
-Take the branch step of `../../../.codefall/shared/landing.md`: standing on the default branch,
+Take the branch step of `../../../../.codefall/shared/landing.md`: standing on the default branch,
 `git switch -c equip/landing`; on another branch, ask once which to use. Write the file from the
 template, byte for byte unless the owner asked for a different allowlist, in which case change the
 `allow` line only.
@@ -113,7 +113,7 @@ within a couple of minutes, and `gh run list --workflow codefall-land-documents`
 ## 6. Report
 
 What was written and why, that the `auto-merge` label exists, the branch-rule finding and what the owner
-has to change if anything, and the landing per `../../../.codefall/shared/landing.md`: the file
+has to change if anything, and the landing per `../../../../.codefall/shared/landing.md`: the file
 committed by path on `equip/landing`, pushed, and its pull request opened and named by URL, none of
 it a question, a person's to merge. **End with what the user does next**: merge the pull request,
 and nothing after it. The branch-rule change, when step 2 found one, is said above as the owner's;
