@@ -261,9 +261,9 @@ track, keeping [the contract](#the-contract), and say what changed.
 
 ### 7. Prove it
 
-Run the runner's list command against the empty tree: Playwright exits `0` and lists no specs,
-which shows the configuration collects from where it says, and `go test` answers
-`matched no packages`, which is that runner's expected answer until a spec exists. Then run
+Run the runner's list command on the empty tree: Playwright, with `--pass-with-no-tests`, exits
+`0` and lists no specs, which shows the configuration collects from where it says; `go test`
+answers `matched no packages`, its expected answer until a spec exists. Then run
 `../../../.codefall/shared/check-cases.sh`, and `../../../.codefall/shared/check-cases-playwright.sh`
 as well when the runner is Playwright; no cases yet is a pass. Then `codefall doctor`, whose
 **Testing** checks must all pass.

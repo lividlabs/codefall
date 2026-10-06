@@ -11,11 +11,14 @@
 #
 # Rules
 #   1  every test title begins with its case id. Titles are read from
-#      `npx playwright test --list --reporter=json`, i.e. from the specs as Playwright actually
-#      collects them, so a title built from a template literal is checked correctly. A
-#      variant-scoped title (`checkout/place-order — [saved-card] …`) satisfies the rule, since the
-#      id is its prefix either way. Only specs under <root>/test-cases/ are checked; a project's
-#      other Playwright tests are none of this script's business.
+#      `npx playwright test --list --pass-with-no-tests --reporter=json`, i.e. from the specs as
+#      Playwright actually collects them, so a title built from a template literal is checked
+#      correctly. A variant-scoped title (`checkout/place-order — [saved-card] …`) satisfies the
+#      rule, since the id is its prefix either way. Only specs under <root>/test-cases/ are checked;
+#      a project's other Playwright tests are none of this script's business. `--pass-with-no-tests`
+#      (Playwright 1.26+) keeps an empty tree a pass: without it Playwright exits 1 with "No tests
+#      found", which this script would read as a spec failing to load. A spec that does fail to load
+#      still exits non-zero with the flag.
 #   2  no `.isVisible().catch(...)` on an un-narrowed locator. `Locator.isVisible()` throws on a
 #      strict-mode multi-match, so a `.catch()` around it turns "several elements matched" into
 #      "no element is there" — an absence that never happened, reported as a product defect.
@@ -47,7 +50,7 @@ while [ $# -gt 0 ]; do
       root_override=$1
       ;;
     --root=*) root_override=${1#--root=} ;;
-    -h|--help) sed -n '2,36p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+    -h|--help) sed -n '2,39p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
     -*) printf 'unknown flag: %s\n' "$1" >&2; exit 2 ;;
     *) project_dir=$1 ;;
   esac
@@ -106,7 +109,7 @@ problem() { problems+=("$1"); }
 
 # --- rule 1 — every test title begins with its case id ------------------------------------------
 
-if ! npx playwright test --list --reporter=json > "$tmp/list.json" 2> "$tmp/list.err"; then
+if ! npx playwright test --list --pass-with-no-tests --reporter=json > "$tmp/list.json" 2> "$tmp/list.err"; then
   printf 'check-cases-playwright: playwright would not list its tests (a spec may fail to load):\n' >&2
   cat "$tmp/list.err" >&2
   exit 2
