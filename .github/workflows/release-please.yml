@@ -50,4 +50,13 @@ jobs:
           artifacts: dist/*.tar.gz dist/*.zip
           bin: codefall
 
+      # A re-run of this job finds the release already cut and skips this step, so a failed
+      # publish is retried with the publish-release workflow instead.
+      - name: Publish to install.codefall.dev
+        if: ${{ steps.release.outputs.release_created }}
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.DO_SPACES_ACCESS_KEY }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.DO_SPACES_SECRET_KEY }}
+        run: scripts/publish-release.sh "${{ steps.release.outputs.version }}" dist
+
 
