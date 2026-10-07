@@ -29,7 +29,9 @@ curl -fsSL https://install.codefall.dev/sh | sh -s -- 0.28.0     # a pinned vers
 ```
 
 The script installs to `~/.local/bin`; set `CODEFALL_INSTALL_DIR` to put the binary elsewhere. It
-verifies the download against the release's `checksums.txt` before installing. The source is
+verifies the download against the release's `checksums.txt` before installing, and records the
+binary's path and version in `~/.local/state/codefall/install.json` (under `XDG_STATE_HOME` when that
+is set), so codefall knows the binary came from the script. The source is
 [`scripts/install.sh`](scripts/install.sh).
 
 ### With [`mise`](https://mise.jdx.dev/)
