@@ -2,7 +2,7 @@
 # template: depguard's allow/deny lists are literal prefix matches with no glob support, so every
 # component's own import paths have to be named here.
 #
-# Components: config, create, doctor, initcmd. Shared modules: internal/shared/ui, internal/shared/process and
+# Components: config, create, doctor, initcmd, update. Shared modules: internal/shared/ui, internal/shared/process and
 # internal/shared/buildinfo (impure), internal/shared/harness, internal/shared/manifest, internal/shared/settings,
 # internal/shared/text, internal/shared/userfile and internal/shared/version (pure — ADR-003). The layer rules were
 # proven against a deliberate Cobra import from `application/` on 2026-08-27 — from doctor's when
@@ -20,6 +20,8 @@
 # importing its facade each compiled and failed lint. The `charm.land/` deny entry was proven the same
 # day against a `charm.land/bubbletea/v2` import from `internal/config/internal/application/`, when
 # Bubble Tea first appeared outside the shared spinner (ADR-012): it compiled and failed lint.
+# The `update` component's entries were proven on 2026-10-07 the same way: a Cobra import from its
+# `application/` and an `internal/shared/proof/` importing its facade each compiled and failed lint.
 #
 # Proving `shared-modules` needs a throwaway package: a real shared module imports a component only
 # in a build that already has an import cycle, and a cycle is a compile error rather than the lint
@@ -90,6 +92,7 @@ linters:
             - github.com/lividlabs/codefall/cli/internal/create/internal/domain
             - github.com/lividlabs/codefall/cli/internal/doctor/internal/domain
             - github.com/lividlabs/codefall/cli/internal/initcmd/internal/domain
+            - github.com/lividlabs/codefall/cli/internal/update/internal/domain
             - github.com/lividlabs/codefall/cli/internal/shared/harness
             - github.com/lividlabs/codefall/cli/internal/shared/manifest
             - github.com/lividlabs/codefall/cli/internal/shared/settings
@@ -121,6 +124,8 @@ linters:
             - pkg: github.com/lividlabs/codefall/cli/internal/doctor
               desc: "shared modules must not import components (ADR-GO-02 rule 4)"
             - pkg: github.com/lividlabs/codefall/cli/internal/initcmd
+              desc: "shared modules must not import components (ADR-GO-02 rule 4)"
+            - pkg: github.com/lividlabs/codefall/cli/internal/update
               desc: "shared modules must not import components (ADR-GO-02 rule 4)"
 
         # ADR-003 — the modules domain/ and application/ are allowed to import, held to the imports

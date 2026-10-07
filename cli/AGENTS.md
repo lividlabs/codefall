@@ -6,14 +6,16 @@ relative to `cli/` unless it says otherwise.
 
 A Go command-line tool. One surface, one app, one module.
 
-**State: four components and nine shared modules.** `internal/doctor/` (`codefall doctor`) is the
+**State: five components and nine shared modules.** `internal/doctor/` (`codefall doctor`) is the
 first component and the reference for the rules below; `internal/initcmd/` (`codefall init` and
 `codefall upgrade`, one use case behind two commands, exported through `Commands`) is the second, and
 follows it; `internal/create/` (`codefall create`) is the third, and runs init's command in the
 directory it makes; `internal/config/` (`codefall config`, an interactive editor in a terminal and
 subcommands for scripts, over one use case) is the fourth, and reads and writes the agents list, one
 entry per active agent with its review and consult lists, how each harness is called, whether review
-posts, and the persona. `internal/shared/ui/` holds the palette,
+posts, and the persona. `internal/update/` (`codefall update`) is the fifth: it finds out how the
+running binary was installed and replaces it with a release only when the install script put it
+there (ADR-015). `internal/shared/ui/` holds the palette,
 the marks, the colour-profile writer, the spinner runner, and the reusable Bubble Tea models that are
 generic over their data (`OrderList`); `internal/shared/process/` holds the command runner and the file
 system; `internal/shared/buildinfo/` holds the version the binary reports, for `--version` and for
@@ -190,7 +192,8 @@ The why lives in the ADRs. This file is the operative rules only — never resta
   `charm.land/lipgloss/v2` import in the module and a `userfile` import from
   `internal/doctor/internal/domain/`. The `config` component's `application-layer` and
   `shared-modules` entries were proven on 2026-09-27, against a Cobra import from its
-  `application/` and a throwaway `internal/shared/proof/` importing its facade.
+  `application/` and a throwaway `internal/shared/proof/` importing its facade. The `update`
+  component's were proven the same way on 2026-10-07.
 - **`depguard` matches `_test.go` too.** Inner-layer tests are internal test packages (`package
   domain`, `package application`), so a `domain` test cannot import `os`. The schema test that holds
   `schemas/settings.schema.json` equal to the settings constants lives in `internal/shared/settings`,

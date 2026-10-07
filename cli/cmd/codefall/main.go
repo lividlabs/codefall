@@ -22,6 +22,7 @@ import (
 	"github.com/lividlabs/codefall/cli/internal/doctor"
 	"github.com/lividlabs/codefall/cli/internal/initcmd"
 	"github.com/lividlabs/codefall/cli/internal/shared/buildinfo"
+	"github.com/lividlabs/codefall/cli/internal/update"
 )
 
 func main() {
@@ -51,6 +52,7 @@ func run(args []string, stdout, stderr io.Writer) error {
 	create.Register(injector)
 	doctor.Register(injector)
 	initcmd.Register(injector)
+	update.Register(injector)
 
 	root := &cobra.Command{
 		Use:   "codefall",
@@ -62,6 +64,7 @@ func run(args []string, stdout, stderr io.Writer) error {
 	root.AddCommand(doctor.Command(injector))
 	root.AddCommand(initcmd.Commands(injector)...)
 	root.AddCommand(config.Command(injector))
+	root.AddCommand(update.Command(injector))
 	// create runs init in the directory it makes, so it gets an init command of its own.
 	root.AddCommand(create.Command(injector, initcmd.Command(injector)))
 
