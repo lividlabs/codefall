@@ -6,6 +6,20 @@ below were written by hand, before that was wired up.
 Tags are bare version numbers (`0.1.2`), not `v`-prefixed, so they match the `ref` the marketplace
 pins. A `v0.1.1` tag also exists from before that convention was settled.
 
+## [0.29.0](https://github.com/lividlabs/codefall/compare/v0.28.0...v0.29.0) (2026-10-07)
+
+
+### Features
+
+* **cli:** codefall update replaces a script-installed binary with the latest release ([#197](https://github.com/lividlabs/codefall/issues/197)) ([9ad62a7](https://github.com/lividlabs/codefall/commit/9ad62a71882097fe7e6556e05417779169822d53))
+* install codefall with curl from install.codefall.dev ([#193](https://github.com/lividlabs/codefall/issues/193)) ([ed57a4d](https://github.com/lividlabs/codefall/commit/ed57a4d94b67b3020305623c9fd802222b7ea1e1))
+* install.sh writes an install receipt for codefall update ([#195](https://github.com/lividlabs/codefall/issues/195)) ([be23168](https://github.com/lividlabs/codefall/commit/be231680cf69e25f322bb6861329f244ac680a03))
+
+
+### Bug Fixes
+
+* **skills:** the product-manager gate says what the run will do in plain words, and refresh no longer asks ([#196](https://github.com/lividlabs/codefall/issues/196)) ([616c72a](https://github.com/lividlabs/codefall/commit/616c72a80e3a462defd625cc41de54e038397a8b))
+
 ## [0.28.0](https://github.com/lividlabs/codefall/compare/v0.27.0...v0.28.0) (2026-10-06)
 
 
