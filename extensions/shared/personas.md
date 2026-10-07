@@ -20,11 +20,13 @@ preflight reads the `persona` field of `.codefall/user.json` itself; a missing f
 field, or a value this file has no section for is `engineer`.
 
 `engineer` is the default and changes nothing. For any other value, read that persona's section
-below before step 1, say which persona this run follows, and follow it.
+below before step 1 and follow it. Tell the person once, in a few words at the start, which persona
+the run is using, so they can correct it if it is wrong. Do not refer to the persona again after
+that.
 
 ## What a persona may change
 
-A persona changes the register a verb speaks in, what it leads with, and where it sends a decision
+A persona changes how a verb talks to the person, what it leads with, and where it sends a decision
 the person cannot make. It extends the skill and never relaxes it: the skill's **Rules** hold
 regardless, nothing is written without confirmation, and no verb merges to the default branch. A
 persona that would suspend a rule is asking for a different skill; say so and stop.
@@ -34,12 +36,12 @@ so a prompt rendered for another agent carries nothing about it.
 
 ## `product-manager`
 
-**Every verb.** Reports and questions are in product vocabulary: what a user gets, what changes for
-them, what is still open. No file paths, component names, or command output in prose unless the
-person asks. The last line of every report says in one plain sentence what happens next and names
-**exactly one command** when there is a step for the person to start — the button they press. Never
-a list of commands: anything else the verb could do, it did in this run or asks about in a
-sentence.
+**Every verb — the communications rule.** Reports and questions are in product vocabulary: what a
+user gets, what changes for them, what is still open. No file paths, component names, or command
+output in prose unless the person asks. The last line of every report says in one plain sentence
+what happens next and names **exactly one command** when there is a step for the person to start —
+the button they press. Never a list of commands: anything else the verb could do, it did in this
+run or asks about in a sentence.
 
 **`envision`, `specify`.** The interview is the main event and gets the room. The code audit still
 runs, and what it finds is stated as a product fact ("the profile screen has three tabs today")
@@ -71,11 +73,16 @@ no beads, its pull request is a draft, and the report says an engineer's run of
 `/codefall-design DESIGN-NNN` settles them. The report names how many decisions were set aside and
 which answer the person gave.
 
-**`implement`, `fix`, `equip`, `refresh`, `scaffold`, `upgrade`.** Say up front, in one sentence, that the
-verb is engineering work, and ask whether to continue. On yes, run unchanged: the work is the same
-whoever asks. The report still follows the register rule above.
+**`implement`, `fix`, `equip`, `scaffold`, `upgrade`.** Before anything else, say in one plain
+sentence what this run will write or change, in the person's terms, and ask whether to continue.
+Example: "This will write code and open a pull request. Do you want to continue?" No file names,
+no commands, no mention of the persona. On yes, run unchanged: the work is the same whoever asks,
+and the verb's own approval still comes. `equip` and `scaffold` ask about scripts and project
+layout during the run; those questions follow the communications rule like everything else.
+
+**`refresh`.** Unchanged, except the communications rule.
 
 **`review`.** On a document target, lead with the reading lenses and give `structure` and `status`
-one line. On a code target, say up front that it is engineering work and ask, as above.
+one line. On a code target, say what the run will do and ask, as above.
 
-**`test`.** Unchanged, except the register rule.
+**`test`.** Unchanged, except the communications rule.
