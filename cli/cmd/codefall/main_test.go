@@ -31,7 +31,7 @@ func TestRunWithoutArgumentsPrintsRootHelp(t *testing.T) {
 		t.Fatalf("run: %v", err)
 	}
 
-	for _, want := range []string{"COMMANDS", "config", "create", "doctor", "init"} {
+	for _, want := range []string{"COMMANDS", "config", "create", "doctor", "init", "update"} {
 		if !strings.Contains(out.String(), want) {
 			t.Errorf("output does not contain %q:\n%s", want, out.String())
 		}

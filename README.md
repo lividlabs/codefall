@@ -34,6 +34,11 @@ binary's path and version in `~/.local/state/codefall/install.json` (under `XDG_
 is set), so codefall knows the binary came from the script. The source is
 [`scripts/install.sh`](scripts/install.sh).
 
+`codefall update` updates a binary the script installed to the latest release, or to a version
+given as an argument; `codefall update --check` reports how the running binary was installed and the
+latest release without changing anything. For a binary mise or `go install` manages, `update`
+changes nothing and prints the command that updates it.
+
 ### With [`mise`](https://mise.jdx.dev/)
 
 ```

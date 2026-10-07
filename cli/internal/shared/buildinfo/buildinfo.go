@@ -3,8 +3,9 @@
 // development build, with the commit it was built from, so a binary built from a checkout is never
 // mistaken for a release — not even one built at a release tag.
 //
-// It is imported by the composition root, which hands the string to Fang for --version, and by
-// init's presentation layer, which records it in .codefall/manifest.json.
+// It is imported by the composition root, which hands the string to Fang for --version, by init's
+// presentation layer, which records it in .codefall/manifest.json, and by update's infrastructure,
+// which reads whether the running binary is a release.
 package buildinfo
 
 import (
