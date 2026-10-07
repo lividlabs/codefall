@@ -1,0 +1,43 @@
+name: publish-release
+
+# Publishes an existing GitHub release to install.codefall.dev by hand: for a release whose publish
+# step failed in release-please, or one cut before that step existed. The release-please job
+# publishes every new release on its own.
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Version to publish, with or without the v (e.g. 0.28.0)
+        required: true
+      latest:
+        description: Point `latest` and `sh` at this version. Turn off for a release older than the current one.
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download release assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ inputs.version }}
+        run: gh release download "v${VERSION#v}" --dir assets --pattern '*.tar.gz' --pattern checksums.txt
+
+      - name: Publish to install.codefall.dev
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.DO_SPACES_ACCESS_KEY }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.DO_SPACES_SECRET_KEY }}
+          VERSION: ${{ inputs.version }}
+          LATEST: ${{ inputs.latest }}
+        run: |
+          if [ "$LATEST" = true ]; then
+            scripts/publish-release.sh "$VERSION" assets
+          else
+            scripts/publish-release.sh "$VERSION" assets --no-latest
+          fi

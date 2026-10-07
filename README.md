@@ -21,6 +21,17 @@ like, `design` decides the shape, `implement` writes it, `review` checks it.
 
 Codefall is a single binary called `codefall` in can be installed in one of the following ways. More coming soon.
 
+### With the install script
+
+```
+curl -fsSL https://install.codefall.dev/sh | sh                 # latest release
+curl -fsSL https://install.codefall.dev/sh | sh -s -- 0.28.0     # a pinned version
+```
+
+The script installs to `~/.local/bin`; set `CODEFALL_INSTALL_DIR` to put the binary elsewhere. It
+verifies the download against the release's `checksums.txt` before installing. The source is
+[`scripts/install.sh`](scripts/install.sh).
+
 ### With [`mise`](https://mise.jdx.dev/)
 
 ```

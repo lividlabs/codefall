@@ -39,6 +39,9 @@ jobs:
         # Every skill against ADR-004.2's guidelines. Fails when one drifts outside them.
         run: extensions/scripts/skill-health.sh --strict
 
+      - name: Release scripts
+        run: shellcheck scripts/install.sh scripts/publish-release.sh
+
       - name: Workflow copy
         # The installed copy of docs/workflow.md against its source. Fails when the two differ.
         run: extensions/scripts/workflow-sync.sh --strict
