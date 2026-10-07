@@ -7,6 +7,10 @@
 # The release workflow uploads this file to the bucket root as `sh`. With no argument it installs the
 # version named in `latest`; an argument pins a version, with or without a leading `v`.
 # CODEFALL_INSTALL_DIR sets where the binary goes (default: ~/.local/bin).
+#
+# After installing, it writes a receipt to $XDG_STATE_HOME/codefall/install.json (default:
+# ~/.local/state/codefall/install.json) naming the binary's path and version. `codefall update` reads
+# it to know the binary came from this script (ADR-015).
 
 set -eu
 
@@ -33,6 +37,25 @@ sha256() {
 	else
 		fail "needs sha256sum or shasum to verify the download"
 	fi
+}
+
+# json_string prints its argument as a JSON string, escaping backslashes and double quotes.
+json_string() {
+	printf '"%s"' "$(printf '%s' "$1" | sed 's/\\/\\\\/g; s/"/\\"/g')"
+}
+
+# write_receipt records the installed binary's path, with symbolic links in its directory resolved,
+# and its version. A receipt that cannot be written leaves the install in place and says so.
+write_receipt() {
+	state="${XDG_STATE_HOME:-$HOME/.local/state}/codefall"
+	path="$(cd "$(dirname "$1")" && pwd -P)/$(basename "$1")"
+	if mkdir -p "$state" &&
+		printf '{\n  "path": %s,\n  "version": %s\n}\n' "$(json_string "$path")" "$(json_string "$2")" >"$state/install.json.tmp" &&
+		mv "$state/install.json.tmp" "$state/install.json"; then
+		return
+	fi
+	rm -f "$state/install.json.tmp" 2>/dev/null || true
+	say "could not write $state/install.json; codefall update will not recognise this install"
 }
 
 main() {
@@ -78,6 +101,7 @@ main() {
 	mv "$tmp/codefall" "$dir/codefall"
 	chmod 755 "$dir/codefall"
 	say "installed $dir/codefall"
+	write_receipt "$dir/codefall" "$version"
 
 	case ":$PATH:" in
 		*":$dir:"*) ;;

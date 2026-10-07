@@ -1842,6 +1842,18 @@ Decided at scaffold, 2026-08-16.
   guard hook denying `gh issue create -R` (the guards read git pushes, the flag is right when
   `issuesRepo` is not the remote, and a hook for one flag buys little over the rule); the rule in
   `shared/landing.md` (it binds the verbs that land files in git, and `test` does not follow it).
+- **Binary install receipt and `codefall update`, 2026-10-07.** `install.sh` now writes
+  `${XDG_STATE_HOME:-~/.local/state}/codefall/install.json` with the installed binary's resolved
+  path and version, and a receipt it cannot write warns without failing the install. ADR-015 records
+  the receipt and decides `codefall update`, landed in the next pull request: it finds out how the
+  running binary was installed before it does anything, from the receipt, a mise `installs/` path,
+  or a missing release version, and replaces only a script install; a mise, `go install`, or unknown
+  binary is left alone and the command that updates it is printed. Seen and not taken: replacing
+  whatever binary is running (it breaks mise's per-version directories and a project's pin);
+  treating anything not mise and not `go install` as a script install (a hand-copied binary would be
+  replaced on a guess); starting from the receipt and replacing the binary it names (in a directory
+  where mise supplies `codefall`, the person sees no change); running `mise upgrade --bump` for the
+  person (it rewrites a config a team may share).
 
 ## Open
 
