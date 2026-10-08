@@ -28,7 +28,10 @@ curl -fsSL https://install.codefall.dev/sh | sh                 # latest release
 curl -fsSL https://install.codefall.dev/sh | sh -s -- 0.28.0     # a pinned version
 ```
 
-The script installs to `~/.local/bin`; set `CODEFALL_INSTALL_DIR` to put the binary elsewhere. It
+The script installs to `~/.local/bin`; set `CODEFALL_INSTALL_DIR` to put the binary elsewhere. If
+that directory is not on your `PATH`, the script adds it in your shell's startup file (`.zshrc`,
+`.bashrc`, or `config.fish`) and tells you to open a new terminal; set `CODEFALL_NO_MODIFY_PATH=1`
+to have it print the line instead. It
 verifies the download against the release's `checksums.txt` before installing, and records the
 binary's path and version in `~/.local/state/codefall/install.json` (under `XDG_STATE_HOME` when that
 is set), so codefall knows the binary came from the script. The source is

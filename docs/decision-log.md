@@ -1854,6 +1854,15 @@ Decided at scaffold, 2026-08-16.
   replaced on a guess); starting from the receipt and replacing the binary it names (in a directory
   where mise supplies `codefall`, the person sees no change); running `mise upgrade --bump` for the
   person (it rewrites a config a team may share).
+- **The install script puts its directory on `PATH`, 2026-10-07.** `install.sh` used to print
+  that `~/.local/bin` was not on `PATH` and stop, which on a default macOS account leaves `codefall`
+  unrunnable by name. It now appends an export line to the startup file of the shell in `$SHELL`
+  (`.zshrc`, `.bashrc`, `.bash_profile` on macOS, `config.fish`) and prints the `source` line, as
+  rustup, uv, and bun do; `CODEFALL_NO_MODIFY_PATH=1`, an unknown shell, or a file it cannot write
+  gets the line printed instead. Recorded in ADR-015. Seen and not taken: printing the exact line
+  only, as mise and Homebrew do (one more step for every new user, at the point that decides whether
+  the first command works); asking at the prompt, as deno does (needs `/dev/tty` under `curl | sh`,
+  the part most likely to misbehave in containers and CI).
 
 ## Open
 
