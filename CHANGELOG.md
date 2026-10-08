@@ -6,6 +6,18 @@ below were written by hand, before that was wired up.
 Tags are bare version numbers (`0.1.2`), not `v`-prefixed, so they match the `ref` the marketplace
 pins. A `v0.1.1` tag also exists from before that convention was settled.
 
+## [0.30.0](https://github.com/lividlabs/codefall/compare/v0.29.0...v0.30.0) (2026-10-08)
+
+
+### ⚠ BREAKING CHANGES
+
+* **skills:** codefall-design is now codefall-plan, and the documents it writes moved from docs/designs/DESIGN-NNN-slug.md to docs/plans/PLAN-NNN-slug.md, with the Task Plan section now Tasks, the Design ref now Plan ref, and the design-revision and design-amended labels now plan-revision and plan-amended. A project with documents under docs/designs/ keeps them; run /codefall-upgrade and take the legacy-documents items so the renamed verbs read them.
+
+### Features
+
+* **install:** install.sh puts its directory on PATH in the shell's startup file ([#199](https://github.com/lividlabs/codefall/issues/199)) ([f1f010e](https://github.com/lividlabs/codefall/commit/f1f010e5e73ea81a6040e10d4ecf4398ff0e81ee))
+* **skills:** rename design to plan, and upgrade bridges a project's DESIGN documents ([#201](https://github.com/lividlabs/codefall/issues/201)) ([cda9eef](https://github.com/lividlabs/codefall/commit/cda9eefbb4483d11be9dcb06625e5df3b8923859))
+
 ## [0.29.0](https://github.com/lividlabs/codefall/compare/v0.28.0...v0.29.0) (2026-10-07)
 
 
