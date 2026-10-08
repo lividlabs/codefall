@@ -18,7 +18,7 @@ the granularity GitHub can express. Read at step 6, at the first claim, and at s
 - Every PR body carries one line — `Relates to #<spec-issue>` — so the mirror cross-links the work
   as it happens.
 - **A fix for a bug report** carries `Fixes #<bug-issue>` instead, from the report's `**Issue:**`
-  row — reached through the design's `bug` label, or the bead's body at tier 0 — on the pull request
+  row — reached through the plan's `bug` label, or the bead's body at tier 0 — on the pull request
   that reaches the default branch: the task's own at tier 0, the epic's aggregate otherwise. GitHub
   closes the issue at the human's merge, and nothing else in this table moves for it.
 - Board IDs are per-installation and never stored in this skill: discover them at run time

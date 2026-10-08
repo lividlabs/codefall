@@ -1,6 +1,6 @@
 ---
-name: codefall-design
-description: Decide how a feature gets built and put the work into the graph — read the docs and the code, judge whether the change warrants a design document at all, write one scaled to the work at docs/designs/, record hard-to-reverse choices as ADRs, decide which tasks are verified through the wired product and draft their test case and its criteria into the bead, and create the task graph in Beads from the document's staged task plan.
+name: codefall-plan
+description: Decide how a feature gets built and put the work into the graph — read the docs and the code, judge whether the change warrants a plan document at all, write one scaled to the work at docs/plans/, record hard-to-reverse choices as ADRs, decide which tasks are verified through the wired product and draft their test case and its criteria into the bead, and create the task graph in Beads from the document's staged task table.
 argument-hint: "[the spec, the bug report, the vision, or what you want built]"
 allowed-tools:
   - Read
@@ -15,16 +15,16 @@ allowed-tools:
   - WebFetch
 ---
 
-# Design
+# Plan
 
 Decide how a feature gets built, and put the work into the dependency graph so `codefall-implement`
 can pick it up.
 
-Two outputs. A **design document** at `docs/designs/DESIGN-NNN-slug.md` — the approach, the
-architecture, and a staged task plan — when the work earns one. **The tasks in Beads**, with their
+Two outputs. A **plan document** at `docs/plans/PLAN-NNN-slug.md` — the approach, the
+architecture, and a staged task table — when the work earns one. **The tasks in Beads**, with their
 dependency edges, always.
 
-Designing is not implementing. Once the document is written and the graph exists, stop.
+Planning is not implementing. Once the document is written and the graph exists, stop.
 
 Paths that start with `../` are relative to this skill's directory, not the user's project. A path
 through `../../../.codefall/` is the one that leaves the skills directory: it names a file `codefall
@@ -36,21 +36,21 @@ Read each when its step says to; none is loaded up front.
 
 - `reference/lifecycle.md` — the three statuses, where each lives, and what each allows. Read at
   step 7 and for the other modes.
-- `reference/document.md` — the design document's shape: header, sections and their triggers, the
-  Technical Context and Hard Constraints blocks, the Task Plan and its callout. Read before step 5.
-- `reference/adrs.md` — when a design writes an ADR, how it is numbered, and the template. Read at
+- `reference/document.md` — the plan document's shape: header, sections and their triggers, the
+  Technical Context and Hard Constraints blocks, the Tasks table and its callout. Read before step 5.
+- `reference/adrs.md` — when a plan writes an ADR, how it is numbered, and the template. Read at
   step 4 and step 7.
-- `reference/beads.md` — what gets created in Beads, the test case a bead's criteria name, the plan
+- `reference/beads.md` — what gets created in Beads, the test case a bead's criteria name, the graph
   file, the edge direction, and how to verify the graph. Read before step 9.
 - `reference/bugs.md` — a fix for a bug: the report, reproducing it, the cause, the tier. Read at
   step 2 for a bug.
-- `reference/revising.md` — reconciling the graph when a design changes after its beads exist, and
+- `reference/revising.md` — reconciling the graph when a plan changes after its beads exist, and
   settling the revision beads filed against it. Read for the Revise mode.
 - `reference/consulting.md` — putting an unsettled technical point to the configured agents, and
   what their answer may do. Read at step 5 when one stays unsettled. Names
   `../../../.codefall/shared/running-agents.md`, `../../../.codefall/shared/run-agent.sh`,
   `../../../.codefall/shared/consult-prompt.md`, `../../../.codefall/shared/consult.schema.json`.
-- `templates/designs/AGENTS.md` — the operative rules this skill installs at `docs/designs/AGENTS.md`.
+- `templates/plans/AGENTS.md` — the operative rules this skill installs at `docs/plans/AGENTS.md`.
 
 ## Scope — how, not what and not whether
 
@@ -65,7 +65,7 @@ Read each when its step says to; none is loaded up front.
 | Hard-to-reverse choices, recorded as ADRs | Estimates and assignment | the team |
 
 **The project's stance is already decided** — layering, component boundaries, and how they are
-enforced — in `docs/adrs/` and the scoped `AGENTS.md` files. Design within it. A design that needs
+enforced — in `docs/adrs/` and the scoped `AGENTS.md` files. Plan within it. A plan that needs
 the stance changed says so once, then either follows the ADR or writes a superseding one.
 
 ## Upstream documents
@@ -95,18 +95,18 @@ Three tiers. The work picks the tier; the user can overrule it.
 
 ## The document
 
-`docs/designs/DESIGN-NNN-slug.md`, git-tracked. Three digits, zero-padded, the highest existing
-number plus one. **A design is never renumbered and its identifier is never reused**, including
+`docs/plans/PLAN-NNN-slug.md`, git-tracked. Three digits, zero-padded, the highest existing
+number plus one. **A plan is never renumbered and its identifier is never reused**, including
 after it is archived — the file moves, the identifier does not.
 
-Three required sections — **Overview**, **Architecture**, **Task Plan** — and seven conditional ones,
+Three required sections — **Overview**, **Architecture**, **Tasks** — and seven conditional ones,
 each with a trigger. The header, the section tables, the Technical Context and Hard Constraints
-blocks, and the Task Plan's callout are in `reference/document.md`.
+blocks, and the Tasks callout are in `reference/document.md`.
 
 ## ADRs
 
 A separate artifact, `docs/adrs/ADR-NNN-title.md`, for a choice that is hard to reverse or that
-other components will build on; most designs need none. The number continues the project's own
+other components will build on; most plans need none. The number continues the project's own
 sequence, a ratified ADR is never rewritten, and the ADR is shown before it is written. The
 trigger, the numbering, and the template are in `reference/adrs.md`.
 
@@ -115,14 +115,14 @@ trigger, the numbering, and the template are in `reference/adrs.md`.
 `Draft`, `Ready`, or `Archived`, one word plus a date, describing the document and never the work.
 The table and the rules are in `reference/lifecycle.md`.
 
-## The designs directory
+## The plans directory
 
-`docs/designs/AGENTS.md` is written from `templates/designs/AGENTS.md` when the directory is created,
+`docs/plans/AGENTS.md` is written from `templates/plans/AGENTS.md` when the directory is created,
 and added on a later run if it is missing.
 
 ## Beads
 
-One epic, `<prefix>-DESIGN-NNN`, and one task bead per row, `<prefix>-DESIGN-NNN-Tn`; tier 0 has no
+One epic, `<prefix>-PLAN-NNN`, and one task bead per row, `<prefix>-PLAN-NNN-Tn`; tier 0 has no
 epic. `reference/beads.md` has the rest.
 
 ## Project customizations and persona
@@ -160,14 +160,14 @@ match `main`: say so and run `/codefall-refresh` before continuing. `refresh=und
 
 One open question, unless the invocation already answered it:
 
-> "What are we designing? A spec or bug report identifier, a vision, or just tell me what needs
+> "What are we planning? A spec or bug report identifier, a vision, or just tell me what needs
 > building."
 
 **Then look for a spec.** Read `docs/specs/` — not `archive/` — and offer the relevant one:
 
-> SPEC-004 covers booking history and looks like what you are describing. Design against it?
+> SPEC-004 covers booking history and looks like what you are describing. Plan against it?
 
-A spec is not required. If there is none and the work is more than a fix, say once that the design
+A spec is not required. If there is none and the work is more than a fix, say once that the plan
 has no written target and offer `/specify`. On no, continue.
 
 **A bug report is a target the way a spec is**: read `reference/bugs.md` for one.
@@ -179,7 +179,7 @@ has no written target and offer `/specify`. On no, continue.
   settle.
 - Its tracker issues carry `requires-mockup` (read per `../codefall-specify/trackers/<name>/PROFILE.md`;
   an unreachable tracker is asked about, never guessed): run `codefall-mock-up` for each such
-  requirement in this run, on this run's branch, before designing.
+  requirement in this run, on this run's branch, before planning.
 
 **Then read what frames it.** The spec's vision, if it names one. `docs/visions/` if no spec
 framed the work. A vision's **Environment & constraints** section is written for this moment.
@@ -187,25 +187,25 @@ framed the work. A vision's **Environment & constraints** section is written for
 ### 3. Read the docs and the code
 
 - **The project's stance** — `docs/adrs/`, every `AGENTS.md` in the tree, and
-  `docs/decision-log.md`. Design within them.
-- **The existing designs** — `docs/designs/`, not `archive/`. If one already covers this, say so
+  `docs/decision-log.md`. Plan within them.
+- **The existing plans** — `docs/plans/`, not `archive/`. If one already covers this, say so
   and link it; the user may want to revise that one.
 - **The code** — the components this touches, their facades, and what already exists that this can
   use.
 - **The graph** — `bd dolt pull`, then `bd list` and `bd search` for existing work. A task
-  this design would create that is already a bead is a dependency edge, not a new task.
-- **Revision requests**, on an existing design — `bd list -l design-revision --spec <its path>`,
+  this plan would create that is already a bead is a dependency edge, not a new task.
+- **Revision requests**, on an existing plan — `bd list -l plan-revision --spec <its path>`,
   filed by `codefall-implement` or `codefall-review`.
 - **The cause**, for a bug, per `reference/bugs.md`. It decides the tier.
 
-Report what you found before designing — open revision requests first. If the work already exists,
+Report what you found before planning — open revision requests first. If the work already exists,
 say so and stop.
 
 ### 4. Decide the tier, and whether there is an ADR
 
 Both judgements, stated together, before any writing:
 
-> Four tasks across the context store and the scaffold command: a design document. The signed
+> Four tasks across the context store and the scaffold command: a plan document. The signed
 > payload versus session lookup choice is hard to reverse: an ADR as well.
 
 Walk the [tier table](#scale-the-artifact-to-the-work) and the [ADR trigger](#adrs) explicitly. They
@@ -213,7 +213,7 @@ are independent.
 
 **At tier 0, skip to step 7.**
 
-### 5. Design it
+### 5. Plan it
 
 Read `reference/document.md`. Settle, in this order, and only what applies:
 
@@ -239,7 +239,7 @@ per `reference/document.md`: never decided by the run, never taken from silence.
 
 ### 6. Stage the tasks
 
-**Tasks decompose by what can be built and verified on its own**, against the design — a different
+**Tasks decompose by what can be built and verified on its own**, against the plan — a different
 cut from `codefall-specify`'s, where requirements decompose by what a consumer observes, and one
 requirement routinely becomes several tasks.
 
@@ -296,24 +296,24 @@ bodies, and their edges. The user approves the graph, not a document.
 
 ### 8. Branch, then write the document
 
-Branch first, per `../../../.codefall/shared/landing.md` — `design/DESIGN-NNN-slug`, from the
+Branch first, per `../../../.codefall/shared/landing.md` — `plan/PLAN-NNN-slug`, from the
 default branch — unless this is a tier 0 run with no ADR, which writes no file.
 
-Write `docs/designs/DESIGN-NNN-slug.md` with the Task Plan **staged**, the ADR if there is one,
-`docs/designs/AGENTS.md` if it was missing, and the amendments the user took: a spec's mirrored, a
-vision's committed beside the design.
+Write `docs/plans/PLAN-NNN-slug.md` with the Tasks table **staged**, the ADR if there is one,
+`docs/plans/AGENTS.md` if it was missing, and the amendments the user took: a spec's mirrored, a
+vision's committed beside the plan.
 
 Write the document before the beads, so a failed creation is resumable.
 
 ### 9. Create the graph
 
-Read `reference/beads.md`. Build the plan file from the table, dry-run it, create it, rename to the
+Read `reference/beads.md`. Build the graph file from the table, dry-run it, create it, rename to the
 IDs, set `--spec-id` and `--acceptance`, verify with `bd ready` and `bd dep cycles`, and push.
 
 If the ready set does not match the table's roots, fix the edges now, before the callout is
 rewritten.
 
-### 10. Mark the Task Plan created
+### 10. Mark the Tasks table created
 
 Rewrite the callout above the table per `reference/document.md`: the date, the epic's full ID, the
 per-row form, and that Beads is authoritative. **The table stays.**
@@ -322,19 +322,19 @@ At tier 0 there is no document to mark.
 
 ### 11. Link back, commit, and report
 
-Fill in the `plan:` field on the framing vision's `Related` line with this design's identifier.
+Fill in the `plan:` field on the framing vision's `Related` line with this plan's identifier.
 Where a spec framed the work, the vision is the one named in the spec's `**Vision:**` row. Add the
 identifier and change nothing else in the file.
 
-There is no back-link to write into the spec: the design's `spec` label carries the connection.
+There is no back-link to write into the spec: the plan's `spec` label carries the connection.
 
 Then land it per `../../../.codefall/shared/landing.md`, with `.beads/interactions.jsonl` when it
 changed: push, and open the pull request, a draft only when the status is `Draft`. Never add the
-`auto-merge` label: a person adds it when they want the design merged.
+`auto-merge` label: a person adds it when they want the plan merged.
 
 Report:
 
-- the design's path, identifier, and status, or that this was tier 0 and why;
+- the plan's path, identifier, and status, or that this was tier 0 and why;
 - any ADR written, and what it decided;
 - every bead created, with its local ID, its title, and any test case its criteria name;
 - every upstream amendment written, and any the user declined;
@@ -344,26 +344,26 @@ Report:
   settled now or left for an engineer, and any concern the user overruled;
 - the branch and the pull request, worded as the landing procedure says: it is open at its URL;
   add the `auto-merge` label when you want it merged, or have someone approve it; either one merges
-  it; a `Draft` design has a draft pull request;
-- **last, one command**: `/codefall-implement DESIGN-NNN`, or `/codefall-implement <bead>` at
-  tier 0; with decisions left for an engineer, `/codefall-design DESIGN-NNN`.
+  it; a `Draft` plan has a draft pull request;
+- **last, one command**: `/codefall-implement PLAN-NNN`, or `/codefall-implement <bead>` at
+  tier 0; with decisions left for an engineer, `/codefall-plan PLAN-NNN`.
 
 ## Other modes
 
-Invoking this skill on an existing design does one of four things. Ask which if it is not obvious.
+Invoking this skill on an existing plan does one of four things. Ask which if it is not obvious.
 
 - **Promote** `Draft` to `Ready`, or **reopen** `Ready` to `Draft` when no beads exist yet.
   Settling every item under **Decisions needed** empties the section first; steps 9 and 10 then
   create the graph.
-- **Revise** a design and reconcile its graph, per `reference/revising.md`, which also settles
-  every open `design-revision` bead. A design the code has moved past is revised, not labelled.
-- **Archive** a design: set `Status: Archived`, add `**Replaced by:**` if something took its place,
-  move the file to `docs/designs/archive/`, and report its open beads to the user rather than
+- **Revise** a plan and reconcile its graph, per `reference/revising.md`, which also settles
+  every open `plan-revision` bead. A plan the code has moved past is revised, not labelled.
+- **Archive** a plan: set `Status: Archived`, add `**Replaced by:**` if something took its place,
+  move the file to `docs/plans/archive/`, and report its open beads to the user rather than
   closing them.
-- **Add tasks** to an existing design — new rows appended to the table, each with its bead, and
+- **Add tasks** to an existing plan — new rows appended to the table, each with its bead, and
   the callout dated. Retired local IDs stay retired.
 
-Every one of these is the user's decision. Report the state and offer; never transition a design on
+Every one of these is the user's decision. Report the state and offer; never transition a plan on
 your own initiative.
 
 ## Rules
@@ -372,12 +372,12 @@ your own initiative.
   the beads.
 - **Scale the artifact to the work.** Tier 0 is a real outcome, not a failure to write a document.
 - **Never fill a heading.** An empty conditional section is deleted.
-- **A design still carrying Decisions needed is `Draft`** and has no beads. The one question at
+- **A plan still carrying Decisions needed is `Draft`** and has no beads. The one question at
   step 7 is how they are settled in this run; silence never settles them.
-- **Design within the project's ADRs.** Changing the stance is a superseding ADR, said out loud; a
+- **Plan within the project's ADRs.** Changing the stance is a superseding ADR, said out loud; a
   ratified ADR is never rewritten.
-- **Identifiers are append-only** — design numbers, and local task IDs within a design.
-- **Beads is authoritative for work state once the tasks exist.** The Task Plan never grows a
+- **Identifiers are append-only** — plan numbers, and local task IDs within a plan.
+- **Beads is authoritative for work state once the tasks exist.** The Tasks table never grows a
   status column.
 - **Every task bead carries acceptance criteria**, checkable, citing spec IDs and the test case
   where one applies.

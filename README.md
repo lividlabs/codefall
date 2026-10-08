@@ -15,7 +15,7 @@ The repo holds two components:
 
 Every skill is a **verb**. The verbs chain: `envision` frames the idea, `scaffold` makes the
 project, `specify` states the problem, `report` states what is wrong, `mock-up` shows what it looks
-like, `design` decides the shape, `implement` writes it, `review` checks it.
+like, `plan` decides the shape, `implement` writes it, `review` checks it.
 
 ## Installation
 
@@ -201,12 +201,12 @@ file it cannot read. The schema is
 
 **The persona changes how the verbs talk to you, never what they may do.** `engineer` is the
 default and changes nothing. Under `product-manager`, every verb speaks in product vocabulary, the
-interviews in `envision` and `specify` get the room, and `design` sets every technical judgment you
+interviews in `envision` and `specify` get the room, and `plan` sets every technical judgment you
 decline or cannot settle aside in a **Decisions needed** section instead of deciding it for you or
 reading your silence as a choice. It then asks you one question: settle them with sensible defaults
 now so building can start, or leave them for an engineer? On "now" it picks each default, tells
 you each in one plain sentence, and goes on to `Ready` and the beads in the same run; on "leave
-them" the design stays `Draft`, creates no beads, and an engineer's `design` run settles them. The
+them" the plan stays `Draft`, creates no beads, and an engineer's `plan` run settles them. The
 engineering verbs, `implement`, `equip`, `refresh`, `scaffold`, and `upgrade`, say so in one
 sentence and ask before running. Every rule a skill carries holds under any persona, and workers
 never see it. What each persona changes is one file, `.codefall/shared/personas.md`;
@@ -272,9 +272,9 @@ TODO: rename the skill names to the actual
 | [`upgrade`](extensions/skills/codefall-upgrade/SKILL.md) | Bring a project's install and docs current: offer `codefall upgrade` when the manifest is behind the binary, then report what changed in the templates since the project's version, with per-file provenance, and apply only what the user takes. Also handles first-time adoption of the stance. | in progress |
 | [`specify`](extensions/skills/codefall-specify/SKILL.md) | Turn a feature idea into a specification another session can implement: a spec document under `docs/specs/` holding requirements with EARS acceptance criteria, mirrored to the issue tracker. | in progress |
 | [`report`](extensions/skills/codefall-report/SKILL.md) | Turn a bug into a report another session can fix: interview the person who saw it for the steps, the expected and actual result, screenshots, and the environment, try to reproduce it on the spot, and write a bug report under `docs/bugs/` with acceptance criteria, mirrored to the issue tracker. | in progress |
-| [`fix`](extensions/skills/codefall-fix/SKILL.md) | Fix something small in one run: `design` at tier 0 for one bead, then `implement` on it, behind one confirmation instead of two. Takes a bead, a bug report, an issue, or a description; stops and names `design` when the work needs a design document, an ADR, or more than one bead. Never merges to `main`. | in progress |
+| [`fix`](extensions/skills/codefall-fix/SKILL.md) | Fix something small in one run: `plan` at tier 0 for one bead, then `implement` on it, behind one confirmation instead of two. Takes a bead, a bug report, an issue, or a description; stops and names `plan` when the work needs a plan document, an ADR, or more than one bead. Never merges to `main`. | in progress |
 | [`mock-up`](extensions/skills/codefall-mock-up/SKILL.md) | Get the visual surface of a feature into the repository under `docs/mockups/`: import what a design tool exported, or make the mockup here, matching the app's own design system so it looks like it belongs. | in progress |
-| [`design`](extensions/skills/codefall-design/SKILL.md) | Decide how a feature gets built and put the work into the graph: a design document under `docs/designs/` scaled to the size of the change, ADRs for the choices that are hard to reverse, and the tasks in Beads with their dependency edges, each carrying the acceptance criteria it is verified against and the test case where one is called for. | in progress |
+| [`plan`](extensions/skills/codefall-plan/SKILL.md) | Decide how a feature gets built and put the work into the graph: a plan document under `docs/plans/` scaled to the size of the change, ADRs for the choices that are hard to reverse, and the tasks in Beads with their dependency edges, each carrying the acceptance criteria it is verified against and the test case where one is called for. | in progress |
 | [`implement`](extensions/skills/codefall-implement/SKILL.md) | Execute the graph: claim ready beads, build each in an isolated worker worktree with tests as part of done, write the test case a bead's criteria name before the code, verify against acceptance criteria, open PRs, and walk the waves until the frontier is empty. Never merges to `main`, and never sets a test harness up. | in progress |
 | [`review`](extensions/skills/codefall-review/SKILL.md) | Review something and fix what the user accepts: uncommitted work, a branch, an open pull request, a commit range, a path, a document, or a description of what to look at. A subagent or another harness reviews, the session triages with you and applies what you take, and every finding is committed under `.codefall/reviews/`. | in progress |
 | [`test`](extensions/skills/codefall-test/SKILL.md) | Run what the project declares: every suite, the subset your changed files reach, a named subset, or one test case in its `spec` or `agentic` modality. A spec case runs through the project's own runner; an agentic case is driven step by step through a browser or the shell and judged against the case's criteria. Every run is reported under `.codefall/tests/`. | in progress |
@@ -290,7 +290,7 @@ Unknowns stay in the document as unknowns rather than being invented away.
 
 **It takes whatever you arrive with.** A sentence, ten minutes of thinking out loud, a pitch
 document, a whiteboard photo, or a folder of design-tool exports. Mockups are routed to
-`docs/mockups/` where `design` and `implement` look for them; everything else is saved verbatim under
+`docs/mockups/` where `plan` and `implement` look for them; everything else is saved verbatim under
 `docs/visions/sources/`, and the vision cites both. Arriving with finished screens is not a reason
 to be sent elsewhere — you can have every screen drawn and still have written nothing down about the
 problem they solve, which is the case this skill is most useful for.
@@ -370,12 +370,12 @@ The vision above them is what groups them, which is why a vision's `Related` lin
 `codefall-upgrade` and `codefall-equip` are **explicitly invoked** and carry
 `disable-model-invocation: true`, because each changes the install or the project's settings. Every
 other verb an agent may run too, and a verb runs the verb upstream of it when the work needs it: a
-spec that needs a mockup gets one from `mock-up` inside the `specify` run, a design that finds its
+spec that needs a mockup gets one from `mock-up` inside the `specify` run, a plan that finds its
 spec still `Draft` runs `specify` to settle it, `review` and `test` run `implement` on the epic to
 build the problems you took, and nobody is told to go run a command and come back. Each verb still
 reports, offers, and applies only what the user takes; no verb merges to `main`, a person merges
 every code pull request, and the project's Action merges document pull requests. The work on one
-epic from design to merge is a **delivery**, taken in
+epic from plan to merge is a **delivery**, taken in
 **rounds** of `implement`, `review`, and `test`; every handoff is a bead, a document, a report, or
 a pull request, so a `/clear` between verbs loses nothing and each report ends with one next step.
 
@@ -426,7 +426,7 @@ their **Design notes**.
 
 When `specify` records a requirement whose surface has no picture yet, it runs `mock-up` for that
 surface in the same run and on the same branch, so the spec and its mockups arrive together. Only a
-requirement whose mockup you chose to skip is labelled `requires-mockup`, and `design` then runs
+requirement whose mockup you chose to skip is labelled `requires-mockup`, and `plan` then runs
 `mock-up` for it before it starts rather than refusing. Landing the mockup clears the label.
 
 ### Bug reports
@@ -449,83 +449,83 @@ acceptance criteria state the expected behaviour in EARS, citing a spec criterio
 says it, and they become the fix's criteria and its regression test. The issue is generated from the
 report, or, when you filed one first, adopted rather than duplicated.
 
-`design` takes a bug report as it takes a spec: it reproduces what the report could not, finds the
+`plan` takes a bug report as it takes a spec: it reproduces what the report could not, finds the
 cause before it chooses a tier, and most fixes land at tier 0 as one bead. The pull request that
 carries the fix closes the issue when you merge it.
 
 ### Fixes
 
 `fix` is the short path for small work. Given a bead, a bug report, an issue, or a sentence, it runs
-`design` at tier 0 to establish one bead, with the cause and the acceptance criteria, and then
+`plan` at tier 0 to establish one bead, with the cause and the acceptance criteria, and then
 `implement` on that bead, in one run. What it removes is repetition: one preflight instead of two,
 one confirmation that shows the bead and the build plan together, and one report at the end. It is
-the path `design` takes at tier 0 and the path `implement` takes for one bead, written as one
+the path `plan` takes at tier 0 and the path `implement` takes for one bead, written as one
 procedure, so its rules are theirs, the merge rule included. When the work turns out to need a
-design document, an ADR, or more than one bead, it stops before writing anything and names `design`.
+plan document, an ADR, or more than one bead, it stops before writing anything and names `plan`.
 
-### Designs
+### Plans
 
-`design` decides the *how* and puts the work into the graph. Two outputs, and the second is the one
-that always exists: a design document at `docs/designs/DESIGN-007-slug.md`, and the tasks in Beads
+`plan` decides the *how* and puts the work into the graph. Two outputs, and the second is the one
+that always exists: a plan document at `docs/plans/PLAN-007-slug.md`, and the tasks in Beads
 with their dependency edges.
 
 **Not every change earns a document.** A fix contained to one component, changing nothing public and
-coming to one or two tasks, gets beads and nothing else — a design document for a null check is the
+coming to one or two tasks, gets beads and nothing else — a plan document for a null check is the
 ceremony this avoids. Anything crossing a component boundary, or fanning out past roughly three
 dependent tasks, gets one. The document then has three required sections — Overview, Architecture,
-Task Plan — and seven more that appear only when their trigger fires. A conditional section with
+Tasks — and seven more that appear only when their trigger fires. A conditional section with
 nothing behind it is deleted, heading and all.
 
 Research findings go inline, next to the decision they bear on. There is no sibling `research.md`,
 no `data-model.md`, and no `contracts/` directory: a finding filed away from its decision is a note
 nobody reads.
 
-**The task plan is staged before it is real.** It starts as a table with local identifiers, so the
+**The task table is staged before it is real.** It starts as a table with local identifiers, so the
 dependency edges can be reviewed while they are still cheap to change — a flat list of tasks does not
 catch the thing review is for, which is a wrong ordering or a missing prerequisite:
 
 ```
-| ID | Task                              | Depends on | Design ref |
+| ID | Task                              | Depends on | Plan ref   |
 |----|-----------------------------------|------------|------------|
 | T1 | Add `StageContext` type + serde   | —          | Components |
 | T2 | Wire context load into `/scaffold`| T1         | Architecture |
 ```
 
 Once you approve it, those rows become beads and the table stays. The callout above it records the
-date, the epic — `booking-DESIGN-007` — and that each row is `booking-DESIGN-007-Tn`: the bead IDs
+date, the epic — `booking-PLAN-007` — and that each row is `booking-PLAN-007-Tn`: the bead IDs
 are the document's own numbering behind the project's Beads prefix, so a person can read and say
 them. Beads is authoritative for work state from that moment, and the table holds only what the
-design decided — the tasks, their edges, and the section each came from — never a status column. A
+plan decided — the tasks, their edges, and the section each came from — never a status column. A
 row changes only through a revision, which edits the row and the bead together, so the two stay
 level; a removed row's identifier is listed under the table and never reused.
 
-**Revising a design reconciles the graph rather than rebuilding it.** A bead nobody has touched is
+**Revising a plan reconciles the graph rather than rebuilding it.** A bead nobody has touched is
 edited, whatever changed. A bead someone has claimed, commented on, or closed is replaced only when
 the work already done against the old wording would no longer count — a ticket should not change
-under the person holding it. A task that leaves the design is reported to you, never closed on its
+under the person holding it. A task that leaves the plan is reported to you, never closed on its
 own, because someone may still be working it. A request to revise can also arrive from downstream,
-as a `design-revision` bead, when the verb that found it could not amend it: `implement` and
-`review` amend the design's text themselves when the code disagrees with it, in their own pull
+as a `plan-revision` bead, when the verb that found it could not amend it: `implement` and
+`review` amend the plan's text themselves when the code disagrees with it, in their own pull
 request, and file the bead when the fix would change a task row or a criterion a bead cites, when
 the document is frozen, or when you declined the amendment.
 
-**`design` also decides which tasks need a test case.** A task verified through the wired product —
+**`plan` also decides which tasks need a test case.** A task verified through the wired product —
 the real interface, against the real services — has the case named in its bead's acceptance
 criteria, with its modalities and every criterion the case will hold: a spec criterion cited in
 full, or marked `derived` with the requirement it elaborates and one line saying what it adds.
 `agentic` is chosen only where verifying an outcome needs judgement, `spec` otherwise, and neither
-where unit tests already verify the task. Approving the task plan is where you sign the derived
+where unit tests already verify the task. Approving the task table is where you sign the derived
 criteria off, which is why they are shown with it. A gap they expose in the spec is offered as an
-appended criterion, written into the spec on the design's own branch and re-mirrored to its tracker
+appended criterion, written into the spec on the plan's own branch and re-mirrored to its tracker
 issue, so the bead cites a real identifier; `derived` is what a criterion stays when you decline.
 
 Choices that are hard to reverse — a new dependency, a schema other components will build on, a
 rejected alternative that cost real analysis — become an ADR in the project's own `ADR-NNN` sequence.
-Most designs need none. A ratified ADR is never rewritten: a revision lands as a new, superseding
+Most plans need none. A ratified ADR is never rewritten: a revision lands as a new, superseding
 one.
 
 **A technical point the run cannot settle is put to the project's consult agents, once.** After the
-concern has been raised and the code and the ADRs read, `design` renders the question, the files,
+concern has been raised and the code and the ADRs read, `plan` renders the question, the files,
 and the options it sees into a consult and walks the `consult` order from `settings.json`, a
 subagent of the current harness when nothing is configured. A confident answer on a reversible
 choice comes back to you as the run's recommendation, naming who was consulted; anything else, and
@@ -533,13 +533,13 @@ any hard-to-reverse choice, comes to you as analysis beside the concern, and wha
 goes into the document as a stated risk. A consult never writes, never settles an ADR, and is never
 asked about a preference you have stated.
 
-The design's `Status` is `Draft`, `Ready`, or `Archived` and describes the document only. Whether the
+The plan's `Status` is `Draft`, `Ready`, or `Archived` and describes the document only. Whether the
 work is queued, underway, or done is Beads' to say, the same division `specify` makes with its
 tracker.
 
 ### Implementation
 
-`implement` executes what `design` put into the graph. Point it at a bead, an epic, or a design — or
+`implement` executes what `plan` put into the graph. Point it at a bead, an epic, or a plan — or
 at nothing, and it shows the ready work and asks. An epic means walking the whole graph: each close
 unblocks the next tasks, waves of background workers build them in isolated worktrees, and the run
 continues until the frontier is empty.
@@ -579,7 +579,7 @@ verb prints the delivery's one-line chart as it starts and as it ends, and appen
 epic's notes as it finishes, so `bd show <epic>` reads as the delivery's history:
 
 ```
-booking-DESIGN-007 · round 2 · 10/12 ██████████████░░░
+booking-PLAN-007 · round 2 · 10/12 ██████████████░░░
 ```
 
 ```
@@ -594,16 +594,16 @@ remains. [ADR-013.4](docs/adrs/ADR-013.4-deliveries.md) holds the rule.
 **A person merges every code pull request.** The run ends at open PRs and the link to the top of
 the stack, which lands every layer when merged on GitHub — never a merge command or a list to merge
 in order — and the plugin ships a hook that mechanically denies the alternative. Tests are part of
-done — the ones the design planned and the ones the work turned out to need — while the round's
+done — the ones the plan named and the ones the work turned out to need — while the round's
 end-to-end run, regression, and fresh-context retesting are the `test` verb's.
 
-**A design the work proves wrong is amended by the work, not worked around.** A worker that can
-finish its task despite the design's text, or the spec's, disagreeing with the code amends that text
+**A plan the work proves wrong is amended by the work, not worked around.** A worker that can
+finish its task despite the plan's text, or the spec's, disagreeing with the code amends that text
 in its own branch, names the amendment in its pull request, and the root re-mirrors a spec change to
 its tracker issue. A disagreement the worker could not amend — one that would move work, a task row
 or a criterion a bead cites; one in a frozen document; one you declined — is filed as a
-`design-revision` bead, and the close-out names those beads separately from code follow-ups and
-tells you to run `design` on that document. A disagreement the task cannot finish
+`plan-revision` bead, and the close-out names those beads separately from code follow-ups and
+tells you to run `plan` on that document. A disagreement the task cannot finish
 under stops the run instead. [ADR-008](docs/adrs/ADR-008-upstream-amendments.md) holds the rule,
 and it applies at any distance up the chain.
 
@@ -685,7 +685,7 @@ blind spots that made the first one worth doing.
 type design, conventions, comment accuracy, documentation that has fallen behind, simplification,
 the local-environment scripts left stale by a change, and security — run as four parallel passes
 rather than one reviewer looking for everything at once.
-Documents get their own set: a spec is checked against its vision, a design against its spec, an ADR
+Documents get their own set: a spec is checked against its vision, a plan against its spec, an ADR
 against every other accepted ADR. Before anything runs, the skill names what it resolved and which
 questions it will ask, and you can drop any of them.
 
@@ -734,7 +734,7 @@ failed, what it means, and what to do. A feature branch is never rebased and a d
 stashed; the environment is brought level with the checkout either way.
 
 **The scripts stay current at the point of introduction.** A task that adds infrastructure, a
-dependency, a migration, or generated code changes the scripts in the same pull request: `design`
+dependency, a migration, or generated code changes the scripts in the same pull request: `plan`
 names it in the task, `implement` counts it toward done, `review` carries a lens for it. `init`
 writes the rule into `AGENTS.md`, `doctor` checks the declaration and that the stamp is
 git-ignored, and every verb that reads the repository reports when `main` has moved or the

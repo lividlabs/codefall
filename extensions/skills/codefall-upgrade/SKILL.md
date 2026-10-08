@@ -15,9 +15,8 @@ allowed-tools:
 
 # Upgrade
 
-A project scaffolded at codefall 0.2.1 never receives anything the templates gained since — new
-ADRs, revised rules, renamed files all live in the extension, not in the project — and its installed
-skills stay at the version that installed them. This verb closes both gaps: it offers
+A project keeps the templates and the installed skills it was scaffolded with; everything the
+extension gained since lives in the extension. This verb closes both gaps: it offers
 `codefall upgrade` for the install, then reads the project's documents, compares them against what
 the extension ships now, reports every difference, and applies exactly the pieces the user takes.
 
@@ -25,12 +24,11 @@ Three rules hold throughout. An existing project is never replaced: this verb ad
 supersedes within it. Application is per item, never wholesale. And where a revised template meets
 a project that amended its ancestor, the amendment wins.
 
-This skill is **only ever invoked explicitly**: it runs on a project people depend on. Never suggest
-it, never fire it from a passing remark, never chain into it from another skill.
+This skill is **only ever invoked explicitly**: it runs on a project people depend on.
 
 Template paths in this document are relative to `../codefall-scaffold/templates/`, resolved from
-this skill's directory, because this verb reasons about `codefall-scaffold`'s templates and has none
-of its own. Neither path is relative to the user's project.
+this skill's directory, because this verb reasons about `codefall-scaffold`'s templates. No path
+is relative to the user's project.
 
 ## Files beside this one
 
@@ -40,6 +38,9 @@ of its own. Neither path is relative to the user's project.
   before `scaffold.json` existed. Read only when step 2 finds no provenance.
 - `reference/declined.md` — how a declined template is recorded and skipped. Read at step 2 when
   `scaffold.json` holds `declined`, and at step 5 when missing templates are offered.
+- `reference/legacy-documents.md` — the `CUSTOMIZE.md` section offered to a project whose plans
+  sit under `docs/designs/`, from before `codefall-design` became `codefall-plan`: the condition,
+  the item, and how it is applied. Read at step 4 when that directory exists.
 - `../../../.codefall/shared/landing.md` — the shared procedure for the branch, the commit, the
   push, and the pull request. Read at step 6, before the first item is applied.
 
@@ -55,16 +56,15 @@ The install is `codefall upgrade`'s, and this verb only offers it (step 1). Past
 | `AGENTS.md` skeleton drift, reported | Re-slicing component boundaries |
 | `.codefall/scaffold.json` — written or brought current | Touching source, build config, or lint rules |
 | A `docs/decision-log.md` line recording the run | The project's own `ADR-NNN` decisions |
+| A `CUSTOMIZE.md` section for plans under a renamed verb's old directory | Moving or renaming those plans |
 
-Moving a project from ports-and-adapters to package-by-component, or pulling a component out into
-a service, are real jobs — and they are code refactors with a different blast radius. They belong
-to a future `migrate` verb. If the user asks for one, say that plainly and stop; do not do a small
-version of it here.
+Moving a project between architectures, or pulling a component out into a service, is a code
+refactor with a different blast radius and belongs to a future `migrate` verb. If the user asks for
+one, say so and stop.
 
-The project's own decisions — the bare-numbered `ADR-NNN` sequence — have no template behind them
-and are never this verb's to update. They enter the picture only when a rename leaves them citing an
-old identifier, and even then the verb reports the stale reference rather than silently editing a
-decision the project wrote.
+The project's own `ADR-NNN` decisions have no template behind them and are never this verb's to
+update; when a rename leaves one citing an old identifier, the verb reports the stale reference and
+edits nothing.
 
 ## Provenance states
 
@@ -79,18 +79,17 @@ do:
 | **edited** | hash no longer matches — changed since scaffolding | report the diff, leave it alone |
 | **unverifiable** | no provenance and no old template reachable | treat as edited |
 
-**Only untouched is ever safe to take mechanically.** Taking a revision never rewrites the
-ratified file — it lands as a new, superseding ADR (step 6) — but building that successor from the
-current template is only correct when the template fully accounts for what the project has. For an
-amended or edited ADR it does not: the project changed the decision on purpose, and a
-template-built successor would silently drop that change from what governs. So for those two the
-diff *is* the deliverable — authoring the superseding ADR that carries their amendment forward is
-the user's work, and after they write it they can run this verb again.
+**Only untouched is ever safe to take mechanically.** Taking a revision lands a superseding ADR
+built from the current template (step 6), which is only correct when the template accounts for
+everything the project has. For an amended or edited ADR it does not: the project changed the
+decision on purpose, and a template-built successor would drop that change from what governs. So
+for those two the diff *is* the deliverable; the superseding ADR that carries their amendment
+forward is the user's to write, and they can run this verb again after.
 
-There is one narrow exception: a user who has seen the diff may explicitly say *supersede my
-version with the template's*. That is their call, and supersession keeps their version on the
-record — but their amendment stops governing, so say exactly that, require them to name the file,
-and only then land it like any other taken revision. Never offer this as the convenient path.
+One narrow exception: a user who has seen the diff may say *supersede my version with the
+template's*. Supersession keeps their version on the record, but their amendment stops governing:
+say exactly that, require them to name the file, then land it like any taken revision. Never offer
+this as the convenient path.
 
 ## Persona
 
@@ -148,10 +147,9 @@ all three — they differ only in how much step 3 must reconstruct:
   If a surface has no supported profile, refuse the same way `codefall-scaffold` does: say plainly that the
   stack isn't supported yet, name what is, offer to record the request, and stop. Do not improvise.
 
-Adoption installs documents describing a stance the existing code does not yet follow, and does not
-check the code against them — say that in the report rather than letting the docs imply otherwise.
-Aligning the code is `migrate`'s job, and the boundary-enforcement obligation lands on the user
-exactly as it does after a docs-only scaffold.
+Adoption installs documents describing a stance the code does not yet follow and does not check
+the code against them; say so in the report. Aligning the code is `migrate`'s job, and the
+boundary-enforcement obligation lands on the user as after a docs-only scaffold.
 
 Steps 2–5 only read, so a dirty working tree is fine for the report. Note it, and require a clean
 tree — or an explicit go-ahead — before step 6 writes anything: every application should be
@@ -165,11 +163,10 @@ edited. A listed file missing from disk was deleted by the project — report it
 the entry alone. Never "correct" the file to make drift disappear; it records history, not
 configuration.
 
-A hand-backfilled `scaffold.json` — one written after the fact rather than by `codefall-scaffold` — is only
-as safe as its `amended` flags. The hashes are re-verified right here, but `amended` is taken as
-recorded, and a flag wrongly set to `false` marks a customized file as safe to supersede. Nothing
-downstream can catch that lie; a backfill unsure about a file should say `true`, whose worst case
-is a diff shown instead of an update offered.
+A hand-backfilled `scaffold.json` is only as safe as its `amended` flags: the hashes are re-verified
+here, `amended` is taken as recorded, and a flag wrongly `false` marks a customized file as safe to
+supersede. A backfill unsure about a file says `true`; its worst case is a diff shown instead of an
+update offered.
 
 **Without `scaffold.json`:** classify per `reference/pre-provenance.md`. What cannot be classified
 is unverifiable, and unverifiable is edited.
@@ -200,6 +197,9 @@ Then classify every difference:
   advisory, never applied wholesale.
 - **Provenance** — `scaffold.json` itself is missing or stale. Offer to write it; that is how a
   pre-provenance project stops needing `reference/pre-provenance.md` next time.
+- **Legacy documents** — `docs/designs/` exists and a verb's `CUSTOMIZE.md` lacks the section
+  `reference/legacy-documents.md` offers for it. One item per verb; the documents and their beads
+  stay as they are.
 
 ### 5. Report — and stop
 
@@ -214,8 +214,7 @@ does not carry it), use it to say *why* things changed, grouped by release since
 baseline. When it isn't, say the report comes from template comparison alone. Either way the
 comparison, not the changelog, is the source of truth for *what* changed.
 
-Then **stop**. Nothing is applied unrequested — a report that quietly rewrote files defeats the
-verb. The user takes items by naming them, "everything safe" included; present the choice with one
+Then **stop**. Nothing is applied unrequested. The user takes items by naming them, "everything safe" included; present the choice with one
 question, items grouped by whether they can be taken automatically.
 
 ### 6. Apply what the user takes — one item at a time
@@ -226,8 +225,7 @@ on the default branch, `git switch -c upgrade/<YYYY-MM-DD>`; on another branch, 
 Only requested items, and only missing or untouched ones are ever taken. **This verb never rewrites
 a ratified ADR.** A taken revision lands as a new ADR that supersedes the old one, which stays on
 the record; the only in-place edit this verb ever makes to an existing ADR is flipping its Status
-line to `Superseded by <id> — <date>`, which is the edit the discipline prescribes. Git history is
-not the record here — the documents are.
+line to `Superseded by <id> — <date>`. Git history is not the record here — the documents are.
 
 - **Missing** — instantiate from the current template, exactly as `codefall-scaffold` step 4 emits it:
   stamp today's real date (`date +%F`, not memory) on the Status line, keep the flat `docs/adrs/`
@@ -249,6 +247,9 @@ not the record here — the documents are.
 - **Amended / edited** — never superseded by taking an update, even one that renames the file
   around them. The narrow, user-named exception is in [Provenance states](#provenance-states).
 - **`AGENTS.md`** — targeted section edits on request only, never a wholesale replacement.
+- **`.codefall/skills/<verb>/CUSTOMIZE.md`** — the legacy-documents section appended between its
+  markers, or the file written fresh, per `reference/legacy-documents.md`. Nothing outside the
+  markers is touched.
 - **`.codefall/scaffold.json`** — after every applied item, update its entry: `id`, `file`, and a
   `sha256` computed with `shasum -a 256` on the file as written — never invented. A supersession
   touches two files: add an entry for the successor, which is what future runs compare against,
@@ -263,8 +264,8 @@ not the record here — the documents are.
   `<version>` on `<date>` — took ADR-BASE-03, ADR-TS-01; left ADR-TS-02 (amended)*. Humans read
   this; `scaffold.json` stays authoritative.
 
-A partial run is a normal outcome, not a failure state. Per-file hashes carry the truth about
-what is current, so the next run needs no memory of this one.
+A partial run is a normal outcome: per-file hashes say what is current, so the next run needs no
+memory of this one.
 
 ### 7. Verify
 
@@ -280,7 +281,7 @@ the documents' changes should be reviewable as one coherent change.
 - What `codefall upgrade` did, when it ran, and the files it changed, left uncommitted.
 - What was **taken**, file by file.
 - What was **left**, and why — amended, edited, retired, or declined.
-- Stale references the user chose to keep, so they aren't rediscovered as a surprise.
+- Stale references the user chose to keep.
 - That `scaffold.json`'s `lastGraft` key was renamed to `lastUpgrade`, when this run renamed it.
 - The landing, per `../../../.codefall/shared/landing.md`: what took, committed by path on the
   branch, pushed, and its pull request opened. A person merges it. A run where nothing took has
@@ -307,6 +308,8 @@ the documents' changes should be reviewable as one coherent change.
 - **A rename is recognised as a rename**, never as a deletion plus an addition. `lineage.md` is the
   record.
 - **Never reconstruct an old template from memory, and never invent a hash.**
+- **A renamed verb's old documents are bridged, never moved.** They and their beads keep their
+  identifiers; a `CUSTOMIZE.md` section tells the renamed verbs where to look.
 - **`scaffold.json` records history.** It is verified, never corrected to make drift disappear.
 - **A clean tree before anything is written.** Every application is reviewable as a git diff on
   its own.

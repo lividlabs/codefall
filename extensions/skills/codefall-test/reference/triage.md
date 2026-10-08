@@ -99,9 +99,9 @@ does, and the epic itself for a suite failure that names no case. Record the bea
 record's `bead` field beside `issue`.
 
 **A wrong expectation whose criterion a bead cites** is offered, on the user's word, as a
-`design-revision` child in the `design` form of the same reference, with `--spec-id` taken from that
-bead's `spec_id` and `-p 2`; `codefall-design`'s Revise mode settles whether the criterion or the
-design moves.
+`plan-revision` child in the `plan` form of the same reference, with `--spec-id` taken from that
+bead's `spec_id` and `-p 2`; `codefall-plan`'s Revise mode settles whether the criterion or the
+plan moves.
 
 **A bug document is the user's to ask for.** `/codefall-report <run report path>` writes
 `docs/bugs/BUG-NNN-slug.md` with acceptance criteria and adopts the issue this run filed rather than

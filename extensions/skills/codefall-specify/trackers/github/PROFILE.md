@@ -50,7 +50,7 @@ the project: they have no issue number, carry no repository labels, and cannot b
 | Draft state | **Absent** | A `draft` label mirrors the spec's `Draft` status |
 | Custom fields | Only via a Project, and per-installation | Optional; see "Project boards" |
 | Image attachment from CLI | **Absent** | Mockups are referenced by repository path |
-| Dependency links | Present, unused | `codefall-design` owns dependency edges, not `codefall-specify` |
+| Dependency links | Present, unused | `codefall-plan` owns dependency edges, not `codefall-specify` |
 
 Two of those are absences worth stating plainly. **GitHub issues have no draft state** — the Projects
 feature named "draft" is the unrelated card described above. And **`gh` cannot upload images**, which
@@ -137,10 +137,10 @@ This profile owns exactly two labels, and creates them if missing:
 gh label create "draft" --color "BFBFBF" \
   --description "Specification incomplete — spec is still Draft" --force
 gh label create "requires-mockup" --color "D93F0B" \
-  --description "Blocked from design until a mockup exists" --force
+  --description "Blocked from planning until a mockup exists" --force
 ```
 
-Both are gates `codefall-design` reads, and it refuses an issue carrying either.
+Both are gates `codefall-plan` reads, and it refuses an issue carrying either.
 
 `draft` **mirrors the spec's status** — present while the document says `Draft`, removed when it says
 `Ready`. It is not an independent state, and it is applied to the spec issue and every requirement
@@ -214,7 +214,7 @@ request is where the document is, and its body carries `Relates to #<spec-issue>
 each other.
 
 **`codefall-specify` writes no dependency links between issues.** GitHub supports them; ordering work is
-`codefall-design`'s decision, made against the build graph, and a guess recorded here would be a guess `codefall-design`
+`codefall-plan`'s decision, made against the build graph, and a guess recorded here would be a guess `codefall-plan`
 has to unpick.
 
 ## Refreshing
@@ -306,7 +306,7 @@ exactly these transitions and no others:
 | Work built, PRs open | Status → **In Review** | — |
 | Every PR merged, epic closed | Status → **Done**, issue closed, requirement children closed with it | Issue closed, children with it |
 
-Requirement sub-issues **never move individually** — beads carry design refs, not requirement IDs,
+Requirement sub-issues **never move individually** — beads carry plan refs, not requirement IDs,
 so per-requirement status would be a guess, and a mirror that guesses is worse than one that is
 coarse. The running trail is the `Relates to #<spec-issue>` line `codefall-implement` puts in every PR body.
 
@@ -320,5 +320,5 @@ graph. Reading `internal/github/mapping.go` at `main`, the GitHub-to-beads conve
 dependency list unconditionally, and the beads-to-GitHub direction sends only title, body, labels, and
 state. Sub-issue relations and dependency links are invisible to it in both directions.
 
-So the spec-to-requirement structure written here does not reach Beads through sync. `codefall-design` reads
+So the spec-to-requirement structure written here does not reach Beads through sync. `codefall-plan` reads
 hierarchy from GitHub directly, and from the spec document, which holds it in a form sync cannot lose.

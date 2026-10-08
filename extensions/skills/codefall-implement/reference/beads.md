@@ -45,10 +45,10 @@ Single-bead scope claims only its bead — the epic stays unclaimed so coworkers
 and creates no landed bead; the PR-link comment is the merge trail.
 
 Work happens in git; commits carry the bead ID — `feat: add StageContext type
-(booking-DESIGN-007-T1)`.
+(booking-PLAN-007-T1)`.
 
 ```bash
-bd comment <bead> "PR #101 · feat/booking-DESIGN-007-T1-stage-context · built with opus/high"
+bd comment <bead> "PR #101 · feat/booking-PLAN-007-T1-stage-context · built with opus/high"
 bd close <bead> -r "done: criteria R1,R2 verified, checks green, PR #101 open" --suggest-next
 bd dolt push
 ```
@@ -109,21 +109,21 @@ bd update "$(bd config get issue_prefix)-parser-trailing-comma" --parent <epic>
 bd dolt push
 ```
 
-**`design`** — the design's text and the code the task needed disagree, or the design and the spec
+**`plan`** — the plan's text and the code the task needed disagree, or the plan and the spec
 disagree, the task could still be finished, and the worker could not amend the document itself:
-the fix would move a Task Plan row or a criterion a bead cites, or the document is frozen. Text the
+the fix would move a Tasks row or a criterion a bead cites, or the document is frozen. Text the
 worker could amend was amended in its branch instead, under *Amendments* below, and the root checks
 each item's `blocks` before filing it, per *Results* in the workers reference beside this file; an
 item that fails the check goes back to its worker, not into a bead. A revision request against the document: the same edge, plus the
-design's path as `--spec-id` and the label `design-revision`. `codefall-design` lists exactly those
+plan's path as `--spec-id` and the label `plan-revision`. `codefall-plan` lists exactly those
 two markers at its start, and its Revise mode closes every one.
 
 ```bash
-bd create "DESIGN-007 § Architecture names a StageStore the code replaced with StageContext" \
-  --id "$(bd config get issue_prefix)-design-007-stagestore" \
-  --deps discovered-from:<bead> --spec-id docs/designs/DESIGN-007-stage-context.md \
-  -l design-revision -p 2 -s deferred
-bd update "$(bd config get issue_prefix)-design-007-stagestore" --parent <epic>
+bd create "PLAN-007 § Architecture names a StageStore the code replaced with StageContext" \
+  --id "$(bd config get issue_prefix)-plan-007-stagestore" \
+  --deps discovered-from:<bead> --spec-id docs/plans/PLAN-007-stage-context.md \
+  -l plan-revision -p 2 -s deferred
+bd update "$(bd config get issue_prefix)-plan-007-stagestore" --parent <epic>
 bd dolt push
 ```
 
@@ -132,18 +132,18 @@ why it was not amended, and what the task did about it. A disagreement the task 
 under is a worker failure and an escalation, never a revision bead: the human decides, and the run
 stops there.
 
-**At session end, the epic carries the hand-off.** When any `design` bead was filed, one
+**At session end, the epic carries the hand-off.** When any `plan` bead was filed, one
 `bd comment` on the epic — on the bead itself at single-bead scope — names every revision bead, so
 the epic's own record shows the drift:
 
 ```bash
-bd comment <epic> "design-revision: booking-design-007-stagestore, booking-design-007-retry — run /codefall-design DESIGN-007"
+bd comment <epic> "plan-revision: booking-plan-007-stagestore, booking-plan-007-retry — run /codefall-plan PLAN-007"
 ```
 
 ## Amendments
 
 A worker's `amended` list names each upstream document it edited in its branch — a `Draft` or
-`Ready` design or spec, text only, nothing that moves work. The root reads every list at the wave
+`Ready` plan or spec, text only, nothing that moves work. The root reads every list at the wave
 boundary, before the next wave is claimed:
 
 - **Two workers amended the same section of one document.** Keep the one whose branch is lower in
@@ -158,26 +158,26 @@ boundary, before the next wave is claimed:
 - **The close reason** names the amendment beside what was verified, so the bead's record says the
   document moved with the work.
 - **Every amendment is recorded as a closed bead.** One per `amended` entry, labelled
-  `design-amended`, with `--spec-id` the document's path and the same `discovered-from` edge a
+  `plan-amended`, with `--spec-id` the document's path and the same `discovered-from` edge a
   revision bead carries; the body says what the document said and what the code needed, and the
   close reason names the branch and commit that carry the amendment. It adds no work to the graph
-  and `codefall-design` never lists it; it exists so `bd list -l design-amended --spec <path>`
+  and `codefall-plan` never lists it; it exists so `bd list -l plan-amended --spec <path>`
   answers which documents were wrong, where, and how often. It is parented under the epic like
   every other bead a delivery files, so `bd children <epic>` is complete; the chart counts every
   child the way `bd epic status` does, this one included.
 
 ```bash
-bd create "DESIGN-007 § Architecture: StageStore renamed to StageContext" \
-  --id "$(bd config get issue_prefix)-design-007-stagecontext-amended" \
-  --deps discovered-from:<bead> --spec-id docs/designs/DESIGN-007-stage-context.md \
-  -l design-amended
-bd update "$(bd config get issue_prefix)-design-007-stagecontext-amended" --parent <epic>
-bd close "$(bd config get issue_prefix)-design-007-stagecontext-amended" \
-  -r "amended on feat/booking-DESIGN-007-T2-wire-context @ <sha>: § Architecture now names StageContext"
+bd create "PLAN-007 § Architecture: StageStore renamed to StageContext" \
+  --id "$(bd config get issue_prefix)-plan-007-stagecontext-amended" \
+  --deps discovered-from:<bead> --spec-id docs/plans/PLAN-007-stage-context.md \
+  -l plan-amended
+bd update "$(bd config get issue_prefix)-plan-007-stagecontext-amended" --parent <epic>
+bd close "$(bd config get issue_prefix)-plan-007-stagecontext-amended" \
+  -r "amended on feat/booking-PLAN-007-T2-wire-context @ <sha>: § Architecture now names StageContext"
 bd dolt push
 ```
 
-Amendments are reported at close-out by document and PR, each with its `design-amended` bead, in
+Amendments are reported at close-out by document and PR, each with its `plan-amended` bead, in
 their own bucket beside the discovered work. Under single-bead scope the same reading happens once,
 at the worker's return.
 

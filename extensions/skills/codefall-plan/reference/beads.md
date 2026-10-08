@@ -6,7 +6,7 @@ Read before creating the graph (step 9).
 
 - What gets created
 - The test case in a bead's criteria
-- The plan file
+- The graph file
 - Name the beads
 - Verify the graph
 - Publish the graph
@@ -15,8 +15,8 @@ Read before creating the graph (step 9).
 
 | Bead | One per | Type | Body |
 | --- | --- | --- | --- |
-| Epic | design document | `epic` | The Overview, and the path to the document |
-| Task | Task Plan row | `task`, or `bug` where it is one | What to do, the design ref, and acceptance criteria |
+| Epic | plan document | `epic` | The Overview, and the path to the document |
+| Task | Tasks row | `task`, or `bug` where it is one | What to do, the plan ref, and acceptance criteria |
 
 **Every task bead carries acceptance criteria** — two to five checkable statements, drawn from the
 spec requirements the task serves and the Hard Constraints that bind it. A criterion that traces to
@@ -83,29 +83,29 @@ criterion is shown at step 7 and nothing later asks again.
 The case-file format `codefall-implement` writes to is
 `../../codefall-test/reference/case-file.md`.
 
-Every bead gets `--spec-id` set to the design document's path, so `bd list --spec <path>` finds a
-design's beads from the graph side, as `bd list --parent <prefix>-DESIGN-NNN` does from the epic.
+Every bead gets `--spec-id` set to the plan document's path, so `bd list --spec <path>` finds a
+plan's beads from the graph side, as `bd list --parent <prefix>-PLAN-NNN` does from the epic.
 The epic gains children this run never creates: `codefall-implement`, `codefall-review`, and
 `codefall-test` file what they find under it, with `--parent` and a `discovered-from` edge, and
-those are not Task Plan rows; `revising.md` says how a later run tells them apart.
+those are not Tasks rows; `revising.md` says how a later run tells them apart.
 
-## The plan file
+## The graph file
 
-`bd create --graph` takes a plan file and creates every node and edge in one call, then prints the
-mapping the document needs. The plan's node keys **are** the Task Plan's local IDs.
+`bd create --graph` takes a graph file and creates every node and edge in one call, then prints the
+mapping the document needs. The plan's node keys **are** the Tasks table's local IDs.
 
 ```json
 {
   "nodes": [
     { "key": "EPIC", "type": "epic",
-      "title": "DESIGN-007: Stage context handoff",
-      "description": "<the Overview, and docs/designs/DESIGN-007-stage-context.md>" },
+      "title": "PLAN-007: Stage context handoff",
+      "description": "<the Overview, and docs/plans/PLAN-007-stage-context.md>" },
     { "key": "T1", "type": "task", "parent_key": "EPIC",
       "title": "Add StageContext type + serde",
-      "description": "<what to do> · Design ref: DESIGN-007 § Components and Interfaces" },
+      "description": "<what to do> · Plan ref: PLAN-007 § Components and Interfaces" },
     { "key": "T2", "type": "task", "parent_key": "EPIC",
       "title": "Wire context load into /scaffold",
-      "description": "<what to do> · Design ref: DESIGN-007 § Architecture" }
+      "description": "<what to do> · Plan ref: PLAN-007 § Architecture" }
   ],
   "edges": [
     { "from_key": "T2", "to_key": "T1", "type": "blocks" }
@@ -114,8 +114,8 @@ mapping the document needs. The plan's node keys **are** the Task Plan's local I
 ```
 
 ```bash
-bd create --graph <plan.json> --dry-run    # validates the graph, creates nothing
-bd create --graph <plan.json>
+bd create --graph <graph.json> --dry-run    # validates the graph, creates nothing
+bd create --graph <graph.json>
 ```
 
 ```
@@ -131,14 +131,14 @@ blocked by T1. It maps straight off the staging table — the row's own ID is `f
 entry in its **Depends on** column is a `to_key`. Getting it backwards produces a graph that runs in
 reverse, and nothing but the ready set will tell you.
 
-**The plan file carries only these fields.** `key`, `title`, `type`, `description`, `labels`,
+**The graph file carries only these fields.** `key`, `title`, `type`, `description`, `labels`,
 `priority`, `parent_key` on a node; `from_key`, `to_key`, `type` on an edge. Anything else is
 **silently dropped** with a warning. Neither `--spec-id` nor `--acceptance` is among them, and
 there is no ID field, so all three are set afterwards, in one pass over the creation output: the
 rename below, then the update.
 
 ```bash
-bd update <id> --spec-id docs/designs/DESIGN-007-stage-context.md \
+bd update <id> --spec-id docs/plans/PLAN-007-stage-context.md \
   --acceptance $'R3: context survives a restart\nHard constraint: one open write txn per booking'
 ```
 
@@ -149,20 +149,20 @@ behind the project's prefix, before anything cites them:
 
 | Bead | ID |
 | --- | --- |
-| Epic | `<prefix>-DESIGN-NNN` |
-| Task `Tn` | `<prefix>-DESIGN-NNN-Tn` |
+| Epic | `<prefix>-PLAN-NNN` |
+| Task `Tn` | `<prefix>-PLAN-NNN-Tn` |
 
 `<prefix>` is what `bd config get issue_prefix` prints. Never write a project's prefix into a
 skill or a template; `bd create` and `bd rename` refuse an ID under another prefix. `bd rename`
 carries the parent, the edges, and every reference with it.
 
 ```bash
-bd rename booking-a2g booking-DESIGN-007
-bd rename booking-unz booking-DESIGN-007-T1
-bd rename booking-s58 booking-DESIGN-007-T2
+bd rename booking-a2g booking-PLAN-007
+bd rename booking-unz booking-PLAN-007-T1
+bd rename booking-s58 booking-PLAN-007-T2
 ```
 
-A rename refused because the ID exists means this design's beads were created before, whatever
+A rename refused because the ID exists means this plan's beads were created before, whatever
 the callout says. Reconcile per `revising.md`; never create a second graph beside the first.
 
 ## Verify the graph

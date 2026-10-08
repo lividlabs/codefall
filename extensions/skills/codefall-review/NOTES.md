@@ -59,12 +59,12 @@ anyone agreed to it. Findings go in the findings file, and accepted ones become 
 triage.
 
 **Filing findings as beads unasked.** A finding that outlives the review is offered as a bead and
-never filed on the review's own initiative: the graph is `codefall-design`'s, and a review that
+never filed on the review's own initiative: the graph is `codefall-plan`'s, and a review that
 quietly adds work to it is making a decision that is not its own. An earlier edition kept deferred
-findings in the file alone, with `design-revision` beads the one exception. That left a deferred
+findings in the file alone, with `plan-revision` beads the one exception. That left a deferred
 finding whose cause was the code in a file `.ignore` hides from search, where no verb read it again
 and the person running the chain had to remember it. Under ADR-013 every finding the user defers is
-offered as a `deferred` child of the epic — a revision bead for one the design caused, a code bead
+offered as a `deferred` child of the epic — a revision bead for one the plan caused, a code bead
 for one the code caused — so the next round of `codefall-implement` claims it and the chart shows
 it. The offer is the same; what changed is where a taken offer lands.
 

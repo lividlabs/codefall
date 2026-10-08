@@ -14,8 +14,8 @@ question goes under **Open questions**.
 
 Never consult on a preference — who the consumer is, what they should be able to do, what is out of
 scope, how a failure should read. Those are the user's answers, and a vague one is pushed back on,
-not looked up. Never consult on a design concern raised as a flag: the flag is the user's to weigh,
-and `codefall-design` decides the how.
+not looked up. Never consult on a plan concern raised as a flag: the flag is the user's to weigh,
+and `codefall-plan` decides the how.
 
 ## The question
 

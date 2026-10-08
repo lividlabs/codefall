@@ -20,8 +20,8 @@ mocked or changed by hand.
 
 ## Dropped
 
-**Finding the cause.** It is `codefall-design`'s, in `reference/bugs.md`, whether design runs on its
-own or inside `codefall-fix`. A report that guessed at a cause would hand design a conclusion to
+**Finding the cause.** It is `codefall-plan`'s, in `reference/bugs.md`, whether plan runs on its
+own or inside `codefall-fix`. A report that guessed at a cause would hand plan a conclusion to
 unlearn.
 
 **Reproduction as a gate.** An attempt that fails does not stop the report. Bugs that only happen in

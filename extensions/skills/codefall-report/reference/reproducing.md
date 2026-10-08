@@ -88,7 +88,7 @@ The report's `**Reproduced:**` row records one, and its **Reproduction** section
 | Not attempted | `Not attempted — <reason>` | Nothing, when the reason says it all |
 
 `Not reproduced` is not a finding that the bug is absent. The report is written, and
-`codefall-design` reads the row before it cuts any work.
+`codefall-plan` reads the row before it cuts any work.
 
 ## What an attempt never does
 
@@ -96,6 +96,6 @@ The report's `**Reproduced:**` row records one, and its **Reproduction** section
   the only change, and it is named at the confirmation.
 - **Never mocks, fakes, or intercepts** anything.
 - **Never looks for the cause.** Reading code to find a control's name is allowed; reading it to
-  explain the bug is `codefall-design`'s work.
+  explain the bug is `codefall-plan`'s work.
 - **Never replaces the reporter's evidence** with its own. Both are kept, each named for where it came
   from.

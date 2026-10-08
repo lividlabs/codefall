@@ -11,11 +11,11 @@ git-authority note or close protocol, decides Dolt sync here.
 - `bd dolt push` after every write — a create, a claim, a close, a dependency change — and
   before the work that follows it.
 - Work found along the way becomes an issue linked `discovered-from` the current one, and a
-  `deferred` child of the epic (`--parent`) when one is in scope. A design the work proves wrong
-  gets one labelled `design-revision`, with `--spec-id` the design's path; a document the work
-  amended gets a closed one labelled `design-amended`, the same way.
-- Every bead is created with `--id`, never with the hash `bd` would pick: a design's epic is
-  `<prefix>-DESIGN-NNN` and its tasks `<prefix>-DESIGN-NNN-Tn`; other work is `<prefix>-<tracker
+  `deferred` child of the epic (`--parent`) when one is in scope. A plan the work proves wrong
+  gets one labelled `plan-revision`, with `--spec-id` the plan's path; a document the work
+  amended gets a closed one labelled `plan-amended`, the same way.
+- Every bead is created with `--id`, never with the hash `bd` would pick: a plan's epic is
+  `<prefix>-PLAN-NNN` and its tasks `<prefix>-PLAN-NNN-Tn`; other work is `<prefix>-<tracker
   ref>` (`gh-123`, `jira-ABC-42`) where an issue exists, else `<prefix>-<slug>`. `<prefix>` is what
   `bd config get issue_prefix` prints. A taken ID is refused: add `-2` and retry. Never `--force`.
 - No Dolt remote (`bd dolt pull` says `no remote`): say so once and carry on. `bd dolt push --yes`

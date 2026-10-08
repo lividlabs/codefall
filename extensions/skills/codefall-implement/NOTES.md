@@ -83,7 +83,7 @@ A finding that lived beside the graph, in a findings file, or in a tracker issue
 to the next verb's start, and the person running the chain had to remember it. As a child of the
 epic it holds the epic open, shows on the chart, and is claimed by the next round like any task.
 It is created `deferred` so the round still running does not pick it up: `bd ready` skips
-`deferred`, and the round boundary is where it opens. `design-amended` beads are parented too, for
+`deferred`, and the round boundary is where it opens. `plan-amended` beads are parented too, for
 a complete `bd children`, and excluded from the counts because they are records, not work.
 
 ## Why the epic's round is the one metadata implement writes
@@ -91,9 +91,9 @@ a complete `bd children`, and excluded from the counts because they are records,
 The round has to live somewhere every verb can read and the chart can print, and only one verb may
 bump it or a review that files both a code child and a revision bead produces two bumps. Implement
 owns the moment a round starts — the go gate of a re-entry run — so it writes `round` there and
-nowhere else; design's Revise mode adds children and bumps nothing.
+nowhere else; plan's Revise mode adds children and bumps nothing.
 
 ## Why the mirror is coarse
 
-Requirement sub-issues close with the parent, never individually, because beads carry design refs,
+Requirement sub-issues close with the parent, never individually, because beads carry plan refs,
 not requirement IDs, and a mirror that guesses is worse than one that is coarse.

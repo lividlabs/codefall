@@ -57,7 +57,7 @@ an ignore file that works across harnesses: Claude Code has no `.agentignore`.
 
 ## Mockups go to `docs/mockups/`
 
-That is where `codefall-design` and `codefall-implement` look for them, and a surface outlives the
+That is where `codefall-plan` and `codefall-implement` look for them, and a surface outlives the
 vision that prompted it. The import procedure is shared with `codefall-specify` and
 `codefall-mock-up` so the three never drift.
 

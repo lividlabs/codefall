@@ -42,4 +42,4 @@ that share nothing but the session they were written in are two specs.
 - When a sibling deserves its own interview, say so at the report and ask whether to write it now,
   rather than writing a thin document in passing.
 - Record the concern in the spec **only** when the user did not engage with it, phrased as an
-  observation for `codefall-design` to weigh. If they considered it and disagreed, nothing goes in.
+  observation for `codefall-plan` to weigh. If they considered it and disagreed, nothing goes in.

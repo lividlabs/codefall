@@ -8,7 +8,7 @@ placeholder, nothing else. The worker is strategy-blind: stacked or epic branch 
 
 - Your task
 - 1. Set up the branch
-- 2. Read before you plan
+- 2. Read before you act
 - 3. Implement
 - 4. Verify
 - 5. Push and open the PR
@@ -32,7 +32,7 @@ one JSON object — nothing else is read.
 
   {{ACCEPTANCE}}
 
-- **Design ref:** {{DESIGN_REF}}
+- **Plan ref:** {{PLAN_REF}}
 - **Branch:** `{{BRANCH}}`, cut from `origin/{{BASE_REF}}`, PR to `{{PR_TARGET}}`
 
 ## 1. Set up the branch
@@ -48,21 +48,21 @@ Branch off the remote-tracking ref exactly as written — a plain checkout of `{
 when another worktree holds that branch. Then install dependencies if the project has them;
 worktrees share nothing.
 
-## 2. Read before you plan
+## 2. Read before you act
 
-In order: the Design ref's section of the design document, plus its Overview, Architecture, and
+In order: the Plan ref's section of the plan document, plus its Overview, Architecture, and
 Hard Constraints; the project's `AGENTS.md`, root and scoped; the ADRs in `docs/adrs/`; any mockup
 the task references — a mockup is a drawing to rebuild in the app's stack, never markup to copy. A
-Design ref of `none` means a tier-0 bead: the body above is the whole brief.
+Plan ref of `none` means a tier-0 bead: the body above is the whole brief.
 
 Plan-mode tools are stripped from subagents, so impose the discipline yourself: no edits until you
-have read the canon and formed a plan. Reconcile the plan against the code as it stands on your
-base — the design was written earlier, and the code may have moved.
+have read the canon and formed an approach. Reconcile the plan against the code as it stands on your
+base — the plan was written earlier, and the code may have moved.
 
-**Never guess on architecture.** A genuine ambiguity — the design contradicts an ADR, the task no
+**Never guess on architecture.** A genuine ambiguity — the plan contradicts an ADR, the task no
 longer matches the code — is a failure result with a clear reason, not a judgment call. Stop and
 report; the root escalates. A disagreement you can finish the task under is different: report it as
-a `design` discovery in step 3 and carry on.
+a `plan` discovery in step 3 and carry on.
 
 ## 3. Implement
 
@@ -76,7 +76,7 @@ a `design` discovery in step 3 and carry on.
   `{{TESTING_ROOT}}/AGENTS.md` names. Never read the sibling spec, the application's code, or your
   own notes to decide what a criterion means. Read code only for mechanics — a control's role, its
   accessible name, the shape of a response — so that a spec can drive it.
-- Write every test this work needs — the ones the design planned and the ones you discover it
+- Write every test this work needs — the ones the plan named and the ones you discover it
   needs. Tests are part of done, not a suggestion.
 - If this work adds infrastructure, a dependency, a migration, or generated code, change the
   project's declared `start` and `update` scripts for it in this same branch, following the
@@ -84,19 +84,19 @@ a `design` discovery in step 3 and carry on.
   idempotent, never destructive. Name the change in the PR body.
 - Scope is exactly this bead. Anything adjacent you find — a bug, a missing test, a refactor —
   goes in your result's `discovered` list with `kind` `code`, not in your diff.
-- Where the design's text and the code disagree, or the spec's, and you can still finish the task,
+- Where the plan's text and the code disagree, or the spec's, and you can still finish the task,
   amend the document in this branch when its Status is `Draft` or `Ready` and the fix is text that
-  moves no work — no Task Plan row, no criterion your acceptance cites retired or reworded. Text a
+  moves no work — no Tasks row, no criterion your acceptance cites retired or reworded. Text a
   later task will read is still text, so amend it: work moves only when a row or a cited criterion
   changes. A spec is amended by appending the next `AC` number under its requirement. Amend every
   document between the change and your task that restates the point; when one of them fails these
-  tests, amend none, and name each document in the `design` discovery so the whole chain reaches
-  `codefall-design` together. Each amendment goes in your result's `amended` list and in the PR
+  tests, amend none, and name each document in the `plan` discovery so the whole chain reaches
+  `codefall-plan` together. Each amendment goes in your result's `amended` list and in the PR
   body. A disagreement whose fix would move work, or whose document is frozen — an `Active` vision,
-  any ADR — goes in `discovered` with `kind` `design` instead: what the document says, what you
+  any ADR — goes in `discovered` with `kind` `plan` instead: what the document says, what you
   found with file and line, what you did about it, and in `blocks` the one thing that stopped you
-  amending — the Task Plan row, the cited criterion, or the frozen document. The root checks
-  `blocks` against the design before filing; an item that names none is sent back to you to amend.
+  amending — the Tasks row, the cited criterion, or the frozen document. The root checks
+  `blocks` against the plan before filing; an item that names none is sent back to you to amend.
 
 ## 4. Verify
 
@@ -144,13 +144,13 @@ Your final message is exactly one JSON object, no prose around it:
 ```json
 {"bead": "{{BEAD_ID}}", "status": "success", "pr": <number>, "branch": "{{BRANCH}}",
  "discovered": [{"kind": "code", "title": "…", "context": "…", "from": "{{BEAD_ID}}"},
-                {"kind": "design", "title": "…", "context": "…", "from": "{{BEAD_ID}}",
-                 "blocks": "Task Plan row T4"}],
+                {"kind": "plan", "title": "…", "context": "…", "from": "{{BEAD_ID}}",
+                 "blocks": "Tasks row T4"}],
  "amended": [{"document": "docs/specs/SPEC-003-trip-export.md", "section": "REQ-01",
               "summary": "appended AC-05: the declined-card path"}]}
 ```
 
-`kind` is `code` for work in the code and `design` for a place a document is wrong that you could
+`kind` is `code` for work in the code and `plan` for a place a document is wrong that you could
 not amend, with `blocks` naming the row, cited criterion, or frozen document that stopped you;
 `amended` lists each document you did amend, by path, section, and one line. Either list is empty
 when there is nothing.
@@ -167,4 +167,4 @@ enough that a fresh worker could start from it.
 - Never touch the primary checkout or a sibling worktree.
 - Never invoke another codefall verb.
 - Never expand scope past this bead, and never guess on architecture.
-- Never edit an ADR or an `Active` vision, and never change a Task Plan row or a cited criterion.
+- Never edit an ADR or an `Active` vision, and never change a Tasks row or a cited criterion.

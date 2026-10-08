@@ -1863,6 +1863,23 @@ Decided at scaffold, 2026-08-16.
   only, as mise and Homebrew do (one more step for every new user, at the point that decides whether
   the first command works); asking at the prompt, as deno does (needs `/dev/tty` under `curl | sh`,
   the part most likely to misbehave in containers and CI).
+- **`design` becomes `plan`, 2026-10-07.** "Design" named the verb that decides how a feature gets
+  built, and readers outside the project heard visual design, system design, or the mock-up verb's
+  work; explaining it never stuck. "Plan" names what the verb produces: the approach and the task
+  graph. The rename is applied everywhere at once, as the envision rename was: the skill directory
+  and name, the documents (`docs/plans/PLAN-NNN-slug.md`), the `Tasks` section (was `Task Plan`,
+  renamed so the plan does not carry a plan), the `Plan ref` column and bead field, the
+  `plan-revision` and `plan-amended` labels, the `tasks` review lens (was `plan`, under a `design`
+  target), the graph file `bd create --graph` takes (was the plan file), and every cross-reference.
+  A project that ran `codefall-design` keeps its documents and beads under the old names: a bead
+  identifier cannot be renamed, so a moved file would split a plan's identity between the document
+  and its graph. `codefall-upgrade` offers such a project marked `CUSTOMIZE.md` sections for plan,
+  implement, and review that say to read `docs/designs/` beside `docs/plans/`, continue its
+  numbering, and revise an old plan in place; the project deletes the sections once the old
+  directory holds only archived plans. Seen and not taken: reading both directories in the shipped
+  skills (every project would carry the bridge, and dropping it later is a second breaking change);
+  renaming the documents in the projects that have them (the epics would stay `<prefix>-DESIGN-NNN`
+  whatever the file was called).
 
 ## Open
 

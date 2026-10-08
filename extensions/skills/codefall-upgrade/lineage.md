@@ -15,7 +15,7 @@ is what `codefall upgrade` reads to report the old directory it removes as a ren
 | Former identity (0.x-0.9.0) | Current |
 | --- | --- |
 | `skills/conceptualize/` (– 0.9.0), `skills/codefall-conceptualize/` (0.9.0 – 0.16.x) | `skills/codefall-envision/` |
-| `skills/design/` | `skills/codefall-design/` |
+| `skills/design/` (– 0.9.0), `skills/codefall-design/` (0.9.0 – 0.29.x) | `skills/codefall-plan/` |
 | `skills/graft/` (– 0.9.0), `skills/codefall-graft/` (0.9.0 – 0.19.x) | `skills/codefall-upgrade/` |
 | `skills/implement/` | `skills/codefall-implement/` |
 | `skills/mock-up/` | `skills/codefall-mock-up/` |
@@ -27,6 +27,15 @@ became `docs/visions/VISION-NNN-slug.md`, the `**Concept:**` header row in a spe
 and the `concept:` key in a design's `Related` row became `vision:`. A project that ran
 `codefall-conceptualize` holds the old paths and identifiers, and `codefall-upgrade` reports them the
 same way it reports a renamed ADR.
+
+The plan rename (0.30.0) changed the documents the same way: `docs/designs/DESIGN-NNN-slug.md`
+became `docs/plans/PLAN-NNN-slug.md`, the `Task Plan` section became `Tasks`, a bead's `Design ref`
+became `Plan ref`, the labels `design-revision` and `design-amended` became `plan-revision` and
+`plan-amended`, and the epic `<prefix>-DESIGN-NNN` became `<prefix>-PLAN-NNN` for plans created
+after it. A project that ran `codefall-design` keeps its documents and beads under the old names,
+because a bead identifier cannot be renamed; `codefall-upgrade` offers it the marked sections in
+`templates/customize/legacy-designs.md`, which tell `codefall-plan`, `codefall-implement`, and
+`codefall-review` to read `docs/designs/` beside `docs/plans/`.
 
 ## Repo layout epochs
 

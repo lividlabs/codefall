@@ -14,7 +14,7 @@ allowed-tools:
 
 # Mock-up
 
-Show what a feature looks like, so that `codefall-design` and `codefall-implement` are not guessing at it.
+Show what a feature looks like, so that `codefall-plan` and `codefall-implement` are not guessing at it.
 
 Two ways in. Either the user has a mockup and this **imports** it, or they do not and this **makes**
 one. Making one is the interesting half, and the one place in this extension where inventing something
@@ -22,7 +22,7 @@ is the job rather than the failure.
 
 The output is `docs/mockups/<slug>/` — the files, and a `README.md` saying what each one shows.
 
-`codefall-specify` runs this skill for each requirement with a visual surface, and `codefall-design`
+`codefall-specify` runs this skill for each requirement with a visual surface, and `codefall-plan`
 runs it for a requirement still waiting on one; a person can also run it alone, before or after a
 spec. A mockup can be what makes the requirements obvious, or it can be drawn once they are settled.
 **Run from another verb**, the spec and the surfaces are given, the files go on that verb's branch,
@@ -35,7 +35,7 @@ skills directory: it names a file `codefall init` installed in the project's own
 
 ## What it decides, and what it leaves alone
 
-| This skill | `codefall-design` |
+| This skill | `codefall-plan` |
 | --- | --- |
 | What is on the screen, and its hierarchy | Which component or module renders it |
 | The states the surface has | Where the data comes from |
@@ -219,7 +219,7 @@ run, and say so.
 
 **No precondition check.** This skill needs a place to write and nothing else.
 
-**Run from `codefall-specify` or `codefall-design`**, the spec and the surfaces are given: read the
+**Run from `codefall-specify` or `codefall-plan`**, the spec and the surfaces are given: read the
 spec and go to step 2. Otherwise ask one question, and offer the three answers:
 
 > Is this mockup for a spec, for a vision, or are we starting fresh?
@@ -333,13 +333,13 @@ Otherwise land the run per `../../../.codefall/shared/landing.md`: commit the mo
 push, and open the pull request once the person has seen the last file. Never add the
 `auto-merge` label: a person adds it when they want the mockup merged.
 
-Do not create issues. Do not start a design.
+Do not create issues. Do not start a plan.
 
 Report the directories, every file with what it shows, what the mockup was matched against, options
 offered and which was taken, states deliberately not made and why, anything assumed because the user
 did not answer, any labels cleared, the branch, and the pull request, worded as the landing
 procedure says: it is open at its URL; add the `auto-merge` label when you want it merged, or have
-someone approve it; either one merges it. **End with one command**: `/codefall-design SPEC-NNN`
+someone approve it; either one merges it. **End with one command**: `/codefall-plan SPEC-NNN`
 where a spec was waiting on this mockup; otherwise say in a sentence that the mockup is in place
 and nothing is pending.
 
@@ -353,6 +353,6 @@ and nothing is pending.
 - **A mockup is a reference, never source.** Working ones included.
 - **Mockups are keyed by surface**, never filed under a spec or a vision.
 - **Say what it looks like, not how it is built.** Naming a component, a route, or a data source is
-  `codefall-design`'s work happening in the wrong document.
+  `codefall-plan`'s work happening in the wrong document.
 - **Clear `requires-mockup` only when files landed**, and only on the issues this mockup covers.
 - **Nothing lands outside `docs/mockups/`.** No application code, no styles, no components.

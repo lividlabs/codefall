@@ -3,7 +3,7 @@
 The shared procedure for putting a verb's files into git: a branch of their own, a commit of those
 files and nothing else, a push, and a pull request. Every verb that writes to the repository follows
 it in full — `codefall-envision`, `codefall-scaffold`, `codefall-specify`, `codefall-report`,
-`codefall-mock-up`, `codefall-design`, `codefall-equip`, `codefall-upgrade` — except
+`codefall-mock-up`, `codefall-plan`, `codefall-equip`, `codefall-upgrade` — except
 `codefall-implement`, which lands one branch and one pull request per task on its own terms, and
 `codefall-review`, whose fixes land on the branch under review.
 
@@ -14,7 +14,7 @@ document never sits uncommitted on the default branch.
 **Two kinds of pull request leave this procedure, and a person decides when each one merges.**
 
 - **A document pull request** comes from `codefall-envision`, `codefall-specify` (its mockups
-  included), `codefall-report`, `codefall-design`, and `codefall-mock-up` run on its own. It is
+  included), `codefall-report`, `codefall-plan`, and `codefall-mock-up` run on its own. It is
   opened as an ordinary pull request, and a GitHub Action the project installs with `/codefall-equip
   landing` merges it when a person adds the `auto-merge` label to it or approves it, provided it
   touches only document paths. No verb adds the label or approves. A project without the Action gets
@@ -55,7 +55,7 @@ Branch names carry the verb and the identifier:
 | `specify` | `spec/SPEC-NNN-slug` |
 | `report` | `bug/BUG-NNN-slug` |
 | `mock-up` | `mockup/<slug>` |
-| `design` | `design/DESIGN-NNN-slug` |
+| `plan` | `plan/PLAN-NNN-slug` |
 | `scaffold` | `scaffold/<project-or-surface>` |
 | `equip` | `equip/local`, `equip/test-harness`, `equip/agents`, or `equip/landing` |
 | `upgrade` | `upgrade/<YYYY-MM-DD>` |
@@ -75,7 +75,7 @@ git commit -m "<type>(<scope>): <what>"
 
 - **By path, never `git add -A` or `git commit -a`.** Anything else in the tree is the user's.
 - **A Conventional Commit line naming the document** — `docs(specs): add SPEC-003 trip export`,
-  `docs(designs): add DESIGN-002 booking history`. Where the project has its own commit convention,
+  `docs(plans): add PLAN-002 booking history`. Where the project has its own commit convention,
   that wins.
 - **A run that wrote beads includes `.beads/interactions.jsonl`** when it changed: the Beads section
   says the log lands in the next commit after a bead write, and this is that commit.
@@ -114,7 +114,7 @@ is the commit line: a squash merge takes it as the commit message.
 
 ## A draft pull request for a `Draft` document
 
-A document whose status is `Draft` — the person is stopping and coming back, or a design still
+A document whose status is `Draft` — the person is stopping and coming back, or a plan still
 carries decisions it set aside for an engineer — is opened as a draft pull request:
 
 ```bash

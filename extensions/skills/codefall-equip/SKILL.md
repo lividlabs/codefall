@@ -79,7 +79,7 @@ Read each when its track says to; none is loaded up front.
 | Finding the scripts and the runner a project already has | Running the scripts on an ordinary day, and pulling or comparing the checkout | `codefall-refresh` |
 | Drafting the scripts when there are none | Running a suite or a case | `codefall-test` |
 | Installing or declaring a spec runner per surface | Writing a test case | `codefall-implement` |
-| Revising either when the project's tools change | Deciding which tools the project uses | `codefall-design` |
+| Revising either when the project's tools change | Deciding which tools the project uses | `codefall-plan` |
 | Declaring `local`, `test.runners`, `harnessConfig`, and the `agents` lists in `.codefall/settings.json` | Per-branch databases, shared or otherwise | the project |
 | Recording the runner's commands in the testing root's `AGENTS.md` | The testing root, its tree, and the `CODEFALL TESTING` section | `codefall init` |
 | Proving a candidate meets the contract, or an agent answers | Any other settings field | `codefall init` |

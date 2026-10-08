@@ -6,7 +6,7 @@ the first file to the default branch, and names the one repository setting that 
 ## What happens
 
 Five verbs write documents: `envision` (`docs/visions/`), `specify` (`docs/specs/`, with the
-mockups it makes under `docs/mockups/`), `report` (`docs/bugs/`), `design` (`docs/designs/` and
+mockups it makes under `docs/mockups/`), `report` (`docs/bugs/`), `plan` (`docs/plans/` and
 `docs/adrs/`), and `mock-up` run on its own (`docs/mockups/`). Each one does the same thing:
 
 1. branches from the default branch;
@@ -23,7 +23,7 @@ approve it, and the verbs open pull requests as the person running them, so an a
 from a second person. You can add the label the moment the verb's report ends, or after a colleague
 has read the document, or never.
 
-A document you left as `Draft` — you stopped and are coming back, or a design still carries
+A document you left as `Draft` — you stopped and are coming back, or a plan still carries
 technical decisions you chose to leave for an engineer — gets a draft pull request. It blocks
 nothing. The run that later promotes the document to `Ready` marks the pull request ready for
 review, because GitHub does not merge a draft; that mark is not a signal to merge, and the pull
@@ -52,7 +52,7 @@ docs/visions/
 docs/specs/
 docs/bugs/
 docs/mockups/
-docs/designs/
+docs/plans/
 docs/adrs/
 .codefall/reviews/
 .codefall/tests/
@@ -98,10 +98,10 @@ landing` as the way to merge document pull requests with a label or an approval 
 
 > SPEC-006 is written and `Ready`. The pull request is open at <url>. Add the `auto-merge` label
 > when you want it merged, or have someone approve it; either one merges it. Next: run
-> `/codefall-design SPEC-006`.
+> `/codefall-plan SPEC-006`.
 
-> DESIGN-003 is `Draft`: you left two technical decisions for an engineer. Pull request #1158 is a
-> draft at <url> until they are settled. Next: have an engineer run `/codefall-design DESIGN-003`.
+> PLAN-003 is `Draft`: you left two technical decisions for an engineer. Pull request #1158 is a
+> draft at <url> until they are settled. Next: have an engineer run `/codefall-plan PLAN-003`.
 
 ## Related
 

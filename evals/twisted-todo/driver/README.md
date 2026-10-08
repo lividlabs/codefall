@@ -64,8 +64,8 @@ default 20), `--project` and `--repo` (override `.throwaway.env`).
 | After | The driver, as the person |
 | --- | --- |
 | `equip-local`, `equip-test` | merges the equip pull request with `gh pr merge --squash`; returns the checkout to `main` |
-| `envision`, `specify`, `design` | adds the `auto-merge` label to the document pull request with `gh pr edit <n> --add-label auto-merge --repo <owner>/<repo>`, as the person would after reading the report; waits for the Action to merge it; merges it itself only when the wait runs out, recorded as a deviation; returns the checkout to `main` |
-| `design`, when the design is `Draft` with decisions left for an engineer | stops the chain and judges what exists |
+| `envision`, `specify`, `plan` | adds the `auto-merge` label to the document pull request with `gh pr edit <n> --add-label auto-merge --repo <owner>/<repo>`, as the person would after reading the report; waits for the Action to merge it; merges it itself only when the wait runs out, recorded as a deviation; returns the checkout to `main` |
+| `plan`, when the plan is `Draft` with decisions left for an engineer | stops the chain and judges what exists |
 | `implement`, `review` | nothing; the code stack stays open |
 | `test` | merges the code stack at its top with `gh stack merge --squash --yes`; returns the checkout to `main` |
 
