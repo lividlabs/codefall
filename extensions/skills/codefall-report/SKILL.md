@@ -18,8 +18,8 @@ Turn a bug someone ran into into a report precise enough that another session ca
 and fix it without asking the reporter anything again.
 
 The output is a **bug report in the repository** at `docs/bugs/BUG-NNN-slug.md`, with its
-attachments beside it in `docs/bugs/BUG-NNN-slug/`, and one tracker issue generated from it. **The
-document is canonical**; the issue is regenerated from it.
+attachments beside it in `docs/bugs/BUG-NNN-slug/`, and, when the project mirrors to a tracker, one
+issue generated from it. **The document is canonical**; the issue is regenerated from it.
 
 Reporting is not fixing. Once the report is written and mirrored, stop.
 
@@ -36,8 +36,9 @@ Read each when its step says to; none is loaded up front.
 - `templates/bugs/BUG.md` — the document template. Read at step 7. Every bracketed instruction in
   it is stripped on emit.
 - `templates/bugs/AGENTS.md` — the operative rules this skill installs at `docs/bugs/AGENTS.md`.
-- `trackers/github/PROFILE.md` — the issue shape, the label, creating, refreshing, and archiving.
-  Read at step 3 for the duplicate search and at step 9.
+- `trackers/<name>/PROFILE.md` — the tracker profile, `<name>` being `tracker` in
+  `.codefall/settings.json`: the issue shape, the label, creating, refreshing, and archiving. Read
+  at step 3 for the duplicate search and at step 9.
 - `../../../.codefall/shared/landing.md` — the branch, the commit, the push, and the pull request.
   Read at step 8.
 
@@ -217,7 +218,7 @@ writes the issue number into the document.
 
 ### 9. Mirror to the tracker
 
-Follow the creation sequence in `trackers/github/PROFILE.md`, on the project's own tracker per *Who
+Follow the creation sequence in `trackers/<name>/PROFILE.md`, on the project's own tracker per *Who
 is authoritative for what* in `../../../.codefall/shared/workflow.md`. **The report is written even
 when the mirror fails**: give the user the exact command that fixes the tracker and say the mirror
 is pending.
@@ -225,8 +226,8 @@ is pending.
 ### 10. Commit and wrap up
 
 Land it per `../../../.codefall/shared/landing.md`: commit by path — the report, its attachments,
-the `AGENTS.md` — push, and open the pull request with `Relates to #<issue>` in its body, a draft
-only when the status is `Draft`. Never add the `auto-merge` label: a person adds it when they want
+the `AGENTS.md` — push, and open the pull request with `Relates to #<issue>` in its body when the
+mirror made one, a draft only when the status is `Draft`. Never add the `auto-merge` label: a person adds it when they want
 the report merged.
 
 Report the path, identifier, status, severity, the reproduction outcome, every open question, the

@@ -140,14 +140,14 @@ gh label create "requires-mockup" --color "D93F0B" \
   --description "Blocked from planning until a mockup exists" --force
 ```
 
-Both are gates `codefall-plan` reads, and it refuses an issue carrying either.
+Both mirror the document, which is what `codefall-plan` reads; neither label is a state of its own.
 
 `draft` **mirrors the spec's status** — present while the document says `Draft`, removed when it says
 `Ready`. It is not an independent state, and it is applied to the spec issue and every requirement
 issue alike.
 
-`requires-mockup` is independent, applied per requirement to those with an unspecified visual surface,
-and cleared when a mockup arrives rather than by this profile.
+`requires-mockup` mirrors a `Mockup: pending` line under a requirement's **Design notes**, applied per
+requirement, and cleared when a mockup arrives rather than by this profile.
 
 **`codefall-specify` does not impose a label taxonomy.** Type, domain, and component labels are the project's
 own business, and a curated set baked into this profile would be wrong for every project that did not

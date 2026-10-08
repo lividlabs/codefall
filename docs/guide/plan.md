@@ -42,7 +42,7 @@ Plan reads what already exists before it proposes anything:
 
 A spec that is not ready is finished in the same run. When the spec still says `Status: Draft`,
 plan runs `/codefall-specify` on it to settle what is open. When a requirement is still waiting for a
-mockup, which its tracker issue shows with the `requires-mockup` label, plan runs
+mockup, which its Design notes show as `Mockup: pending`, plan runs
 `/codefall-mock-up` for it before planning. A bug report is a target in the same way as a spec. When
 the report could not reproduce the bug, plan tries to reproduce it, and it finds the cause before it
 chooses a tier.
@@ -153,7 +153,7 @@ The criteria name three things:
 You sign off the derived criteria when you approve the task table, which is why the run shows them
 with it. Sometimes a derived criterion exposes a gap in the spec. Plan then offers it as a new
 criterion appended to the spec. If you accept, the spec is edited on the plan's own branch, its
-GitHub issue is regenerated, and the bead cites the new identifier. If you decline, the criterion
+GitHub issue, when the project has one, is regenerated, and the bead cites the new identifier. If you decline, the criterion
 stays `derived`.
 
 ## When does a plan write an ADR?
@@ -196,7 +196,7 @@ A plan's `Status` describes the document and never the work:
 | `Archived` | Superseded or dropped. The file moves to `docs/plans/archive/`, where its identifier still resolves |
 
 Whether the work is queued, underway, or done is for Beads to say. `/codefall-specify` divides a
-spec's status from its GitHub issues the same way.
+spec's status from its issue tracker the same way.
 
 ## How a plan changes after its beads exist
 

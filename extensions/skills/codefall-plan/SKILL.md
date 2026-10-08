@@ -177,8 +177,7 @@ has no written target and offer `/specify`. On no, continue.
 - The spec, or the bug report, says `Status: Draft`: run `codefall-specify` on it in this run, on
   its branch, to settle what is open and promote it. Stop only on a question the person cannot
   settle.
-- Its tracker issues carry `requires-mockup` (read per `../codefall-specify/trackers/<name>/PROFILE.md`;
-  an unreachable tracker is asked about, never guessed): run `codefall-mock-up` for each such
+- A requirement's **Design notes** say `Mockup: pending`: run `codefall-mock-up` for each such
   requirement in this run, on this run's branch, before planning.
 
 **Then read what frames it.** The spec's vision, if it names one. `docs/visions/` if no spec

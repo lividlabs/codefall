@@ -59,8 +59,9 @@ A criterion a spec already states cites it, as `(SPEC-003-REQ-01-AC-02)`, instea
 These criteria become the fix's criteria and its regression test.
 
 The skill shows you the whole report before writing it. It then writes the report on a branch named
-`bug/BUG-012-slug`, generates a GitHub issue from it, commits, pushes, and opens a pull request. If
-you filed an issue first, the skill adopts that issue instead of creating a duplicate. You merge the
+`bug/BUG-012-slug`, generates a GitHub issue from it when the project uses GitHub Issues, commits,
+pushes, and opens a pull request. If you filed an issue first, the skill adopts that issue instead
+of creating a duplicate. You merge the
 pull request the way [`docs/landing-documents.md`](../landing-documents.md) describes.
 
 ## What happens next
