@@ -72,6 +72,28 @@ field can be added without changing this record.
 There is one receipt per user. A second script install to another directory replaces it, and the
 binary the first one installed is then recognised as unknown.
 
+### The install script puts the directory on `PATH`
+
+`~/.local/bin` is not on `PATH` on a default macOS account, so a script install that stops at
+copying the binary leaves `codefall` unrunnable by name. The script checks `PATH` after the copy,
+and when the install directory is missing from it, appends an export line to the startup file of
+the shell `$SHELL` names: `.zshrc` under `ZDOTDIR` or the home directory for zsh, `.bashrc` for bash
+on Linux and `.bash_profile` for bash on macOS, where the terminal starts a login shell, and
+`config.fish` for fish. The directory is written as `$HOME/...` when it lies under the home
+directory. It then says what it changed and prints the `source` line that applies it to the current
+shell. This is what rustup, uv, and bun do.
+
+It does not edit when the directory is already on `PATH`, when the startup file already names the
+directory (it says to open a new terminal instead), when `CODEFALL_NO_MODIFY_PATH=1` is set, or when
+`$SHELL` is a shell it does not know; in the last two cases it prints the line to add. A startup
+file it cannot write is reported the same way. Nothing in this step fails the install.
+
+Two alternatives were not taken. Printing the exact line for the person to run, as mise and
+Homebrew do, is one step fewer for the script and one more for every new user, and the step is the
+one that decides whether the first `codefall` command works. Asking at the prompt, as deno does,
+needs `/dev/tty` because the script's stdin is the pipe from `curl`, and that is the part most
+likely to misbehave in containers and CI.
+
 ### `codefall update` finds out how the running binary was installed before it does anything
 
 Decided here, landed in the next pull request. It starts from `os.Executable`, with symbolic links
@@ -129,6 +151,9 @@ replacement are not pure.
 - **The mise check reads a path layout codefall does not own.** A mise release that moves its
   `installs/` directory turns a mise install into an unknown one, which changes nothing and prints the
   install script's line — the safe failure, and a wrong suggestion until the check is updated.
+- **The script writes to a file it does not own.** A startup file gets one commented export line,
+  appended, never rewritten, and only when it does not already name the directory. A person who
+  wants no such edit sets `CODEFALL_NO_MODIFY_PATH=1` and is given the line to add.
 - **`update` and `upgrade` differ by one word.** The help text of each names the other, and the
   order a person runs them in matches what each one brings current.
 

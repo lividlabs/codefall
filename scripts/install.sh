@@ -8,6 +8,10 @@
 # version named in `latest`; an argument pins a version, with or without a leading `v`.
 # CODEFALL_INSTALL_DIR sets where the binary goes (default: ~/.local/bin).
 #
+# If that directory is not on PATH, the script adds an export line to the startup file of the shell
+# in $SHELL (.zshrc, .bashrc or .bash_profile on macOS, config.fish). CODEFALL_NO_MODIFY_PATH=1
+# prints the line instead of writing it.
+#
 # After installing, it writes a receipt to $XDG_STATE_HOME/codefall/install.json (default:
 # ~/.local/state/codefall/install.json) naming the binary's path and version. `codefall update` reads
 # it to know the binary came from this script (ADR-015).
@@ -58,6 +62,66 @@ write_receipt() {
 	say "could not write $state/install.json; codefall update will not recognise this install"
 }
 
+# add_to_path puts the install directory on PATH for the shell in $SHELL by appending an export line
+# to its startup file, unless the directory is already on PATH, CODEFALL_NO_MODIFY_PATH is set, or
+# the shell is one it does not know. In those last two cases it prints the line to add instead. The
+# directory is written as $HOME/... when it is under the home directory, so the line survives a home
+# directory move.
+add_to_path() {
+	dir="$1"
+	case ":$PATH:" in
+		*":$dir:"*) return ;;
+	esac
+
+	case "$dir" in
+		"$HOME"/*) rel="\$HOME${dir#"$HOME"}" ;;
+		*) rel="$dir" ;;
+	esac
+
+	case "$(basename "${SHELL:-}")" in
+		zsh)
+			rc="${ZDOTDIR:-$HOME}/.zshrc"
+			line="export PATH=\"$rel:\$PATH\""
+			;;
+		bash)
+			# Terminal.app and iTerm start bash as a login shell, which reads .bash_profile, not .bashrc.
+			if [ "$(uname -s)" = Darwin ]; then rc="$HOME/.bash_profile"; else rc="$HOME/.bashrc"; fi
+			line="export PATH=\"$rel:\$PATH\""
+			;;
+		fish)
+			rc="${XDG_CONFIG_HOME:-$HOME/.config}/fish/config.fish"
+			line="set -gx PATH \"$rel\" \$PATH"
+			;;
+		*)
+			say "$dir is not on your PATH. Add it in your shell's startup file to run codefall by name:"
+			say "  export PATH=\"$rel:\$PATH\""
+			return
+			;;
+	esac
+
+	if [ "${CODEFALL_NO_MODIFY_PATH:-0}" != 0 ]; then
+		say "$dir is not on your PATH. Add this line to $rc to run codefall by name:"
+		say "  $line"
+		return
+	fi
+
+	tail="${dir#"$HOME"}"
+	[ -n "$tail" ] || tail="$dir"
+	if grep -qsF -- "$tail" "$rc"; then
+		say "$dir is not on your PATH in this shell, but $rc already names it. Open a new terminal, or run:"
+		say "  source $rc"
+		return
+	fi
+
+	if mkdir -p "$(dirname "$rc")" 2>/dev/null && printf '\n# codefall\n%s\n' "$line" >>"$rc" 2>/dev/null; then
+		say "added $dir to PATH in $rc. Open a new terminal, or run:"
+		say "  source $rc"
+		return
+	fi
+	say "$dir is not on your PATH, and $rc could not be written. Add this line to it to run codefall by name:"
+	say "  $line"
+}
+
 main() {
 	case "$(uname -s)" in
 		Darwin) os=darwin ;;
@@ -102,11 +166,7 @@ main() {
 	chmod 755 "$dir/codefall"
 	say "installed $dir/codefall"
 	write_receipt "$dir/codefall" "$version"
-
-	case ":$PATH:" in
-		*":$dir:"*) ;;
-		*) say "$dir is not on your PATH; add it to run codefall by name" ;;
-	esac
+	add_to_path "$dir"
 }
 
 # The whole script is read before main runs, so a download cut short cannot run half of it.
