@@ -54,8 +54,8 @@ testing root. This file, [`AGENTS.md`](AGENTS.md),
 someone working on codefall and are installed nowhere.
 [ADR-006](../docs/adrs/ADR-006-install-layout.md) records the layout.
 
-See the [repository README](../README.md) for the architectural stance, the surface catalog, and
-installation instructions.
+See the [architecture guide](../docs/guide/architecture.md) for the architectural stance and the
+surface catalog, and the [repository README](../README.md) for installation.
 
 ## License
 

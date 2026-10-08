@@ -58,7 +58,9 @@ curl -fsSL https://install.codefall.dev/sh | sh
 ```
 
 The script downloads the latest release, verifies it against the release's checksums, and installs
-it to `~/.local/bin`. To install a specific version, pass the version as an argument:
+it to `~/.local/bin`. If that directory is not on your `PATH`, the script adds it in your shell's
+startup file and tells you to open a new terminal; set `CODEFALL_NO_MODIFY_PATH=1` to have it print
+the line instead. To install a specific version, pass the version as an argument:
 
 ```sh
 curl -fsSL https://install.codefall.dev/sh | sh -s -- 0.30.0
@@ -99,8 +101,8 @@ and adds a Codefall section to `AGENTS.md`, the file coding agents read for proj
 The settings are meant to be checked in, so everyone on the team works from the same ones.
 
 The skills work on your project's existing architecture. To adopt Codefall's architecture as well,
-run `/codefall-upgrade adopt` in your coding agent. It offers each architecture decision as a
-document you can take or decline.
+run `/codefall-upgrade` in your coding agent. It offers each architecture decision as a document
+you can take or decline; `/codefall-upgrade adopt` offers the ones you declined again.
 
 ### A new project
 
@@ -228,8 +230,9 @@ ready to specify: the problem, who has it, and the questions nobody has answered
 design.
 
 Two rules hold throughout. First, every step's result is a file, a bead, or a pull request, so you
-can clear the agent's context between steps and lose nothing. Second, no skill merges code. A hook,
-a check the coding agent runs before each command, refuses any merge or push to `main`.
+can clear the agent's context between steps and lose nothing. Second, no skill merges code, and in
+coding agents that support hooks, a hook (a check the agent runs before each command) refuses any
+merge or push to `main`.
 [`docs/workflow.md`](docs/workflow.md) shows what each skill reads and writes.
 
 ## Skills
@@ -317,7 +320,7 @@ project to its profiles.
 | Learn how one skill works | [The guide](docs/guide/) |
 | See what each skill reads and writes | [`docs/workflow.md`](docs/workflow.md) |
 | Merge document pull requests automatically | [`docs/landing-documents.md`](docs/landing-documents.md) |
-| Understand the architecture scaffold sets up | [Architecture](docs/guide/architecture.md) |
+| Understand the architecture that scaffold sets up | [Architecture](docs/guide/architecture.md) |
 | See what is planned | [Roadmap](extensions/docs/ROADMAP.md) |
 
 ## Terms
@@ -333,10 +336,14 @@ project to its profiles.
 - **EARS:** Easy Approach to Requirements Syntax, a format that limits each requirement to a few
   fixed sentence patterns.
 - **Hook:** a check the coding agent runs at a fixed point, such as before each command.
+- **Mirror:** the copy of a spec or bug report that Codefall keeps in the issue tracker. The
+  document is the record, and the mirror is regenerated from it.
 - **Persona:** whether the skills talk to you as an engineer or as a product manager.
 - **Profile:** the templates and decisions scaffold applies to one kind of code, such as Go.
 - **Skill:** a set of instructions a coding agent follows when you type its slash command.
 - **Spec:** a document that lists a feature's requirements and their acceptance criteria.
+- **Vision:** a short document about what a project or feature is for: the problem, who has it,
+  and what is still undecided.
 
 ## Contributing
 
