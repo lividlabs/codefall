@@ -6,7 +6,7 @@ something in the repository or in the task graph that the next step reads. Human
 gate; a person merges every code pull request, and a GitHub Action the project installs merges a
 document pull request once a person adds the `auto-merge` label to it or approves it. This file is
 the map; each verb's `SKILL.md` under [`extensions/skills/`](../extensions/skills/) holds the
-procedure, and the [README](../README.md) argues for it. This file is edited here; the three
+procedure, and the [guide](guide/) explains each one for the people using it. This file is edited here; the three
 sections from *The chain*
 on are copied into [`extensions/shared/workflow.md`](../extensions/shared/workflow.md), which `init`
 installs, by `extensions/scripts/workflow-sync.sh --write`, and CI fails when the copy drifts.
