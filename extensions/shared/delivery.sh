@@ -2,7 +2,7 @@
 #
 # The delivery chart: one line on where an epic's work stands, read from Beads.
 #
-# A delivery is the work on one epic from the design's graph to the human merge, taken in rounds of
+# A delivery is the work on one epic from the plan's graph to the human merge, taken in rounds of
 # implement, review, and test; it ends when the epic has no open children and the last test run
 # passed. Every verb in a delivery prints this line at its start and in its close-out, so the person
 # running the chain sees the same count wherever they are. The script reads and never writes.
@@ -10,14 +10,14 @@
 # Usage: delivery.sh <epic-or-bead-id> [project-dir]      (default: .)
 #
 # For an epic, the epic, the round, and the children closed over the children in all:
-#   booking-DESIGN-007 · round 2 · 10/12 ██████████████░░░
+#   booking-PLAN-007 · round 2 · 10/12 ██████████████░░░
 #   - the counts are `bd epic status --json`'s own, every child included, so this line and
 #     `bd show <epic>` agree
 #   - the round is `metadata.round` on the epic, 1 when unset; `codefall-implement` writes it
 #
 # For any other bead, the same bar over what was discovered from it:
-#   booking-DESIGN-007-T1 · 1/2 █████████░░░░░░░░
-#   booking-DESIGN-007-T3 · nothing discovered from it
+#   booking-PLAN-007-T1 · 1/2 █████████░░░░░░░░
+#   booking-PLAN-007-T3 · nothing discovered from it
 #
 # Prints nothing and exits 0 when `bd` is not on PATH or the id resolves to nothing, so a skill can
 # call it unconditionally. Without jq it prints the id and says what is missing.

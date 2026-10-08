@@ -14,7 +14,7 @@ The run directory, which is your working directory, holds:
   down for it.
 - `brief.md` — the person the simulator played, with the twist's rules in her words.
 - `<verb>.md` and `<verb>.jsonl` — one pair per session, in chain order: `equip-local`,
-  `equip-test`, `envision`, `specify`, `design`, `implement`, `review`, `test`. The `.md` is the
+  `equip-test`, `envision`, `specify`, `plan`, `implement`, `review`, `test`. The `.md` is the
   readable transcript; the `.jsonl` is every message the session emitted, for when a quote has to
   be exact. Lines marked `PM-sim` are the simulator, which plays the person; lines marked `driver`
   are the harness around the sessions, not the verb under test. The `review` and `test`
@@ -37,7 +37,7 @@ The run directory, which is your working directory, holds:
 
 ## Facts about this run that bear on reading the rubric
 
-- - Every document pull request in this run — the vision's, the spec's, the design's — should have
+- - Every document pull request in this run — the vision's, the spec's, the plan's — should have
   `main` as its base and should have been opened as an ordinary pull request, not a draft, because
   every document in this run reaches `Ready` in its own session. The verb's report should give the
   pull request's address and say to add the `auto-merge` label when the person wants it merged, or
@@ -52,9 +52,9 @@ The run directory, which is your working directory, holds:
   `/codefall-equip landing`, so block 4 has no transcript here. Mark block 4 "not exercised" unless the Action merged a pull request that
   carried a path outside the allowlist, in which case judge what you see in `action-runs.json`
   and `git-log.txt`.
-- The person is a product manager. Under that persona `design` sets technical decisions aside and
-  then asks one question. The simulator answers "settle them now", so the design should reach
-  `Ready` and create beads in the same session. Block 5 is judged on the `design.md` transcript.
+- The person is a product manager. Under that persona `plan` sets technical decisions aside and
+  then asks one question. The simulator answers "settle them now", so the plan should reach
+  `Ready` and create beads in the same session. Block 5 is judged on the `plan.md` transcript.
 - In `review` and `test`, the simulator answers "fix them all" to review's question and takes the
   rule-breaking problems in test's. After either answer the verb runs `implement` itself in the
   same session; the transcript shows a `Skill` tool call and implement's own go gate and report.

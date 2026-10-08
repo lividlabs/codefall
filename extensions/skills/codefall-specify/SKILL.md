@@ -24,7 +24,7 @@ The output is a **spec document in the repository** at `docs/specs/SPEC-NNN-slug
 more requirements, each with a user story and numbered acceptance criteria. The issue tracker gets a
 generated mirror. **The document is canonical**; the issues are regenerated from it.
 
-Specifying is not designing. Once the criteria are written and confirmed, stop.
+Specifying is not planning. Once the criteria are written and confirmed, stop.
 
 Paths that start with `../` or `trackers/` are relative to this skill's directory, not the user's
 project. A path through `../../../.codefall/` is the one that leaves the skills directory: it names
@@ -279,7 +279,7 @@ Audit the surface the feature touches, not the whole application.
 Read `reference/specification.md`. Cut what the user described into requirements. Each one is a
 capability a consumer can use and a ticket someone can pick up.
 
-**Requirements decompose by what a consumer can observe.** `codefall-design` cuts by what can be
+**Requirements decompose by what a consumer can observe.** `codefall-plan` cuts by what can be
 built; do not do that cut here. A fact the cut needs and the user cannot supply is consulted on, as
 at step 5.
 
@@ -298,7 +298,7 @@ For each requirement with a visual surface, ask whether a mockup exists.
   surface on this branch. Say so; the only question is whether to skip it for now. The spec
   references the path it will land at.
 - **Skipped** — the requirement's tracker issue is marked `requires-mockup` at step 13, and
-  `codefall-design` makes the mockup before it starts.
+  `codefall-plan` makes the mockup before it starts.
 
 Nothing is drawn here; `codefall-mock-up` is the tool.
 
@@ -374,7 +374,7 @@ what it settled, the issues that were created with links, the mockups made and w
 amendment, the branch, and the pull request, worded as the landing procedure says: it is open at its
 URL; add the `auto-merge` label when you want it merged, or have someone approve it; either one
 merges it.
-**End with one command**: `/codefall-design SPEC-NNN`; where the user asked for a
+**End with one command**: `/codefall-plan SPEC-NNN`; where the user asked for a
 sibling spec, say so in a sentence and ask whether to write it now.
 
 ## Other modes

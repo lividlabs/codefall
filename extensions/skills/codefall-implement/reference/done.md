@@ -1,7 +1,7 @@
 # Verification and done
 
 When a bead is done, where the commands that check it come from, and what they check. Read at
-step 3, before the plan is formed, and again at step 6. `codefall-fix` reads it for its one bead.
+step 3, before the approach is formed, and again at step 6. `codefall-fix` reads it for its one bead.
 
 A bead is done when three things are true: **its acceptance criteria hold, the project's checks are
 green, and its PR is open.** Done is not merged.
@@ -24,7 +24,7 @@ The resolved list is passed into worker prompts. Workers re-derive nothing.
   `simplify` always; `code-review` and `security-review` when available. These are checks inside
   implement, not review — implement renders no verdict on its own work.
 - The bead's acceptance criteria, checked one by one. What passed goes into the close reason. A
-  bead with no acceptance field falls back to the design's Hard Constraints plus the spec's
+  bead with no acceptance field falls back to the plan's Hard Constraints plus the spec's
   criteria, and the close reason still records what was verified.
 
 **Tests are part of done, not a follow-up.** So are the local scripts: a bead whose criteria name

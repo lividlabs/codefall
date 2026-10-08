@@ -19,7 +19,7 @@ the file cannot change.
 ## What the workflow does
 
 Every codefall verb that writes a document — `codefall-envision`, `codefall-specify`,
-`codefall-report`, `codefall-design`, and `codefall-mock-up` run on its own — opens its pull request
+`codefall-report`, `codefall-plan`, and `codefall-mock-up` run on its own — opens its pull request
 and tells the person to add the `auto-merge` label when they want it merged, or to have someone
 approve it; either one merges it. No verb adds the label or approves. The workflow runs when the
 label is added (`labeled`, label name `auto-merge`), again on a commit pushed to a pull request that
@@ -29,7 +29,7 @@ author approve it, and a verb opens the pull request as the person running it, s
 second person's. It checks that every path in the pull request's diff is one of these:
 
 ```
-docs/visions/   docs/specs/   docs/bugs/   docs/mockups/   docs/designs/   docs/adrs/
+docs/visions/   docs/specs/   docs/bugs/   docs/mockups/   docs/plans/   docs/adrs/
 .codefall/reviews/   .codefall/tests/   .beads/interactions.jsonl
 ```
 

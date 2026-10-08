@@ -68,4 +68,4 @@ with real visibility is not assumed to need nothing.
 
 Discuss → decision-log → ADR → scoped `AGENTS.md` → code. The decision-log holds detail while a
 decision is moving; the ADR holds the settled decision and its why; `AGENTS.md` holds the terse
-operative rules and links back. `codefall-design` picks up from there.
+operative rules and links back. `codefall-plan` picks up from there.

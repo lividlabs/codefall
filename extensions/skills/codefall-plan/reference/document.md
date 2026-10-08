@@ -1,6 +1,6 @@
-# The design document
+# The plan document
 
-The shape of `docs/designs/DESIGN-NNN-slug.md`. Read before designing (step 5) and again when
+The shape of `docs/plans/PLAN-NNN-slug.md`. Read before planning (step 5) and again when
 drafting (step 7).
 
 ## Contents
@@ -11,8 +11,8 @@ drafting (step 7).
 - Decisions needed
 - Technical Context
 - Hard Constraints
-- Task Plan
-- Task Plan, after creation
+- Tasks
+- Tasks, after creation
 - Local IDs are append-only
 
 ## The header
@@ -21,7 +21,7 @@ A title heading and two rows, the same shape `VISION` and `SPEC` documents use. 
 `## Overview`.
 
 ```markdown
-# DESIGN-007: Stage context handoff
+# PLAN-007: Stage context handoff
 
 **Status:** Ready — 2026-08-31
 **Related:** spec: SPEC-004 · adr: ADR-003
@@ -32,15 +32,15 @@ labeled list, not a set of rows.
 
 | Label | Holds |
 | --- | --- |
-| `spec` | The specification this design implements |
-| `bug` | The bug report this design fixes |
+| `spec` | The specification this plan implements |
+| `bug` | The bug report this plan fixes |
 | `vision` | The vision that framed it — **only when there is no spec** |
-| `adr` | The ADR or ADRs this design produced |
+| `adr` | The ADR or ADRs this plan produced |
 
 **Never record a hop you can derive.** A spec names its vision in its own `**Vision:**` row, so a
-design records the spec alone. A design written from a vision with no spec records the vision. A
-design for a bug records the report, and a spec only when the report's Spec row does not name it. A
-design with none of these has no `Related` row until it produces an ADR.
+plan records the spec alone. A plan written from a vision with no spec records the vision. A
+plan for a bug records the report, and a spec only when the report's Spec row does not name it. A
+plan with none of these has no `Related` row until it produces an ADR.
 
 ## Required sections
 
@@ -48,7 +48,7 @@ design with none of these has no `Related` row until it produces an ADR.
 | --- | --- |
 | **Overview** | The approach in a paragraph, plus the key decisions and why each was made |
 | **Architecture** | Components, their relationships, and data flow. Mermaid where a diagram earns its place. May be a paragraph for small work |
-| **Task Plan** | The task table, under a callout that says whether the beads exist yet |
+| **Tasks** | The task table, under a callout that says whether the beads exist yet |
 
 **Research findings go inline**, in Overview or Architecture, next to the decision they bear on.
 There is **no sibling `research.md`**, and no `data-model.md`, `quickstart.md`, or `contracts/`.
@@ -70,7 +70,7 @@ Include a section only when its trigger fires. Nothing is written to fill a head
 
 ## Decisions needed
 
-The section a design carries when a technical choice was put to the person and not settled: under
+The section a plan carries when a technical choice was put to the person and not settled: under
 the `product-manager` persona, every such choice; under any persona, one the person says they
 cannot decide. The run never settles it in their place, and never reads silence as a choice. It
 researches first, so what is parked is a judgment call and not a gap in reading.
@@ -88,11 +88,11 @@ One entry per decision:
 - **Consulted:** codex:gpt-5-codex preferred the signed payload; the reasoning is under Overview
 ```
 
-**A design with a non-empty Decisions needed section is `Draft`, never `Ready`, and creates no
+**A plan with a non-empty Decisions needed section is `Draft`, never `Ready`, and creates no
 beads.** Before the status is set, the run asks the person once whether to settle the entries with
 sensible defaults now or leave them for an engineer. Settled now, each entry's outcome moves into
 the section it belongs to, the entry is removed, and the graph is created in the same run. Left,
-the design stays `Draft`, and an engineer's run of `codefall-design` in Promote mode settles each
+the plan stays `Draft`, and an engineer's run of `codefall-plan` in Promote mode settles each
 entry with that person, moves the outcome, removes the entry, and only then creates the graph. The
 section is deleted when it is empty, like every conditional section.
 
@@ -126,16 +126,16 @@ criterion is what a consumer observes; a hard constraint is an invariant of the 
 - THE SYSTEM SHALL reject a context payload whose signature does not verify, before parsing it.
 ```
 
-## Task Plan
+## Tasks
 
-One table under a callout. The table keeps its shape for the life of the design; the callout is
+One table under a callout. The table keeps its shape for the life of the plan; the callout is
 **rewritten in place** when the beads are created.
 
 ```markdown
-## Task Plan
+## Tasks
 > Staged. Not yet in Beads.
 
-| ID | Task | Depends on | Design ref |
+| ID | Task | Depends on | Plan ref |
 |----|------|-----------|------------|
 | T1 | Add `StageContext` type + serde | — | Components |
 | T2 | Wire context load into `/scaffold` | T1 | Architecture |
@@ -144,24 +144,24 @@ One table under a callout. The table keeps its shape for the life of the design;
 ```
 
 The local IDs make the dependency edges reviewable before the beads exist, and they name the beads
-once they do. The **Design ref** column names the section of this design that motivated the task,
+once they do. The **Plan ref** column names the section of this plan that motivated the task,
 so `codefall-implement` opens the relevant fifteen lines rather than the whole document.
 
-The table holds what the design decided: the tasks, their edges, and the section each came from.
+The table holds what the plan decided: the tasks, their edges, and the section each came from.
 Work state — status, assignee, comments — is Beads' alone, and **the table never grows a column for
 it.**
 
-## Task Plan, after creation
+## Tasks, after creation
 
 The callout is rewritten; the table stays.
 
 ```markdown
-## Task Plan
-> Created in Beads 2026-08-29 as `booking-DESIGN-007`, one bead per row as `booking-DESIGN-007-Tn`.
+## Tasks
+> Created in Beads 2026-08-29 as `booking-PLAN-007`, one bead per row as `booking-PLAN-007-Tn`.
 > This is the plan as last approved. Beads is authoritative, and a difference between the two is
-> reconciled by revising the design.
+> reconciled by revising the plan.
 
-| ID | Task | Depends on | Design ref |
+| ID | Task | Depends on | Plan ref |
 |----|------|-----------|------------|
 | T1 | Add `StageContext` type + serde | — | Components |
 | T2 | Wire context load into `/scaffold` | T1 | Architecture |
@@ -170,26 +170,26 @@ The callout is rewritten; the table stays.
 ```
 
 Bead identifiers are the document's own numbering behind the project's prefix —
-`<prefix>-DESIGN-NNN` for the epic, `<prefix>-DESIGN-NNN-Tn` for each task — set by `bd rename`
+`<prefix>-PLAN-NNN` for the epic, `<prefix>-PLAN-NNN-Tn` for each task — set by `bd rename`
 after creation, per `beads.md`. The callout names the epic in full, so a reader sees the prefix
 without running `bd`, and the per-row form says what every task is called; there is no column of
 bead IDs because every one is derived. A replaced task's old bead is renamed
-`<prefix>-DESIGN-NNN-Tn-superseded`, and the current bead always holds the plain ID.
+`<prefix>-PLAN-NNN-Tn-superseded`, and the current bead always holds the plain ID.
 
-A row's title, edges, and design ref change only through Revise, which edits the row and the bead
+A row's title, edges, and plan ref change only through Revise, which edits the row and the bead
 together (`revising.md`), and a revision adds its date to the callout: `Created in Beads
 2026-08-29, revised 2026-09-10, as …`. A bead edited directly with `bd` is the one way the table
-falls behind the graph, and the rules installed at `docs/designs/AGENTS.md` forbid it. Anything
+falls behind the graph, and the rules installed at `docs/plans/AGENTS.md` forbid it. Anything
 filed under the epic since creation — discovered work, the landed bead — is Beads' alone and never
 a row.
 
-A design created before the table stayed carries a mapping line in place of the table. Its epic
+A plan created before the table stayed carries a mapping line in place of the table. Its epic
 still resolves by number, and its first revision rebuilds the table from the beads before going row
 by row.
 
 ## Local IDs are append-only
 
-`T1`, `T2`, `T3` are permanent within a design. **A retired local ID is never reused.** A removed
+`T1`, `T2`, `T3` are permanent within a plan. **A retired local ID is never reused.** A removed
 row comes out of the table and its ID goes on a `Retired:` line under it, so the next task added
 takes the number after the highest ever used, never the first gap — that would silently make `T2`
 name a different bead.

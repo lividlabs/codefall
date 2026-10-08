@@ -205,8 +205,8 @@ func (i *Initialize) describeRemovals(removed []removal, written installed, dest
 	return described
 }
 
-// skillDirOf is the skill directory a path sits under — `.agents/skills/codefall-design` for
-// `.agents/skills/codefall-design/SKILL.md` — when it sits under one of the skills directories this
+// skillDirOf is the skill directory a path sits under — `.agents/skills/codefall-plan` for
+// `.agents/skills/codefall-plan/SKILL.md` — when it sits under one of the skills directories this
 // run installs into.
 func skillDirOf(file string, dests map[string]string) (string, bool) {
 	for _, dest := range dests {

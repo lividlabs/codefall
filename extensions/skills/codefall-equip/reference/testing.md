@@ -312,7 +312,7 @@ per *Who is authoritative for what* in `../../../../.codefall/shared/workflow.md
 lockfile, the `update` revision, `test.runners`, and the Runners line, and nothing else. A task's
 pull request never carries harness setup, and no verb sets one up on the way to something else.
 
-The first case comes afterwards, through `/codefall-implement`, from criteria `/codefall-design`
+The first case comes afterwards, through `/codefall-implement`, from criteria `/codefall-plan`
 put in the bead.
 
 ## Rules

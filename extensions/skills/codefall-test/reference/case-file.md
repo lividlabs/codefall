@@ -110,7 +110,7 @@ allowed and often necessary: a control's role, its accessible name, the shape of
 a spec can drive it. Reading code to decide what should happen is not.
 
 **A gap the expansion exposes is appended to the spec.** Where the spec is silent or ambiguous, the
-verb that found the gap offers the criterion to the spec in its own run — `codefall-design` when
+verb that found the gap offers the criterion to the spec in its own run — `codefall-plan` when
 the case's criteria are drafted — and the case cites the appended identifier. Spec numbering is
 append-only, so the addition takes the next number and nothing already cited moves. `derived` is
 what a criterion stays when the spec was offered it and declined.

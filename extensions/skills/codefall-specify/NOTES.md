@@ -18,7 +18,7 @@ often finds missing.
 `codefall-specify` deliberately diverges from `codefall-envision`, which carries an `Active`
 state because a vision has no tracker representation to carry work state. A spec has one — its
 mirrored issues — so the tracker says whether work is queued, underway, or done, and a status line
-would only approximate it. `codefall-design` takes the same rule for the same reason, with Beads in
+would only approximate it. `codefall-plan` takes the same rule for the same reason, with Beads in
 the tracker's place.
 
 ## Mockups are keyed by surface

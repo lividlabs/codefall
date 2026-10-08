@@ -53,9 +53,9 @@ person would see on the screen, not by the driver or the commands it ran.
 
 **`mock-up`.** Unchanged.
 
-**`design`.** The person confirms what they can judge: the tier, the task cut against the spec,
+**`plan`.** The person confirms what they can judge: the tier, the task cut against the spec,
 and the case criteria, all in product terms. Every technical judgment the person declines or cannot
-settle is set aside in the document's **Decisions needed** section, per `codefall-design`'s
+settle is set aside in the document's **Decisions needed** section, per `codefall-plan`'s
 `reference/document.md`: the run never decides it on its own, and never takes the person's silence
 or a shrug as consent. Research before setting a decision aside, since the person cannot fill the
 gap; set aside only what stays a judgment call afterwards. Then, once, at the end of the draft, ask
@@ -68,9 +68,9 @@ On **settle now**, the run picks the default for each one — the simplest choic
 project's stance and what it already uses — says each choice in one plain sentence, moves it into
 the section of the document it belongs to, and carries on to `Ready` and the beads in the same
 run. A decision that needs an ADR gets one, written from the default; the report says so in a
-sentence, so an engineer knows where to look. On **leave them**, the design stays `Draft`, creates
+sentence, so an engineer knows where to look. On **leave them**, the plan stays `Draft`, creates
 no beads, its pull request is a draft, and the report says an engineer's run of
-`/codefall-design DESIGN-NNN` settles them. The report names how many decisions were set aside and
+`/codefall-plan PLAN-NNN` settles them. The report names how many decisions were set aside and
 which answer the person gave.
 
 **`implement`, `fix`, `equip`, `scaffold`, `upgrade`.** Before anything else, say in one plain

@@ -1,7 +1,7 @@
 ---
 name: codefall-test
 description: Run what the project declares — every suite, the subset the changed files reach, a named subset — or one test case in one of its two modalities, or every case an epic's beads name on the epic's own branch before the merge. A spec case runs through the project's own runner and reports that runner's pass or fail. An agentic case is worked step by step through a driver the session already has, and each criterion is judged against what the run made observable. Every run writes a report under .codefall/tests/, with runner output, logs, and run-scoped state left git-ignored under the testing root's .artifacts/. Findings are triaged and become tracker issues and, in a delivery, children of the epic, only on the user's word; a criterion is never edited to make a run pass. Use when the user says /codefall-test, "run the tests", "run the suite for what changed", "test the epic", or "run <case> agentically".
-argument-hint: "[suites | changed | <suite> | <area>/<slug> | <epic> | DESIGN-NNN] [modality=spec|agentic] [variant=<name>]"
+argument-hint: "[suites | changed | <suite> | <area>/<slug> | <epic> | PLAN-NNN] [modality=spec|agentic] [variant=<name>]"
 allowed-tools:
   - Read
   - Glob
@@ -45,7 +45,7 @@ Read each when its step says to; none is loaded up front.
 - `run.schema.json` — the shape of the JSON record a report is written beside.
 - `../codefall-review/reference/targets.md` — how an epic's branch is found. Read at step 2 for an
   epic target.
-- `../codefall-implement/reference/beads.md` — the `code` and `design` forms a finding is filed in
+- `../codefall-implement/reference/beads.md` — the `code` and `plan` forms a finding is filed in
   under the epic. Read at step 6 for an epic target.
 - `../../../.codefall/shared/delivery.sh <epic>` — the delivery's one-line chart. Run at the
   confirmation and in the report for an epic target.
@@ -58,7 +58,7 @@ Read each when its step says to; none is loaded up front.
 | --- | --- | --- |
 | Running the declared suites | Installing or declaring a runner | `codefall-equip` |
 | Running one case in either modality | Writing a case file | `codefall-implement` |
-| Judging an agentic run against the case's criteria | Deciding which tasks need a case | `codefall-design` |
+| Judging an agentic run against the case's criteria | Deciding which tasks need a case | `codefall-plan` |
 | Reporting a run and triaging what it found | Adding a criterion the spec is missing | `codefall-specify` |
 | Recording a run's real side effects and cleaning them up | Editing a case, a spec, or application code | the work that follows |
 | Naming a remedy a run needs | Running that remedy | the user |
@@ -74,7 +74,7 @@ The argument's shape decides what is run.
 | a suite name | that suite alone | the three sources |
 | `<area>/<slug>` | that case | `<root>/test-cases/<area>/<slug>.md` |
 | a path under `<root>/test-cases/` | the case that path names | the file itself |
-| an epic ID, or `DESIGN-NNN` | the epic's work: every case its children's criteria name, plus `changed`, on the epic's branch | `bd list --parent <epic> --all --json --limit 0`, each `<area>/<slug>` in the acceptance criteria; [Epic targets](#epic-targets) |
+| an epic ID, or `PLAN-NNN` | the epic's work: every case its children's criteria name, plus `changed`, on the epic's branch | `bd list --parent <epic> --all --json --limit 0`, each `<area>/<slug>` in the acceptance criteria; [Epic targets](#epic-targets) |
 
 `<root>` is the testing root `test.dir` declares in `.codefall/settings.json`. The default branch is
 what preflight's `default_branch` line names. An argument that resolves to nothing is a stop, not a
@@ -276,7 +276,7 @@ test passed, and the merge is what remains: give the link to the pull request th
 the top of the stack, or the aggregate pull request on an epic branch — and say that merging it on
 GitHub lands the whole stack, per *Pointing at a stack* in `../../../.codefall/shared/stacks.md`;
 never a merge command, never a list of pull requests to merge in order. Otherwise per class: a real bug with an issue filed goes
-to `/codefall-fix #<issue>` when the change is contained and `/codefall-design #<issue>` otherwise,
+to `/codefall-fix #<issue>` when the change is contained and `/codefall-plan #<issue>` otherwise,
 or to `/codefall-report <run report path>` when the user wants a bug document first; a real bug not
 filed waits for the user's word; a wrong expectation goes to the decision that supersedes the
 criterion; a flake or agent variance is recorded and waits for the next run; when every case passed,

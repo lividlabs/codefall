@@ -6,7 +6,7 @@ runs the verb upstream of it instead of handing the person a command; specify ma
 requirements need in the same run; each document pull request is pushed and opened without asking,
 the report tells the person to add the `auto-merge` label when they want it merged or to have
 someone approve it, and a GitHub Action merges it on that label or on an approving review, so nobody
-is asked to merge a document and no verb merges one; design
+is asked to merge a document and no verb merges one; plan
 asks one question about the technical decisions it set aside and, on
 "settle now", reaches beads in the same run; review and test ask "Fix them all?" and run implement
 themselves; implement's integration asks GitHub rather than rebasing; the product-manager report
@@ -39,7 +39,7 @@ forfeits the other at the same moment; a forfeit never returns; the two counts a
 set aside: a fixed number of slots (Teuxdeux and others cap a day), pairwise ranking (several
 prioritisers do it), coins for completions (Habitica), a strict oldest-first queue (too little data
 model to design), and a list you can only see by recalling it (fuzzy matching is a technical choice
-the product manager cannot settle, which would stall the design on purpose rather than by accident).
+the product manager cannot settle, which would stall the plan on purpose rather than by accident).
 
 ## The PM brief
 
@@ -50,7 +50,7 @@ empty record; the out-of-scope list), what she does not know (the second page's 
 tasks are listed on their own, whether to show a pair's age), and how she behaves (short answers,
 picks an option when offered, confirms a document that carries the rules, pushes back once, says yes
 to engineering work, says go at the gate, never asks for a merge, declines every technical choice in
-one sentence, and says "settle them now" when design asks about the decisions it set aside).
+one sentence, and says "settle them now" when plan asks about the decisions it set aside).
 
 ## The fixture
 
@@ -75,7 +75,7 @@ deletes the repository. Neither has been run.
 
 One session per verb, each a fresh `query()` in the project directory, which is the `/clear`. The
 first message is the slash command with its argument; the argument is read from the project tree
-(the newest `VISION-`, `SPEC-`, or `DESIGN-` identifier). The driver's `protocol.ts` holds this
+(the newest `VISION-`, `SPEC-`, or `PLAN-` identifier). The driver's `protocol.ts` holds this
 table as code, with the "after" column as the step's `after` field.
 
 | Session | First message | The simulator must | The simulator must not | After the session, the driver |
@@ -84,10 +84,10 @@ table as code, with the "after" column as the step's `after` field.
 | equip-test | `/codefall-equip test` | say yes to engineering work; declare the existing Playwright configuration | ask to merge | merges the `equip/test-harness` pull request as the person; returns to `main` |
 | envision | `/codefall-envision <the idea in Mara's words>` | give the idea as spoken, answer why now and non-goals, keep rules at rule level, confirm a Ready document | give behaviour precise enough to build; ask to merge | adds the `auto-merge` label to the `vision/` pull request as the person, waits for the Action to merge it; returns to `main` |
 | specify | `/codefall-specify VISION-001` | work from the vision; hold the spec to exactly three requirements and push back on a fourth; say no mockup exists and ask for them (main page full and empty, Forfeits full and empty); confirm recap and document; Ready | ask to merge; accept more than three requirements without saying so; choose anything technical | adds the `auto-merge` label to the `spec/` pull request as the person, waits for the Action to merge it; returns to `main` |
-| design | `/codefall-design SPEC-001` | accept the tier; ask for five tasks or fewer; confirm the criteria cover the five rules; decline technical choices; answer "settle them now" to the one question | decide anything technical | stops the chain if the design is `Draft` with decisions left; otherwise adds the `auto-merge` label to the `design/` pull request as the person, waits for the Action to merge it; returns to `main` |
-| implement | `/codefall-implement DESIGN-001` | say yes to engineering work; say go at the gate; accept the serial stack | ask to merge | nothing; the code stack stays open |
-| review | `/codefall-review DESIGN-001` | say yes to engineering work; review with every lens; answer "yes, fix them all"; say go at the implement go gate inside the session | fix anything itself | nothing |
-| test | `/codefall-test DESIGN-001` | run now; take the problems that break a rule or something she said she would see, decline the rest with a reason; say go at the implement go gate if any were taken | ask for fixes by hand | merges the code stack at its top as the person, from outside the project directory; returns to `main` |
+| plan | `/codefall-plan SPEC-001` | accept the tier; ask for five tasks or fewer; confirm the criteria cover the five rules; decline technical choices; answer "settle them now" to the one question | decide anything technical | stops the chain if the plan is `Draft` with decisions left; otherwise adds the `auto-merge` label to the `plan/` pull request as the person, waits for the Action to merge it; returns to `main` |
+| implement | `/codefall-implement PLAN-001` | say yes to engineering work; say go at the gate; accept the serial stack | ask to merge | nothing; the code stack stays open |
+| review | `/codefall-review PLAN-001` | say yes to engineering work; review with every lens; answer "yes, fix them all"; say go at the implement go gate inside the session | fix anything itself | nothing |
+| test | `/codefall-test PLAN-001` | run now; take the problems that break a rule or something she said she would see, decline the rest with a reason; say go at the implement go gate if any were taken | ask for fixes by hand | merges the code stack at its top as the person, from outside the project directory; returns to `main` |
 
 **How the driver answers.** `AskUserQuestion` calls reach the driver's `canUseTool` callback with
 the questions; the simulator returns a label per question and the callback returns them as
@@ -98,7 +98,7 @@ remedy is a command for the person, is done; a loop is stuck. Caps: 60 PM turns 
 session. Review and test each contain a run of implement that the verb started itself, so those
 two sessions are longer than the others.
 
-**Adding the label and waiting for the Action.** After envision, specify, and design, the driver
+**Adding the label and waiting for the Action.** After envision, specify, and plan, the driver
 finds the newest pull request on the verb's branch prefix and adds the `auto-merge` label to it,
 acting as the person from outside the project directory (`gh pr edit <n> --add-label auto-merge
 --repo <owner>/<repo>`), which is what fires the Action. The Action also merges on an approving
@@ -107,7 +107,7 @@ author approve it, so the label is the one way the driver has. Then it waits up 
 (`--land-minutes`) for the pull request to be merged. If the pull request is still open when the
 wait ends, the driver merges it itself and records a deviation. A pull request that already carries
 the label when the session ends, or that is already merged, is recorded as a deviation too, because
-no verb adds the label and no verb merges. A design left `Draft` with decisions set aside stops the
+no verb adds the label and no verb merges. A plan left `Draft` with decisions set aside stops the
 chain, because the person said to leave them for an engineer and no engineer is in this run; the
 brief says to settle them now, so that path is a simulator failure, recorded as such.
 
@@ -161,7 +161,7 @@ facts about this run that bear on reading the rubric: every document pull reques
 base and was opened as an ordinary pull request, with the `auto-merge` label added by the driver as
 the person and never by a verb; specify commits the mockups with the spec, so there is no mockup pull
 request; the Action and the label were installed by the setup script, so block 4 (equip's landing
-track) has no transcript and is marked not exercised; design should reach `Ready` in its own
+track) has no transcript and is marked not exercised; plan should reach `Ready` in its own
 session because the simulator says "settle them now"; review and test each contain an implement
 run.
 
@@ -189,8 +189,8 @@ harness's own accounting, not here.
 | equip local, equip test | 0.3M | two short searches, two declarations, two proofs |
 | envision | 0.2M | the interview and the template |
 | specify, with two mockup surfaces in four files | 0.6M | the interview, the audit, the mockup files, the tracker mirror |
-| design | 0.5M | reading the spec, the code, the references; the plan file; the one question and the defaults |
-| implement, five beads as a serial stack | 2.5M | one worker session per bead, each reading the design, the spec, the case format, and running checks; the root's bookkeeping |
+| plan | 0.5M | reading the spec, the code, the references; the graph file; the one question and the defaults |
+| implement, five beads as a serial stack | 2.5M | one worker session per bead, each reading the plan, the spec, the case format, and running checks; the root's bookkeeping |
 | review, with its implement run | 1.0M | the reviewer subagents on the stack's diff, then a worker per problem taken |
 | test, with its implement run | 0.8M | the Playwright specs and the report, then a worker per problem taken |
 | simulator, about fifty calls | 0.7M | the transcript tail on every call |
@@ -199,7 +199,7 @@ harness's own accounting, not here.
 **The bead count is the token lever.** Each bead is one worker session that reads the same
 documents and runs the same checks, so five beads is roughly five times one; four beads saves a
 fifth of implement. The other levers, in order: the number of mockup states (four files, no loading
-or error drawings); the worker model (`sonnet` for workers where the design proposes it); the effort
+or error drawings); the worker model (`sonnet` for workers where the plan proposes it); the effort
 level; dropping review lenses the simulator does not need; one variant per test case.
 
 ## Open questions for the maintainer
@@ -211,7 +211,7 @@ level; dropping review lenses the simulator does not need; one variant per test 
    the evidence shows the shipped app. The alternative is to stop at open pull requests, which is
    where implement's report leaves a person. Keep the merge?
 3. **Models and effort.** Sessions default to `opus`, the simulator to `sonnet`. Workers take what
-   the design proposes. The judge's model is whatever `muse` or `opencode` is configured with in the
+   the plan proposes. The judge's model is whatever `muse` or `opencode` is configured with in the
    project's `harnessConfig`, which `codefall init` leaves empty, so each runs with its own default.
    Change any of these?
 4. **The Dolt remote.** `setup.sh` runs `bd dolt push --yes`, which pushes `refs/dolt/data` to the

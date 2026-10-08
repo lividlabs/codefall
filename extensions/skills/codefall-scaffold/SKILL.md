@@ -60,7 +60,7 @@ Scaffold decides **how this project will be built**, never **what it does**.
   this skill does not do. Say so plainly.
 - **Keep the session short.** Stop asking the moment you have enough to emit the docs; prefer a
   default over a question wherever the answer does not change what gets emitted. A long thread
-  about how the thing will work belongs to `codefall-specify` and `codefall-design`; say so and
+  about how the thing will work belongs to `codefall-specify` and `codefall-plan`; say so and
   finish.
 
 ## The stance
@@ -136,7 +136,7 @@ settle it, **record the shape as unclear and move on.** Do not ask again and do 
 
 **When the user volunteers more than you asked for**, name the surfaces you found and carry on. Do
 not ask a follow-up about a feature, propose entities or a schema, or let product detail reach the
-ADRs. If something will matter to `codefall-specify` or `codefall-design`, put it in the
+ADRs. If something will matter to `codefall-specify` or `codefall-plan`, put it in the
 decision-log's **Parking lot** and say you did.
 
 **Note any rendering signal without asking for one.** Public pages, sharing, browsing without an

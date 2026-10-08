@@ -19,7 +19,7 @@ What each lens asks. Read at the confirmation, which names the lenses that will 
 | `types` | Where new types appear: do they make invalid states unrepresentable, or push that job onto every caller |
 | `conventions` | `AGENTS.md` and the ADRs — boundary rules first, since those are the encoded architecture |
 | `comments` | Do the comments say what the code does, and does anything the work touched now lie |
-| `docs` | Does the code contradict a document that describes it — `README.md`, `AGENTS.md`, a design, an ADR — and is that document one the project may amend or one that is immutable |
+| `docs` | Does the code contradict a document that describes it — `README.md`, `AGENTS.md`, a plan, an ADR — and is that document one the project may amend or one that is immutable |
 | `simplify` | Reuse it should have used, dead code, nesting that early returns would flatten |
 | `local` | Does the change add infrastructure, a dependency, a migration, or generated code, and leave the project's declared `start` and `update` scripts as they were — so the next teammate's refresh brings an environment current that the change has made stale |
 | `security` | Injection, authn/authz bypass, data exposure, secrets in the diff |
@@ -28,8 +28,8 @@ What each lens asks. Read at the confirmation, which names the lenses that will 
 
 Every document target gets `structure` and `status`, plus the lenses for its kind. Each verb owns
 the rules its documents are held to — required sections, status vocabularies, identifier forms,
-EARS, the Task Plan's callout. Read them in `codefall-envision`, `codefall-specify`,
-`codefall-design` and `codefall-scaffold` when a lens needs the detail; they are not restated here.
+EARS, the Tasks callout. Read them in `codefall-envision`, `codefall-specify`,
+`codefall-plan` and `codefall-scaffold` when a lens needs the detail; they are not restated here.
 
 | Target | Lens | The question |
 | --- | --- | --- |
@@ -42,9 +42,9 @@ EARS, the Task Plan's callout. Read them in `codefall-envision`, `codefall-speci
 | spec | `criteria` | Do the acceptance criteria hold to EARS, as `codefall-specify` defines it — its patterns, its rule about failure behaviour, and its ban on implementation vocabulary |
 | spec | `precision` | Ambiguity a reader could resolve two ways; undefined terms; missing non-functional requirements |
 | spec | `stories` | Every requirement has a user story with the `so that` clause `codefall-specify` makes mandatory |
-| design | `coverage` | Every spec requirement has a home in the design, or the design says why not |
-| design | `decisions` | Hard-to-reverse choices with no ADR; assumptions the spec does not guarantee; a conditional section present with nothing behind it |
-| design | `plan` | The Task Plan's callout is staged or created, as `codefall-design` defines them, over a table of the four columns and no status column; no ID on the `Retired:` line reappears as a row |
+| plan | `coverage` | Every spec requirement has a home in the plan, or the plan says why not |
+| plan | `decisions` | Hard-to-reverse choices with no ADR; assumptions the spec does not guarantee; a conditional section present with nothing behind it |
+| plan | `tasks` | The Tasks callout is staged or created, as `codefall-plan` defines them, over a table of the four columns and no status column; no ID on the `Retired:` line reappears as a row |
 | adr | `alternatives` | Alternatives genuinely weighed, not asserted and dismissed in a clause |
 | adr | `consequences` | Consequences stated, including the ones that cost something |
 | adr | `coherence` | No contradiction with another accepted ADR; project decisions numbered bare `ADR-NNN` rather than continuing an inherited sequence |

@@ -45,9 +45,9 @@ Read each when its step says to; none is loaded up front.
 
 | In scope | Out of scope | Whose |
 | --- | --- | --- |
-| What the reporter did, expected, and saw | Why the code does it | `codefall-design` |
-| Reproducing it through the running product | Changing code, data, or a test to see what happens | `codefall-design`, `codefall-implement` |
-| Evidence: screenshots, recordings, logs, output | The fix, and its task graph | `codefall-design` |
+| What the reporter did, expected, and saw | Why the code does it | `codefall-plan` |
+| Reproducing it through the running product | Changing code, data, or a test to see what happens | `codefall-plan`, `codefall-implement` |
+| Evidence: screenshots, recordings, logs, output | The fix, and its task graph | `codefall-plan` |
 | The expected behaviour, as acceptance criteria | A new capability nobody specified | `codefall-specify` |
 | Severity as the reporter judges it | Priority and assignment | the team |
 
@@ -233,7 +233,7 @@ Report the path, identifier, status, severity, the reproduction outcome, every o
 issue with its link, the branch, and the pull request, worded as the landing procedure says: it is
 open at its URL; add the `auto-merge` label when you want it merged, or have someone approve it;
 either one merges it.
-**End with one command**: `/codefall-design BUG-NNN`.
+**End with one command**: `/codefall-plan BUG-NNN`.
 
 ## Other modes
 
@@ -253,7 +253,7 @@ Each lands per `../../../.codefall/shared/landing.md`.
 - **Nothing is written without the user confirming the document first.**
 - **The document is canonical**; the tracker issue is regenerated from it.
 - **A report says what is wrong, never why.** A suspected cause the reporter offers goes under
-  Open questions for `codefall-design`, marked as theirs.
+  Open questions for `codefall-plan`, marked as theirs.
 - **Reproducing never changes anything** — no code, no data outside what the steps themselves do,
   no mocks, no test files.
 - **A report that was not reproduced is still written**, with what was tried.

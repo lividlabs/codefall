@@ -162,7 +162,7 @@ Optional, per spec. The domain nouns the specification uses, and what each one m
 ```
 
 **Names and meanings only.** No fields, no types, no relations, no identifiers, no storage. `Trip
-has a departureDate: Date and belongs to a User` is a data model, and that is `codefall-design`'s
+has a departureDate: Date and belongs to a User` is a data model, and that is `codefall-plan`'s
 output.
 
 Include the section when the feature involves data and the vocabulary needs settling. Omit it when

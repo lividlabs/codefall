@@ -82,7 +82,7 @@ Replace it only on a yes; on a no, leave it and say nothing further about it.
 - **Keep the original filenames** where they are legible. Rename only what is meaningless (`image.png`,
   `Untitled-1.svg`), and say in the README what the original was called.
 - **Do not interpret the design.** No component names, no annotations about which existing widget to
-  reuse, no notes about what should be built differently. That reading is `codefall-design`'s, and doing it
+  reuse, no notes about what should be built differently. That reading is `codefall-plan`'s, and doing it
   here puts solution decisions into a requirements artifact.
 - **Ask before overwriting.** If `docs/mockups/<slug>/` already has contents, show the user what is
   there and let them choose: replace, add alongside, or use a different slug.

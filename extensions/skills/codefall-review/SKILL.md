@@ -64,7 +64,7 @@ The argument's shape decides what is being reviewed.
 | `<from>..<to>`, two commits | the work between them | `git diff <from> <to>`; both must be reachable from a live branch |
 | a path to a file or directory | that path as it stands | the files under it |
 | a codefall document identifier, or a path under `docs/` | that document | the file, plus the document upstream of it |
-| an epic ID, or `DESIGN-NNN` | the epic's work | the epic branch, or the stack's top, per `reference/targets.md` |
+| an epic ID, or `PLAN-NNN` | the epic's work | the epic branch, or the stack's top, per `reference/targets.md` |
 | anything else — prose describing what to look at | that code | a search, confirmed with the user |
 
 **The default branch** is `git symbolic-ref --short refs/remotes/origin/HEAD` with the `origin/`
@@ -112,9 +112,9 @@ would create a worktree or branch. For an epic's work it opens with the chart li
 4. The project's `AGENTS.md` and `docs/adrs/`. The root `AGENTS.md` always; a scoped one whenever a
    touched file sits under its directory, nearest first. A project with neither is reviewed against
    its own surrounding code, and the report says so.
-5. The design behind the work when there is one. A branch named `feat/booking-DESIGN-007-T1-…` carries a bead ID;
-   `bd show <id> --json` gives `spec_id`, the design document's path. From the design,
-   `codefall-design` defines the row that reaches the spec, and `codefall-specify` the row that
+5. The plan behind the work when there is one. A branch named `feat/booking-PLAN-007-T1-…` carries a bead ID;
+   `bd show <id> --json` gives `spec_id`, the plan document's path. From the plan,
+   `codefall-plan` defines the row that reaches the spec, and `codefall-specify` the row that
    reaches the vision.
 
 **Every hop in item 5 is optional, and a missing one is never an error.** Review against
@@ -203,28 +203,28 @@ before the write.
 Apply the accepted fixes, code and documents alike. A finding's proposed `patch` is a starting
 point, not a script — apply the intent, matching the surrounding code. Fixes are not re-reviewed
 here. **On an epic's work, a taken code finding is not fixed here**: it is
-filed as a `deferred` child of the epic in the `code` form below, or the `design` form where the
-design caused it, its status is `deferred` with the bead's ID, and step 8 runs `codefall-implement`
+filed as a `deferred` child of the epic in the `code` form below, or the `plan` form where the
+plan caused it, its status is `deferred` with the bead's ID, and step 8 runs `codefall-implement`
 on the epic to build them in this session. Document fixes on an epic's work still land
-here as text, under the rule below. **A code fix that changes behaviour the design or spec describes amends
+here as text, under the rule below. **A code fix that changes behaviour the plan or spec describes amends
 that document in the same commit**, under the rule below: the document is part of the fix, not a
 second finding.
 
 **A finding that an upstream document is wrong is fixed like any other document finding.** When the
-design behind the work says one thing and the code needed another, or the design and its spec
+plan behind the work says one thing and the code needed another, or the plan and its spec
 disagree, and the document is `Draft` or `Ready`, the fix is text on the target's branch: the
-design's section amended, or a criterion appended to the spec with the requirement's tracker issue
+plan's section amended, or a criterion appended to the spec with the requirement's tracker issue
 regenerated per `../codefall-specify/trackers/<name>/PROFILE.md`. Fix every document between the
 change and the code that restates the point; when one of them fails these tests, fix none, and name
-each document in the bead offered below, so the whole chain reaches `codefall-design` together.
-Each document fix is recorded as a closed `design-amended` bead, per *Amendments* in
+each document in the bead offered below, so the whole chain reaches `codefall-plan` together.
+Each document fix is recorded as a closed `plan-amended` bead, per *Amendments* in
 `../codefall-implement/reference/beads.md`, with a `discovered-from` edge to the bead the branch
 names when there is one.
 
 **What that fix cannot do, and what the user defers, is offered as a bead.** A finding left in the
 findings file alone is one no verb reads again. Offer, at triage, to file each in the form under
-*Discovered work* in `../codefall-implement/reference/beads.md`: the `design` form — `--spec-id`
-the design's path, the label `design-revision` — for a finding the design caused that a fix here
+*Discovered work* in `../codefall-implement/reference/beads.md`: the `plan` form — `--spec-id`
+the plan's path, the label `plan-revision` — for a finding the plan caused that a fix here
 cannot settle because it moves work, the document is frozen, or the user deferred it; the `code`
 form for a `deferred` finding whose cause is the code. Either carries a `discovered-from` edge to
 the bead the branch names when there is one, and is a `deferred` child of that bead's epic, read
@@ -288,7 +288,7 @@ run, and say so.
    push the fixes and give the link to the pull request to merge, per *Pointing at a stack* in
    `../../../.codefall/shared/stacks.md`; on uncommitted work, the findings files are left unstaged
    to commit with the work or not at all; otherwise nothing is pending. Where revision beads were
-   filed, `/codefall-design DESIGN-NNN` comes first, so the document is corrected while the work
+   filed, `/codefall-plan PLAN-NNN` comes first, so the document is corrected while the work
    that found it wrong is still in view.
 8. **Fix the epic's problems.** On an epic's work, when the person took at least one code finding,
    run the `codefall-implement` skill with the epic as its argument, through the `Skill` tool, in
@@ -328,7 +328,7 @@ run, and say so.
 - **Refuse what is not reviewable**, and say which of the five it is.
 - **An identifier that resolves to nothing is a stop**, not a guess.
 - **Only `fixed` and `deferred` findings reach a pull request.** A dismissed one was judged wrong.
-- **A bead is offered, never filed unasked**: a `design-revision` bead for a finding the design
+- **A bead is offered, never filed unasked**: a `plan-revision` bead for a finding the plan
   caused that a fix here cannot settle, a `code` bead for a deferred finding the code caused, each a
   `deferred` child of the epic when there is one.
 - **On an epic's work, the problems the person takes are built by `codefall-implement`**, run by

@@ -1,6 +1,6 @@
 ---
 name: codefall-fix
-description: Fix something small in one run — a bead, a bug report, an issue, or a description. Establish one bead at tier 0 with its cause and acceptance criteria, build it in a worktree with tests as part of done, and open a pull request, behind a single confirmation. Stops and names codefall-design when the work needs a design document, an ADR, or more than one bead. Never merges to main.
+description: Fix something small in one run — a bead, a bug report, an issue, or a description. Establish one bead at tier 0 with its cause and acceptance criteria, build it in a worktree with tests as part of done, and open a pull request, behind a single confirmation. Stops and names codefall-plan when the work needs a plan document, an ADR, or more than one bead. Never merges to main.
 argument-hint: "[a bead, a bug report, an issue, or what to fix]"
 allowed-tools:
   - Read
@@ -18,8 +18,8 @@ allowed-tools:
 Take one small change from its description to an open pull request in one run: establish the bead,
 confirm once, build it, verify it, and stop at the pull request.
 
-This is the path `codefall-design` takes at tier 0 followed by the path `codefall-implement` takes for
-a single bead, written as one procedure. Anything bigger is `codefall-design`'s.
+This is the path `codefall-plan` takes at tier 0 followed by the path `codefall-implement` takes for
+a single bead, written as one procedure. Anything bigger is `codefall-plan`'s.
 
 Paths that start with `../` are relative to this skill's directory, not the user's project. A path
 through `../../../.codefall/` is the one that leaves the skills directory: it names a file `codefall
@@ -29,11 +29,11 @@ init` installed in the project's own `.codefall/`.
 
 Read each when its step says to; none is loaded up front.
 
-- `../codefall-design/reference/bugs.md` — the bug report as a target, reproducing it when the report
+- `../codefall-plan/reference/bugs.md` — the bug report as a target, reproducing it when the report
   could not, and finding the cause. Read at step 2 for a bug.
-- `../codefall-design/reference/beads.md` — what a tier-0 bead carries, its ID, and the test case in
+- `../codefall-plan/reference/beads.md` — what a tier-0 bead carries, its ID, and the test case in
   its criteria. Read at step 2 and step 5. Names `../codefall-test/reference/case-file.md`, and
-  `../codefall-design/reference/revising.md`, for a design whose graph exists, which a fix never
+  `../codefall-plan/reference/revising.md`, for a plan whose graph exists, which a fix never
   reaches.
 - `../codefall-implement/reference/done.md` — when a bead is done, where the verification commands
   come from, and the test case written before the code. Read at step 2 and step 6. Names
@@ -56,8 +56,8 @@ All of these hold, or it is not a fix:
   build on, no choice that is hard to reverse.
 
 **When any of them fails, stop before anything is written**, say which one, and name
-`/codefall-design <the input>`. This is an exit, not a disagreement about size: fix has no step that
-writes a design document or an ADR, or builds a graph.
+`/codefall-plan <the input>`. This is an exit, not a disagreement about size: fix has no step that
+writes a plan document or an ADR, or builds a graph.
 
 ## Project customizations and persona
 
@@ -90,7 +90,7 @@ Read the project's `AGENTS.md`, root and scoped. **Never run a remedy.**
 | --- | --- |
 | A bead with acceptance criteria and a body that says what to do | Read it. It is the bead |
 | A bead with a title and little else | Fill it in below: the cause, the criteria. Only if nobody holds it |
-| A bug report, `BUG-NNN`, or the issue a report mirrors | `../codefall-design/reference/bugs.md`: the report is the target, reproduce if it could not be, find the cause |
+| A bug report, `BUG-NNN`, or the issue a report mirrors | `../codefall-plan/reference/bugs.md`: the report is the target, reproduce if it could not be, find the cause |
 | Another issue, or a description | Establish what to change from the code; for a bug, `bugs.md` as well, without its offer of `/codefall-report` |
 
 A bead someone else holds is a stop: say who. A bead already closed, or with an open pull request,
@@ -104,7 +104,7 @@ default branch as it stands. Cite file and line for the cause and for anything t
 has moved.
 
 **Write the acceptance criteria**, two to five checkable statements, per
-`../codefall-design/reference/beads.md`: a bug report's criteria as they are, citing `BUG-NNN-AC-nn`;
+`../codefall-plan/reference/beads.md`: a bug report's criteria as they are, citing `BUG-NNN-AC-nn`;
 a spec criterion cited in full. When only the wired product shows the change, the criteria name a
 test case and its criteria as that file says.
 
@@ -124,7 +124,7 @@ Show everything the run will do, in one block, and wait. Nothing is written befo
 - **The bead**: its ID, title, and body — the reproduction, the cause with its file and line, the
   acceptance criteria, and the test case when there is one. For an existing bead, what changes in it,
   or that nothing does.
-- **The plan**: the files to touch, the approach, the test plan, the branch
+- **The approach**: the files to touch, the approach, the test plan, the branch
   (`feat/<bead>-<slug>`), and the model the worker runs on.
 - **The verification commands** and where they came from, per
   `../codefall-implement/reference/done.md`.
@@ -134,7 +134,7 @@ Show everything the run will do, in one block, and wait. Nothing is written befo
 
 ### 5. Create and claim the bead
 
-Create it, or edit the thin bead, per `../codefall-design/reference/beads.md`: its ID,
+Create it, or edit the thin bead, per `../codefall-plan/reference/beads.md`: its ID,
 `--external-ref` where a tracker issue exists, type `bug` where it is one, the body, and
 `--acceptance`. Then claim it per `../codefall-implement/reference/beads.md`. `bd dolt push` after
 each.
@@ -150,7 +150,7 @@ mirror, and neither otherwise.
 bead is done per `../codefall-implement/reference/done.md`. A failure is consulted on and retried
 once, per `workers.md`; a second one goes to the user.
 
-Comment the pull request link on the bead, close it with what was verified, check any `design`
+Comment the pull request link on the bead, close it with what was verified, check any `plan`
 discovery and record any amendment per `../codefall-implement/reference/workers.md`, file the
 discovered work as `discovered-from` beads, and `bd dolt push`.
 
@@ -166,7 +166,7 @@ merge the pull request, then `/codefall-test <area>/<slug>` when the bead named 
 
 ## Rules
 
-- **One bead at tier 0, or an exit** naming `/codefall-design`.
+- **One bead at tier 0, or an exit** naming `/codefall-plan`.
 - **One confirmation, and nothing written before it.**
 - **A person merges every code PR to `main`; fix performs none.**
 - **A ticket must not change under someone holding it.**

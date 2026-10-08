@@ -1,6 +1,6 @@
 # Merges a document pull request when a person adds the `auto-merge` label to it or approves it.
 #
-# codefall's document verbs (envision, specify, report, design, and mock-up) open their pull
+# codefall's document verbs (envision, specify, report, plan, and mock-up) open their pull
 # request and tell the person to add the `auto-merge` label when they want it merged, or to have
 # someone approve it; either one merges it. No verb adds the label or approves. This workflow is
 # that decision reaching the default branch: it merges a labelled or approved pull request whose
@@ -50,7 +50,7 @@ jobs:
       - name: Only document paths
         run: |
           set -euo pipefail
-          allow='^(docs/(visions|specs|bugs|mockups|designs|adrs)/|\.codefall/(reviews|tests)/|\.beads/interactions\.jsonl$)'
+          allow='^(docs/(visions|specs|bugs|mockups|plans|adrs)/|\.codefall/(reviews|tests)/|\.beads/interactions\.jsonl$)'
           base="origin/${{ github.event.pull_request.base.ref }}"
           # HEAD is the pull request merged onto its base for both events, so base...HEAD is
           # exactly its diff.

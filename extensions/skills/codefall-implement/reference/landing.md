@@ -64,7 +64,7 @@ Nothing below the new link is touched by hand.
 
 ## The diagrams
 
-The go gate renders the plan as a branch diagram built from the actual graph. Serial stack:
+The go gate renders the landing as a branch diagram built from the actual graph. Serial stack:
 
 ```
 main ── T1 ── T2 ── T3 ── T4 ── T5 ── T6
@@ -74,7 +74,7 @@ main ── T1 ── T2 ── T3 ── T4 ── T5 ── T6
 Epic branch:
 
 ```
-main ── epic/booking-DESIGN-007-stage-context
+main ── epic/booking-PLAN-007-stage-context
           ├── T1 ─┐
           ├── T2 ─┼── T4    fan-in: T4 needs T1 + T2
           └── T3 ─┘         wave 1: T1 T2 T3 · wave 2: T4

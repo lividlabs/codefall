@@ -5,7 +5,7 @@
 import { readdirSync, existsSync } from "node:fs";
 import { join } from "node:path";
 
-export type Verb = "equip-local" | "equip-test" | "envision" | "specify" | "design" | "implement" | "review" | "test";
+export type Verb = "equip-local" | "equip-test" | "envision" | "specify" | "plan" | "implement" | "review" | "test";
 
 export type Step = {
   verb: Verb;
@@ -70,36 +70,36 @@ export const STEPS: Step[] = [
     after: { kind: "label-and-wait", prefix: "spec/" },
   },
   {
-    verb: "design",
-    skill: "/codefall-design",
+    verb: "plan",
+    skill: "/codefall-plan",
     argument: (dir) => findId(dir, "specs", "SPEC", "SPEC-001"),
-    simulatorNotes: `This is the design. You can judge the tier (accept the agent's call; tier 1 is expected), the task cut (five tasks or fewer; ask for a smaller cut if more), and the test criteria in product terms (they must cover the five rules). You cannot judge anything technical: say so plainly and let the agent set it aside. When the agent asks whether to settle the technical decisions it set aside with sensible defaults now or leave them for an engineer, say settle them now so building can start. Confirm the document when the plan covers the three requirements.`,
-    after: { kind: "label-and-wait", prefix: "design/" },
+    simulatorNotes: `This is the plan. You can judge the tier (accept the agent's call; tier 1 is expected), the task cut (five tasks or fewer; ask for a smaller cut if more), and the test criteria in product terms (they must cover the five rules). You cannot judge anything technical: say so plainly and let the agent set it aside. When the agent asks whether to settle the technical decisions it set aside with sensible defaults now or leave them for an engineer, say settle them now so building can start. Confirm the document when the plan covers the three requirements.`,
+    after: { kind: "label-and-wait", prefix: "plan/" },
   },
   {
     verb: "implement",
     skill: "/codefall-implement",
-    argument: (dir) => findId(dir, "designs", "DESIGN", "DESIGN-001"),
+    argument: (dir) => findId(dir, "plans", "PLAN", "PLAN-001"),
     simulatorNotes: `When told this is engineering work and asked whether to continue, say yes. At the go gate say go; accept the serial stack and the models proposed. The driver answers permission prompts, so the permissions condition is met. If a worker fails and the agent asks what to do, say retry once, then skip the task and tell you. Never ask to merge; the report's merge order is for later.`,
     after: { kind: "none" },
   },
   {
     verb: "review",
     skill: "/codefall-review",
-    argument: (dir) => findId(dir, "designs", "DESIGN", "DESIGN-001"),
+    argument: (dir) => findId(dir, "plans", "PLAN", "PLAN-001"),
     simulatorNotes: `Say yes to engineering work. Review now with every lens. When the agent asks "I found N problems. Fix them all?", say yes, fix them all. It then runs implement itself in this same session: at implement's go gate say go, and answer as you would in the implement session. Give a one-sentence reason for anything you dismiss. Never ask to merge.`,
     after: { kind: "none" },
   },
   {
     verb: "test",
     skill: "/codefall-test",
-    argument: (dir) => findId(dir, "designs", "DESIGN", "DESIGN-001"),
+    argument: (dir) => findId(dir, "plans", "PLAN", "PLAN-001"),
     simulatorNotes: `Run now. Accept the driver the agent proposes. When the agent asks "I found N problems. Fix them all?", take the ones that break one of the five rules or something you said you would see, and say no to the rest with a reason; if none break a rule, say no to all of them. If you took any, the agent runs implement itself in this session: at its go gate say go. Never ask to merge.`,
     after: { kind: "merge-code-stack" },
   },
 ];
 
-export const CHAIN: Verb[] = ["equip-local", "equip-test", "envision", "specify", "design", "implement", "review", "test"];
+export const CHAIN: Verb[] = ["equip-local", "equip-test", "envision", "specify", "plan", "implement", "review", "test"];
 
 export function step(verb: Verb): Step {
   const found = STEPS.find((s) => s.verb === verb);

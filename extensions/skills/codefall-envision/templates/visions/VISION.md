@@ -1,7 +1,7 @@
 # VISION-NNN: {Title}
 
 **Status:** Ready — {date}
-**Related:** specs: _(identifiers once `/specify` creates them)_ · plan: _(link once `/design` creates it)_
+**Related:** specs: _(identifiers once `/specify` creates them)_ · plan: _(link once `/plan` creates it)_
 
 <!--
 Problem and Proposed shape are the minimum — every vision needs
@@ -47,13 +47,13 @@ wasn't trying to solve.
 integration points, or `/scaffold` needs to know something before
 setting up the workspace. Skip for self-contained work.)*
 Existing systems, integration points, and technical realities that
-`/design` and `/scaffold` need before touching anything — what this
+`/plan` and `/scaffold` need before touching anything — what this
 work depends on, what it touches, what it must not break.
 
 ## Open questions
 
 *(Optional — include only if something real is actually unresolved.)*
-Anything unresolved that `/specify` or `/design` will need to settle
+Anything unresolved that `/specify` or `/plan` will need to settle
 before they can commit to an approach.
 
 ## Alternatives considered

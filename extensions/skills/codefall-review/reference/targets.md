@@ -13,8 +13,8 @@ prose. The simple shapes — nothing, a branch, a PR, a range, a path — are re
 
 ## An epic's work
 
-An epic ID (`<prefix>-DESIGN-NNN`) or a design identifier (`DESIGN-NNN`, which names the epic
-`<prefix>-DESIGN-NNN`, `<prefix>` being `bd config get issue_prefix`) is the work
+An epic ID (`<prefix>-PLAN-NNN`) or a plan identifier (`PLAN-NNN`, which names the epic
+`<prefix>-PLAN-NNN`, `<prefix>` being `bd config get issue_prefix`) is the work
 `codefall-implement` built for it, wherever it stands:
 
 ```bash
@@ -54,10 +54,10 @@ A document is read with the document upstream of it:
 | --- | --- | --- |
 | vision | none | — |
 | spec | its vision, when it has one | the `**Vision:**` header row |
-| design | its spec, or its vision when there is no spec | the `**Related:**` row |
-| ADR | the design that cites it, and every other accepted ADR | `grep -rl 'ADR-007' docs/designs/`, substituting the identifier, plus `docs/adrs/` |
+| plan | its spec, or its vision when there is no spec | the `**Related:**` row |
+| ADR | the plan that cites it, and every other accepted ADR | `grep -rl 'ADR-007' docs/plans/`, substituting the identifier, plus `docs/adrs/` |
 
-Links point one way: reaching a design from a spec or an ADR is a grep for the identifier. A
+Links point one way: reaching a plan from a spec or an ADR is a grep for the identifier. A
 vision has no upstream and is reviewed for internal consistency alone.
 
 ## A prose argument

@@ -15,7 +15,7 @@ prompt.
 ## Launching
 
 `Agent` with `isolation: 'worktree'`, prompted from `../worker-prompt.md`, rendered by substituting
-`{{BEAD_ID}}`, `{{TITLE}}`, `{{BODY}}`, `{{ACCEPTANCE}}`, `{{DESIGN_REF}}`, `{{BRANCH}}`,
+`{{BEAD_ID}}`, `{{TITLE}}`, `{{BODY}}`, `{{ACCEPTANCE}}`, `{{PLAN_REF}}`, `{{BRANCH}}`,
 `{{BASE_REF}}`, `{{PR_TARGET}}`, `{{VERIFY_COMMANDS}}`, `{{RELATES_LINE}}`, `{{REPO}}`,
 `{{TESTING_ROOT}}`, and `{{CASE_FILE_FORMAT}}`.
 
@@ -54,33 +54,33 @@ the PR exists. The root checks, never trusts.
 The worker's final message is exactly one JSON object:
 
 ```json
-{"bead": "booking-DESIGN-007-T2", "status": "success", "pr": 102,
- "branch": "feat/booking-DESIGN-007-T2-wire-context",
+{"bead": "booking-PLAN-007-T2", "status": "success", "pr": 102,
+ "branch": "feat/booking-PLAN-007-T2-wire-context",
  "discovered": [{"kind": "code", "title": "Parser drops trailing comma", "context": "…",
-                 "from": "booking-DESIGN-007-T2"},
-                {"kind": "design", "title": "§ Architecture names a StageStore the code replaced",
-                 "context": "…", "from": "booking-DESIGN-007-T2", "blocks": "Task Plan row T4"}],
- "amended": [{"document": "docs/designs/DESIGN-007-stage-context.md", "section": "Architecture",
+                 "from": "booking-PLAN-007-T2"},
+                {"kind": "plan", "title": "§ Architecture names a StageStore the code replaced",
+                 "context": "…", "from": "booking-PLAN-007-T2", "blocks": "Tasks row T4"}],
+ "amended": [{"document": "docs/plans/PLAN-007-stage-context.md", "section": "Architecture",
               "summary": "StageStore renamed to StageContext, matching the code"}]}
 ```
 
 or `{"bead": "…", "status": "failure", "reason": "…"}`. The `discovered` list is how tangent work
 reaches the root, which files it — the worker's diff stays scoped to its bead. `kind` is `code` or
-`design` and picks the form under *Discovered work* in `beads.md`. A `code` item is filed as it
+`plan` and picks the form under *Discovered work* in `beads.md`. A `code` item is filed as it
 stands. The `amended` list names each upstream document the worker amended in its branch; the root
 reads it at the wave boundary per *Amendments* in `beads.md`, and records each entry as a closed
-`design-amended` bead there.
+`plan-amended` bead there.
 
-**A `design` item is checked before it is filed.** Its `blocks` names the one thing that stopped
-the worker amending: a Task Plan row, a criterion a bead cites, or a frozen document. The root reads
-that against the design, and a `blocks` that holds is filed as a `design-revision` bead. A `blocks`
+**A `plan` item is checked before it is filed.** Its `blocks` names the one thing that stopped
+the worker amending: a Tasks row, a criterion a bead cites, or a frozen document. The root reads
+that against the plan, and a `blocks` that holds is filed as a `plan-revision` bead. A `blocks`
 that names none of the three, or names a row or criterion the fix would not in fact change, on a
 document whose Status is `Draft` or `Ready`, is text the worker could have amended: the root
 resumes the worker with a message naming the item and the test it failed, and the worker amends,
 pushes, and reports again, the document now in its `amended` list. No bead is filed for an item
 sent back. The close-out report names every item sent back beside the beads that were filed. A
 worker that cannot be resumed — it failed, or the harness has released it — leaves the item filed
-as a `design-revision` bead whose body says the fix is text this run could not land.
+as a `plan-revision` bead whose body says the fix is text this run could not land.
 
 ## Failure handling
 
@@ -100,10 +100,10 @@ checkout, as every `bd` write is. The procedure is *Consulting* in
 
 **The question**, rendered into `../../../../.codefall/shared/consult-prompt.md`: `QUESTION` is why
 the worker failed, in its own words from `reason`, and what the bead asked for; `FILES` are the
-bead's Design ref section and the files the worker's branch touched, or the design's predicted files
+bead's Plan ref section and the files the worker's branch touched, or the plan's predicted files
 when nothing was pushed; `CONTEXT` is the bead body and acceptance criteria; `OPTIONS` are the
-courses the root can see — a different approach the design allows, a missing precondition to name,
-a task that is cut wrong and belongs back with `codefall-design`; `PRIOR` is the failure of an
+courses the root can see — a different approach the plan allows, a missing precondition to name,
+a task that is cut wrong and belongs back with `codefall-plan`; `PRIOR` is the failure of an
 earlier agent in the order, or empty. `SCHEMA` is `../../../../.codefall/shared/consult.schema.json`.
 
 **The order** is the entry's `consult` list, resolved and walked as `running-agents.md` says, with
@@ -113,11 +113,11 @@ the default run consults too. The go gate names the resolved order.
 
 **What the answer does.** Before the retry: an answer that names a course the bead allows is folded
 into the retry prompt beside the failure reason, as a suggestion the fresh worker weighs and not an
-instruction — the worker still reads the design and the code first. `cannotSettle`, or no agent
+instruction — the worker still reads the plan and the code first. `cannotSettle`, or no agent
 answering, means the retry runs on the failure reason alone, as before. At the second failure: the
 answer, or the fact that none came, goes into the escalation so the human reads the analysis beside
-the failure. A consult never changes the graph, never edits a bead, and never overrides a design;
-an answer that says the task is cut wrong is reported as exactly that, for `codefall-design`.
+the failure. A consult never changes the graph, never edits a bead, and never overrides a plan;
+an answer that says the task is cut wrong is reported as exactly that, for `codefall-plan`.
 
 **The record.** The `bd comment` that records what ran on the bead names the agent consulted and
 its answer in one line; the close-out report lists every consult, by bead, with who answered and

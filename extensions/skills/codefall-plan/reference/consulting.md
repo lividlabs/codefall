@@ -1,7 +1,7 @@
-# Consulting during a design
+# Consulting during a plan
 
 Read at step 5, when a technical point stays unsettled after research. The procedure every verb
-shares is *Consulting* in `../../../../.codefall/shared/running-agents.md`; this is what design puts
+shares is *Consulting* in `../../../../.codefall/shared/running-agents.md`; this is what plan puts
 into it and what it does with the answer.
 
 ## When
@@ -19,7 +19,7 @@ the user's to ratify; a consult may inform the analysis the user reads, and that
 ## The question
 
 Render `../../../../.codefall/shared/consult-prompt.md`: `QUESTION` is the technical point, in the
-words the concern was raised in; `FILES` are the components the design touches and the ADRs that
+words the concern was raised in; `FILES` are the components the plan touches and the ADRs that
 bind them; `CONTEXT` is the spec requirement the point serves and the approach so far, in a
 paragraph; `OPTIONS` are the approaches weighed, each with what the run thinks it costs; `PRIOR` is
 an earlier agent's failure, or empty; `SCHEMA` is `../../../../.codefall/shared/consult.schema.json`.

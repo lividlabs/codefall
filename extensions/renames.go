@@ -15,8 +15,9 @@ import "maps"
 var skillRenames = map[string]string{
 	"conceptualize":          "codefall-envision",
 	"codefall-conceptualize": "codefall-envision",
+	"codefall-design":        "codefall-plan",
 	"codefall-graft":         "codefall-upgrade",
-	"design":                 "codefall-design",
+	"design":                 "codefall-plan",
 	"graft":                  "codefall-upgrade",
 	"implement":              "codefall-implement",
 	"mock-up":                "codefall-mock-up",

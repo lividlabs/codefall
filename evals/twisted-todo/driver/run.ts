@@ -1,4 +1,4 @@
-// Runs the chain: equip (local, then test), envision, specify, design, implement, review, test,
+// Runs the chain: equip (local, then test), envision, specify, plan, implement, review, test,
 // each a fresh session in the project directory, with the PM simulator answering. Between
 // sessions it does what the person would: merges the equip pull requests, adds the `auto-merge` label to
 // each document pull request and waits for the Action to merge it, returns the checkout to main,
@@ -183,11 +183,11 @@ async function afterVerb(verb: Verb): Promise<boolean> {
       return true;
     }
     case "label-and-wait": {
-      if (verb === "design") {
-        const design = latestDoc("designs");
-        const text = design ? readFileSync(design, "utf8") : "";
+      if (verb === "plan") {
+        const plan = latestDoc("plans");
+        const text = plan ? readFileSync(plan, "utf8") : "";
         if (/\*\*Status:\*\*\s*Draft/.test(text) && /## Decisions needed/.test(text)) {
-          log("the design is Draft with decisions left for an engineer; the chain stops here, because no engineer is in this run");
+          log("the plan is Draft with decisions left for an engineer; the chain stops here, because no engineer is in this run");
           return false;
         }
       }
@@ -247,20 +247,20 @@ function setPersona(persona: "engineer" | "product-manager"): void {
   execFileSync(bin, ["config", "persona", persona], { cwd: projectDir, stdio: "ignore" });
 }
 
-function latestDoc(kind: "designs" | "specs" | "visions"): string | undefined {
+function latestDoc(kind: "plans" | "specs" | "visions"): string | undefined {
   const dir = join(projectDir, "docs", kind);
   if (!existsSync(dir)) return undefined;
-  const files = execFileSync("ls", [dir], { encoding: "utf8" }).split("\n").filter((f) => /^(DESIGN|SPEC|VISION)-\d{3}.*\.md$/.test(f)).sort();
+  const files = execFileSync("ls", [dir], { encoding: "utf8" }).split("\n").filter((f) => /^(PLAN|SPEC|VISION)-\d{3}.*\.md$/.test(f)).sort();
   return files.length ? join(dir, files.at(-1)!) : undefined;
 }
 
 function epicId(): string {
   try {
     const prefix = execFileSync("bd", ["config", "get", "issue_prefix"], { cwd: projectDir, encoding: "utf8" }).trim();
-    const design = latestDoc("designs")?.match(/(DESIGN-\d{3})/)?.[1] ?? "DESIGN-001";
-    return `${prefix}-${design}`;
+    const plan = latestDoc("plans")?.match(/(PLAN-\d{3})/)?.[1] ?? "PLAN-001";
+    return `${prefix}-${plan}`;
   } catch {
-    return "forfeit-DESIGN-001";
+    return "forfeit-PLAN-001";
   }
 }
 

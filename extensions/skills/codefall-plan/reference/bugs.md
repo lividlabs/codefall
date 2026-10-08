@@ -1,4 +1,4 @@
-# Designing a fix for a bug
+# Planning a fix for a bug
 
 What changes when the input is a bug rather than a feature. Read at step 2 when the input names or
 describes one.
@@ -43,7 +43,7 @@ investigation bead, or stopping.
 
 The cause decides it, through the same table as any other work. A cause inside one component with a
 fix of one or two beads is tier 0. A cause that sits across a component boundary, or a fix that
-changes a public interface, is tier 1, and the design's `Related` row carries `bug: BUG-NNN`.
+changes a public interface, is tier 1, and the plan's `Related` row carries `bug: BUG-NNN`.
 
 **A bug fix carries a regression test**, whatever the tier: a unit test where one reaches the cause,
 and a test case, drafted into the bead as for any task, where the bug was seen through the wired

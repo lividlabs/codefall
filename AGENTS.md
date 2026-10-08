@@ -17,9 +17,9 @@ Decisions for the whole repository live in [`docs/adrs/`](docs/adrs/); the in-fl
 with the settings, shared scripts, and hooks the verbs read. The verbs chain from an idea to open
 pull requests, and each leaves something the next one reads: `envision` → `docs/visions/`, `specify`
 → `docs/specs/` mirrored to the tracker, `report` → `docs/bugs/` mirrored the same way, `mock-up` →
-`docs/mockups/`, `design` → `docs/designs/` and beads with dependency edges, `implement` → a
+`docs/mockups/`, `plan` → `docs/plans/` and beads with dependency edges, `implement` → a
 worktree, a test case, and a pull request per task, `review` → `.codefall/reviews/`, `test` →
-`.codefall/tests/`. Beside the chain, `fix` runs `design` at tier 0 and `implement` on one bead in
+`.codefall/tests/`. Beside the chain, `fix` runs `plan` at tier 0 and `implement` on one bead in
 one run, `scaffold` starts a project, `upgrade` brings its install and documents current, and
 `equip` and `refresh` keep the local environment level with the checkout. Bead state travels over
 the git remote as `refs/dolt/data`: a verb runs `bd dolt push` after every bead write, and `refresh`

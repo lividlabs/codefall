@@ -1,6 +1,6 @@
 # ADRs
 
-Read at step 4, when deciding whether this design writes one, and at step 7, when it is shown.
+Read at step 4, when deciding whether this plan writes one, and at step 7, when it is shown.
 
 A separate artifact, `docs/adrs/ADR-NNN-title.md`, in the Nygard shape — Status, Context, Decision,
 Consequences, Related — written from `../../codefall-scaffold/templates/adrs/_TEMPLATE.md`.
@@ -8,11 +8,11 @@ Consequences, Related — written from `../../codefall-scaffold/templates/adrs/_
 - **The number continues the project's own sequence:** the highest bare `ADR-NNN` in `docs/adrs/`
   plus one, starting at `ADR-001`. The prefixed sequences — `ADR-BASE-NN`, `ADR-<PREFIX>-NN` — are
   inherited stance and are never continued here.
-- **The trigger** is the design's Alternatives Considered holding a choice that is hard to reverse
+- **The trigger** is the plan's Alternatives Considered holding a choice that is hard to reverse
   or that other components will build on: a new dependency; a schema or protocol decision other
-  components will be written against; a rejected alternative that cost real analysis. Most designs
+  components will be written against; a rejected alternative that cost real analysis. Most plans
   need none.
-- **One home for the rationale.** The design names the choice and points at the ADR from the `adr`
+- **One home for the rationale.** The plan names the choice and points at the ADR from the `adr`
   label on `Related`; the ADR carries the reasoning.
 - **A ratified ADR is never rewritten.** A revision is a new, superseding ADR; the only in-place
   edit is the Status line, to `Superseded by <id> — <date>`.

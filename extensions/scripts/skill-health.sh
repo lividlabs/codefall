@@ -53,7 +53,7 @@ TOKENS_MAX=5000
 DESC_MAX=1024
 # Skills an agent may invoke on its own; every other skill carries disable-model-invocation: true.
 # Only upgrade and equip, which change the install and the project's settings, carry the line.
-MODEL_INVOCABLE="codefall-refresh codefall-design codefall-implement codefall-test codefall-review codefall-envision codefall-specify codefall-report codefall-fix codefall-mock-up codefall-scaffold"
+MODEL_INVOCABLE="codefall-refresh codefall-plan codefall-implement codefall-test codefall-review codefall-envision codefall-specify codefall-report codefall-fix codefall-mock-up codefall-scaffold"
 TOC_LINES=100
 
 strict=0
