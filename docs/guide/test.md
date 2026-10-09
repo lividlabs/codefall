@@ -109,7 +109,8 @@ finding into one of four classes:
 | Flake | The test raced the product |
 | Agent variance | A product that plans its own actions took a different route, recorded with how often it happened, such as "2 of 6 runs" |
 
-A finding becomes an issue on your project's tracker only when you say so. When the run tested an
+A finding becomes an issue on your project's tracker, or a bead in a project that keeps no issue
+tracker, only when you say so. When the run tested an
 epic, it asks one question, "I found N problems. Fix them all?", and each problem you take also
 becomes a bead under the epic. The same session then runs `/codefall-implement` on the epic to fix
 them.

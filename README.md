@@ -58,7 +58,9 @@ curl -fsSL https://install.codefall.dev/sh | sh
 ```
 
 The script downloads the latest release, verifies it against the release's checksums, and installs
-it to `~/.local/bin`. To install a specific version, pass the version as an argument:
+it to `~/.local/bin`. If that directory is not on your `PATH`, the script adds it in your shell's
+startup file and tells you to open a new terminal; set `CODEFALL_NO_MODIFY_PATH=1` to have it print
+the line instead. To install a specific version, pass the version as an argument:
 
 ```sh
 curl -fsSL https://install.codefall.dev/sh | sh -s -- 0.30.0
@@ -93,14 +95,15 @@ In the repository, run:
 codefall init
 ```
 
-`init` asks which coding agents the project uses and where its tests should live. It then installs
+`init` asks which coding agents the project uses, where its tests should live, and whether to copy
+specs and bug reports to GitHub Issues. It then installs
 the skills for each agent, saves Codefall's settings in `.codefall/settings.json`, sets up Beads,
 and adds a Codefall section to `AGENTS.md`, the file coding agents read for project instructions.
 The settings are meant to be checked in, so everyone on the team works from the same ones.
 
 The skills work on your project's existing architecture. To adopt Codefall's architecture as well,
-run `/codefall-upgrade adopt` in your coding agent. It offers each architecture decision as a
-document you can take or decline.
+run `/codefall-upgrade` in your coding agent. It offers each architecture decision as a document
+you can take or decline; `/codefall-upgrade adopt` offers the ones you declined again.
 
 ### A new project
 
@@ -186,8 +189,8 @@ SPEC-003-REQ-01-AC-01  WHEN a traveler selects export, the system SHALL produce 
 SPEC-003-REQ-01-AC-02  IF the trip is missing a departure date, THEN the system SHALL name the missing field.
 ```
 
-Each requirement also becomes a GitHub issue, and the spec arrives as its own pull request for you
-to merge.
+In a project that uses GitHub Issues, each requirement also becomes an issue. The spec arrives as
+its own pull request for you to merge.
 
 **2. Decide how to build it.** Type `/codefall-plan`. The skill reads the spec and the code, then
 writes a plan to `docs/plans/PLAN-007-itinerary-export.md`. The plan ends with a table of tasks and
@@ -202,7 +205,8 @@ the order they depend on:
 
 When you approve the table, each row becomes a *bead*, which is a task in Beads. The beads record
 which task waits on which, so the agent always knows what is ready to start. A small fix skips the
-plan document and gets beads alone.
+plan document and gets beads alone. Beads holds the tasks in every project; the issue tracker only
+holds copies of specs and bug reports, and a project can choose to keep none.
 
 **3. Build it.** Type `/codefall-implement`. The skill shows you how it will build the plan, and
 after you approve, it works through the tasks without stopping. Each task gets its own branch, its
@@ -222,14 +226,16 @@ go back through `implement`.
 
 Some skills work outside this sequence. `/codefall-envision` writes down a rough idea before it is
 ready to specify: the problem, who has it, and the questions nobody has answered yet.
-`/codefall-report` writes a bug report, tries to reproduce the bug, and files it as an issue.
+`/codefall-report` writes a bug report, tries to reproduce the bug, and copies it to GitHub Issues
+when the project uses them.
 `/codefall-fix` handles a small change in one run by planning a single task and building it.
 `/codefall-mock-up` adds a mockup of a screen to the repository, drawn to match the app's existing
 design.
 
 Two rules hold throughout. First, every step's result is a file, a bead, or a pull request, so you
-can clear the agent's context between steps and lose nothing. Second, no skill merges code. A hook,
-a check the coding agent runs before each command, refuses any merge or push to `main`.
+can clear the agent's context between steps and lose nothing. Second, no skill merges code, and in
+coding agents that support hooks, a hook (a check the agent runs before each command) refuses any
+merge or push to `main`.
 [`docs/workflow.md`](docs/workflow.md) shows what each skill reads and writes.
 
 ## Skills
@@ -238,8 +244,8 @@ a check the coding agent runs before each command, refuses any merge or push to 
 | --- | --- | --- |
 | **Ideas and requirements** | | |
 | [`/codefall-envision`](docs/guide/envision.md) | Writes down an idea: the problem, who has it, and the open questions. | `docs/visions/` |
-| [`/codefall-specify`](docs/guide/specify.md) | Turns a feature into requirements with acceptance criteria, mirrored to GitHub issues. | `docs/specs/` |
-| [`/codefall-report`](docs/guide/report.md) | Writes a bug report, tries to reproduce the bug, and mirrors it to a GitHub issue. | `docs/bugs/` |
+| [`/codefall-specify`](docs/guide/specify.md) | Turns a feature into requirements with acceptance criteria, copied to GitHub Issues when the project uses them. | `docs/specs/` |
+| [`/codefall-report`](docs/guide/report.md) | Writes a bug report, tries to reproduce the bug, and copies it to GitHub Issues when the project uses them. | `docs/bugs/` |
 | [`/codefall-mock-up`](docs/guide/mock-up.md) | Imports or draws a mockup of a screen that matches the app's design. | `docs/mockups/` |
 | **Building** | | |
 | [`/codefall-plan`](docs/guide/plan.md) | Breaks the work into tasks with dependencies, and records hard-to-reverse decisions as ADRs. | `docs/plans/`, Beads |
@@ -275,7 +281,8 @@ the settings in full.
 ## Design principles
 
 - **Documents in the repository are the record.** Specs, plans, and bug reports are files under
-  `docs/`. GitHub issues are generated from them, so the two never disagree about what was decided.
+  `docs/`. A project that uses GitHub Issues gets them generated from the documents, so the two
+  never disagree about what was decided.
 - **People merge code.** Skills open pull requests and stop. A person reviews and merges every one
   that changes code.
 - **The agent that finds a problem does not fix it.** An agent reviewing its own work misses the
@@ -317,7 +324,7 @@ project to its profiles.
 | Learn how one skill works | [The guide](docs/guide/) |
 | See what each skill reads and writes | [`docs/workflow.md`](docs/workflow.md) |
 | Merge document pull requests automatically | [`docs/landing-documents.md`](docs/landing-documents.md) |
-| Understand the architecture scaffold sets up | [Architecture](docs/guide/architecture.md) |
+| Understand the architecture that scaffold sets up | [Architecture](docs/guide/architecture.md) |
 | See what is planned | [Roadmap](extensions/docs/ROADMAP.md) |
 
 ## Terms
@@ -327,16 +334,20 @@ project to its profiles.
   and the reasons for it.
 - **Bead:** one task in Beads.
 - **Beads:** a task tracker that stores its data in your git repository. Codefall keeps its task
-  graph there.
+  graph there in every project.
 - **Coding agent:** an AI tool that reads and edits the code in your repository, such as Claude Code
   or Codex. Codefall's settings and flags call these *harnesses*.
 - **EARS:** Easy Approach to Requirements Syntax, a format that limits each requirement to a few
   fixed sentence patterns.
 - **Hook:** a check the coding agent runs at a fixed point, such as before each command.
+- **Mirror:** the copy of a spec or bug report that Codefall keeps in the issue tracker, in a
+  project that chose one. The document is the record, and the mirror is regenerated from it.
 - **Persona:** whether the skills talk to you as an engineer or as a product manager.
 - **Profile:** the templates and decisions scaffold applies to one kind of code, such as Go.
 - **Skill:** a set of instructions a coding agent follows when you type its slash command.
 - **Spec:** a document that lists a feature's requirements and their acceptance criteria.
+- **Vision:** a short document about what a project or feature is for: the problem, who has it,
+  and what is still undecided.
 
 ## Contributing
 

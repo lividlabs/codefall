@@ -64,7 +64,7 @@ meantime, make it.
 `../../../.codefall/shared/import-mockup.md` is the whole procedure, and it is shared with `codefall-specify` so the two
 never drift. Follow it as written: what to accept, where the files land, the `README.md`, and the
 rules about never editing or interpreting what the user brought. Then go to
-[step 8](#8-clear-the-requires-mockup-label).
+[step 8](#8-clear-mockup-pending).
 
 ## Where mockups live
 
@@ -228,12 +228,12 @@ spec and go to step 2. Otherwise ask one question, and offer the three answers:
 identifier, title, and status — and let them pick:
 
 > SPEC-002 — Trip export (Ready)
-> SPEC-004 — Booking history (Ready, two requirements marked `requires-mockup`)
+> SPEC-004 — Booking history (Ready, two requirements with `Mockup: pending`)
 > SPEC-005 — Share links (Draft)
 
 Then read it. A spec answers most of what an interview would: the surface, who the consumer is, and
-what they observe when it works. Requirements marked `requires-mockup` are the ones waiting on this
-run.
+what they observe when it works. Requirements whose Design notes say `Mockup: pending` are the ones
+waiting on this run.
 
 **For a vision.** Same shape — take the one they named, or list the live visions in
 `docs/visions/`, not `archive/`. Then read it.
@@ -310,11 +310,11 @@ was missing. Report each file with what it shows.
 
 Nothing is committed yet: the label and the back-link come first.
 
-### 8. Clear the `requires-mockup` label
+### 8. Clear `Mockup: pending`
 
 Follow the **Hand back** section of `../../../.codefall/shared/import-mockup.md` — it works the same
-for a mockup made here as for an imported one. `codefall-specify` applies the label per requirement,
-so clear the issues this mockup covers, leave the rest, and clear none of them unless files actually
+for a mockup made here as for an imported one. `codefall-specify` marks each requirement separately,
+so clear the ones this mockup covers, leave the rest, and clear none of them unless files actually
 landed.
 
 ### 9. Link it back
@@ -354,5 +354,5 @@ and nothing is pending.
 - **Mockups are keyed by surface**, never filed under a spec or a vision.
 - **Say what it looks like, not how it is built.** Naming a component, a route, or a data source is
   `codefall-plan`'s work happening in the wrong document.
-- **Clear `requires-mockup` only when files landed**, and only on the issues this mockup covers.
+- **Clear `Mockup: pending` only when files landed**, and only for the requirements this mockup covers.
 - **Nothing lands outside `docs/mockups/`.** No application code, no styles, no components.

@@ -15,8 +15,8 @@ tier 0 and `implement` on one bead in a single run. Beside the chain, `scaffold`
 environment level with the checkout. No verb merges to `main`: a person merges code pull requests,
 and a GitHub Action the project installs with `equip landing` merges a document pull request once a
 person adds the `auto-merge` label to it or approves it. Documents in the repository are canonical
-for the why, the what, and the how; the project's own tracker, the only one a verb files on, mirrors
-specs and bug reports; Beads holds task state. `.codefall/shared/workflow.md` has the chain, what
+for the why, the what, and the how; the project's own tracker, when `tracker` in `.codefall/settings.json`
+names one, mirrors specs and bug reports; Beads holds task state in every project. `.codefall/shared/workflow.md` has the chain, what
 each verb reads and writes, and who is authoritative for what.
 
 Speak plainly. Use everyday words, full sentences, and the active voice. Omit needless words. Say

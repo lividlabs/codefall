@@ -304,8 +304,8 @@ nothing.
   traces, logs, and run-scoped state stay under `<root>/.artifacts/`.
 - **Side effects are recorded the moment they exist**, and cleaned up the way `<root>/AGENTS.md`
   says.
-- **A finding becomes a tracker issue, and in a delivery a `deferred` child of the epic, only on
-  the user's word**, and the existing issues are searched first. The tracker is the project's own,
+- **A finding becomes a tracker issue — a bead, when `tracker` is `beads` — and in a delivery a
+  `deferred` child of the epic, only on the user's word**, and the existing issues are searched first. The tracker is the project's own,
   per *Who is authoritative for what* in `../../../.codefall/shared/workflow.md`; a bug in codefall
   itself goes to the person as issue text, never filed. In a delivery the word is the
   answer to one question, "Fix them all?", and the children it files are built by

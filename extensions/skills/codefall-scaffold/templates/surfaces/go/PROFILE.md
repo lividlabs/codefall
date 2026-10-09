@@ -46,7 +46,7 @@ use of internal package example.com/app/internal/orders/internal/domain not allo
 
 So ADR-BASE-02's facade is not a convention in Go. The component's root package *is* the facade, its
 internals live in a nested `internal/`, and the toolchain refuses to compile a reach-around. There is
-no `eslint-extension-boundaries` equivalent to install for this, and no way to disable it in a comment.
+no `eslint-plugin-boundaries` equivalent to install for this, and no way to disable it in a comment.
 
 **What the compiler does not do is the layer rule.** Go rejects import *cycles*, not *outward*
 imports. A `domain/` package importing its sibling `infrastructure/` is acyclic and compiles clean,

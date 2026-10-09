@@ -8,7 +8,11 @@
   "properties": {
     "$schema": { "type": "string" },
     "version": { "type": "integer", "const": 1 },
-    "tracker": { "type": "string", "enum": ["beads", "github"] },
+    "tracker": {
+      "description": "Where specs and bug reports are copied as issues. Beads holds the tasks in every project; github mirrors the documents to GitHub Issues, and beads mirrors them nowhere.",
+      "type": "string",
+      "enum": ["beads", "github"]
+    },
     "harnesses": {
       "description": "The harnesses the project is set up for, each named for its binary. codefall still reads claude-code and antigravity, the names claude and agy had before, and codefall upgrade rewrites them. A name appears once.",
       "type": "array",
@@ -82,7 +86,12 @@
       },
       "additionalProperties": false
     },
-    "beads": { "type": "object", "properties": {}, "additionalProperties": true },
+    "beads": {
+      "description": "Present when tracker is beads: the documents are mirrored nowhere. Empty, because bd keeps its own configuration under .beads/.",
+      "type": "object",
+      "properties": {},
+      "additionalProperties": true
+    },
     "github": {
       "type": "object",
       "required": ["issuesRepo"],

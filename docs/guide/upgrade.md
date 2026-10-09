@@ -10,6 +10,9 @@ when you want to adopt Codefall's architecture in a project that never used it.
 /codefall-upgrade adopt
 ```
 
+The plain form does everything, adoption included. The `adopt` form also offers the templates you
+declined in an earlier run.
+
 Codefall's skills are instructions your coding agent follows when you type a slash command; the
 [README](../../README.md) introduces them.
 

@@ -78,6 +78,7 @@ apply.
 
 When [`/codefall-specify`](specify.md) records a requirement whose screen has no picture yet, it runs
 this skill for that screen in the same run and on the same branch, so the spec and its mockups arrive
-together. A requirement whose mockup you chose to skip gets a `requires-mockup` label on its GitHub
-issue, and [`/codefall-plan`](plan.md) runs this skill for it before planning, instead of refusing.
-When the mockup's files land, the skill removes the label from the issues it covers.
+together. A requirement whose mockup you chose to skip says `Mockup: pending` under its Design
+notes, with a `requires-mockup` label on its GitHub issue when the project has one, and
+[`/codefall-plan`](plan.md) runs this skill for it before planning, instead of refusing. When the
+mockup's files land, the skill removes the line, and the label, for the requirements it covers.

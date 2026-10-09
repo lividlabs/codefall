@@ -64,9 +64,9 @@ report ends with one next command. In order:
 | --- | --- | --- | --- |
 | `envision` | whatever the user arrived with: a sentence, a pitch document, a folder of mockups | `docs/visions/VISION-NNN-slug.md`, the *why*; sources kept verbatim under `docs/visions/sources/` | `scaffold` requires one; `specify` may draw on one |
 | `scaffold` | a vision; an interview for what a template cannot decide; the project's consult agents when a stack stays open | ratified ADRs, scoped `AGENTS.md` files, optionally project files, boundary lint, and the `start` and `update` scripts | a project ready for `specify` |
-| `specify` | the idea or vision, and an audit of what already exists; the project's consult agents for a question of fact the user cannot answer | `docs/specs/SPEC-NNN-slug.md`, the *what*: requirements with EARS acceptance criteria, mirrored to the tracker as a parent issue and one child per requirement; the mockups its requirements need, made through `mock-up` in the same run | `plan` |
-| `report` | the person who saw a bug, interviewed; the running product, driven through their steps; a test run's report or an issue they filed | `docs/bugs/BUG-NNN-slug.md`, what is wrong: the steps, the expected and actual result, evidence committed beside it, whether it reproduced, and EARS acceptance criteria, mirrored to one tracker issue | `plan` |
-| `mock-up` | a design-tool export, or nothing; run by `specify` or `plan` for a requirement that needs one, or alone | `docs/mockups/<slug>/`, matching the app's own design system | `plan`; an issue still labelled `requires-mockup` is one `plan` runs `mock-up` for before it starts |
+| `specify` | the idea or vision, and an audit of what already exists; the project's consult agents for a question of fact the user cannot answer | `docs/specs/SPEC-NNN-slug.md`, the *what*: requirements with EARS acceptance criteria, mirrored to the tracker, when the project has one, as a parent issue and one child per requirement; the mockups its requirements need, made through `mock-up` in the same run | `plan` |
+| `report` | the person who saw a bug, interviewed; the running product, driven through their steps; a test run's report or an issue they filed | `docs/bugs/BUG-NNN-slug.md`, what is wrong: the steps, the expected and actual result, evidence committed beside it, whether it reproduced, and EARS acceptance criteria, mirrored to one tracker issue when the project has one | `plan` |
+| `mock-up` | a design-tool export, or nothing; run by `specify` or `plan` for a requirement that needs one, or alone | `docs/mockups/<slug>/`, matching the app's own design system | `plan`; a requirement whose Design notes still say `Mockup: pending` is one `plan` runs `mock-up` for before it starts |
 | `plan` | the spec, the vision, the code; the project's consult agents for a technical point it cannot settle | `docs/plans/PLAN-NNN-slug.md`, the *how*, scaled to the change; ADRs for hard-to-reverse choices; beads with dependency edges, each carrying its acceptance criteria and, where the task is verified through the wired product, the test case and its criteria; or, when the person chose to leave the decisions it set aside for an engineer, a `Draft` carrying them | `implement`; `plan` again, for a `Draft` with decisions needed |
 | `implement` | ready beads, an epic, or a plan; the project's consult agents when a worker fails | a worktree per task, the test case before the code, verification against the bead's criteria and the project's checks, a pull request per task, walked as a serial stack or in waves on an epic branch until the frontier is empty | `review` and `test` on the epic's work; `implement` again, the next round, when they added children; the human, who merges when the graph is empty; `plan`, for a disagreement that moves work, filed as a revision bead |
 | `review` | anything live: uncommitted work, a branch, a PR, a commit range, a path, a document, an epic's work; the project's consult agents for what the reviewer could not settle | `.codefall/reviews/`, a JSON and Markdown pair per review; fixes on the target's branch for the findings the user takes; on an epic's work, children of the epic for the problems the person took, built by `implement` in the same session | the human; `implement`, which it runs itself on an epic's work; `plan`, for a deferred finding that moves work |
@@ -155,10 +155,14 @@ dependency, a migration, or generated code changes `start` or `update` in the sa
 
 - **Documents in the repository** are canonical for the why (vision), the what (spec), what is
   wrong (bug report), and the how (plan). Each carries a `Status` that describes the document only.
-- **The tracker** (GitHub Issues in this version) mirrors specs and bug reports so people can see
-  what is ready, in progress, and done; the document stays canonical. It is the project's own — the
-  repository `github.issuesRepo` names in `.codefall/settings.json` — and the only tracker a verb
-  files on, comments on, or edits; a `gh issue` command names it with `-R` when it is not the
+- **The tracker** mirrors specs and bug reports so people can see what is ready, in progress, and
+  done; the document stays canonical. Which tracker is `tracker` in `.codefall/settings.json`, and
+  that value names the profile a verb reads, `codefall-specify/trackers/<name>/PROFILE.md` and
+  `codefall-report/trackers/<name>/PROFILE.md`: `github` is GitHub Issues in the repository
+  `github.issuesRepo` names, and `beads` is no mirror at all — the documents and Beads carry
+  everything, and a verb that would create, search, refresh, or close an issue does nothing. Beads
+  holds the tasks under either. The tracker is the project's own, and the only tracker a verb files
+  on, comments on, or edits; a `gh issue` command names it with `-R` when it is not the
   checkout's remote. A bug a verb finds in codefall itself, or in any other repository, is handed to
   the person as a finished issue — a title and a body, ready to paste — and named in the verb's
   report. No verb files it, and no verb offers to: a yes given inside a run reaches this project and

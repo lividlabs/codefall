@@ -92,16 +92,18 @@ Replace it only on a yes; on a no, leave it and say nothing further about it.
 Return the directory path — `docs/mockups/<slug>/` — to whatever is calling this procedure. The
 caller decides what to do with it.
 
-When issues carried `requires-mockup`, a successful import clears it:
+When a requirement's **Design notes** carry `Mockup: pending`, a successful import clears it: remove
+the line from the spec, and when the project mirrors to GitHub (`tracker` is `github` in
+`.codefall/settings.json`), remove the mirror's label from the requirement's issue:
 
 ```bash
 gh issue edit <number> --remove-label "requires-mockup"
 ```
 
-`codefall-specify` applies that label per requirement, so a feature can have several issues carrying it. Clear
-it on the ones this mockup covers and leave the rest, and clear it only when files actually landed. A
-recorded URL with no export is a judgement call — ask the user whether the link is enough to design
-against, and leave the label on if they are unsure.
+`codefall-specify` marks each requirement separately, so a feature can have several. Clear the ones
+this mockup covers and leave the rest, and clear them only when files actually landed. A recorded URL
+with no export is a judgement call — ask the user whether the link is enough to design against, and
+leave the mark on if they are unsure.
 
 ## Committing
 

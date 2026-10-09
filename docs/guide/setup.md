@@ -22,7 +22,7 @@ codefall init
 | Question | Flag | Notes |
 | --- | --- | --- |
 | Which coding agents should Codefall set up? | `--harness` | Repeat the flag, or separate names with commas, for several. |
-| Which issue tracker should Codefall use? | `--tracker` | `github` (GitHub Issues) or `beads`. |
+| Where should specs and bug reports be copied as issues? | `--tracker` | `github` (GitHub Issues) or `beads` (nowhere). Beads holds the tasks either way. |
 | Which GitHub repository holds the issues? | `--issues-repo` | Asked only for GitHub. It defaults to the repository the directory belongs to. |
 | Which GitHub Project number? | `--issues-project` | Asked only for GitHub. Leave it blank for none. |
 | May `/codefall-review` post its findings to a pull request? | `--review-post-to-pr` | Off unless you say yes. |

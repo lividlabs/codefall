@@ -20,7 +20,7 @@ Per surface, under `../templates/surfaces/<name>/` — a `PROFILE.md`, an `AGENT
 the profile's own ADRs.
 
 - `typescript-react` supplies DI (Inversify), frontend state (TanStack Query / Zustand /
-  `useState`), and boundary enforcement (`eslint-extension-boundaries`).
+  `useState`), and boundary enforcement (`eslint-plugin-boundaries`).
 - `go` supplies DI (`samber/do`), boundary enforcement (`internal/` packages plus `depguard`), and
   optional values (`samber/mo`'s `Option`).
 

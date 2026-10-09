@@ -22,7 +22,7 @@ workflow, where fast code generation drifts without hard guardrails.
 
 ### Tooling
 
-- **`eslint-extension-boundaries`** as primary — it gives **editor-time** feedback, catching a
+- **`eslint-plugin-boundaries`** as primary — it gives **editor-time** feedback, catching a
   violation as it's written (the guardrail that matters most for AI-assisted work).
 - **`dependency-cruiser`** optional, as a CI graph-level gate if ESLint rules aren't enough.
 - On the **Next.js topology**, `server-only` is an optional extra: importing a module marked with it

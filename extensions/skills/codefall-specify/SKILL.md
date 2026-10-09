@@ -41,8 +41,9 @@ Read each when its step says to; none is loaded up front.
 - `templates/specs/SPEC.md` — the document template. Read at step 10. Every bracketed instruction
   in it is stripped on emit.
 - `templates/specs/AGENTS.md` — the operative rules this skill installs at `docs/specs/AGENTS.md`.
-- `trackers/github/PROFILE.md` — the GitHub tracker profile: issue shape, labels, creating,
-  refreshing, archiving. Read at step 13, and at step 3 for the duplicate search.
+- `trackers/<name>/PROFILE.md` — the tracker profile, `<name>` being `tracker` in
+  `.codefall/settings.json`: issue shape, labels, creating, refreshing, archiving. Read at step 13,
+  and at step 3 for the duplicate search.
 - `reference/consulting.md` — a question of fact the user cannot answer, put to the configured
   agents. Read at steps 5 and 7. Names
   `../../../.codefall/shared/running-agents.md`, `../../../.codefall/shared/run-agent.sh`, `../../../.codefall/shared/consult-prompt.md`,
@@ -128,15 +129,13 @@ profile** — one directory per tracker.
 | Tracker profile | Covers | Status |
 | --- | --- | --- |
 | `github` | GitHub Issues, optionally with a GitHub Project | **supported** |
+| `beads` | No mirror: the document and Beads carry everything | **supported** |
 | `jira` | Jira Cloud and Data Center | planned |
 | `linear` | Linear | planned |
 
-- A tracker is **supported** only when `trackers/<name>/PROFILE.md` is complete. A planned profile
-  is an exit, not a menu choice: say `codefall-specify` does not mirror to it yet and stop.
-- GitHub is the only supported profile, so there is no question to ask: state that the mirror will
-  land in GitHub Issues and confirm the repository.
-- Read the profile's capability table before writing, and follow its fallbacks rather than
-  improvising around a missing feature.
+- A planned profile is an exit: say `codefall-specify` does not mirror to it yet and stop.
+- The profile is the settings' `tracker`; never ask. Under `github`, confirm the repository.
+- Read the profile's capability table before writing, and follow its fallbacks.
 - **The spec is written even when the mirror fails.** The document is the deliverable. Give the user
   the exact command to fix the tracker and say the mirror is pending. Do not discard the spec.
 
@@ -297,8 +296,8 @@ For each requirement with a visual surface, ask whether a mockup exists.
 - **They do not** — it is made in this run, at step 12, by running `codefall-mock-up` for that
   surface on this branch. Say so; the only question is whether to skip it for now. The spec
   references the path it will land at.
-- **Skipped** — the requirement's tracker issue is marked `requires-mockup` at step 13, and
-  `codefall-plan` makes the mockup before it starts.
+- **Skipped** — write `Mockup: pending` under the requirement's **Design notes**; step 13 mirrors
+  it as a label, and `codefall-plan` makes the mockup before it starts.
 
 Nothing is drawn here; `codefall-mock-up` is the tool.
 
@@ -355,9 +354,9 @@ per-file lines; the path goes under the requirement's **Design notes**.
 
 ### 13. Mirror to the tracker
 
-Follow the creation sequence in `trackers/github/PROFILE.md`. The document is canonical and the
+Follow the creation sequence in `trackers/<name>/PROFILE.md`. The document is canonical and the
 issues are generated from it, so this step never asks the user to re-approve content.
-`requires-mockup` goes only on a requirement whose mockup was skipped at step 8.
+`requires-mockup` goes only on a requirement whose Design notes say `Mockup: pending`.
 
 ### 14. Link back, commit, and wrap up
 
@@ -366,7 +365,8 @@ amendment the user took at step 10; change nothing else in the file.
 
 Then land it per `../../../.codefall/shared/landing.md`: commit by path — the spec, the mockups,
 the `AGENTS.md` files, the vision — push, and open the pull request with
-`Relates to #<spec-issue>` in its body, a draft only when the status is `Draft`. Never add the
+`Relates to #<spec-issue>` in its body when the mirror made one, a draft only when the status is
+`Draft`. Never add the
 `auto-merge` label: a person adds it when they want the spec merged.
 
 Report the spec path, its identifier, its status, every open question it carries, every consult and

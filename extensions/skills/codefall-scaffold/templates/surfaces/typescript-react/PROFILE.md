@@ -35,7 +35,7 @@ implicit resolution cannot work **under any toolchain, `tsc` included**. It is n
 
 Toolchain differences make it worse rather than causing it. Next.js detects `emitDecoratorMetadata`
 in tsconfig and turns on SWC's transform, while Metro strips types with Babel and emits nothing
-unless `babel-extension-transform-typescript-metadata` is added. So a class-typed parameter with a
+unless `babel-plugin-transform-typescript-metadata` is added. So a class-typed parameter with a
 forgotten `@inject` resolves on Next and fails on React Native — the same code, two behaviours.
 
 ADR-TS-01 makes `@inject(TYPES.Thing)` mandatory on every constructor parameter, which needs no
@@ -142,7 +142,7 @@ example: the compiler covers the facade rules outright, and only the layer rule 
 | Server state | TanStack Query | ADR-TS-02 |
 | Shared client state | Zustand | ADR-TS-02 |
 | Local UI state | `useState` / `useReducer` | ADR-TS-02 |
-| Boundary enforcement | `eslint-extension-boundaries`, `dependency-cruiser` optional | ADR-TS-03 |
+| Boundary enforcement | `eslint-plugin-boundaries`, `dependency-cruiser` optional | ADR-TS-03 |
 
 ## ADRs this profile supplies
 
@@ -157,12 +157,17 @@ a desktop or mobile app, a library — not for one that merely has no current pl
 ## Depth notes
 
 Beyond docs, this profile's **project files** tier owes: `package.json`, a `tsconfig` with
-`experimentalDecorators`, ESLint including the `eslint-extension-boundaries` rules, formatter, test
+`experimentalDecorators`, ESLint including the `eslint-plugin-boundaries` rules, formatter, test
 runner, and CI running all of it.
+
+**Add every dependency with the package manager** — `npm install -D <name>`, `pnpm add -D <name>`,
+`yarn add -D <name>` — never by writing a version into `package.json` by hand. The package manager
+resolves the current release and writes the lockfile to match it; a version written from memory is
+whatever was current when the model was trained.
 
 **Do not set `emitDecoratorMetadata`.** Nothing here needs it, and enabling it lets a forgotten
 `@inject` on a class-typed parameter resolve on some toolchains and not others — a portability bug
-that the explicit-token rule exists to make impossible. No metadata extension is needed on any target
+that the explicit-token rule exists to make impossible. No metadata plugin is needed on any target
 for the same reason.
 
 On the **Next.js topology**, add `next.config.ts`, the `app/` tree with at least one

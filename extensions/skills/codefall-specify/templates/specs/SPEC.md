@@ -61,7 +61,9 @@ As a <consumer>, I want <capability>, so that <benefit>.
 
 ## Design notes
 
-[Visual direction, mockup path, distilled research the user confirmed. Omit if empty.]
+[Visual direction, mockup path, distilled research the user confirmed. `Mockup: pending` on its
+own line for a requirement whose mockup was skipped; the mirror labels it, and the line comes out
+when the mockup lands. Omit if empty.]
 
 ## Open questions
 

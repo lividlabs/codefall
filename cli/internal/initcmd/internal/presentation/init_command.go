@@ -70,7 +70,8 @@ type initFlags struct {
 
 func (f *initFlags) register(cmd *cobra.Command) {
 	cmd.Flags().StringVar(&f.tracker, "tracker", "",
-		"issue tracker to use ("+strings.Join(settings.Trackers(), ", ")+")")
+		"where specs and bug reports are copied as issues: "+settings.TrackerGitHub+" (GitHub Issues) or "+
+			settings.TrackerBeads+" (nowhere; Beads holds the tasks either way)")
 	cmd.Flags().StringVar(&f.issuesRepo, "issues-repo", "",
 		"repository whose issues the project files against, as owner/name on GitHub (defaults to the "+
 			"repository this directory belongs to; required when the tracker is "+settings.TrackerGitHub+
@@ -524,10 +525,11 @@ func answered(
 
 func trackerField(tracker *string) huh.Field {
 	return huh.NewSelect[string]().
-		Title("Which issue tracker should codefall use?").
+		Title("Where should specs and bug reports be copied as issues?").
+		Description("Beads holds the tasks in every project; this only chooses where the documents are mirrored.").
 		Options(
 			huh.NewOption("GitHub Issues", settings.TrackerGitHub),
-			huh.NewOption("Beads", settings.TrackerBeads),
+			huh.NewOption("Nowhere (Beads holds the tasks either way)", settings.TrackerBeads),
 			huh.NewOption("Jira (not yet available)", trackerJira),
 			huh.NewOption("Linear (not yet available)", trackerLinear),
 		).
@@ -554,7 +556,7 @@ func availableTracker(tracker string) error {
 }
 
 func notAvailable(tracker string) error {
-	return fmt.Errorf("codefall cannot use %s yet — choose GitHub Issues or Beads", tracker)
+	return fmt.Errorf("codefall cannot use %s yet — choose GitHub Issues or nowhere", tracker)
 }
 
 func repoField(repo *string) huh.Field {
