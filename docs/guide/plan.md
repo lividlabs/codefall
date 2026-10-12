@@ -16,7 +16,10 @@ building. With no argument, the skill asks what you want to plan.
 A run produces up to two things:
 
 - **A plan document** at `docs/plans/PLAN-007-itinerary-export.md`, when the change is big enough to
-  need one. It holds the approach, the architecture, and a table of tasks.
+  need one. It is a software design document: the approach, the architecture, the decisions and
+  why they were made, and a table of tasks at the end. `/codefall-implement` and `/codefall-review`
+  check the code against it, and it stays as the description of that part of the system until the
+  code moves away from it.
 - **Tasks in Beads**, always. Beads is a task tracker that stores its data in your git repository,
   and each task in it is a *bead*. A bead records which other beads must finish before it can
   start; those records are *dependency edges*. The beads and their edges together form the *task
