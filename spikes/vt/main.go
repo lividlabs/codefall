@@ -5,13 +5,14 @@
 // virtual terminal (x/vt), renders the terminal's grid as the right pane, and
 // sends the host's key, paste, and mouse events back through the emulator,
 // which encodes them for the child. The emulator also answers the child's
-// terminal queries (DA1, DSR, CPR) on the same pipe. The left pane is a static
-// list the host draws itself, to see what layout and focus switching cost.
+// terminal queries (DA1, DSR, CPR) on the same pipe. The left pane is a menu
+// the host draws itself, to see what layout and focus switching cost.
 //
 //	go run . [command [args...]]     default: $SHELL
 //
-// ctrl+] moves focus between the panes; a mouse click focuses the pane under
-// it. ctrl+q quits the host and kills the child. Everything else goes to the
+// ctrl+] moves focus between the panes, showing the sidebar if it is hidden;
+// ctrl+^ hides and shows the sidebar; a mouse click focuses the pane under it.
+// ctrl+q quits the host and kills the child. Everything else goes to the
 // focused pane.
 package main
 
@@ -349,35 +350,48 @@ type bead struct {
 	description                 string
 }
 
-// sidebar is the host's own pane: a static list with a cursor, standing in for
+// menuItems are the rows of the sidebar's menu.
+var menuItems = []string{"Beads/Issues", "About"}
+
+// sidebar is the host's own pane: a menu with a cursor, standing in for
 // whatever a real host would show beside the harness.
 type sidebar struct {
-	items  []bead
-	cursor int
+	menu  int // cursor in the menu
+	items []bead
 }
 
-// update moves the cursor, and on enter returns the chosen bead.
-func (s sidebar) update(msg tea.KeyPressMsg) (sidebar, *bead) {
+// update handles a key while the sidebar has focus. It returns the sidebar and
+// the dialog to open, if the key opened one.
+func (s sidebar) update(msg tea.KeyPressMsg) (sidebar, dialog) {
 	switch msg.String() {
-	case "up", "k":
-		if s.cursor > 0 {
-			s.cursor--
+	case "up":
+		if s.menu > 0 {
+			s.menu--
 		}
-	case "down", "j":
-		if s.cursor < len(s.items)-1 {
-			s.cursor++
+	case "down":
+		if s.menu < len(menuItems)-1 {
+			s.menu++
 		}
-	case "enter":
-		if s.cursor < len(s.items) {
-			b := s.items[s.cursor]
-			return s, &b
-		}
+	case "enter", "right":
+		return s, s.open(s.menu)
 	}
 	return s, nil
 }
 
+// open returns the dialog for the menu item at i: the bead list for
+// Beads/Issues, the About dialog for About.
+func (s sidebar) open(i int) dialog {
+	switch menuItems[i] {
+	case "Beads/Issues":
+		return &beadList{items: s.items}
+	case "About":
+		return aboutDialog{}
+	}
+	return nil
+}
+
 // logo is the wordmark, CODE over FALL, in block glyphs with its own ANSI
-// colors, as copied from the terminal. It sits above the beads.
+// colors, as copied from the terminal. It sits above the menu.
 //
 //go:embed logo.ans
 var logoText string
@@ -452,36 +466,85 @@ func abs(n int) int {
 	return n
 }
 
-func (s sidebar) content(width, height int) string {
-	var b strings.Builder
-	b.WriteString(logo(width) + "\n\n") // a blank row between the glow and the list
-	height -= logoRows + 1
-	for i, it := range s.items {
-		if i >= height {
-			break
-		}
-		line := "  " + it.id + " " + it.title
-		if i == s.cursor {
-			line = selectedRow.Render(fitBlock(line, width, 1))
-		}
-		b.WriteString(line)
-		if i < len(s.items)-1 {
-			b.WriteByte('\n')
-		}
+// helpItem is one entry of a key help row.
+type helpItem struct{ key, desc string }
+
+var (
+	menuHelp  = []helpItem{{"↑↓", "move"}, {"enter", "confirm"}}
+	listHelp  = []helpItem{{"↑↓", "choose"}, {"enter", "confirm"}, {"esc", "cancel"}}
+	beadHelp  = []helpItem{{"←→", "switch"}, {"enter", "confirm"}, {"esc", "cancel"}}
+	aboutHelp = []helpItem{{"enter", "confirm"}, {"esc", "cancel"}}
+)
+
+// help renders the items the way the Charm help bubble does: key, a space,
+// its description, the pairs separated by a dot.
+func help(items []helpItem) string {
+	parts := make([]string, len(items))
+	for i, it := range items {
+		parts[i] = helpKey.Render(it.key) + " " + helpDesc.Render(it.desc)
 	}
-	return fitBlock(b.String(), width, height+logoRows+1)
+	return strings.Join(parts, helpDesc.Render(" • "))
 }
 
-// --- bead dialog -------------------------------------------------------------------------------
-
-// beadDialog is the modal opened by enter on a bead: its details and two
-// buttons. Implement types a slash command into the child; Cancel closes.
-type beadDialog struct {
-	bead   bead
-	button int // 0 implement, 1 cancel
+// selected draws a row as the selection in the given style: the text on the
+// highlight, padded with plain spaces to the full width first, because
+// fitBlock resets the style ahead of its padding and would end the highlight
+// at the text.
+func selected(line string, width int, style lipgloss.Style) string {
+	return style.Render(line + strings.Repeat(" ", max(width-ansi.StringWidth(line), 0)))
 }
 
-const dialogWidth = 60
+// content draws the sidebar as a block the full size of its pane, margin
+// included, so a selected row runs edge to edge. The top row is blank, the
+// wordmark standing for a title. While the sidebar has focus the cursor is
+// highlighted and the key help sits on the bottom row; without it the text is
+// muted and neither is drawn.
+func (s sidebar) content(width, height int, focused bool) string {
+	rows := []string{""} // the title row
+	for _, line := range strings.Split(logo(width-borderCols), "\n") {
+		rows = append(rows, " "+line)
+	}
+	rows = append(rows, "") // a blank row between the glow and the list
+	text := lipgloss.NewStyle()
+	if !focused {
+		text = text.Foreground(colMuted)
+	}
+	for i, it := range menuItems {
+		line := text.Render("  " + it)
+		if focused && i == s.menu {
+			line = selected(line, width, selectedRow)
+		}
+		rows = append(rows, line)
+	}
+	block := strings.Join(rows, "\n")
+	if focused {
+		block = fitBlock(block, width, height-1) + "\n " + help(menuHelp)
+	}
+	return fitBlock(block, width, height)
+}
+
+// --- dialogs -----------------------------------------------------------------------------------
+
+// dialog is a modal composed over the dimmed frame. While one is open it takes
+// every key.
+type dialog interface {
+	// render draws the dialog for a window of the given size.
+	render(winW, winH int) string
+	// update handles a key. It returns the dialog to show next, nil once the
+	// dialog has closed, and the bead to implement when Implement was chosen.
+	update(msg tea.KeyPressMsg) (dialog, *bead)
+}
+
+// dialogWidth is the inner width of a dialog, hairline to hairline: 70 cells
+// like Crush's command palette, or what the window leaves after the ring and a
+// cell of margin on each side.
+func dialogWidth(winW int) int {
+	return max(min(70, winW-6), 20)
+}
+
+// dialogPad is the padding inside the hairlines. Text sits a cell in; a
+// selected row runs under it to the hairline.
+const dialogPad = 1
 
 // hairline is a border of one-eighth blocks: the sides flush with the outer
 // edge, the top and bottom on the inner edge of their cells. A rule in a corner
@@ -506,23 +569,104 @@ var (
 			Margin(0, 1)
 )
 
-func (d beadDialog) render() string {
-	b := d.bead
-	w := dialogWidth
-	row := func(label, value string) string {
-		return dialogLabel.Render(fmt.Sprintf("%-9s", label)) + value
+// dialogFrame sets the lines, already w wide at most, in the shaded pane with
+// its border around it. The pane's title row is left blank so the top is
+// padded like the bottom, and the help row is the last line.
+func dialogFrame(lines []string, w int, items []helpItem) string {
+	lines = append(lines, "", pad(help(items)))
+	body := fitBlock(strings.Join(lines, "\n"), w, len(lines))
+	return dialogBorder.Render(pane(body, w, "", true, colBgLight))
+}
+
+// pad indents a line by the dialog's padding.
+func pad(line string) string { return strings.Repeat(" ", dialogPad) + line }
+
+// wrap word-wraps text to the width inside the padding and pads each line.
+func wrap(text string, w int) []string {
+	lines := strings.Split(lipgloss.NewStyle().Width(w-2*dialogPad).Render(text), "\n")
+	for i := range lines {
+		lines[i] = pad(lines[i])
 	}
-	var lines []string
-	lines = append(lines,
-		focusedTitle.Render(b.id),
-		lipgloss.NewStyle().Bold(true).Render(b.title),
+	return lines
+}
+
+// --- bead list ---------------------------------------------------------------------------------
+
+// beadList is the dialog Beads/Issues opens: the beads to choose from, with a
+// cursor. enter opens the bead's own dialog, which comes back here on cancel.
+type beadList struct {
+	items  []bead
+	cursor int
+}
+
+func (d *beadList) render(winW, winH int) string {
+	w := dialogWidth(winW)
+	// The rows the window leaves for the list: the ring, the pane's top and
+	// bottom rows, the title and its blank row, the help row and its blank.
+	visible := max(min(len(d.items), winH-8), 1)
+	start := 0
+	if d.cursor >= visible {
+		start = d.cursor - visible + 1
+	}
+	lines := []string{pad(focusedTitle.Render("Beads/Issues")), ""}
+	for i := start; i < len(d.items) && i < start+visible; i++ {
+		it := d.items[i]
+		line := pad(it.id + "  " + it.title)
+		if i == d.cursor {
+			line = selected(line, w, dialogSelected)
+		}
+		lines = append(lines, line)
+	}
+	return dialogFrame(lines, w, listHelp)
+}
+
+func (d *beadList) update(msg tea.KeyPressMsg) (dialog, *bead) {
+	switch msg.String() {
+	case "up":
+		if d.cursor > 0 {
+			d.cursor--
+		}
+	case "down":
+		if d.cursor < len(d.items)-1 {
+			d.cursor++
+		}
+	case "esc", "q":
+		return nil, nil
+	case "enter":
+		if d.cursor < len(d.items) {
+			return &beadDialog{bead: d.items[d.cursor], back: d}, nil
+		}
+	}
+	return d, nil
+}
+
+// --- bead dialog -------------------------------------------------------------------------------
+
+// beadDialog is the modal opened on a bead: its details and two buttons.
+// Implement types a slash command into the child; Cancel returns to the list
+// it was opened from.
+type beadDialog struct {
+	bead   bead
+	button int    // 0 implement, 1 cancel
+	back   dialog // what cancel returns to, or nil
+}
+
+func (d beadDialog) render(winW, winH int) string {
+	b := d.bead
+	w := dialogWidth(winW)
+	row := func(label, value string) string {
+		return pad(dialogLabel.Render(fmt.Sprintf("%-9s", label)) + value)
+	}
+	lines := []string{
+		pad(focusedTitle.Render(b.id)),
+		pad(lipgloss.NewStyle().Bold(true).Render(b.title)),
 		"",
 		row("status", b.status),
 		row("priority", b.priority),
 		row("deps", strings.Join(b.deps, ", ")),
 		"",
-	)
-	lines = append(lines, strings.Split(lipgloss.NewStyle().Width(w).Render(b.description), "\n")...)
+	}
+	lines = append(lines, wrap(b.description, w)...)
 	impl, cancel := buttonStyle, buttonStyle
 	if d.button == 0 {
 		impl = buttonActive
@@ -530,27 +674,57 @@ func (d beadDialog) render() string {
 		cancel = buttonActive
 	}
 	buttons := impl.Render("Implement") + "  " + cancel.Render("Cancel")
-	lines = append(lines, "", lipgloss.PlaceHorizontal(w, lipgloss.Right, buttons))
-	body := fitBlock(strings.Join(lines, "\n"), w, len(lines))
-	// The shaded pane carries the fill, with its title row left blank so the
-	// top is padded like the bottom; the border goes around it.
-	return dialogBorder.Render(pane(body, w, "", true, colBgLight))
+	lines = append(lines, "", lipgloss.PlaceHorizontal(w-dialogPad, lipgloss.Right, buttons))
+	return dialogFrame(lines, w, beadHelp)
 }
 
-// update handles a key while the dialog is open. It returns the dialog (nil
-// when it closed) and whether Implement was chosen.
-func (d *beadDialog) update(msg tea.KeyPressMsg) (*beadDialog, bool) {
+func (d *beadDialog) update(msg tea.KeyPressMsg) (dialog, *bead) {
 	switch msg.String() {
-	case "left", "h", "shift+tab":
+	case "left", "shift+tab":
 		d.button = 0
-	case "right", "l", "tab":
+	case "right", "tab":
 		d.button = 1
 	case "esc", "q":
-		return nil, false
+		return d.back, nil
 	case "enter":
-		return nil, d.button == 0
+		if d.button == 0 {
+			return nil, &d.bead
+		}
+		return d.back, nil
 	}
-	return d, false
+	return d, nil
+}
+
+// --- about dialog ------------------------------------------------------------------------------
+
+// aboutDialog is the modal the About item opens: what the spike is, and the
+// command it is running, over an OK button.
+type aboutDialog struct{}
+
+// childCommand is the command line the child was started with, for About.
+var childCommand string
+
+func (aboutDialog) render(winW, winH int) string {
+	w := dialogWidth(winW)
+	lines := []string{
+		pad(focusedTitle.Render("Codefall")),
+		pad(lipgloss.NewStyle().Bold(true).Render("VT spike")),
+		"",
+	}
+	lines = append(lines, wrap("A terminal program inside a Bubble Tea pane, beside a pane the host draws itself: "+
+		"x/xpty for the PTY, x/vt for the terminal, keys and mouse re-encoded through the emulator.", w)...)
+	lines = append(lines, "")
+	lines = append(lines, wrap(dialogLabel.Render("child    ")+childCommand, w)...)
+	lines = append(lines, "", lipgloss.PlaceHorizontal(w-dialogPad, lipgloss.Right, buttonActive.Render("OK")))
+	return dialogFrame(lines, w, aboutHelp)
+}
+
+func (d aboutDialog) update(msg tea.KeyPressMsg) (dialog, *bead) {
+	switch msg.String() {
+	case "esc", "q", "enter":
+		return nil, nil
+	}
+	return d, nil
 }
 
 // dimAmount is how far the frame's colors move toward black under an open
@@ -634,20 +808,22 @@ type model struct {
 	width, height int
 	focus         focus
 	side          sidebar
+	sideHidden    bool // the sidebar is hidden and the child has the width
 	term          termPane
-	dialog        *beadDialog // open modal, or nil
+	dialog        dialog // open modal, or nil
 }
 
 // The palette is OpenCode's Material theme (dark), whose panes are blocks of
 // three blue-grays rather than lines: packages/tui/src/theme/assets/material.json.
 var (
-	colBgDark  = lipgloss.Color("#1e272c") // backgroundPanel: the sidebar
-	colBg      = lipgloss.Color("#263238") // background: unused, the terminal pane stays on the terminal's own
-	colBgLight = lipgloss.Color("#37474f") // backgroundElement: status bar, dialog, selection
-	colText    = lipgloss.Color("#eeffff")
-	colMuted   = lipgloss.Color("#546e7a")
-	colPrimary = lipgloss.Color("#82aaff")
-	colAccent  = lipgloss.Color("#89ddff")
+	colBgDark    = lipgloss.Color("#1e272c") // backgroundPanel: the sidebar
+	colBg        = lipgloss.Color("#263238") // background: unused, the terminal pane stays on the terminal's own
+	colBgLight   = lipgloss.Color("#37474f") // backgroundElement: status bar, dialog, selection
+	colText      = lipgloss.Color("#eeffff")
+	colMuted     = lipgloss.Color("#546e7a")
+	colMutedDark = lipgloss.Color("#415a64") // the help descriptions, a step under colMuted
+	colPrimary   = lipgloss.Color("#82aaff")
+	colAccent    = lipgloss.Color("#89ddff")
 )
 
 var (
@@ -655,6 +831,11 @@ var (
 	focusedTitle = lipgloss.NewStyle().Foreground(colPrimary).Bold(true)
 	blurredTitle = lipgloss.NewStyle().Foreground(colMuted)
 	selectedRow  = lipgloss.NewStyle().Background(colBgLight).Foreground(colText).Bold(true)
+	// A dialog's fill is the sidebar's selection color, so its own selection
+	// is a bar in the primary blue, as Crush draws one.
+	dialogSelected = lipgloss.NewStyle().Background(colPrimary).Foreground(colBgDark).Bold(true)
+	helpKey        = lipgloss.NewStyle().Foreground(colMuted)
+	helpDesc       = lipgloss.NewStyle().Foreground(colMutedDark)
 )
 
 // paint fills in what a block leaves to the terminal's defaults: every cell
@@ -709,9 +890,18 @@ func pane(block string, w int, title string, focused bool, bg color.Color) strin
 
 func (m model) Init() tea.Cmd { return nil }
 
+// sideCols is the width the sidebar takes from the window: its content and
+// its margin, or nothing while it is hidden.
+func (m model) sideCols() int {
+	if m.sideHidden {
+		return 0
+	}
+	return sidebarWidth + borderCols
+}
+
 // termInner is the inner size of the terminal pane for the current window.
 func (m model) termInner() (int, int) {
-	w := m.width - (sidebarWidth + borderCols) - borderCols
+	w := m.width - m.sideCols() - borderCols
 	h := m.height - statusRows - borderRows
 	if w < 1 {
 		w = 1
@@ -724,7 +914,30 @@ func (m model) termInner() (int, int) {
 
 // termOrigin is where the terminal pane's inner top-left cell sits on screen.
 func (m model) termOrigin() (int, int) {
-	return sidebarWidth + borderCols + 1, statusRows + 1
+	return m.sideCols() + 1, statusRows + 1
+}
+
+// isToggleKey reports whether the key hides or shows the sidebar: ctrl+^,
+// which no harness binds. Terminals send it for ctrl+6 as well, and one with
+// the kitty protocol on names that key by its digit, so both spellings count.
+func isToggleKey(key string) bool {
+	switch key {
+	case "ctrl+^", "ctrl+6", "ctrl+shift+6":
+		return true
+	}
+	return false
+}
+
+// toggleSidebar hides or shows the sidebar, gives the child the new width, and
+// moves focus to the child when the pane it was on is gone.
+func (m model) toggleSidebar() model {
+	m.sideHidden = !m.sideHidden
+	w, h := m.termInner()
+	m.term = m.term.resize(w, h)
+	if m.sideHidden {
+		m = m.setFocus(focusTerm)
+	}
+	return m
 }
 
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -769,26 +982,28 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, tea.Quit
 		}
 		if m.dialog != nil {
-			var implement bool
+			var implement *bead
 			m.dialog, implement = m.dialog.update(msg)
-			if implement && m.term.started() {
+			if implement != nil && m.term.started() {
 				// Type the command into the child as if at the keyboard,
 				// without enter, and hand it the focus so the user sends it.
-				m.term.term.SendText("/codefall-implement " + m.side.items[m.side.cursor].id)
+				m.term.term.SendText("/codefall-implement " + implement.id)
 				m = m.setFocus(focusTerm)
 			}
 			return m, nil
 		}
+		if isToggleKey(msg.String()) {
+			return m.toggleSidebar(), nil
+		}
 		if msg.String() == "ctrl+]" {
+			if m.sideHidden {
+				return m.toggleSidebar().setFocus(focusSidebar), nil
+			}
 			return m.setFocus(1 - m.focus), nil
 		}
 		switch m.focus {
 		case focusSidebar:
-			var chosen *bead
-			m.side, chosen = m.side.update(msg)
-			if chosen != nil {
-				m.dialog = &beadDialog{bead: *chosen}
-			}
+			m.side, m.dialog = m.side.update(msg)
 		case focusTerm:
 			if !m.term.started() {
 				break
@@ -830,7 +1045,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if _, click := msg.(tea.MouseClickMsg); click {
 			if inTerm {
 				m = m.setFocus(focusTerm)
-			} else if ev.Y >= statusRows {
+			} else if ev.Y >= statusRows && !m.sideHidden {
 				m = m.setFocus(focusSidebar)
 			}
 		}
@@ -875,9 +1090,12 @@ func (m model) View() tea.View {
 	}
 	w, h := m.termInner()
 
-	side := pane(m.side.content(sidebarWidth, h), sidebarWidth, "beads", m.focus == focusSidebar, colBgDark)
-	term := pane(fitBlock(m.term.content(), w, h), w, m.term.title(), m.focus == focusTerm, nil)
-	body := lipgloss.JoinHorizontal(lipgloss.Top, side, term)
+	body := pane(fitBlock(m.term.content(), w, h), w, m.term.title(), m.focus == focusTerm, nil)
+	if !m.sideHidden {
+		sw, sh := sidebarWidth+borderCols, h+borderRows
+		side := paint(m.side.content(sw, sh, m.focus == focusSidebar), sw, sh, colText, colBgDark)
+		body = lipgloss.JoinHorizontal(lipgloss.Top, side, body)
+	}
 
 	alt := ""
 	if m.term.started() {
@@ -895,13 +1113,13 @@ func (m model) View() tea.View {
 	if m.focus == focusTerm {
 		focused = m.term.title()
 	}
-	status := fmt.Sprintf(" focus: %s  term %dx%d  %d B%s  ctrl+] switches · shift+pgup/pgdn or wheel scrolls · ctrl+q quits ",
+	status := fmt.Sprintf(" focus: %s  term %dx%d  %d B%s  ctrl+] switches · ctrl+^ sidebar · shift+pgup/pgdn or wheel scrolls · ctrl+q quits ",
 		focused, w, h, m.term.bytes, alt)
 	bar := statusStyle.Render(fitBlock(status, m.width, 1))
 
 	frame := bar + "\n" + body
 	if m.dialog != nil {
-		frame = overlay(frame, m.dialog.render(), m.width, m.height)
+		frame = overlay(frame, m.dialog.render(m.width, m.height), m.width, m.height)
 	}
 	if dump := os.Getenv("VTSPIKE_DUMP"); dump != "" {
 		_ = os.WriteFile(dump, []byte(frame), 0o644)
@@ -949,6 +1167,7 @@ func main() {
 		argv = []string{sh}
 	}
 
+	childCommand = strings.Join(argv, " ")
 	m := model{
 		focus: focusTerm,
 		side: sidebar{items: []bead{

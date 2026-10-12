@@ -101,7 +101,7 @@ func TestPaneWithNilBackgroundLeavesEverythingToTheTerminal(t *testing.T) {
 
 func TestDialogIsBorderedOnItsFill(t *testing.T) {
 	d := beadDialog{bead: bead{id: "cf-1", title: "T", description: "d"}}
-	got := d.render()
+	got := d.render(120, 36)
 	lines := strings.Split(got, "\n")
 	first := strings.TrimSpace(ansiStrip(lines[0]))
 	if !strings.HasPrefix(first, "▁") || !strings.HasSuffix(first, "▁") {
@@ -126,14 +126,14 @@ func TestDialogIsBorderedOnItsFill(t *testing.T) {
 func TestOverlayRingTakesTheDimmedBackground(t *testing.T) {
 	// A frame painted in its own color everywhere, the way OpenCode draws.
 	row := strings.Repeat("\x1b[48;2;100;100;100mx", 70) + "\x1b[m"
-	frame := strings.TrimSuffix(strings.Repeat(row+"\n", 14), "\n")
+	frame := strings.TrimSuffix(strings.Repeat(row+"\n", 20), "\n")
 	d := beadDialog{bead: bead{id: "cf-1", title: "T", description: "d"}}
-	out := overlay(frame, d.render(), 70, 14)
-	canvas := lipgloss.NewCanvas(70, 14)
+	out := overlay(frame, d.render(70, 20), 70, 20)
+	canvas := lipgloss.NewCanvas(70, 20)
 	canvas.Compose(uv.NewStyledString(out))
 
-	dw, dh := lipgloss.Width(d.render()), lipgloss.Height(d.render())
-	x, y := (70-dw)/2, (14-dh)/2
+	dw, dh := lipgloss.Width(d.render(70, 20)), lipgloss.Height(d.render(70, 20))
+	x, y := (70-dw)/2, (20-dh)/2
 	for _, pos := range [][2]int{{x, y + 1}, {x + 1, y}, {x + 1, y + dh - 1}, {x + dw - 1, y + 1}} {
 		c := canvas.CellAt(pos[0], pos[1])
 		if r, g, b := rgb(c.Style.Bg); r != 50 || g != 50 || b != 50 {
