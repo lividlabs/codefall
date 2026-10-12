@@ -483,21 +483,25 @@ type beadDialog struct {
 
 const dialogWidth = 60
 
-// hairline is a border of one-eighth blocks flush with the cell edge. The
-// corners are from Symbols for Legacy Computing (U+1FB7C..7F), which join a
-// side eighth to a top or bottom eighth; terminals that draw block elements
-// themselves show them whatever the font.
+// hairline is a border of one-eighth blocks: the sides flush with the outer
+// edge, the top and bottom on the inner edge of their cells. A rule in a corner
+// cell then ends at the outer edge, exactly where the side rule below it
+// starts, so the corner closes without a joining glyph. Every glyph is a
+// standard Block Element; the flush corners (U+1FB7C..7F) are missing from
+// some fonts.
 var hairline = lipgloss.Border{
-	Top: "▔", Bottom: "▁", Left: "▏", Right: "▕",
-	TopLeft: "\U0001FB7D", TopRight: "\U0001FB7E", BottomLeft: "\U0001FB7C", BottomRight: "\U0001FB7F",
+	Top: "▁", Bottom: "▔", Left: "▏", Right: "▕",
+	TopLeft: "▁", TopRight: "▁", BottomLeft: "▔", BottomRight: "▔",
 }
 
 var (
 	dialogLabel  = lipgloss.NewStyle().Foreground(colMuted)
 	buttonStyle  = lipgloss.NewStyle().Padding(0, 2).Foreground(colMuted)
 	buttonActive = lipgloss.NewStyle().Padding(0, 2).Background(colPrimary).Foreground(colBgDark).Bold(true)
-	dialogBorder = lipgloss.NewStyle().Border(hairline).
-			BorderForeground(colAccent).BorderBackground(colBgLight)
+	// The top and bottom rows carry no fill, so their rules read as the edges of
+	// the shaded block on the terminal's own background.
+	dialogBorder = lipgloss.NewStyle().Border(hairline).BorderForeground(colAccent).
+			BorderLeftBackground(colBgLight).BorderRightBackground(colBgLight)
 )
 
 func (d beadDialog) render() string {

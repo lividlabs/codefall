@@ -104,13 +104,16 @@ func TestDialogIsBorderedOnItsFill(t *testing.T) {
 	got := d.render()
 	lines := strings.Split(got, "\n")
 	first := ansiStrip(lines[0])
-	if !strings.HasPrefix(first, "\U0001FB7D") || !strings.HasSuffix(first, "\U0001FB7E") {
+	if !strings.HasPrefix(first, "▁") || !strings.HasSuffix(first, "▁") {
 		t.Errorf("top = %q, want a hairline border", first)
 	}
 	canvas := lipgloss.NewCanvas(lipgloss.Width(got), len(lines))
 	canvas.Compose(uv.NewStyledString(got))
-	if r, g, b := rgb(canvas.CellAt(0, 0).Style.Bg); r != 0x37 || g != 0x47 || b != 0x4f {
-		t.Errorf("border bg = %x,%x,%x want 37,47,4f", r, g, b)
+	if bg := canvas.CellAt(0, 0).Style.Bg; bg != nil {
+		t.Errorf("top border bg = %v want nil", bg)
+	}
+	if r, g, b := rgb(canvas.CellAt(0, 1).Style.Bg); r != 0x37 || g != 0x47 || b != 0x4f {
+		t.Errorf("side border bg = %x,%x,%x want 37,47,4f", r, g, b)
 	}
 	if r, g, b := rgb(canvas.CellAt(1, 1).Style.Bg); r != 0x37 || g != 0x47 || b != 0x4f {
 		t.Errorf("inner bg = %x,%x,%x want 37,47,4f", r, g, b)

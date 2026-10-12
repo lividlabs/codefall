@@ -22,7 +22,9 @@ arrows move between them, `enter` chooses, and `esc` closes. Implement types
 without `enter`, and moves focus to it so sending is yours. Cancel closes and nothing reaches
 the child. The dialog is composed over a dimmed copy of the frame on a Lip Gloss canvas: every
 cell's colors, backgrounds included, move halfway toward black. The dialog itself is a shaded block
-with a hairline border of one-eighth blocks in the cyan `#89ddff`, flush with its edge. While the
+with a hairline border of one-eighth blocks in the cyan `#89ddff`: the sides flush with the edge,
+the top and bottom a cell in on the terminal's own background, so the rules meet at the corners
+without a joining glyph and read as the edges of the shaded block. While the
 dialog is open no key, paste, or mouse event reaches either pane. The right pane is the child.
 `ctrl+]` moves focus between them, and a mouse click focuses the pane under it. The panes are
 colored blocks rather than boxes, in OpenCode's Material palette (`packages/tui/src/theme/assets/
