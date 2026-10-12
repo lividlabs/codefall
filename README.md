@@ -193,8 +193,8 @@ In a project that uses GitHub Issues, each requirement also becomes an issue. Th
 its own pull request for you to merge.
 
 **2. Decide how to build it.** Type `/codefall-plan`. The skill reads the spec and the code, then
-writes a plan to `docs/plans/PLAN-007-itinerary-export.md`. The plan ends with a table of tasks and
-the order they depend on:
+writes a plan, a short software design document, to `docs/plans/PLAN-007-itinerary-export.md`. The
+plan ends with a table of tasks and the order they depend on:
 
 ```
 | ID | Task                                 | Depends on |
@@ -248,7 +248,7 @@ merge or push to `main`.
 | [`/codefall-report`](docs/guide/report.md) | Writes a bug report, tries to reproduce the bug, and copies it to GitHub Issues when the project uses them. | `docs/bugs/` |
 | [`/codefall-mock-up`](docs/guide/mock-up.md) | Imports or draws a mockup of a screen that matches the app's design. | `docs/mockups/` |
 | **Building** | | |
-| [`/codefall-plan`](docs/guide/plan.md) | Breaks the work into tasks with dependencies, and records hard-to-reverse decisions as ADRs. | `docs/plans/`, Beads |
+| [`/codefall-plan`](docs/guide/plan.md) | Writes a software design document for the change, breaks the work into tasks with dependencies, and records hard-to-reverse decisions as ADRs. | `docs/plans/`, Beads |
 | [`/codefall-implement`](docs/guide/implement.md) | Builds each ready task with its tests and opens a pull request for it. | pull requests |
 | [`/codefall-fix`](docs/guide/fix.md) | Plans and builds one small change in a single run. | a pull request |
 | **Checking** | | |

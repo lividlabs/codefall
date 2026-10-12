@@ -20,9 +20,9 @@ allowed-tools:
 Decide how a feature gets built, and put the work into the dependency graph so `codefall-implement`
 can pick it up.
 
-Two outputs. A **plan document** at `docs/plans/PLAN-NNN-slug.md` — the approach, the
-architecture, and a staged task table — when the work earns one. **The tasks in Beads**, with their
-dependency edges, always.
+Two outputs. A **plan document** at `docs/plans/PLAN-NNN-slug.md` — a software design document:
+the approach, the architecture, the decisions and why they were made, ending in a staged task
+table — when the work earns one. **The tasks in Beads**, with their dependency edges, always.
 
 Planning is not implementing. Once the document is written and the graph exists, stop.
 
