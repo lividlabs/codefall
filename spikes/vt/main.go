@@ -18,6 +18,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"image/color"
 	"io"
 	"os"
 	"os/exec"
@@ -380,13 +381,11 @@ func (s sidebar) content(width, height int) string {
 		if i >= height {
 			break
 		}
-		mark := "  "
-		line := it.id + " " + it.title
+		line := "  " + it.id + " " + it.title
 		if i == s.cursor {
-			mark = "❯ "
-			line = lipgloss.NewStyle().Bold(true).Render(line)
+			line = selectedRow.Render(fitBlock(line, width, 1))
 		}
-		b.WriteString(mark + line)
+		b.WriteString(line)
 		if i < len(s.items)-1 {
 			b.WriteByte('\n')
 		}
@@ -406,9 +405,9 @@ type beadDialog struct {
 const dialogWidth = 60
 
 var (
-	dialogLabel  = lipgloss.NewStyle().Foreground(lipgloss.Color("8"))
-	buttonStyle  = lipgloss.NewStyle().Padding(0, 2).Foreground(lipgloss.Color("8"))
-	buttonActive = lipgloss.NewStyle().Padding(0, 2).Reverse(true).Bold(true)
+	dialogLabel  = lipgloss.NewStyle().Foreground(colMuted)
+	buttonStyle  = lipgloss.NewStyle().Padding(0, 2).Foreground(colMuted)
+	buttonActive = lipgloss.NewStyle().Padding(0, 2).Background(colPrimary).Foreground(colBgDark).Bold(true)
 )
 
 func (d beadDialog) render() string {
@@ -436,7 +435,7 @@ func (d beadDialog) render() string {
 	buttons := impl.Render("Implement") + "  " + cancel.Render("Cancel")
 	lines = append(lines, "", lipgloss.PlaceHorizontal(w, lipgloss.Right, buttons))
 	body := fitBlock(strings.Join(lines, "\n"), w, len(lines))
-	return box(body, w, b.id, true)
+	return pane(body, w, b.id, true, colBgLight)
 }
 
 // update handles a key while the dialog is open. It returns the dialog (nil
@@ -453,6 +452,53 @@ func (d *beadDialog) update(msg tea.KeyPressMsg) (*beadDialog, bool) {
 		return nil, d.button == 0
 	}
 	return d, false
+}
+
+// dimAmount is how far the frame's colors move toward black under an open
+// dialog: 0 leaves them alone, 1 blacks them out.
+const dimAmount = 0.5
+
+// dimmedDefault stands in for the terminal's default foreground, which has no
+// value to darken.
+var dimmedDefault = lipgloss.Color("8")
+
+// dim darkens every cell on the canvas so a layer composed over it afterwards
+// stands out. Colors the frame set, pane backgrounds included, move toward
+// black; a cell still on the default foreground becomes gray, and one still on
+// the default background is left to the terminal.
+func dim(c *lipgloss.Canvas) {
+	b := c.Bounds()
+	for y := b.Min.Y; y < b.Max.Y; y++ {
+		for x := b.Min.X; x < b.Max.X; x++ {
+			cell := c.CellAt(x, y)
+			if cell == nil {
+				continue
+			}
+			if cell.Style.Fg == nil {
+				cell.Style.Fg = dimmedDefault
+			} else {
+				cell.Style.Fg = lipgloss.Darken(cell.Style.Fg, dimAmount)
+			}
+			if cell.Style.Bg != nil {
+				cell.Style.Bg = lipgloss.Darken(cell.Style.Bg, dimAmount)
+			}
+		}
+	}
+}
+
+// overlay centers the dialog over a dimmed copy of the frame. The frame is a
+// plain layer so it lands at the origin; the dialog goes through a compositor,
+// which is what honors a layer's X and Y.
+func overlay(frame, dialog string, width, height int) string {
+	x := (width - lipgloss.Width(dialog)) / 2
+	y := (height - lipgloss.Height(dialog)) / 2
+	canvas := lipgloss.NewCanvas(width, height)
+	canvas.Compose(lipgloss.NewLayer(frame))
+	dim(canvas)
+	canvas.Compose(lipgloss.NewCompositor(
+		lipgloss.NewLayer(dialog).X(max(x, 0)).Y(max(y, 0)),
+	))
+	return canvas.Render()
 }
 
 // --- host --------------------------------------------------------------------------------------
@@ -472,40 +518,72 @@ type model struct {
 	dialog        *beadDialog // open modal, or nil
 }
 
+// The palette is OpenCode's Material theme (dark), whose panes are blocks of
+// three blue-grays rather than lines: packages/tui/src/theme/assets/material.json.
 var (
-	statusStyle  = lipgloss.NewStyle().Reverse(true)
-	focusedEdge  = lipgloss.NewStyle().Foreground(lipgloss.Color("12"))
-	blurredEdge  = lipgloss.NewStyle().Foreground(lipgloss.Color("8"))
-	focusedTitle = lipgloss.NewStyle().Foreground(lipgloss.Color("12")).Bold(true)
-	blurredTitle = lipgloss.NewStyle().Foreground(lipgloss.Color("8"))
+	colBgDark  = lipgloss.Color("#1e272c") // backgroundPanel: the sidebar
+	colBg      = lipgloss.Color("#263238") // background: unused, the terminal pane stays on the terminal's own
+	colBgLight = lipgloss.Color("#37474f") // backgroundElement: status bar, dialog, selection
+	colText    = lipgloss.Color("#eeffff")
+	colMuted   = lipgloss.Color("#546e7a")
+	colPrimary = lipgloss.Color("#82aaff")
 )
 
-// box draws a rounded border around a block that is already exactly w by h,
-// with the title set into the top edge the way tmux's pane-border-status does.
-func box(block string, w int, title string, focused bool) string {
-	edge, ttl := blurredEdge, blurredTitle
-	if focused {
-		edge, ttl = focusedEdge, focusedTitle
+var (
+	statusStyle  = lipgloss.NewStyle().Background(colBgLight).Foreground(colText)
+	focusedTitle = lipgloss.NewStyle().Foreground(colPrimary).Bold(true)
+	blurredTitle = lipgloss.NewStyle().Foreground(colMuted)
+	selectedRow  = lipgloss.NewStyle().Background(colBgLight).Foreground(colText).Bold(true)
+)
+
+// paint fills in what a block leaves to the terminal's defaults: every cell
+// without a foreground gets fg, every cell without a background gets bg, and
+// the canvas pads the block to w by h so the whole rectangle is one color.
+// Colors the block set itself are kept. A nil bg paints nothing: the whole
+// rectangle is left to the terminal.
+func paint(block string, w, h int, fg, bg color.Color) string {
+	canvas := lipgloss.NewCanvas(w, h)
+	canvas.Compose(lipgloss.NewLayer(block))
+	for y := 0; y < h; y++ {
+		for x := 0; x < w; x++ {
+			cell := canvas.CellAt(x, y)
+			if cell == nil || cell.Width == 0 || bg == nil { // nil, the tail of a wide character, or unpainted
+				continue
+			}
+			if cell.Style.Fg == nil {
+				cell.Style.Fg = fg
+			}
+			if cell.Style.Bg == nil {
+				cell.Style.Bg = bg
+			}
+		}
 	}
-	if w < 4 {
+	return canvas.Render()
+}
+
+// pane sets a block that is already exactly w wide into a colored rectangle one
+// cell larger on each side, the way OpenCode's panes are blocks rather than
+// boxes: the title sits in the top row, the margin is the pane's color. A nil
+// bg leaves the pane on the terminal's default colors, for the child, whose
+// palette was chosen against them.
+func pane(block string, w int, title string, focused bool, bg color.Color) string {
+	ttl := blurredTitle
+	if focused {
+		ttl = focusedTitle
+	}
+	if w < 2 {
 		title = ""
 	} else {
-		title = ansi.Truncate(title, w-4, "…")
+		title = ansi.Truncate(title, w-1, "…")
 	}
-	tw := ansi.StringWidth(title)
-	top := edge.Render("╭" + strings.Repeat("─", max(w, 0)) + "╮")
-	if tw > 0 {
-		top = edge.Render("╭─ ") + ttl.Render(title) + edge.Render(" "+strings.Repeat("─", max(w-3-tw, 0))+"╮")
-	}
-	bottom := edge.Render("╰" + strings.Repeat("─", max(w, 0)) + "╯")
-	side := edge.Render("│")
 	var b strings.Builder
-	b.WriteString(top)
+	b.WriteString(" " + ttl.Render(title))
+	rows := 1
 	for _, line := range strings.Split(block, "\n") {
-		b.WriteString("\n" + side + line + side)
+		b.WriteString("\n " + line)
+		rows++
 	}
-	b.WriteString("\n" + bottom)
-	return b.String()
+	return paint(b.String(), w+borderCols, rows+1, colText, bg)
 }
 
 func (m model) Init() tea.Cmd { return nil }
@@ -676,8 +754,8 @@ func (m model) View() tea.View {
 	}
 	w, h := m.termInner()
 
-	side := box(m.side.content(sidebarWidth, h), sidebarWidth, "beads", m.focus == focusSidebar)
-	term := box(fitBlock(m.term.content(), w, h), w, m.term.title(), m.focus == focusTerm)
+	side := pane(m.side.content(sidebarWidth, h), sidebarWidth, "beads", m.focus == focusSidebar, colBgDark)
+	term := pane(fitBlock(m.term.content(), w, h), w, m.term.title(), m.focus == focusTerm, nil)
 	body := lipgloss.JoinHorizontal(lipgloss.Top, side, term)
 
 	alt := ""
@@ -702,13 +780,7 @@ func (m model) View() tea.View {
 
 	frame := bar + "\n" + body
 	if m.dialog != nil {
-		d := m.dialog.render()
-		x := (m.width - lipgloss.Width(d)) / 2
-		y := (m.height - lipgloss.Height(d)) / 2
-		frame = lipgloss.NewCompositor(
-			lipgloss.NewLayer(frame),
-			lipgloss.NewLayer(d).X(max(x, 0)).Y(max(y, 0)).Z(1),
-		).Render()
+		frame = overlay(frame, m.dialog.render(), m.width, m.height)
 	}
 	if dump := os.Getenv("VTSPIKE_DUMP"); dump != "" {
 		_ = os.WriteFile(dump, []byte(frame), 0o644)

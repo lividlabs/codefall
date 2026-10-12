@@ -16,9 +16,16 @@ dialog over both panes with the bead's details and two buttons; `tab`, `shift+ta
 arrows move between them, `enter` chooses, and `esc` closes. Implement types
 `/codefall-implement <id>` into the child through the emulator, as if at the keyboard and
 without `enter`, and moves focus to it so sending is yours. Cancel closes and nothing reaches
-the child. The dialog is a second Lip Gloss layer composited over the frame, and while it is
-open no key, paste, or mouse event reaches either pane. The right pane is the child.
-`ctrl+]` moves focus between them, and a mouse click focuses the pane under it. `ctrl+q` quits the
+the child. The dialog is composed over a dimmed copy of the frame on a Lip Gloss canvas: every
+cell's colors, backgrounds included, move halfway toward black. While the dialog is open no
+key, paste, or mouse event reaches either pane. The right pane is the child.
+`ctrl+]` moves focus between them, and a mouse click focuses the pane under it. The panes are
+colored blocks rather than boxes, in OpenCode's Material palette (`packages/tui/src/theme/assets/
+material.json` there): the sidebar on `#1e272c`, and the status bar, dialog, and selected bead on
+`#37474f`. In those, every cell left on the terminal's default colors is painted with the block's
+background and `#eeffff`. The terminal pane, margin included, is not painted at all: the child
+chose its palette against the terminal's own colors, so it keeps them. The focused pane's title is
+blue, the other's gray. `ctrl+q` quits the
 host and kills the child. The wheel and `shift+pgup`/`shift+pgdn` scroll (see below), and `esc`
 leaves scroll mode. Every other key, paste, and mouse event goes to the focused pane.
 
