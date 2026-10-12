@@ -569,10 +569,104 @@ var (
 			Margin(0, 1)
 )
 
-// dialogFrame sets the lines, already w wide at most, in the shaded pane with
-// its border around it. The pane's title row is left blank so the top is
-// padded like the bottom, and the help row is the last line.
-func dialogFrame(lines []string, w int, items []helpItem) string {
+// --- dialog title bar --------------------------------------------------------------------------
+
+// titleBar is one treatment of the run after a dialog's title, out to the
+// right padding, the way Crush hatches its title row. The run is colored one
+// cell at a time by a gradient from the accent cyan to the bar's far stop:
+// the fill gray, so the run dissolves before the hairline, or the primary
+// blue, so it stays visible to the edge. glyph picks the cell at i of n, with
+// a seed from the title for the bars that scatter. A bar drawn below runs
+// the full width in the row under the title instead of beside it: a cell
+// holds a letter or a block, so a rule under the title's own letters has to
+// be the top eighth of the next row.
+type titleBar struct {
+	name  string
+	far   color.Color
+	below bool
+	glyph func(i, n int, seed uint32) string
+}
+
+var titleBars = []titleBar{
+	{"hairline", colBgLight, true, func(int, int, uint32) string { return "▔" }},
+	{"taper", colBgLight, false, func(i, n int, _ uint32) string {
+		switch {
+		case i < n/3:
+			return "━"
+		case i < 2*n/3:
+			return "─"
+		default:
+			return "┄"
+		}
+	}},
+	{"braille", colPrimary, false, func(i, _ int, seed uint32) string {
+		dots := []string{"⠁", "⠂", "⠄", "⡀", "⢀", "⠠", "⠐", "⠈"}
+		h := mix(seed, i)
+		if h%3 == 0 { // about a third of the cells are left empty
+			return " "
+		}
+		return dots[h%uint32(len(dots))]
+	}},
+	{"shade", colPrimary, false, func(i, n int, _ uint32) string {
+		return []string{"█", "▓", "▒", "░"}[i*4/n]
+	}},
+	{"chevrons", colPrimary, false, func(int, int, uint32) string { return "›" }},
+}
+
+// titleBarIndex is the bar in use; tab cycles it while a dialog is open.
+var titleBarIndex int
+
+// seed hashes a title so a scattered bar keeps its shape between renders.
+func seed(s string) uint32 {
+	h := uint32(2166136261)
+	for _, b := range []byte(s) {
+		h ^= uint32(b)
+		h *= 16777619
+	}
+	return h
+}
+
+// mix spreads a seed and a cell index into a hash.
+func mix(seed uint32, i int) uint32 {
+	x := seed ^ uint32(i)*2654435761
+	x ^= x >> 15
+	x *= 0x2c1b3c6d
+	x ^= x >> 12
+	return x
+}
+
+var titleText = lipgloss.NewStyle().Foreground(colAccent).Bold(true)
+
+// titleRows draws a dialog's title with the current bar: after it on the same
+// row, or under it across the full width on the next.
+func titleRows(title string, w int) []string {
+	text := titleText.Render(title)
+	bar := titleBars[titleBarIndex]
+	n := w - 2*dialogPad
+	if !bar.below {
+		n -= ansi.StringWidth(title) + 1
+	}
+	if n < 2 {
+		return []string{pad(text)}
+	}
+	colors := lipgloss.Blend1D(n, colAccent, bar.far)
+	sd := seed(title)
+	var b strings.Builder
+	for i := 0; i < n; i++ {
+		b.WriteString(lipgloss.NewStyle().Foreground(colors[i]).Render(bar.glyph(i, n, sd)))
+	}
+	if bar.below {
+		return []string{pad(text), pad(b.String())}
+	}
+	return []string{pad(text + " " + b.String())}
+}
+
+// dialogFrame sets the title row, then the lines, already w wide at most, in
+// the shaded pane with its border around it. The pane's own title row is left
+// blank so the top is padded like the bottom, and the help row is the last
+// line.
+func dialogFrame(title string, lines []string, w int, items []helpItem) string {
+	lines = append(titleRows(title, w), lines...)
 	lines = append(lines, "", pad(help(items)))
 	body := fitBlock(strings.Join(lines, "\n"), w, len(lines))
 	return dialogBorder.Render(pane(body, w, "", true, colBgLight))
@@ -608,7 +702,7 @@ func (d *beadList) render(winW, winH int) string {
 	if d.cursor >= visible {
 		start = d.cursor - visible + 1
 	}
-	lines := []string{pad(focusedTitle.Render("Beads/Issues")), ""}
+	lines := []string{""}
 	for i := start; i < len(d.items) && i < start+visible; i++ {
 		it := d.items[i]
 		line := pad(it.id + "  " + it.title)
@@ -617,7 +711,7 @@ func (d *beadList) render(winW, winH int) string {
 		}
 		lines = append(lines, line)
 	}
-	return dialogFrame(lines, w, listHelp)
+	return dialogFrame("Beads/Issues", lines, w, listHelp)
 }
 
 func (d *beadList) update(msg tea.KeyPressMsg) (dialog, *bead) {
@@ -658,7 +752,6 @@ func (d beadDialog) render(winW, winH int) string {
 		return pad(dialogLabel.Render(fmt.Sprintf("%-9s", label)) + value)
 	}
 	lines := []string{
-		pad(focusedTitle.Render(b.id)),
 		pad(lipgloss.NewStyle().Bold(true).Render(b.title)),
 		"",
 		row("status", b.status),
@@ -675,7 +768,7 @@ func (d beadDialog) render(winW, winH int) string {
 	}
 	buttons := impl.Render("Implement") + "  " + cancel.Render("Cancel")
 	lines = append(lines, "", lipgloss.PlaceHorizontal(w-dialogPad, lipgloss.Right, buttons))
-	return dialogFrame(lines, w, beadHelp)
+	return dialogFrame(b.id, lines, w, beadHelp)
 }
 
 func (d *beadDialog) update(msg tea.KeyPressMsg) (dialog, *bead) {
@@ -707,7 +800,6 @@ var childCommand string
 func (aboutDialog) render(winW, winH int) string {
 	w := dialogWidth(winW)
 	lines := []string{
-		pad(focusedTitle.Render("Codefall")),
 		pad(lipgloss.NewStyle().Bold(true).Render("VT spike")),
 		"",
 	}
@@ -716,7 +808,7 @@ func (aboutDialog) render(winW, winH int) string {
 	lines = append(lines, "")
 	lines = append(lines, wrap(dialogLabel.Render("child    ")+childCommand, w)...)
 	lines = append(lines, "", lipgloss.PlaceHorizontal(w-dialogPad, lipgloss.Right, buttonActive.Render("OK")))
-	return dialogFrame(lines, w, aboutHelp)
+	return dialogFrame("Codefall", lines, w, aboutHelp)
 }
 
 func (d aboutDialog) update(msg tea.KeyPressMsg) (dialog, *bead) {
@@ -982,6 +1074,10 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, tea.Quit
 		}
 		if m.dialog != nil {
+			if msg.String() == "tab" { // try the next title bar
+				titleBarIndex = (titleBarIndex + 1) % len(titleBars)
+				return m, nil
+			}
 			var implement *bead
 			m.dialog, implement = m.dialog.update(msg)
 			if implement != nil && m.term.started() {
@@ -1108,6 +1204,9 @@ func (m model) View() tea.View {
 		if m.term.scroll > 0 {
 			alt += fmt.Sprintf("  [scroll %d/%d · esc]", m.term.scroll, m.term.term.ScrollbackLen())
 		}
+	}
+	if m.dialog != nil {
+		alt += fmt.Sprintf("  [title bar: %s · tab cycles]", titleBars[titleBarIndex].name)
 	}
 	focused := "sidebar"
 	if m.focus == focusTerm {

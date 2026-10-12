@@ -29,6 +29,16 @@ the keyboard and without `enter`, and moves focus to it so sending is yours. Abo
 dialog naming the spike and the child's command line; `enter` or `esc` closes it. Every dialog
 ends with a key help row in the same style as the sidebar's.
 
+A dialog's title row is the title in the accent cyan followed by a run out to the right padding,
+the way Crush hatches its title row, colored one cell at a time by a Lip Gloss `Blend1D` gradient
+from the cyan to the bar's far stop. Five bars are in to compare, and `tab` cycles them while a
+dialog is open, the status bar naming the one in use: a hairline of `▔` across the full width of the
+row under the title, so it underlines the title itself, and a taper from `━` through `─` to `┄`
+beside it, both fading to the fill gray so the run dissolves before the hairline; and
+scattered braille dots seeded from the title, a shade ramp `█▓▒░`, and chevrons `›`, all fading to
+the primary blue so they stay visible to the edge. While the bars are under comparison `tab` is
+taken from the bead dialog, whose buttons still move on the arrows.
+
 A dialog is 70 cells wide, hairline to hairline, like Crush's command palette, or narrower when
 the window leaves less after the ring and a cell of margin on each side; a list shows as many
 rows as the window has and scrolls to keep the cursor in view. Text sits a cell in from the
