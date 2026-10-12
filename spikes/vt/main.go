@@ -17,6 +17,7 @@ package main
 
 import (
 	"context"
+	_ "embed"
 	"fmt"
 	"image/color"
 	"io"
@@ -375,8 +376,86 @@ func (s sidebar) update(msg tea.KeyPressMsg) (sidebar, *bead) {
 	return s, nil
 }
 
+// logo is the wordmark, CODE over FALL, in block glyphs with its own ANSI
+// colors, as copied from the terminal. It sits above the beads.
+//
+//go:embed logo.ans
+var logoText string
+
+// The glow is the sidebar fill tinted toward the logo's teal: a quarter of the
+// way for cells touching a glyph, an eighth for the ring outside that.
+var (
+	glowInner = lipgloss.Color("#25484e")
+	glowOuter = lipgloss.Color("#21373c")
+)
+
+// logoRows is the logo's height in the sidebar: the art plus a blank row above
+// and below for the glow to spill into.
+var logoRows = lipgloss.Height(strings.TrimRight(logoText, "\n")) + 2
+
+// logo renders the wordmark with a dark glow: every cell without a background
+// of its own takes a tint by its distance from the nearest glyph, so the glyphs
+// sit in a halo and the half blocks show it in their empty half.
+func logo(width int) string {
+	canvas := lipgloss.NewCanvas(width, logoRows)
+	canvas.Compose(lipgloss.NewLayer("\n" + strings.TrimRight(logoText, "\n")))
+	// A glyph is any drawn cell, the shaded blocks included. The map is taken
+	// before tinting, or the tint itself would count as drawn.
+	drawn := make([][]bool, logoRows)
+	for y := range drawn {
+		drawn[y] = make([]bool, width)
+		for x := range drawn[y] {
+			c := canvas.CellAt(x, y)
+			drawn[y][x] = c != nil && c.Width > 0 && (strings.TrimSpace(c.Content) != "" || c.Style.Bg != nil)
+		}
+	}
+	glyph := func(x, y int) bool {
+		return y >= 0 && y < logoRows && x >= 0 && x < width && drawn[y][x]
+	}
+	for y := 0; y < logoRows; y++ {
+		for x := 0; x < width; x++ {
+			cell := canvas.CellAt(x, y)
+			if cell == nil || cell.Width == 0 || cell.Style.Bg != nil {
+				continue
+			}
+			switch nearest(glyph, x, y, 2) {
+			case 0, 1:
+				cell.Style.Bg = glowInner
+			case 2:
+				cell.Style.Bg = glowOuter
+			}
+		}
+	}
+	return canvas.Render()
+}
+
+// nearest is the distance from x, y to the closest cell for which glyph is
+// true, up to limit, with a row counting as two columns because a cell is
+// about twice as tall as it is wide; it returns limit+1 when none is that
+// close.
+func nearest(glyph func(x, y int) bool, x, y, limit int) int {
+	best := limit + 1
+	for dy := -limit / 2; dy <= limit/2; dy++ {
+		for dx := -limit; dx <= limit; dx++ {
+			if d := max(abs(dx), 2*abs(dy)); d < best && glyph(x+dx, y+dy) {
+				best = d
+			}
+		}
+	}
+	return best
+}
+
+func abs(n int) int {
+	if n < 0 {
+		return -n
+	}
+	return n
+}
+
 func (s sidebar) content(width, height int) string {
 	var b strings.Builder
+	b.WriteString(logo(width) + "\n\n") // a blank row between the glow and the list
+	height -= logoRows + 1
 	for i, it := range s.items {
 		if i >= height {
 			break
@@ -390,7 +469,7 @@ func (s sidebar) content(width, height int) string {
 			b.WriteByte('\n')
 		}
 	}
-	return fitBlock(b.String(), width, height)
+	return fitBlock(b.String(), width, height+logoRows+1)
 }
 
 // --- bead dialog -------------------------------------------------------------------------------

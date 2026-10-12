@@ -11,6 +11,10 @@ go run . claude          # Claude Code in a pane
 go run . codex
 ```
 
+The sidebar opens with the wordmark (`logo.ans`, CODE over FALL in block glyphs, recolored to the
+Material cyan `#89ddff` with `#39adb5` for the shading) above the beads, in a dark glow: cells
+beside a glyph take the fill tinted a quarter toward the teal, the ring outside that and the rows
+above and below an eighth, a row counting as two columns.
 The left pane is a static list of beads with a cursor (`j`/`k` or the arrows). `enter` opens a
 dialog over both panes with the bead's details and two buttons; `tab`, `shift+tab`, or the
 arrows move between them, `enter` chooses, and `esc` closes. Implement types
@@ -18,8 +22,8 @@ arrows move between them, `enter` chooses, and `esc` closes. Implement types
 without `enter`, and moves focus to it so sending is yours. Cancel closes and nothing reaches
 the child. The dialog is composed over a dimmed copy of the frame on a Lip Gloss canvas: every
 cell's colors, backgrounds included, move halfway toward black. The dialog itself is a shaded block
-with a hairline border of one-eighth blocks in the cyan `#89ddff`, flush with its edge. While the dialog is open no
-key, paste, or mouse event reaches either pane. The right pane is the child.
+with a hairline border of one-eighth blocks in the cyan `#89ddff`, flush with its edge. While the
+dialog is open no key, paste, or mouse event reaches either pane. The right pane is the child.
 `ctrl+]` moves focus between them, and a mouse click focuses the pane under it. The panes are
 colored blocks rather than boxes, in OpenCode's Material palette (`packages/tui/src/theme/assets/
 material.json` there): the sidebar on `#1e272c`, and the status bar, dialog, and selected bead on
