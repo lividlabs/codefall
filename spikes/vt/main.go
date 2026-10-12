@@ -404,10 +404,21 @@ type beadDialog struct {
 
 const dialogWidth = 60
 
+// hairline is a border of one-eighth blocks flush with the cell edge. The
+// corners are from Symbols for Legacy Computing (U+1FB7C..7F), which join a
+// side eighth to a top or bottom eighth; terminals that draw block elements
+// themselves show them whatever the font.
+var hairline = lipgloss.Border{
+	Top: "▔", Bottom: "▁", Left: "▏", Right: "▕",
+	TopLeft: "\U0001FB7D", TopRight: "\U0001FB7E", BottomLeft: "\U0001FB7C", BottomRight: "\U0001FB7F",
+}
+
 var (
 	dialogLabel  = lipgloss.NewStyle().Foreground(colMuted)
 	buttonStyle  = lipgloss.NewStyle().Padding(0, 2).Foreground(colMuted)
 	buttonActive = lipgloss.NewStyle().Padding(0, 2).Background(colPrimary).Foreground(colBgDark).Bold(true)
+	dialogBorder = lipgloss.NewStyle().Border(hairline).
+			BorderForeground(colAccent).BorderBackground(colBgLight)
 )
 
 func (d beadDialog) render() string {
@@ -435,7 +446,9 @@ func (d beadDialog) render() string {
 	buttons := impl.Render("Implement") + "  " + cancel.Render("Cancel")
 	lines = append(lines, "", lipgloss.PlaceHorizontal(w, lipgloss.Right, buttons))
 	body := fitBlock(strings.Join(lines, "\n"), w, len(lines))
-	return pane(body, w, b.id, true, colBgLight)
+	// The shaded pane carries the title and the fill; the border goes around
+	// it, on the same fill, so the dialog is a bordered block.
+	return dialogBorder.Render(pane(body, w, b.id, true, colBgLight))
 }
 
 // update handles a key while the dialog is open. It returns the dialog (nil
@@ -527,6 +540,7 @@ var (
 	colText    = lipgloss.Color("#eeffff")
 	colMuted   = lipgloss.Color("#546e7a")
 	colPrimary = lipgloss.Color("#82aaff")
+	colAccent  = lipgloss.Color("#89ddff")
 )
 
 var (
