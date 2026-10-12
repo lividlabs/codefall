@@ -498,10 +498,12 @@ var (
 	dialogLabel  = lipgloss.NewStyle().Foreground(colMuted)
 	buttonStyle  = lipgloss.NewStyle().Padding(0, 2).Foreground(colMuted)
 	buttonActive = lipgloss.NewStyle().Padding(0, 2).Background(colPrimary).Foreground(colBgDark).Bold(true)
-	// The top and bottom rows carry no fill, so their rules read as the edges of
-	// the shaded block on the terminal's own background.
+	// The dialog sits in a ring of the terminal's own background: the top and
+	// bottom border rows carry no fill, and a blank column is left outside each
+	// side. Every hairline then lies on the boundary between fill and ring.
 	dialogBorder = lipgloss.NewStyle().Border(hairline).BorderForeground(colAccent).
-			BorderLeftBackground(colBgLight).BorderRightBackground(colBgLight)
+			BorderLeftBackground(colBgLight).BorderRightBackground(colBgLight).
+			Margin(0, 1)
 )
 
 func (d beadDialog) render() string {
@@ -512,6 +514,7 @@ func (d beadDialog) render() string {
 	}
 	var lines []string
 	lines = append(lines,
+		focusedTitle.Render(b.id),
 		lipgloss.NewStyle().Bold(true).Render(b.title),
 		"",
 		row("status", b.status),
@@ -529,9 +532,9 @@ func (d beadDialog) render() string {
 	buttons := impl.Render("Implement") + "  " + cancel.Render("Cancel")
 	lines = append(lines, "", lipgloss.PlaceHorizontal(w, lipgloss.Right, buttons))
 	body := fitBlock(strings.Join(lines, "\n"), w, len(lines))
-	// The shaded pane carries the title and the fill; the border goes around
-	// it, on the same fill, so the dialog is a bordered block.
-	return dialogBorder.Render(pane(body, w, b.id, true, colBgLight))
+	// The shaded pane carries the fill, with its title row left blank so the
+	// top is padded like the bottom; the border goes around it.
+	return dialogBorder.Render(pane(body, w, "", true, colBgLight))
 }
 
 // update handles a key while the dialog is open. It returns the dialog (nil
@@ -584,16 +587,37 @@ func dim(c *lipgloss.Canvas) {
 
 // overlay centers the dialog over a dimmed copy of the frame. The frame is a
 // plain layer so it lands at the origin; the dialog goes through a compositor,
-// which is what honors a layer's X and Y.
+// which is what honors a layer's X and Y. Dialog cells without a background
+// of their own, the blank ring and the top and bottom rules, are transparent:
+// they take the dimmed cell's background, so the ring looks the same over a
+// child that paints its own background as over one that does not.
 func overlay(frame, dialog string, width, height int) string {
-	x := (width - lipgloss.Width(dialog)) / 2
-	y := (height - lipgloss.Height(dialog)) / 2
+	dw, dh := lipgloss.Width(dialog), lipgloss.Height(dialog)
+	x, y := max((width-dw)/2, 0), max((height-dh)/2, 0)
 	canvas := lipgloss.NewCanvas(width, height)
 	canvas.Compose(lipgloss.NewLayer(frame))
 	dim(canvas)
+	under := make([][]color.Color, dh) // the dimmed backgrounds the dialog will cover
+	for cy := range under {
+		under[cy] = make([]color.Color, dw)
+		for cx := range under[cy] {
+			if c := canvas.CellAt(x+cx, y+cy); c != nil {
+				under[cy][cx] = c.Style.Bg
+			}
+		}
+	}
 	canvas.Compose(lipgloss.NewCompositor(
-		lipgloss.NewLayer(dialog).X(max(x, 0)).Y(max(y, 0)),
+		lipgloss.NewLayer(dialog).X(x).Y(y),
 	))
+	for cy := 0; cy < dh; cy++ {
+		for cx := 0; cx < dw; cx++ {
+			cell := canvas.CellAt(x+cx, y+cy)
+			if cell == nil || cell.Width == 0 || cell.Style.Bg != nil {
+				continue
+			}
+			cell.Style.Bg = under[cy][cx]
+		}
+	}
 	return canvas.Render()
 }
 

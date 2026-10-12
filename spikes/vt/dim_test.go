@@ -103,19 +103,44 @@ func TestDialogIsBorderedOnItsFill(t *testing.T) {
 	d := beadDialog{bead: bead{id: "cf-1", title: "T", description: "d"}}
 	got := d.render()
 	lines := strings.Split(got, "\n")
-	first := ansiStrip(lines[0])
+	first := strings.TrimSpace(ansiStrip(lines[0]))
 	if !strings.HasPrefix(first, "▁") || !strings.HasSuffix(first, "▁") {
 		t.Errorf("top = %q, want a hairline border", first)
 	}
 	canvas := lipgloss.NewCanvas(lipgloss.Width(got), len(lines))
 	canvas.Compose(uv.NewStyledString(got))
-	if bg := canvas.CellAt(0, 0).Style.Bg; bg != nil {
+	if bg := canvas.CellAt(1, 0).Style.Bg; bg != nil {
 		t.Errorf("top border bg = %v want nil", bg)
 	}
-	if r, g, b := rgb(canvas.CellAt(0, 1).Style.Bg); r != 0x37 || g != 0x47 || b != 0x4f {
-		t.Errorf("side border bg = %x,%x,%x want 37,47,4f", r, g, b)
+	if c := canvas.CellAt(0, 1); c.Style.Bg != nil || strings.TrimSpace(c.Content) != "" {
+		t.Errorf("ring cell = %q bg %v, want blank on the terminal background", c.Content, c.Style.Bg)
 	}
 	if r, g, b := rgb(canvas.CellAt(1, 1).Style.Bg); r != 0x37 || g != 0x47 || b != 0x4f {
+		t.Errorf("side border bg = %x,%x,%x want 37,47,4f", r, g, b)
+	}
+	if r, g, b := rgb(canvas.CellAt(2, 1).Style.Bg); r != 0x37 || g != 0x47 || b != 0x4f {
 		t.Errorf("inner bg = %x,%x,%x want 37,47,4f", r, g, b)
+	}
+}
+
+func TestOverlayRingTakesTheDimmedBackground(t *testing.T) {
+	// A frame painted in its own color everywhere, the way OpenCode draws.
+	row := strings.Repeat("\x1b[48;2;100;100;100mx", 70) + "\x1b[m"
+	frame := strings.TrimSuffix(strings.Repeat(row+"\n", 14), "\n")
+	d := beadDialog{bead: bead{id: "cf-1", title: "T", description: "d"}}
+	out := overlay(frame, d.render(), 70, 14)
+	canvas := lipgloss.NewCanvas(70, 14)
+	canvas.Compose(uv.NewStyledString(out))
+
+	dw, dh := lipgloss.Width(d.render()), lipgloss.Height(d.render())
+	x, y := (70-dw)/2, (14-dh)/2
+	for _, pos := range [][2]int{{x, y + 1}, {x + 1, y}, {x + 1, y + dh - 1}, {x + dw - 1, y + 1}} {
+		c := canvas.CellAt(pos[0], pos[1])
+		if r, g, b := rgb(c.Style.Bg); r != 50 || g != 50 || b != 50 {
+			t.Errorf("ring cell %v bg = %d,%d,%d want 50,50,50 (the frame dimmed), content %q", pos, r, g, b, c.Content)
+		}
+	}
+	if r, g, b := rgb(canvas.CellAt(x+2, y+2).Style.Bg); r != 0x37 || g != 0x47 || b != 0x4f {
+		t.Errorf("fill = %x,%x,%x want 37,47,4f", r, g, b)
 	}
 }
