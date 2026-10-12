@@ -6,6 +6,18 @@ below were written by hand, before that was wired up.
 Tags are bare version numbers (`0.1.2`), not `v`-prefixed, so they match the `ref` the marketplace
 pins. A `v0.1.1` tag also exists from before that convention was settled.
 
+## [0.31.0](https://github.com/lividlabs/codefall/compare/v0.30.0...v0.31.0) (2026-10-09)
+
+
+### Features
+
+* **skills:** honor the beads tracker, and fix the scaffold package names and equip label ([#204](https://github.com/lividlabs/codefall/issues/204)) ([703d2b3](https://github.com/lividlabs/codefall/commit/703d2b300f09960c0b1a5c17c47819e9199f1671))
+
+
+### Documentation
+
+* rewrite the README and move its reference material into docs/guide ([#202](https://github.com/lividlabs/codefall/issues/202)) ([29b8cba](https://github.com/lividlabs/codefall/commit/29b8cba50b3e7cf2a67dd9e6402162a6b58a5e60))
+
 ## [0.30.0](https://github.com/lividlabs/codefall/compare/v0.29.0...v0.30.0) (2026-10-08)
 
 
