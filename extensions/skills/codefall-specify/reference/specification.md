@@ -1,7 +1,7 @@
 # What a specification is
 
 The rules for the requirements, criteria, and optional sections inside a spec document. Read before
-shaping the requirements (step 7) and again when writing (step 10).
+shaping the requirements (step 7) and again when writing (step 11).
 
 ## Contents
 
