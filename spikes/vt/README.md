@@ -12,14 +12,14 @@ go run . codex
 ```
 
 The sidebar opens with the wordmark (`logo.ans`, CODE over FALL in block glyphs, recolored to the
-Material cyan `#89ddff` with `#39adb5` for the shading) above the menu, in a dark glow: cells
-beside a glyph take the fill tinted a quarter toward the teal, the ring outside that and the rows
-above and below an eighth, a row counting as two columns.
-The left pane is a menu, Beads/Issues and About, with a cursor on the arrows; `enter` or `right`
-confirms. The sidebar draws its own margin, so the selected row runs edge to edge like a select
-box. Focus shows three ways: the cursor is drawn only while the sidebar has focus, the text is
-muted without it, and while it has focus the bottom row carries the key help in the Charm help
-bubble's style (`↑↓ move • enter confirm`).
+Material cyan `#89ddff` with `#39adb5` for the shading) above the menu, in a dark glow: cells beside
+a glyph take the fill tinted a quarter toward the teal, the ring outside that and the rows above and
+below an eighth, a row counting as two columns. The left pane is a menu, Beads/Issues and About,
+with a cursor on the arrows; `enter` or `right` confirms. The sidebar draws its own margin; its text
+sits three cells in, under the wordmark's left edge, and the selected row's bar starts a cell before
+that, inside the margin. Focus shows three ways: the cursor is drawn only while the sidebar has
+focus, the text is muted without it, and while it has focus the bottom row carries the key help in
+the Charm help bubble's style (`↑↓ move • enter confirm`).
 
 Beads/Issues opens a dialog listing the beads; `↑`/`↓` choose, `enter` opens the bead's own
 dialog, and `esc` closes. The bead dialog shows the bead's details and two buttons; `←`/`→`,
@@ -29,40 +29,47 @@ the keyboard and without `enter`, and moves focus to it so sending is yours. Abo
 dialog naming the spike and the child's command line; `enter` or `esc` closes it. Every dialog
 ends with a key help row in the same style as the sidebar's.
 
-A dialog's title row is the title in the accent cyan followed by a run out to the right padding,
-the way Crush hatches its title row, colored one cell at a time by a Lip Gloss `Blend1D` gradient
-from the cyan to the bar's far stop. Five bars are in to compare, and `tab` cycles them while a
-dialog is open, the status bar naming the one in use: a hairline of `▔` across the full width of the
-row under the title, so it underlines the title itself, and a taper from `━` through `─` to `┄`
-beside it, both fading to the fill gray so the run dissolves before the hairline; and
-scattered braille dots seeded from the title, a shade ramp `█▓▒░`, and chevrons `›`, all fading to
-the primary blue so they stay visible to the edge. While the bars are under comparison `tab` is
-taken from the bead dialog, whose buttons still move on the arrows.
+A dialog's title row is the title, and under it a hairline of `▔` across the full width of the
+next row, so it underlines the title itself: a cell holds a letter or a block, never both, so the
+rule is the top eighth of the row below. The rule is a Lip Gloss `Blend1D` gradient, one color per
+cell, and the title takes its first stop. Seven gradients are in to compare, and `tab` cycles them
+while a dialog is open, the status bar naming the one in use: the gold `#f2c25a` into the teal
+`#89ddff`, Material's purple `#c792ea`, violet `#bb80b3`, red `#f07178`, or green `#c3e88d`, or
+the wordmark's deep teal `#39adb5`; and the teal into the purple, for comparison. A fade ends
+in another hue, never in the fill gray, which passes through desaturated mud and reads as the
+same color dimming. While the gradients are under comparison `tab` is taken from the bead
+dialog, whose buttons still move on the arrows.
 
-A dialog is 70 cells wide, hairline to hairline, like Crush's command palette, or narrower when
-the window leaves less after the ring and a cell of margin on each side; a list shows as many
-rows as the window has and scrolls to keep the cursor in view. Text sits a cell in from the
-hairlines, and a selected row runs under that padding from hairline to hairline, a bar in the
-primary blue because the dialog's fill is already the sidebar's selection gray. The dialog is
-composed over a dimmed copy of the frame on a Lip Gloss canvas: every cell's colors, backgrounds
-included, move halfway toward black. The dialog itself is a shaded block with a hairline border
-of one-eighth blocks in the cyan `#89ddff`: the sides flush with the edge, the top and bottom a
-cell in. The dialog sits in a ring one cell wide, the top and bottom border rows and a blank
-column outside each side, that is transparent: those cells take the dimmed frame's background,
-so the ring looks the same over a child that paints its own background, as OpenCode does, as
-over one on the terminal's. Every rule lies where the fill meets the ring and the corners close
-without a joining glyph. While the
-dialog is open no key, paste, or mouse event reaches either pane. The right pane is the child.
-`ctrl+]` moves focus between them, and a mouse click focuses the pane under it. `ctrl+^` (typed as
-`ctrl+6` on a US keyboard) hides the sidebar and gives the child its width, or shows it again;
-hiding it moves focus to the child, and `ctrl+]` on a hidden sidebar shows it and focuses it. The panes are
-colored blocks rather than boxes, in OpenCode's Material palette (`packages/tui/src/theme/assets/
-material.json` there): the sidebar on `#1e272c`, and the status bar, dialog, and selected bead on
-`#37474f`. In those, every cell left on the terminal's default colors is painted with the block's
-background and `#eeffff`. The terminal pane, margin included, is not painted at all: the child
-chose its palette against the terminal's own colors, so it keeps them. The child's title is blue while it has focus and gray
-otherwise; the sidebar has no title, the wordmark stands for it. `ctrl+q` quits the
-host and kills the child. The wheel and `shift+pgup`/`shift+pgdn` scroll (see below), and `esc`
+A dialog is 70 cells wide, hairline to hairline, like Crush's command palette, or narrower when the
+window leaves less after the ring and a cell of margin on each side; a list shows as many rows as
+the window has and scrolls to keep the cursor in view. Text sits two cells in from the hairlines. A
+selected row, in a dialog or the sidebar, is a blue-gray bar `#455a64` a step above the dialog fill,
+set inside the padding rather than under it, a cell of fill left on each side, with a gold `▎` as
+the bar's first cell for the cursor: the gold stays one cell wide and means what it means on a
+button, that this is the one `enter` acts on. A gold bar, teal and dark teal bars, a dark gold bar,
+and bare gold text were tried against it and set aside. The dialog is composed over a dimmed copy of
+the frame on a Lip Gloss canvas: every cell's colors, backgrounds included, move halfway toward
+black. The dialog itself is a shaded block with a hairline border of one-eighth blocks in the cyan
+`#89ddff`: the sides flush with the edge, the top and bottom a cell in. The dialog sits in a ring
+one cell wide, the top and bottom border rows and a blank column outside each side, that is
+transparent: those cells take the dimmed frame's background, so the ring looks the same over a child
+that paints its own background, as OpenCode does, as over one on the terminal's. Every rule lies
+where the fill meets the ring and the corners close without a joining glyph. While the dialog is
+open no key, paste, or mouse event reaches either pane. The right pane is the child. `ctrl+]` moves
+focus between them, and a mouse click focuses the pane under it. `ctrl+^` (typed as `ctrl+6` on a US
+keyboard) hides the sidebar and gives the child its width, or shows it again; hiding it moves focus
+to the child, and `ctrl+]` on a hidden sidebar shows it and focuses it. The panes are colored blocks
+rather than boxes, in OpenCode's Material palette (`packages/tui/src/theme/assets/ material.json`
+there): the sidebar on `#1e272c`, and the status bar, dialog, and selected bead on `#37474f`. In
+those, every cell left on the terminal's default colors is painted with the block's background and
+`#eeffff`. The one color outside Material is the website's accent, the gold `#f2c25a`: the
+complement of the wordmark's teal, it marks what is about to be acted on, the selection bar in a
+dialog, the active button, and the focused title, roles the Material blue `#82aaff` had before. The
+selected row of a list is not gold: it marks a position, not a commitment, so it is a gray bar with
+a one-cell gold cursor. The terminal pane, margin included, is not painted at all: the child chose
+its palette against the terminal's own colors, so it keeps them. The child's title is gold while it
+has focus and gray otherwise; the sidebar has no title, the wordmark stands for it. `ctrl+q` quits
+the host and kills the child. The wheel and `shift+pgup`/`shift+pgdn` scroll (see below), and `esc`
 leaves scroll mode. Every other key, paste, and mouse event goes to the focused pane.
 
 Two environment variables help when something looks wrong: `VTSPIKE_DUMP=<file>` writes the last

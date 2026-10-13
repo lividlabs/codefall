@@ -39,6 +39,7 @@ import (
 const (
 	statusRows   = 1
 	sidebarWidth = 28 // content; the border adds 2
+	sidebarPad   = 3  // cells before the sidebar's text, the margin included: under the wordmark's left edge; the bar starts a cell before
 	borderCols   = 2
 	borderRows   = 2
 )
@@ -495,7 +496,8 @@ func selected(line string, width int, style lipgloss.Style) string {
 }
 
 // content draws the sidebar as a block the full size of its pane, margin
-// included, so a selected row runs edge to edge. The top row is blank, the
+// included, so a selected row runs edge to edge; the text sits sidebarPad
+// cells in, under the wordmark's left edge. The top row is blank, the
 // wordmark standing for a title. While the sidebar has focus the cursor is
 // highlighted and the key help sits on the bottom row; without it the text is
 // muted and neither is drawn.
@@ -509,16 +511,17 @@ func (s sidebar) content(width, height int, focused bool) string {
 	if !focused {
 		text = text.Foreground(colMuted)
 	}
+	lead := strings.Repeat(" ", sidebarPad)
 	for i, it := range menuItems {
-		line := text.Render("  " + it)
+		line := lead + text.Render(it)
 		if focused && i == s.menu {
-			line = selected(line, width, selectedRow)
+			line = selectRow(it, width, sidebarPad-1)
 		}
 		rows = append(rows, line)
 	}
 	block := strings.Join(rows, "\n")
 	if focused {
-		block = fitBlock(block, width, height-1) + "\n " + help(menuHelp)
+		block = fitBlock(block, width, height-1) + "\n" + lead + help(menuHelp)
 	}
 	return fitBlock(block, width, height)
 }
@@ -542,9 +545,9 @@ func dialogWidth(winW int) int {
 	return max(min(70, winW-6), 20)
 }
 
-// dialogPad is the padding inside the hairlines. Text sits a cell in; a
-// selected row runs under it to the hairline.
-const dialogPad = 1
+// dialogPad is the cells between a hairline and the text. A selected row's
+// bar starts one cell in from the hairline, with the cursor in that cell.
+const dialogPad = 2
 
 // hairline is a border of one-eighth blocks: the sides flush with the outer
 // edge, the top and bottom on the inner edge of their cells. A rule in a corner
@@ -560,7 +563,7 @@ var hairline = lipgloss.Border{
 var (
 	dialogLabel  = lipgloss.NewStyle().Foreground(colMuted)
 	buttonStyle  = lipgloss.NewStyle().Padding(0, 2).Foreground(colMuted)
-	buttonActive = lipgloss.NewStyle().Padding(0, 2).Background(colPrimary).Foreground(colBgDark).Bold(true)
+	buttonActive = lipgloss.NewStyle().Padding(0, 2).Background(colGold).Foreground(colBgDark).Bold(true)
 	// The dialog sits in a ring of the terminal's own background: the top and
 	// bottom border rows carry no fill, and a blank column is left outside each
 	// side. Every hairline then lies on the boundary between fill and ring.
@@ -569,96 +572,69 @@ var (
 			Margin(0, 1)
 )
 
+// --- selection ---------------------------------------------------------------------------------
+
+// selectedRow is the selected row of a list, in the sidebar or a dialog: a
+// blue-gray bar a step above the dialog fill, inside the pane's padding rather
+// than under it, with a gold ▎ as its first cell for the cursor. The gold
+// stays one cell wide and means what it means on a button: this is the one
+// enter acts on.
+var (
+	selectedRow = lipgloss.NewStyle().Background(colBgLighter).Foreground(colText).Bold(true)
+	marker      = lipgloss.NewStyle().Foreground(colGold).Background(colBgLighter).Render("▎")
+)
+
+// selectRow draws text as the selected row of a list width wide: inset cells
+// of the pane's own fill on each side, then the bar, whose first cell is the
+// marker and whose text starts where the other rows' text does.
+func selectRow(text string, width, inset int) string {
+	side := strings.Repeat(" ", inset)
+	return side + marker + selected(text, width-2*inset-1, selectedRow) + side
+}
+
 // --- dialog title bar --------------------------------------------------------------------------
 
-// titleBar is one treatment of the run after a dialog's title, out to the
-// right padding, the way Crush hatches its title row. The run is colored one
-// cell at a time by a gradient from the accent cyan to the bar's far stop:
-// the fill gray, so the run dissolves before the hairline, or the primary
-// blue, so it stays visible to the edge. glyph picks the cell at i of n, with
-// a seed from the title for the bars that scatter. A bar drawn below runs
-// the full width in the row under the title instead of beside it: a cell
-// holds a letter or a block, so a rule under the title's own letters has to
-// be the top eighth of the next row.
-type titleBar struct {
-	name  string
-	far   color.Color
-	below bool
-	glyph func(i, n int, seed uint32) string
+// gradient is the pair of stops for the rule under a dialog's title, which
+// Blend1D spreads across the row one color per cell; the title takes the
+// first stop so the rule continues from it. Several are in to compare, cycled
+// with tab while a dialog is open. A fade ends in another hue, never in the
+// fill gray: a blend into the neutral passes through desaturated mud and
+// reads as the same color dimming.
+type gradient struct {
+	name     string
+	from, to color.Color
 }
 
-var titleBars = []titleBar{
-	{"hairline", colBgLight, true, func(int, int, uint32) string { return "▔" }},
-	{"taper", colBgLight, false, func(i, n int, _ uint32) string {
-		switch {
-		case i < n/3:
-			return "━"
-		case i < 2*n/3:
-			return "─"
-		default:
-			return "┄"
-		}
-	}},
-	{"braille", colPrimary, false, func(i, _ int, seed uint32) string {
-		dots := []string{"⠁", "⠂", "⠄", "⡀", "⢀", "⠠", "⠐", "⠈"}
-		h := mix(seed, i)
-		if h%3 == 0 { // about a third of the cells are left empty
-			return " "
-		}
-		return dots[h%uint32(len(dots))]
-	}},
-	{"shade", colPrimary, false, func(i, n int, _ uint32) string {
-		return []string{"█", "▓", "▒", "░"}[i*4/n]
-	}},
-	{"chevrons", colPrimary, false, func(int, int, uint32) string { return "›" }},
+var gradients = []gradient{
+	{"gold → teal", colGold, colAccent},
+	{"gold → purple", colGold, colPurple},
+	{"gold → violet", colGold, colViolet},
+	{"gold → red", colGold, colPink},
+	{"gold → green", colGold, colGreen},
+	{"gold → deep teal", colGold, colTealDark},
+	{"teal → purple", colAccent, colPurple},
 }
 
-// titleBarIndex is the bar in use; tab cycles it while a dialog is open.
-var titleBarIndex int
+// gradientIndex is the gradient in use; tab cycles it while a dialog is open.
+var gradientIndex int
 
-// seed hashes a title so a scattered bar keeps its shape between renders.
-func seed(s string) uint32 {
-	h := uint32(2166136261)
-	for _, b := range []byte(s) {
-		h ^= uint32(b)
-		h *= 16777619
-	}
-	return h
-}
-
-// mix spreads a seed and a cell index into a hash.
-func mix(seed uint32, i int) uint32 {
-	x := seed ^ uint32(i)*2654435761
-	x ^= x >> 15
-	x *= 0x2c1b3c6d
-	x ^= x >> 12
-	return x
-}
-
-var titleText = lipgloss.NewStyle().Foreground(colAccent).Bold(true)
-
-// titleRows draws a dialog's title with the current bar: after it on the same
-// row, or under it across the full width on the next.
+// titleRows draws a dialog's title, and under it a hairline of ▔ across the
+// full width in the gradient. The rule is the top eighth of the next row
+// because a cell holds a letter or a block, never both, so a rule under the
+// title's own letters cannot share its row.
 func titleRows(title string, w int) []string {
-	text := titleText.Render(title)
-	bar := titleBars[titleBarIndex]
+	g := gradients[gradientIndex]
+	text := lipgloss.NewStyle().Foreground(g.from).Bold(true).Render(title)
 	n := w - 2*dialogPad
-	if !bar.below {
-		n -= ansi.StringWidth(title) + 1
-	}
 	if n < 2 {
 		return []string{pad(text)}
 	}
-	colors := lipgloss.Blend1D(n, colAccent, bar.far)
-	sd := seed(title)
+	colors := lipgloss.Blend1D(n, g.from, g.to)
 	var b strings.Builder
 	for i := 0; i < n; i++ {
-		b.WriteString(lipgloss.NewStyle().Foreground(colors[i]).Render(bar.glyph(i, n, sd)))
+		b.WriteString(lipgloss.NewStyle().Foreground(colors[i]).Render("▔"))
 	}
-	if bar.below {
-		return []string{pad(text), pad(b.String())}
-	}
-	return []string{pad(text + " " + b.String())}
+	return []string{pad(text), pad(b.String())}
 }
 
 // dialogFrame sets the title row, then the lines, already w wide at most, in
@@ -707,7 +683,7 @@ func (d *beadList) render(winW, winH int) string {
 		it := d.items[i]
 		line := pad(it.id + "  " + it.title)
 		if i == d.cursor {
-			line = selected(line, w, dialogSelected)
+			line = selectRow(it.id+"  "+it.title, w, dialogPad-1)
 		}
 		lines = append(lines, line)
 	}
@@ -916,18 +892,26 @@ var (
 	colMutedDark = lipgloss.Color("#415a64") // the help descriptions, a step under colMuted
 	colPrimary   = lipgloss.Color("#82aaff")
 	colAccent    = lipgloss.Color("#89ddff")
+	// The rest of the Material accents, for the title gradients.
+	colPurple   = lipgloss.Color("#c792ea")
+	colPink     = lipgloss.Color("#f07178")
+	colOrange   = lipgloss.Color("#f78c6c")
+	colTealDark = lipgloss.Color("#39adb5") // the wordmark's shading
+	colViolet   = lipgloss.Color("#bb80b3")
+	colGreen    = lipgloss.Color("#c3e88d")
+	// The website's accent: the one warm color, for what is about to be acted
+	// on. It is the complement of the wordmark's teal, and it takes the roles
+	// the Material blue had.
+	colGold      = lipgloss.Color("#f2c25a")
+	colBgLighter = lipgloss.Color("#455a64") // the selected row, a step above the dialog fill
 )
 
 var (
 	statusStyle  = lipgloss.NewStyle().Background(colBgLight).Foreground(colText)
-	focusedTitle = lipgloss.NewStyle().Foreground(colPrimary).Bold(true)
+	focusedTitle = lipgloss.NewStyle().Foreground(colGold).Bold(true)
 	blurredTitle = lipgloss.NewStyle().Foreground(colMuted)
-	selectedRow  = lipgloss.NewStyle().Background(colBgLight).Foreground(colText).Bold(true)
-	// A dialog's fill is the sidebar's selection color, so its own selection
-	// is a bar in the primary blue, as Crush draws one.
-	dialogSelected = lipgloss.NewStyle().Background(colPrimary).Foreground(colBgDark).Bold(true)
-	helpKey        = lipgloss.NewStyle().Foreground(colMuted)
-	helpDesc       = lipgloss.NewStyle().Foreground(colMutedDark)
+	helpKey      = lipgloss.NewStyle().Foreground(colMuted)
+	helpDesc     = lipgloss.NewStyle().Foreground(colMutedDark)
 )
 
 // paint fills in what a block leaves to the terminal's defaults: every cell
@@ -1074,8 +1058,9 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, tea.Quit
 		}
 		if m.dialog != nil {
-			if msg.String() == "tab" { // try the next title bar
-				titleBarIndex = (titleBarIndex + 1) % len(titleBars)
+			switch msg.String() {
+			case "tab": // try the next gradient
+				gradientIndex = (gradientIndex + 1) % len(gradients)
 				return m, nil
 			}
 			var implement *bead
@@ -1206,7 +1191,7 @@ func (m model) View() tea.View {
 		}
 	}
 	if m.dialog != nil {
-		alt += fmt.Sprintf("  [title bar: %s · tab cycles]", titleBars[titleBarIndex].name)
+		alt += fmt.Sprintf("  [gradient: %s · tab]", gradients[gradientIndex].name)
 	}
 	focused := "sidebar"
 	if m.focus == focusTerm {
