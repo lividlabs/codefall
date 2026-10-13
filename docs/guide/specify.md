@@ -8,9 +8,10 @@ before planning any feature larger than a small fix.
 /codefall-specify Travelers can export a trip itinerary as a file.
 ```
 
-The skill interviews you, checks whether the feature already exists, writes the spec, and, in a
-project that uses GitHub Issues, copies it there. It decides *what* will be true when the work is done and never *how* it gets
-built; that is [`/codefall-plan`](plan.md)'s job.
+The skill interviews you, checks whether the feature already exists, reads your criteria against
+the code before writing, writes the spec, and, in a project that uses GitHub Issues, copies it
+there. It decides *what* will be true when the work is done and never *how* it gets built; that is
+[`/codefall-plan`](plan.md)'s job.
 
 ## What it writes
 

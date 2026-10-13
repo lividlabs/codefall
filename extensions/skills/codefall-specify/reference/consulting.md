@@ -43,5 +43,5 @@ corrects it before it reaches the document:
 | `low`, or `cannotSettle`, or no agent answered | The question goes under **Open questions** as it would have, with the consults' view appended when there is one |
 
 Nothing a consult said is written unconfirmed, and nothing in **Open questions** is written as
-settled because an agent guessed. The report at step 13 lists every consult: the question, who
+settled because an agent guessed. The report at step 15 lists every consult: the question, who
 answered, who was skipped or failed, and which row above it took.
