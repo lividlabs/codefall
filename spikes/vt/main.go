@@ -669,9 +669,11 @@ func dialogWidth(winW int) int {
 	return max(min(70, winW-6), 20)
 }
 
-// dialogPad is the cells between a hairline and the text. A selected row's
-// bar starts one cell in from the hairline, with the cursor in that cell.
-const dialogPad = 2
+// dialogPad is the cells between the pane's margin and the text, so the text
+// sits two cells in from the hairline, the margin and this one; it was three.
+// A selected row's bar starts at the margin, with the cursor in its first
+// cell.
+const dialogPad = 1
 
 // hairline is a border of one-eighth blocks: the sides flush with the outer
 // edge, the top and bottom on the inner edge of their cells and running
@@ -738,7 +740,7 @@ func gradientBorder(rendered string) string {
 		tint(right, y, n-1+y) // the right side, downward, after the top
 		tint(left, y, y)      // the left side, downward
 	}
-	if titleBar && h > 2 {
+	if (titleStyle == titleBar || titleStyle == titleFrameless) && h > 2 {
 		bar := lipgloss.Blend1D(n, g.from, g.to)
 		for x := left; x <= right; x++ {
 			c := bar[x-left]
@@ -755,6 +757,31 @@ func gradientBorder(rendered string) string {
 		for y := 1; y < h-1; y++ {
 			if cell := canvas.CellAt(right, y); cell != nil {
 				cell.Style.Fg = g.to
+			}
+		}
+	}
+	if titleStyle == titleFrameless && h > 3 { // take the hairlines off, keeping each cell's background
+		for x := left; x <= right; x++ {
+			for _, y := range []int{0, h - 1} {
+				if cell := canvas.CellAt(x, y); cell != nil && cell.Width > 0 {
+					cell.Content, cell.Style.Fg = " ", nil
+				}
+			}
+		}
+		for y := 1; y < h-1; y++ {
+			for _, x := range []int{left, right} {
+				if cell := canvas.CellAt(x, y); cell != nil && cell.Width > 0 {
+					cell.Content, cell.Style.Fg = " ", nil
+				}
+			}
+		}
+		bar := lipgloss.Blend1D(n, g.from, g.to)
+		for x := left; x <= right; x++ { // the eighth-row pads
+			if cell := canvas.CellAt(x, 0); cell != nil && cell.Width > 0 {
+				cell.Content, cell.Style.Fg = "▁", bar[x-left]
+			}
+			if cell := canvas.CellAt(x, 2); cell != nil && cell.Width > 0 {
+				cell.Content, cell.Style.Fg, cell.Style.Bg = "▔", bar[x-left], colBgLight
 			}
 		}
 	}
@@ -814,10 +841,24 @@ var gradients = []gradient{
 // gradientIndex is the gradient in use; tab cycles it while a dialog is open.
 var gradientIndex int
 
-// titleBar sets the title as dark text on a bar of the gradient, flush with
-// the hairlines, in place of the title and its rule; shift+tab toggles it
-// while a dialog is open.
-var titleBar bool
+// titleStyle is how a dialog sets its title; shift+tab cycles them while a
+// dialog is open. titleRule is the title in the gradient's first stop with
+// the rule under it. titleBar is dark text on a bar of the gradient, flush
+// with the hairlines, in place of the title and its rule. titleFrameless is
+// the bar with no hairline border at all: the side cells take the fill, the
+// top and bottom border rows stay transparent ring, and the bar is the
+// block's top edge, padded an eighth of a row above and below in its own
+// colors, ▁ on the ring and ▔ on the fill, each flush against the bar.
+const (
+	titleRule = iota
+	titleBar
+	titleFrameless
+)
+
+var (
+	titleStyle      = titleRule
+	titleStyleNames = []string{"rule", "bar", "frameless"}
+)
 
 // titleRows draws a dialog's title, and under it a hairline of ▔ across the
 // full width in the gradient. The rule is the top eighth of the next row
@@ -844,9 +885,13 @@ func titleRows(title string, w int) []string {
 // line.
 func dialogFrame(title string, lines []string, w int, items []helpItem) string {
 	paneTitle := ""
-	if titleBar { // the bar takes the pane's title row; the lines' own blank row follows
+	switch titleStyle {
+	case titleBar: // the bar takes the pane's title row; the lines' own blank row follows
 		paneTitle = pad(lipgloss.NewStyle().Bold(true).Render(title))
-	} else {
+	case titleFrameless: // the bar takes the pane's title row, then a row for its lower pad
+		paneTitle = pad(lipgloss.NewStyle().Bold(true).Render(title))
+		lines = append([]string{""}, lines...)
+	default:
 		lines = append(titleRows(title, w), lines...)
 	}
 	lines = append(lines, "", pad(help(items)))
@@ -1269,8 +1314,8 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			case "tab": // try the next gradient
 				gradientIndex = (gradientIndex + 1) % len(gradients)
 				return m, nil
-			case "shift+tab": // try the title on a bar
-				titleBar = !titleBar
+			case "shift+tab": // try the next title style
+				titleStyle = (titleStyle + 1) % len(titleStyleNames)
 				return m, nil
 			}
 			var implement *bead
@@ -1418,11 +1463,7 @@ func (m model) View() tea.View {
 		}
 	}
 	if m.dialog != nil {
-		title := "rule"
-		if titleBar {
-			title = "bar"
-		}
-		alt += fmt.Sprintf("  [gradient: %s · tab · title: %s · shift+tab]", gradients[gradientIndex].name, title)
+		alt += fmt.Sprintf("  [gradient: %s · tab · title: %s · shift+tab]", gradients[gradientIndex].name, titleStyleNames[titleStyle])
 	} else if m.logoMode && m.focus == focusSidebar {
 		alt += fmt.Sprintf("  [logo: %s · ← mark · → center · ↓ glow · ctrl+l done]", logoState())
 	} else if m.focus == focusSidebar {
