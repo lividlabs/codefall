@@ -691,7 +691,7 @@ var hairline = lipgloss.Border{
 var (
 	dialogLabel  = lipgloss.NewStyle().Foreground(colMuted)
 	buttonStyle  = lipgloss.NewStyle().Padding(0, 2).Foreground(colMuted)
-	buttonActive = lipgloss.NewStyle().Padding(0, 2).Background(colGold).Foreground(colBgDark).Bold(true)
+	buttonActive = lipgloss.NewStyle().Padding(0, 2).Background(colPurple).Foreground(colBgDark).Bold(true)
 	// The dialog sits in a ring of the terminal's own background: the top and
 	// bottom border rows carry no fill, and a blank column is left outside each
 	// side. Every hairline then lies on the boundary between fill and ring.
@@ -804,12 +804,12 @@ func gradientBorder(rendered string) string {
 
 // selectedRow is the selected row of a list, in the sidebar or a dialog: a
 // blue-gray bar a step above the dialog fill, inside the pane's padding rather
-// than under it, with a gold ▎ as its first cell for the cursor. The gold
+// than under it, with a purple ▎ as its first cell for the cursor. The purple
 // stays one cell wide and means what it means on a button: this is the one
 // enter acts on.
 var (
 	selectedRow = lipgloss.NewStyle().Background(colBgLighter).Foreground(colText).Bold(true)
-	marker      = lipgloss.NewStyle().Foreground(colGold).Background(colBgLighter).Render("▎")
+	marker      = lipgloss.NewStyle().Foreground(colPurple).Background(colBgLighter).Render("▎")
 )
 
 // selectRow draws text as the selected row of a list width wide: inset cells
@@ -1116,9 +1116,10 @@ var (
 	colTealDark = lipgloss.Color("#39adb5") // the wordmark's shading
 	colViolet   = lipgloss.Color("#bb80b3")
 	colGreen    = lipgloss.Color("#c3e88d")
-	// The website's accent: the one warm color, for what is about to be acted
-	// on. It is the complement of the wordmark's teal, and it takes the roles
-	// the Material blue had.
+	// The website's accent: the one warm color. It held the action roles, the
+	// active button and the selection cursor, until the purple took them to
+	// match the default title gradient; it keeps the focused title and the
+	// gradients that start or end in it.
 	colGold      = lipgloss.Color("#f2c25a")
 	colBgLighter = lipgloss.Color("#455a64") // the selected row, a step above the dialog fill
 )

@@ -87,39 +87,42 @@ the window has and scrolls to keep the cursor in view. Text sits two cells in fr
 the pane's margin and one of padding; it sat three in, and the row was taken off to bring the side
 inset nearer the one row above the title, a cell being twice as tall as it is wide. A selected row,
 in a dialog or the sidebar, is a blue-gray bar `#455a64` a step above the dialog fill, set inside
-the padding rather than under it, a cell of fill left on each side, with a gold `▎` as the bar's
-first cell for the cursor: the gold stays one cell wide and means what it means on a button, that
-this is the one `enter` acts on. A gold bar, teal and dark teal bars, a dark gold bar, and bare gold
-text were tried against it and set aside. The dialog is composed over a dimmed copy of the frame on
-a Lip Gloss canvas: every cell's colors, backgrounds included, move halfway toward black. The dialog
-itself is a shaded block with a hairline border of one-eighth blocks in the title's gradient: the
-sides `▏` and `▕` flush with the outer edge, the top `▁` and bottom `▔` on the inner edge of their
-cells and running through the corner cells. A rule in a corner cell ends at the outer edge exactly
-where the side rule below it starts, so the corners close to the pixel without a joining glyph. The
-dialog sits in a ring one cell wide, the top and bottom border rows and a blank column outside each
-side, that is transparent: those cells take the dimmed frame's background, so the ring looks the
-same over a child that paints its own background, as OpenCode does, as over one on the terminal's.
-Every rule lies where the fill meets the ring. The sides sat on the inner edge of their cells for a
-while, `▕` left and `▏` right with the corner cells blank, which let the title bar's rules meet them
-but left each corner missing an eighth-square that no Block Element can fill; and the Legacy
-Computing flush corners were tried twice, for the frame and for the title bar's lower rule, and set
-aside both times for the fonts that lack them. While the dialog is open no key, paste, or mouse
-event reaches either pane. The right pane is the child. `ctrl+]` moves focus between them, and a
-mouse click focuses the pane under it. `ctrl+^` (typed as `ctrl+6` on a US keyboard) hides the
-sidebar and gives the child its width, or shows it again; hiding it moves focus to the child, and
-`ctrl+]` on a hidden sidebar shows it and focuses it. The panes are colored blocks rather than
-boxes, in OpenCode's Material palette (`packages/tui/src/theme/assets/ material.json` there): the
-sidebar on `#1e272c`, and the status bar, dialog, and selected bead on `#37474f`. In those, every
-cell left on the terminal's default colors is painted with the block's background and `#eeffff`. The
-one color outside Material is the website's accent, the gold `#f2c25a`: the complement of the
-wordmark's teal, it marks what is about to be acted on, the selection bar in a dialog, the active
-button, and the focused title, roles the Material blue `#82aaff` had before. The selected row of a
-list is not gold: it marks a position, not a commitment, so it is a gray bar with a one-cell gold
-cursor. The terminal pane, margin included, is not painted at all: the child chose its palette
-against the terminal's own colors, so it keeps them. The child's title is gold while it has focus
-and gray otherwise; the sidebar has no title, the wordmark stands for it. `ctrl+q` quits the host
-and kills the child. The wheel and `shift+pgup`/`shift+pgdn` scroll (see below), and `esc` leaves
-scroll mode. Every other key, paste, and mouse event goes to the focused pane.
+the padding rather than under it, a cell of fill left on each side, with a purple `▎` as the bar's
+first cell for the cursor: the purple stays one cell wide and means what it means on a button, that
+this is the one `enter` acts on. The cursor and the active button were gold until the purple took
+the action roles to match the default title gradient. A gold bar, teal and dark teal bars, a dark
+gold bar, and bare gold text were tried against it and set aside. The dialog is composed over a
+dimmed copy of the frame on a Lip Gloss canvas: every cell's colors, backgrounds included, move
+halfway toward black. The dialog itself is a shaded block with a hairline border of one-eighth
+blocks in the title's gradient: the sides `▏` and `▕` flush with the outer edge, the top `▁` and
+bottom `▔` on the inner edge of their cells and running through the corner cells. A rule in a corner
+cell ends at the outer edge exactly where the side rule below it starts, so the corners close to the
+pixel without a joining glyph. The dialog sits in a ring one cell wide, the top and bottom border
+rows and a blank column outside each side, that is transparent: those cells take the dimmed frame's
+background, so the ring looks the same over a child that paints its own background, as OpenCode
+does, as over one on the terminal's. Every rule lies where the fill meets the ring. The sides sat on
+the inner edge of their cells for a while, `▕` left and `▏` right with the corner cells blank, which
+let the title bar's rules meet them but left each corner missing an eighth-square that no Block
+Element can fill; and the Legacy Computing flush corners were tried twice, for the frame and for the
+title bar's lower rule, and set aside both times for the fonts that lack them. While the dialog is
+open no key, paste, or mouse event reaches either pane. The right pane is the child. `ctrl+]` moves
+focus between them, and a mouse click focuses the pane under it. `ctrl+^` (typed as `ctrl+6` on a US
+keyboard) hides the sidebar and gives the child its width, or shows it again; hiding it moves focus
+to the child, and `ctrl+]` on a hidden sidebar shows it and focuses it. The panes are colored blocks
+rather than boxes, in OpenCode's Material palette (`packages/tui/src/theme/assets/ material.json`
+there): the sidebar on `#1e272c`, and the status bar, dialog, and selected bead on `#37474f`. In
+those, every cell left on the terminal's default colors is painted with the block's background and
+`#eeffff`. What is about to be acted on, the active button and the selection cursor, is the Material
+purple `#c792ea`, the end stop of the default title gradient. Those roles belonged to the Material
+blue `#82aaff` first and then to the one color outside Material, the website's accent, the gold
+`#f2c25a`, the complement of the wordmark's teal; the gold keeps the focused title and the gradients
+that start or end in it. The selected row of a list is not purple: it marks a position, not a
+commitment, so it is a gray bar with a one-cell purple cursor. The terminal pane, margin included,
+is not painted at all: the child chose its palette against the terminal's own colors, so it keeps
+them. The child's title is gold while it has focus and gray otherwise; the sidebar has no title, the
+wordmark stands for it. `ctrl+q` quits the host and kills the child. The wheel and
+`shift+pgup`/`shift+pgdn` scroll (see below), and `esc` leaves scroll mode. Every other key, paste,
+and mouse event goes to the focused pane.
 
 Two environment variables help when something looks wrong: `VTSPIKE_DUMP=<file>` writes the last
 composed frame on every render, and `VTSPIKE_LOG=<file>` appends every terminal mode the child
