@@ -15,31 +15,35 @@ The sidebar opens with a wordmark, CODE over FALL in block glyphs, above the men
 cells beside a glyph take the fill tinted a quarter toward the teal, and so does every cell between
 a row's first and last glyph, the spacing between letters and the open sides of the letters
 included; the ring outside that and the rows above and below take an eighth, a row counting as two
-columns. Six wordmarks are in to compare, and `tab` cycles them while the sidebar has focus; the
-status bar names the one in use, and so does the sidebar's second-to-last row, in the faint
-help-description color. The first, `logo.ans`, is a half-block mark in the Material cyan `#89ddff`
-with the deep teal `#39adb5` for its shading, copied from a terminal that put one extra space after
-every colored segment, which the file has stripped. `logo-runner.ans` is a three-row half-block mark
-on one line and `logo-mini.ans` the same in quadrant glyphs at sixteen cells. Three thin marks set
-the same letters in heavy box-drawing lines, two cells per letter with no spacing:
-`logo-thin-stretched.ans` is a column wider per letter, a heavy horizontal `━` inserted in each bar;
-`logo-thin-sans.ans` is the two-cell mark without its serifs, the stems of F, A, and L ending in the
-half lines `╹` and `╻` and the bars of C, E, F, and L in `╸`, while D keeps its arms, since without
-them it is an O; and `logo-thin-stretched-sans.ans` is the stretched mark treated the same way, its
-E and F keeping their `┣━` middle strokes. All came uncolored, and the program colors them the cyan
-with the bottom row in the deep teal, like the first mark's shading. The runner and the thin marks
-draw their glow as bands instead of the halo: the inner tint behind the rows edge to edge, and a
-half-row rim of the outer tint above and below, a run of `▄` and one of `▀` on the sidebar's own
-fill. A shaded mark with a lit left column, a one-line mark in box-drawing lines, the runner split
-over two lines, a plain half-block mark on a solid stripe in the dialog fill, and the two-cell thin
-mark with its serifs were tried and set aside. The sidebar is as wide as the wordmark in use plus a
-cell either side, and at least 28, so the child pane is resized when `tab` changes the mark. The
-left pane is a menu, Beads/Issues and About, with a cursor on the arrows; `enter` or `right`
-confirms. The sidebar draws its own margin; its text sits three cells in, under the wordmark's left
-edge, and the selected row's bar starts a cell before that, inside the margin. Focus shows three
-ways: the cursor is drawn only while the sidebar has focus, the text is muted without it, and while
-it has focus the bottom row carries the key help in the Charm help bubble's style (`↑↓ move • enter
-confirm`).
+columns. Four wordmarks are in to compare. While the sidebar has focus, `ctrl+l` enters and leaves
+logo mode, in which the arrows change the wordmark instead of the menu: the left arrow cycles the
+marks, narrowest first, the right arrow centers the mark or sets it back left, and the down arrow
+darkens the glow or lightens it. The status bar names the mark in use, and so does the sidebar's
+second-to-last row, in the faint help-description color. Four thin marks set the letters in heavy
+box-drawing lines, two cells per letter with no spacing: `logo-thin.ans` as drawn, with serifs;
+`logo-thin-stretched.ans` a column wider per letter, a heavy horizontal `━` inserted in each bar;
+`logo-thin-sans.ans` without the serifs, the stems of F, A, and L ending in the half lines `╹` and
+`╻` and the bars of C, E, F, and L in `╸`, while D keeps its arms, since without them it is an O;
+and `logo-thin-stretched-sans.ans` the stretched mark treated the same way, its E and F keeping
+their `┣━` middle strokes. All came uncolored, and the program colors them the Material cyan
+`#89ddff` with the bottom row in the deep teal `#39adb5`. All draw their glow as bands instead of
+the halo: the inner tint behind the rows edge to edge, and a half-row rim of the outer tint above
+and below, a run of `▄` and one of `▀` on the sidebar's own fill. The down arrow takes the glow to a
+touch darker, three sixteenths and a sixteenth of the way to the teal in place of a quarter and an
+eighth, and the status bar notes `dark` while it is on. The right arrow moves the mark between a
+cell in from the left and centered in the sidebar, the status bar noting `centered`; a ragged mark
+is centered as a block, so its rows keep their alignment. The sans mark, dark and centered, is the
+default. A shaded mark with a lit left column, a one-line mark in box-drawing lines, a three-row
+half-block mark on one line, split over two lines, and in quadrant glyphs, a plain half-block mark
+on a solid stripe in the dialog fill, and the original half-block mark with the halo glow were tried
+and set aside. The sidebar is as wide as the wordmark in use plus a cell either side, and at least
+24, so the child pane is resized when the mark changes; when 24 is too narrow for the key help on
+one row, its items take a row each. The left pane is a menu, Beads/Issues and About, with a cursor
+on the arrows; `enter` or `right` confirms. The sidebar draws its own margin; its text sits three
+cells in, under the wordmark's left edge, and the selected row's bar starts a cell before that,
+inside the margin. Focus shows three ways: the cursor is drawn only while the sidebar has focus, the
+text is muted without it, and while it has focus the bottom row carries the key help in the Charm
+help bubble's style (`↑↓ move • enter confirm`).
 
 Beads/Issues opens a dialog listing the beads; `↑`/`↓` choose, `enter` opens the bead's own
 dialog, and `esc` closes. The bead dialog shows the bead's details and two buttons; `←`/`→`,
