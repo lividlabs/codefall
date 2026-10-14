@@ -37,12 +37,18 @@ import (
 )
 
 const (
-	statusRows   = 1
-	sidebarWidth = 28 // content; the border adds 2
-	sidebarPad   = 3  // cells before the sidebar's text, the margin included: under the wordmark's left edge; the bar starts a cell before
-	borderCols   = 2
-	borderRows   = 2
+	statusRows = 1
+	sidebarPad = 3 // cells before the sidebar's text, the margin included: under the wordmark's left edge; the bar starts a cell before
+	borderCols = 2
+	borderRows = 2
 )
+
+// sidebarWidth is the sidebar's content width; the border adds 2. It is wide
+// enough for the wordmark in use with a cell of margin either side, and at
+// least 28, so the child is resized when the wordmark changes.
+func sidebarWidth() int {
+	return max(28, lipgloss.Width(strings.TrimRight(logos[logoIndex].text, "\n"))+2)
+}
 
 // --- terminal pane -----------------------------------------------------------------------------
 
@@ -391,29 +397,98 @@ func (s sidebar) open(i int) dialog {
 	return nil
 }
 
-// logo is the wordmark, CODE over FALL, in block glyphs with its own ANSI
-// colors, as copied from the terminal. It sits above the menu.
+// The wordmarks, CODE over FALL in block glyphs, with their ANSI colors as
+// copied from the terminal and recolored to the palette, or uncolored and
+// colored here from it. One sits above the menu; tab cycles them while the
+// sidebar has focus.
 //
 //go:embed logo.ans
-var logoText string
+var logoHalfBlocks string
+
+//go:embed logo-runner.ans
+var logoRunner string
+
+//go:embed logo-mini.ans
+var logoMini string
+
+//go:embed logo-thin-stretched.ans
+var logoThinStretched string
+
+//go:embed logo-thin-sans.ans
+var logoThinSans string
+
+//go:embed logo-thin-stretched-sans.ans
+var logoThinStretchedSans string
+
+// logoArt is a wordmark. rows, when set, colors the art's rows in turn from
+// the palette, the art carrying no colors of its own. band draws the glow as
+// stripes instead of the halo: the inner tint behind the rows edge to edge,
+// and a half-row rim of the outer tint above and below, ▄ and ▀ on the
+// sidebar's own fill.
+type logoArt struct {
+	name, text string
+	rows       []color.Color
+	band       bool
+}
+
+var logos = []logoArt{
+	{name: "half blocks", text: logoHalfBlocks},
+	{name: "runner", text: logoRunner, rows: []color.Color{colAccent, colAccent, colTealDark}, band: true},
+	{name: "mini", text: logoMini, rows: []color.Color{colAccent, colAccent, colTealDark}},
+	{name: "thin stretched", text: logoThinStretched, rows: []color.Color{colAccent, colAccent, colTealDark}, band: true},
+	{name: "thin sans", text: logoThinSans, rows: []color.Color{colAccent, colAccent, colTealDark}, band: true},
+	{name: "thin stretched sans", text: logoThinStretchedSans, rows: []color.Color{colAccent, colAccent, colTealDark}, band: true},
+}
+
+// logoIndex is the wordmark in use; tab cycles it while the sidebar has focus.
+var logoIndex int
 
 // The glow is the sidebar fill tinted toward the logo's teal: a quarter of the
-// way for cells touching a glyph, an eighth for the ring outside that.
+// way for cells touching a glyph and for every cell between a row's first and
+// last glyph, the spacing between letters and the open sides of the letters
+// included, an eighth for the ring outside that.
 var (
 	glowInner = lipgloss.Color("#25484e")
 	glowOuter = lipgloss.Color("#21373c")
 )
 
-// logoRows is the logo's height in the sidebar: the art plus a blank row above
-// and below for the glow to spill into.
-var logoRows = lipgloss.Height(strings.TrimRight(logoText, "\n")) + 2
-
-// logo renders the wordmark with a dark glow: every cell without a background
-// of its own takes a tint by its distance from the nearest glyph, so the glyphs
-// sit in a halo and the half blocks show it in their empty half.
+// logo renders the wordmark in use, a cell in from the left, with a dark glow:
+// every cell without a background of its own takes a tint by its distance from
+// the nearest glyph, so the glyphs sit in a halo and the half blocks show it in
+// their empty half. The art gets a blank row above and below for the glow to
+// spill into, or for the bands of a banded wordmark.
 func logo(width int) string {
+	l := logos[logoIndex]
+	art := strings.TrimRight(l.text, "\n")
+	logoRows := lipgloss.Height(art) + 2
 	canvas := lipgloss.NewCanvas(width, logoRows)
-	canvas.Compose(lipgloss.NewLayer("\n" + strings.TrimRight(logoText, "\n")))
+	canvas.Compose(lipgloss.NewLayer("\n " + strings.ReplaceAll(art, "\n", "\n ")))
+	for y := 1; len(l.rows) > 0 && y < logoRows-1; y++ {
+		for x := 0; x < width; x++ {
+			if cell := canvas.CellAt(x, y); cell != nil && strings.TrimSpace(cell.Content) != "" {
+				cell.Style.Fg = l.rows[(y-1)%len(l.rows)]
+			}
+		}
+	}
+	if l.band {
+		for y := 0; y < logoRows; y++ {
+			for x := 0; x < width; x++ {
+				cell := canvas.CellAt(x, y)
+				if cell == nil || cell.Width == 0 {
+					continue
+				}
+				switch {
+				case y == 0:
+					cell.Content, cell.Style.Fg = "▄", glowOuter
+				case y == logoRows-1:
+					cell.Content, cell.Style.Fg = "▀", glowOuter
+				default:
+					cell.Style.Bg = glowInner
+				}
+			}
+		}
+		return canvas.Render()
+	}
 	// A glyph is any drawn cell, the shaded blocks included. The map is taken
 	// before tinting, or the tint itself would count as drawn.
 	drawn := make([][]bool, logoRows)
@@ -428,15 +503,21 @@ func logo(width int) string {
 		return y >= 0 && y < logoRows && x >= 0 && x < width && drawn[y][x]
 	}
 	for y := 0; y < logoRows; y++ {
+		first, last := width, -1
+		for x := range drawn[y] {
+			if drawn[y][x] {
+				first, last = min(first, x), x
+			}
+		}
 		for x := 0; x < width; x++ {
 			cell := canvas.CellAt(x, y)
 			if cell == nil || cell.Width == 0 || cell.Style.Bg != nil {
 				continue
 			}
-			switch nearest(glyph, x, y, 2) {
-			case 0, 1:
+			switch d := nearest(glyph, x, y, 2); {
+			case d <= 1, first <= x && x <= last:
 				cell.Style.Bg = glowInner
-			case 2:
+			case d == 2:
 				cell.Style.Bg = glowOuter
 			}
 		}
@@ -498,14 +579,13 @@ func selected(line string, width int, style lipgloss.Style) string {
 // content draws the sidebar as a block the full size of its pane, margin
 // included, so a selected row runs edge to edge; the text sits sidebarPad
 // cells in, under the wordmark's left edge. The top row is blank, the
-// wordmark standing for a title. While the sidebar has focus the cursor is
-// highlighted and the key help sits on the bottom row; without it the text is
-// muted and neither is drawn.
+// wordmark standing for a title. The wordmark's name sits faint on the
+// second-to-last row while they are under comparison. While the sidebar has
+// focus the cursor is highlighted and the key help sits on the bottom row;
+// without it the text is muted and neither is drawn.
 func (s sidebar) content(width, height int, focused bool) string {
 	rows := []string{""} // the title row
-	for _, line := range strings.Split(logo(width-borderCols), "\n") {
-		rows = append(rows, " "+line)
-	}
+	rows = append(rows, strings.Split(logo(width), "\n")...)
 	rows = append(rows, "") // a blank row between the glow and the list
 	text := lipgloss.NewStyle()
 	if !focused {
@@ -519,9 +599,9 @@ func (s sidebar) content(width, height int, focused bool) string {
 		}
 		rows = append(rows, line)
 	}
-	block := strings.Join(rows, "\n")
+	block := fitBlock(strings.Join(rows, "\n"), width, height-2) + "\n" + lead + helpDesc.Render(logos[logoIndex].name)
 	if focused {
-		block = fitBlock(block, width, height-1) + "\n" + lead + help(menuHelp)
+		block += "\n" + lead + help(menuHelp)
 	}
 	return fitBlock(block, width, height)
 }
@@ -972,7 +1052,7 @@ func (m model) sideCols() int {
 	if m.sideHidden {
 		return 0
 	}
-	return sidebarWidth + borderCols
+	return sidebarWidth() + borderCols
 }
 
 // termInner is the inner size of the terminal pane for the current window.
@@ -1076,6 +1156,12 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if isToggleKey(msg.String()) {
 			return m.toggleSidebar(), nil
 		}
+		if msg.String() == "tab" && m.focus == focusSidebar { // try the next wordmark
+			logoIndex = (logoIndex + 1) % len(logos)
+			w, h := m.termInner() // the sidebar is sized to the wordmark
+			m.term = m.term.resize(w, h)
+			return m, nil
+		}
 		if msg.String() == "ctrl+]" {
 			if m.sideHidden {
 				return m.toggleSidebar().setFocus(focusSidebar), nil
@@ -1173,7 +1259,7 @@ func (m model) View() tea.View {
 
 	body := pane(fitBlock(m.term.content(), w, h), w, m.term.title(), m.focus == focusTerm, nil)
 	if !m.sideHidden {
-		sw, sh := sidebarWidth+borderCols, h+borderRows
+		sw, sh := sidebarWidth()+borderCols, h+borderRows
 		side := paint(m.side.content(sw, sh, m.focus == focusSidebar), sw, sh, colText, colBgDark)
 		body = lipgloss.JoinHorizontal(lipgloss.Top, side, body)
 	}
@@ -1192,6 +1278,8 @@ func (m model) View() tea.View {
 	}
 	if m.dialog != nil {
 		alt += fmt.Sprintf("  [gradient: %s · tab]", gradients[gradientIndex].name)
+	} else if m.focus == focusSidebar {
+		alt += fmt.Sprintf("  [logo: %s · tab]", logos[logoIndex].name)
 	}
 	focused := "sidebar"
 	if m.focus == focusTerm {
