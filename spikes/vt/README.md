@@ -53,36 +53,33 @@ the keyboard and without `enter`, and moves focus to it so sending is yours. Abo
 dialog naming the spike and the child's command line; `enter` or `esc` closes it. Every dialog
 ends with a key help row in the same style as the sidebar's.
 
-A dialog's title row is the title, and under it a hairline of `▔` across the full width of the next
-row, so it underlines the title itself: a cell holds a letter or a block, never both, so the rule is
-the top eighth of the row below. The rule is a Lip Gloss `Blend1D` gradient, one color per cell, and
-the title takes its first stop. The hairline border runs the same gradient from the top-left corner
-to the bottom-right, both ways round: across the top and down the right side, and down the left side
-and along the bottom, the two runs meeting at the bottom-right corner on the last stop. Seven
-gradients are in to compare, and `tab` cycles them while a dialog is open, the status bar naming the
-one in use: the gold `#f2c25a` into the teal `#89ddff`, Material's purple `#c792ea`, violet
-`#bb80b3`, red `#f07178`, or green `#c3e88d`, or the wordmark's deep teal `#39adb5`; and the teal
-into the purple, for comparison. A fade ends in another hue, never in the fill gray, which passes
-through desaturated mud and reads as the same color dimming. `shift+tab` cycles two more title
-styles. The bar sets the title as dark text, the sidebar fill `#1e272c`, on a bar: the title row
-moves up to the row under the top hairline and takes the gradient as its background from edge to
-edge, the side hairlines sitting on it, and the blank row above the title and the rule below it go,
-so the dialog is two rows shorter. The top hairline runs the bar's whole gradient and sits flush
-against it, so the bar reads an eighth taller, and the right side is the gradient's last stop
-throughout, so the frame agrees with the bar at both ends. A matching `▔` rule under the bar was
-tried and taken off: the side cells are the side rules', so it stopped a cell short at each end and
-left a notch of fill there. Half a row of padding above and below the bar in its own colors, `▄` on
-the ring and `▀` on the fill, with the frame thickened to match, `▌` `▐` sides and a `▀` bottom, was
-tried and set aside: Apple Terminal sets Block Elements from the font, and the font's glyphs stop
-short of the cell edge, so every run of blocks showed seams. The frameless style is the bar with no
-hairline border at all: the side cells take the fill, the top and bottom border rows stay
-transparent ring, and the bar is the block's top edge, padded an eighth of a row above and below in
-its own colors, `▁` on the ring and `▔` on the fill, each flush against the bar; with no frame there
-are no side cells for the pads to fight. Half-row pads, `▄` and `▀`, were tried there first. An
-inset style, the bar where the rule style's title sits with a cell of fill in from each side like a
-selected row, was in briefly and replaced by it. A light text was tried on the bar first and was
-hard to read. While the gradients and the title styles are under comparison `tab` and `shift+tab`
-are taken from the bead dialog, whose buttons still move on the arrows.
+A dialog's title is dark text, the sidebar fill `#1e272c`, on a bar: the row under the top hairline
+takes a Lip Gloss `Blend1D` gradient as its background from edge to edge, one color per cell, the
+side hairlines sitting on it. The top hairline runs the bar's whole gradient and sits flush against
+it, so the bar reads an eighth taller. The hairline border runs the same gradient from the top-left
+corner to the bottom-right, both ways round: across the top and down the right side, and down the
+left side and along the bottom, the two runs meeting at the bottom-right corner on the last stop;
+the right side is the gradient's last stop throughout, so the frame agrees with the bar at both
+ends. The border is drawn only where `TERM_PROGRAM` is `iTerm.app` or `ghostty`: eighth blocks read
+as continuous lines where the terminal draws Block Elements itself, pixel-aligned to the cell, and
+those two do, while a terminal that sets them from the font, Apple Terminal among them, leaves seams
+between the glyphs. Elsewhere the dialog is the bare shaded block under its title bar, the border
+cells keeping their backgrounds so it holds its size and place; under tmux `TERM_PROGRAM` names
+tmux, so the border is off there too. Seven gradients are in to compare, and `tab` cycles them while
+a dialog is open, the status bar naming the one in use: the gold `#f2c25a` into the teal `#89ddff`,
+Material's purple `#c792ea`, violet `#bb80b3`, or red `#f07178`; and the teal into the purple, the
+violet, or the gold, the teal into the purple being the default. The gold into the green `#c3e88d`
+and into the wordmark's deep teal `#39adb5`, and the teal into the red and the green, were in and
+are out. A fade ends in another hue, never in the fill gray, which passes through desaturated mud
+and reads as the same color dimming. Tried and set aside: the title in the gradient's first stop
+with a `▔` rule under it in the gradient, the first version, with a blank row above the title; a
+frameless version of the bar with no hairline border, padded an eighth of a row above and below in
+its own colors; an inset version where that rule's title sat, a cell of fill in from each side;
+light text on the bar, hard to read; a `▔` rule under the bar, which stopped a cell short of the
+side cells at each end and left a notch; and half a row of padding above and below the bar with the
+frame thickened to half blocks, which Apple Terminal sets from the font with seams between the
+glyphs. While the gradients are under comparison `tab` is taken from the bead dialog, whose buttons
+still move on the arrows and `shift+tab`.
 
 A dialog is 70 cells wide, hairline to hairline, like Crush's command palette, or narrower when the
 window leaves less after the ring and a cell of margin on each side; a list shows as many rows as

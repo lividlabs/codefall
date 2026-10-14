@@ -700,19 +700,34 @@ var (
 			Margin(0, 1)
 )
 
+// hairlines is whether the dialog draws its hairline border. Eighth blocks
+// only read as continuous lines where the terminal draws Block Elements
+// itself, pixel-aligned to the cell; a terminal that sets them from the font
+// leaves seams between the glyphs. iTerm2 and Ghostty draw them, and name
+// themselves in TERM_PROGRAM, so the border is kept there and taken off
+// elsewhere, the dialog then a bare shaded block under its title bar. Under
+// tmux TERM_PROGRAM names tmux, so the border is off there regardless.
+var hairlines = func() bool {
+	switch os.Getenv("TERM_PROGRAM") {
+	case "iTerm.app", "ghostty":
+		return true
+	}
+	return false
+}()
+
 // gradientBorder recolors a rendered dialog's hairlines in the title's
 // gradient, run from the top-left corner to the bottom-right along both
 // ways round: across the top and down the right side, and down the left side
 // and along the bottom. The two runs are the same length, so they meet at
 // the bottom-right corner on the last stop. The margin columns outside the
-// sides are left alone. With the title bar on, the row under the top
-// hairline takes the gradient as its background from hairline to hairline
-// and its text the dark fill color. The top hairline then runs the bar's
-// own gradient, the whole of it across the top, and sits on the bottom edge
-// of its cell flush against the bar, so the bar reads an eighth taller. A
-// matching ▔ rule under the bar was tried and taken off: the side cells
-// are the side rules', so the rule stopped a cell short at each end and
-// left a notch of fill there. The right side takes
+// sides are left alone. The row under the top hairline is the title bar: it
+// takes the gradient as its background from hairline to hairline and its
+// text the dark fill color. The top hairline runs the bar's own gradient,
+// the whole of it across the top, and sits on the bottom edge of its cell
+// flush against the bar, so the bar reads an eighth taller. A matching ▔
+// rule under the bar was tried and taken off: the side cells are the side
+// rules', so the rule stopped a cell short at each end and left a notch of
+// fill there. The right side takes
 // the gradient's last stop throughout, so the frame agrees with the bar at
 // both ends; the left side and the bottom run the corner-to-corner path as
 // in rule mode.
@@ -740,7 +755,7 @@ func gradientBorder(rendered string) string {
 		tint(right, y, n-1+y) // the right side, downward, after the top
 		tint(left, y, y)      // the left side, downward
 	}
-	if (titleStyle == titleBar || titleStyle == titleFrameless) && h > 2 {
+	if h > 2 { // the title bar
 		bar := lipgloss.Blend1D(n, g.from, g.to)
 		for x := left; x <= right; x++ {
 			c := bar[x-left]
@@ -760,7 +775,7 @@ func gradientBorder(rendered string) string {
 			}
 		}
 	}
-	if titleStyle == titleFrameless && h > 3 { // take the hairlines off, keeping each cell's background
+	if !hairlines { // take the border off, keeping each cell's background
 		for x := left; x <= right; x++ {
 			for _, y := range []int{0, h - 1} {
 				if cell := canvas.CellAt(x, y); cell != nil && cell.Width > 0 {
@@ -773,15 +788,6 @@ func gradientBorder(rendered string) string {
 				if cell := canvas.CellAt(x, y); cell != nil && cell.Width > 0 {
 					cell.Content, cell.Style.Fg = " ", nil
 				}
-			}
-		}
-		bar := lipgloss.Blend1D(n, g.from, g.to)
-		for x := left; x <= right; x++ { // the eighth-row pads
-			if cell := canvas.CellAt(x, 0); cell != nil && cell.Width > 0 {
-				cell.Content, cell.Style.Fg = "▁", bar[x-left]
-			}
-			if cell := canvas.CellAt(x, 2); cell != nil && cell.Width > 0 {
-				cell.Content, cell.Style.Fg, cell.Style.Bg = "▔", bar[x-left], colBgLight
 			}
 		}
 	}
@@ -816,11 +822,10 @@ func selectRow(text string, width, inset int) string {
 
 // --- dialog title bar --------------------------------------------------------------------------
 
-// gradient is the pair of stops for the rule under a dialog's title, which
-// Blend1D spreads across the row one color per cell; the title takes the
-// first stop so the rule continues from it, and the border runs the same
-// stops corner to corner. Several are in to compare, cycled
-// with tab while a dialog is open. A fade ends in another hue, never in the
+// gradient is the pair of stops for a dialog's title bar, which Blend1D
+// spreads across the row one color per cell, and for the border, which runs
+// the same stops corner to corner. Several are in to compare, cycled with
+// tab while a dialog is open. A fade ends in another hue, never in the
 // fill gray: a blend into the neutral passes through desaturated mud and
 // reads as the same color dimming.
 type gradient struct {
@@ -833,67 +838,27 @@ var gradients = []gradient{
 	{"gold → purple", colGold, colPurple},
 	{"gold → violet", colGold, colViolet},
 	{"gold → red", colGold, colPink},
-	{"gold → green", colGold, colGreen},
-	{"gold → deep teal", colGold, colTealDark},
 	{"teal → purple", colAccent, colPurple},
+	{"teal → violet", colAccent, colViolet},
+	{"teal → gold", colAccent, colGold},
 }
 
 // gradientIndex is the gradient in use; tab cycles it while a dialog is open.
-var gradientIndex int
-
-// titleStyle is how a dialog sets its title; shift+tab cycles them while a
-// dialog is open. titleRule is the title in the gradient's first stop with
-// the rule under it. titleBar is dark text on a bar of the gradient, flush
-// with the hairlines, in place of the title and its rule. titleFrameless is
-// the bar with no hairline border at all: the side cells take the fill, the
-// top and bottom border rows stay transparent ring, and the bar is the
-// block's top edge, padded an eighth of a row above and below in its own
-// colors, ▁ on the ring and ▔ on the fill, each flush against the bar.
-const (
-	titleRule = iota
-	titleBar
-	titleFrameless
-)
-
-var (
-	titleStyle      = titleRule
-	titleStyleNames = []string{"rule", "bar", "frameless"}
-)
-
-// titleRows draws a dialog's title, and under it a hairline of ▔ across the
-// full width in the gradient. The rule is the top eighth of the next row
-// because a cell holds a letter or a block, never both, so a rule under the
-// title's own letters cannot share its row.
-func titleRows(title string, w int) []string {
-	g := gradients[gradientIndex]
-	text := lipgloss.NewStyle().Foreground(g.from).Bold(true).Render(title)
-	n := w - 2*dialogPad
-	if n < 2 {
-		return []string{pad(text)}
+// The teal into the purple is the default.
+var gradientIndex = func() int {
+	for i, g := range gradients {
+		if g.name == "teal → purple" {
+			return i
+		}
 	}
-	colors := lipgloss.Blend1D(n, g.from, g.to)
-	var b strings.Builder
-	for i := 0; i < n; i++ {
-		b.WriteString(lipgloss.NewStyle().Foreground(colors[i]).Render("▔"))
-	}
-	return []string{pad(text), pad(b.String())}
-}
+	return 0
+}()
 
-// dialogFrame sets the title row, then the lines, already w wide at most, in
-// the shaded pane with its border around it. The pane's own title row is left
-// blank so the top is padded like the bottom, and the help row is the last
-// line.
+// dialogFrame sets the title in the pane's title row, which gradientBorder
+// paints as the bar, then the lines, already w wide at most, in the shaded
+// pane with its border around it; the help row is the last line.
 func dialogFrame(title string, lines []string, w int, items []helpItem) string {
-	paneTitle := ""
-	switch titleStyle {
-	case titleBar: // the bar takes the pane's title row; the lines' own blank row follows
-		paneTitle = pad(lipgloss.NewStyle().Bold(true).Render(title))
-	case titleFrameless: // the bar takes the pane's title row, then a row for its lower pad
-		paneTitle = pad(lipgloss.NewStyle().Bold(true).Render(title))
-		lines = append([]string{""}, lines...)
-	default:
-		lines = append(titleRows(title, w), lines...)
-	}
+	paneTitle := pad(lipgloss.NewStyle().Bold(true).Render(title))
 	lines = append(lines, "", pad(help(items)))
 	body := fitBlock(strings.Join(lines, "\n"), w, len(lines))
 	return gradientBorder(dialogBorder.Render(pane(body, w, paneTitle, true, colBgLight)))
@@ -1314,9 +1279,6 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			case "tab": // try the next gradient
 				gradientIndex = (gradientIndex + 1) % len(gradients)
 				return m, nil
-			case "shift+tab": // try the next title style
-				titleStyle = (titleStyle + 1) % len(titleStyleNames)
-				return m, nil
 			}
 			var implement *bead
 			m.dialog, implement = m.dialog.update(msg)
@@ -1463,7 +1425,7 @@ func (m model) View() tea.View {
 		}
 	}
 	if m.dialog != nil {
-		alt += fmt.Sprintf("  [gradient: %s · tab · title: %s · shift+tab]", gradients[gradientIndex].name, titleStyleNames[titleStyle])
+		alt += fmt.Sprintf("  [gradient: %s · tab]", gradients[gradientIndex].name)
 	} else if m.logoMode && m.focus == focusSidebar {
 		alt += fmt.Sprintf("  [logo: %s · ← mark · → center · ↓ glow · ctrl+l done]", logoState())
 	} else if m.focus == focusSidebar {

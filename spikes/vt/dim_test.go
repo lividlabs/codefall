@@ -100,6 +100,8 @@ func TestPaneWithNilBackgroundLeavesEverythingToTheTerminal(t *testing.T) {
 }
 
 func TestDialogIsBorderedOnItsFill(t *testing.T) {
+	defer func(h bool) { hairlines = h }(hairlines)
+	hairlines = true // as on iTerm2 and Ghostty
 	d := beadDialog{bead: bead{id: "cf-1", title: "T", description: "d"}}
 	got := d.render(120, 36)
 	lines := strings.Split(got, "\n")
@@ -115,15 +117,22 @@ func TestDialogIsBorderedOnItsFill(t *testing.T) {
 	if c := canvas.CellAt(0, 1); c.Style.Bg != nil || strings.TrimSpace(c.Content) != "" {
 		t.Errorf("ring cell = %q bg %v, want blank on the terminal background", c.Content, c.Style.Bg)
 	}
-	if r, g, b := rgb(canvas.CellAt(1, 1).Style.Bg); r != 0x37 || g != 0x47 || b != 0x4f {
+	// The row under the top hairline is the title bar, on the gradient's
+	// first stop at its left end; the fill starts on the row below.
+	if got, want := canvas.CellAt(1, 1).Style.Bg, gradients[gradientIndex].from; got == nil || got != want {
+		t.Errorf("title bar bg = %v want %v, the gradient's first stop", got, want)
+	}
+	if r, g, b := rgb(canvas.CellAt(1, 2).Style.Bg); r != 0x37 || g != 0x47 || b != 0x4f {
 		t.Errorf("side border bg = %x,%x,%x want 37,47,4f", r, g, b)
 	}
-	if r, g, b := rgb(canvas.CellAt(2, 1).Style.Bg); r != 0x37 || g != 0x47 || b != 0x4f {
+	if r, g, b := rgb(canvas.CellAt(2, 2).Style.Bg); r != 0x37 || g != 0x47 || b != 0x4f {
 		t.Errorf("inner bg = %x,%x,%x want 37,47,4f", r, g, b)
 	}
 }
 
 func TestOverlayRingTakesTheDimmedBackground(t *testing.T) {
+	defer func(h bool) { hairlines = h }(hairlines)
+	hairlines = true
 	// A frame painted in its own color everywhere, the way OpenCode draws.
 	row := strings.Repeat("\x1b[48;2;100;100;100mx", 70) + "\x1b[m"
 	frame := strings.TrimSuffix(strings.Repeat(row+"\n", 20), "\n")
@@ -142,5 +151,15 @@ func TestOverlayRingTakesTheDimmedBackground(t *testing.T) {
 	}
 	if r, g, b := rgb(canvas.CellAt(x+2, y+2).Style.Bg); r != 0x37 || g != 0x47 || b != 0x4f {
 		t.Errorf("fill = %x,%x,%x want 37,47,4f", r, g, b)
+	}
+}
+
+func TestDialogDropsTheBorderOffIterm2AndGhostty(t *testing.T) {
+	defer func(h bool) { hairlines = h }(hairlines)
+	hairlines = false
+	d := beadDialog{bead: bead{id: "cf-1", title: "T", description: "d"}}
+	got := ansiStrip(d.render(120, 36))
+	if strings.ContainsAny(got, "▁▔▏▕") {
+		t.Errorf("dialog has hairline glyphs without the border:\n%s", got)
 	}
 }
