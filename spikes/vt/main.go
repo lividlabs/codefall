@@ -673,28 +673,29 @@ func dialogWidth(winW int) int {
 // bar starts one cell in from the hairline, with the cursor in that cell.
 const dialogPad = 2
 
-// hairline is a border of one-eighth blocks, every rule on the inner edge of
-// its cell: ▁ across the top, ▔ across the bottom, ▕ on the left, and ▏ on
-// the right, with the corner cells blank. The top rule ends at the inner
-// corner of the corner cell, exactly where the side rule in the cell below
-// begins, so the corners close without a joining glyph and nothing overshoots.
-// Every glyph is a standard Block Element; the flush corners (U+1FB7C..7F)
-// are missing from some fonts and are not used.
+// hairline is a border of one-eighth blocks: the sides flush with the outer
+// edge, the top and bottom on the inner edge of their cells and running
+// through the corner cells. A rule in a corner cell then ends at the outer
+// edge, exactly where the side rule below it starts, so the corner closes to
+// the pixel without a joining glyph. Every glyph is a standard Block Element;
+// the flush corners (U+1FB7C..7F) are missing from some fonts and are not
+// used. With the sides on the inner edge instead, the corner cells blank,
+// each corner misses an eighth-square that no Block Element can fill.
 var hairline = lipgloss.Border{
-	Top: "▁", Bottom: "▔", Left: "▕", Right: "▏",
-	TopLeft: " ", TopRight: " ", BottomLeft: " ", BottomRight: " ",
+	Top: "▁", Bottom: "▔", Left: "▏", Right: "▕",
+	TopLeft: "▁", TopRight: "▁", BottomLeft: "▔", BottomRight: "▔",
 }
 
 var (
 	dialogLabel  = lipgloss.NewStyle().Foreground(colMuted)
 	buttonStyle  = lipgloss.NewStyle().Padding(0, 2).Foreground(colMuted)
 	buttonActive = lipgloss.NewStyle().Padding(0, 2).Background(colGold).Foreground(colBgDark).Bold(true)
-	// The dialog sits in a ring of the terminal's own background: the border
-	// cells carry no fill, so each hairline lies on the boundary between the
-	// fill and the ring, and a blank column outside each side widens the ring
-	// there to about what the border rows give above and below, a cell being
-	// twice as tall as it is wide.
-	dialogBorder = lipgloss.NewStyle().Border(hairline).BorderForeground(colAccent).Margin(0, 1)
+	// The dialog sits in a ring of the terminal's own background: the top and
+	// bottom border rows carry no fill, and a blank column is left outside each
+	// side. Every hairline then lies on the boundary between fill and ring.
+	dialogBorder = lipgloss.NewStyle().Border(hairline).BorderForeground(colAccent).
+			BorderLeftBackground(colBgLight).BorderRightBackground(colBgLight).
+			Margin(0, 1)
 )
 
 // gradientBorder recolors a rendered dialog's hairlines in the title's
@@ -705,11 +706,11 @@ var (
 // sides are left alone. With the title bar on, the row under the top
 // hairline takes the gradient as its background from hairline to hairline
 // and its text the dark fill color. The top hairline then runs the bar's
-// own gradient, the whole of it across the top, and so does a hairline of
-// ▔ on the row under the bar, so the bar is padded an eighth above and
-// below: the top hairline sits on the bottom edge of its cell and the ▔ on
-// the top edge of its, both flush with the bar, and both meeting the side
-// rules, which sit on the inner edge of their cells. The right side takes
+// own gradient, the whole of it across the top, and sits on the bottom edge
+// of its cell flush against the bar, so the bar reads an eighth taller. A
+// matching ▔ rule under the bar was tried and taken off: the side cells
+// are the side rules', so the rule stopped a cell short at each end and
+// left a notch of fill there. The right side takes
 // the gradient's last stop throughout, so the frame agrees with the bar at
 // both ends; the left side and the bottom run the corner-to-corner path as
 // in rule mode.
@@ -737,21 +738,18 @@ func gradientBorder(rendered string) string {
 		tint(right, y, n-1+y) // the right side, downward, after the top
 		tint(left, y, y)      // the left side, downward
 	}
-	if titleBar && h > 3 {
+	if titleBar && h > 2 {
 		bar := lipgloss.Blend1D(n, g.from, g.to)
-		for x := left + 1; x < right; x++ { // inside the side rules
+		for x := left; x <= right; x++ {
 			c := bar[x-left]
 			if cell := canvas.CellAt(x, 0); cell != nil && cell.Width > 0 {
 				cell.Style.Fg = c
 			}
 			if cell := canvas.CellAt(x, 1); cell != nil && cell.Width > 0 {
 				cell.Style.Bg = c
-				if strings.TrimSpace(cell.Content) != "" {
+				if strings.TrimSpace(cell.Content) != "" && x > left && x < right {
 					cell.Style.Fg = colBgDark
 				}
-			}
-			if cell := canvas.CellAt(x, 2); cell != nil && cell.Width > 0 {
-				cell.Content, cell.Style.Fg = "▔", c
 			}
 		}
 		for y := 1; y < h-1; y++ {
@@ -846,9 +844,8 @@ func titleRows(title string, w int) []string {
 // line.
 func dialogFrame(title string, lines []string, w int, items []helpItem) string {
 	paneTitle := ""
-	if titleBar { // the bar takes the pane's title row, then a row for its lower hairline
+	if titleBar { // the bar takes the pane's title row; the lines' own blank row follows
 		paneTitle = pad(lipgloss.NewStyle().Bold(true).Render(title))
-		lines = append([]string{""}, lines...)
 	} else {
 		lines = append(titleRows(title, w), lines...)
 	}

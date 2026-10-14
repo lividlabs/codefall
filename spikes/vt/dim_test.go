@@ -115,8 +115,8 @@ func TestDialogIsBorderedOnItsFill(t *testing.T) {
 	if c := canvas.CellAt(0, 1); c.Style.Bg != nil || strings.TrimSpace(c.Content) != "" {
 		t.Errorf("ring cell = %q bg %v, want blank on the terminal background", c.Content, c.Style.Bg)
 	}
-	if c := canvas.CellAt(1, 1); c.Style.Bg != nil || c.Content != "▕" {
-		t.Errorf("side border = %q bg %v, want ▕ on the terminal background", c.Content, c.Style.Bg)
+	if r, g, b := rgb(canvas.CellAt(1, 1).Style.Bg); r != 0x37 || g != 0x47 || b != 0x4f {
+		t.Errorf("side border bg = %x,%x,%x want 37,47,4f", r, g, b)
 	}
 	if r, g, b := rgb(canvas.CellAt(2, 1).Style.Bg); r != 0x37 || g != 0x47 || b != 0x4f {
 		t.Errorf("inner bg = %x,%x,%x want 37,47,4f", r, g, b)
