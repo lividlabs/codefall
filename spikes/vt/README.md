@@ -18,14 +18,14 @@ included; the ring outside that and the rows above and below take an eighth, a r
 columns. Four wordmarks are in to compare. While the sidebar has focus, `ctrl+l` enters and leaves
 logo mode, in which the arrows change the wordmark instead of the menu: the left arrow cycles the
 marks, narrowest first, the right arrow centers the mark or sets it back left, and the down arrow
-darkens the glow or lightens it. The status bar names the mark in use, and so does the sidebar's
-second-to-last row, in the faint help-description color. Four thin marks set the letters in heavy
-box-drawing lines, two cells per letter with no spacing: `logo-thin.ans` as drawn, with serifs;
-`logo-thin-stretched.ans` a column wider per letter, a heavy horizontal `━` inserted in each bar;
-`logo-thin-sans.ans` without the serifs, the stems of F, A, and L ending in the half lines `╹` and
-`╻` and the bars of C, E, F, and L in `╸`, while D keeps its arms, since without them it is an O;
-and `logo-thin-stretched-sans.ans` the stretched mark treated the same way, its E and F keeping
-their `┣━` middle strokes. All came uncolored, and the program colors them the Material cyan
+darkens the glow or lightens it. The status bar names the mark in use; the sidebar's second-to-last
+row did too, in the faint help-description color, and that row is gone. Four thin marks set the
+letters in heavy box-drawing lines, two cells per letter with no spacing: `logo-thin.ans` as drawn,
+with serifs; `logo-thin-stretched.ans` a column wider per letter, a heavy horizontal `━` inserted in
+each bar; `logo-thin-sans.ans` without the serifs, the stems of F, A, and L ending in the half lines
+`╹` and `╻` and the bars of C, E, F, and L in `╸`, while D keeps its arms, since without them it is
+an O; and `logo-thin-stretched-sans.ans` the stretched mark treated the same way, its E and F
+keeping their `┣━` middle strokes. All came uncolored, and the program colors them the Material cyan
 `#89ddff` with the bottom row in the deep teal `#39adb5`. All draw their glow as bands instead of
 the halo: the inner tint behind the rows edge to edge, and a half-row rim of the outer tint above
 and below, a run of `▄` and one of `▀` on the sidebar's own fill. The down arrow takes the glow to a
@@ -43,15 +43,20 @@ on the arrows; `enter` or `right` confirms. The sidebar draws its own margin; it
 cells in, under the wordmark's left edge, and the selected row's bar starts a cell before that,
 inside the margin. Focus shows three ways: the cursor is drawn only while the sidebar has focus, the
 text is muted without it, and while it has focus the bottom row carries the key help in the Charm
-help bubble's style (`↑↓ move • enter confirm`).
+help bubble's style (`↑↓ move • enter confirm`), a cell left of the text so it is not flush with the
+right edge.
 
-Beads/Issues opens a dialog listing the beads; `↑`/`↓` choose, `enter` opens the bead's own
-dialog, and `esc` closes. The bead dialog shows the bead's details and two buttons; `←`/`→`,
-`tab`, or `shift+tab` move between them, `enter` confirms, and `esc` or Cancel returns to the
-list. Implement types `/codefall-implement <id>` into the child through the emulator, as if at
-the keyboard and without `enter`, and moves focus to it so sending is yours. About opens a
-dialog naming the spike and the child's command line; `enter` or `esc` closes it. Every dialog
-ends with a key help row in the same style as the sidebar's.
+Beads/Issues opens a dialog listing the beads; `↑`/`↓` choose, `enter` opens the bead's own dialog,
+and `esc` closes. The bead dialog shows the bead's details and two buttons; `←`/`→`, `tab`, or
+`shift+tab` move between them, `enter` confirms, and `esc` or Cancel returns to the list. Implement
+types `/codefall-implement <id>` into the child through the emulator, as if at the keyboard and
+without `enter`, and moves focus to it so sending is yours. About opens a dialog naming the spike
+and the child's command line; `enter` or `esc` closes it. Every dialog ends with a key help row laid
+out like the sidebar's, in lighter colors, Material's blue-gray 200 `#b0bec5` for the keys and 400
+`#78909c` for the descriptions, since the sidebar's pair, chosen against its darker fill, sinks into
+the dialog's; the text color for the keys over the sidebar's key color for the descriptions was
+tried first and was too bright on one and too dark on the other, and blue-gray 300 for the keys a
+touch dull.
 
 A dialog's title is dark text, the sidebar fill `#1e272c`, on a bar: the row under the top hairline
 takes a Lip Gloss `Blend1D` gradient as its background from edge to edge, one color per cell, the
@@ -85,36 +90,40 @@ A dialog is 70 cells wide, hairline to hairline, like Crush's command palette, o
 window leaves less after the ring and a cell of margin on each side; a list shows as many rows as
 the window has and scrolls to keep the cursor in view. Text sits two cells in from the hairlines,
 the pane's margin and one of padding; it sat three in, and the row was taken off to bring the side
-inset nearer the one row above the title, a cell being twice as tall as it is wide. A selected row,
-in a dialog or the sidebar, is a blue-gray bar `#455a64` a step above the dialog fill, set inside
-the padding rather than under it, a cell of fill left on each side, with a purple `▎` as the bar's
-first cell for the cursor: the purple stays one cell wide and means what it means on a button, that
-this is the one `enter` acts on. The cursor and the active button were gold until the purple took
-the action roles to match the default title gradient. A gold bar, teal and dark teal bars, a dark
-gold bar, and bare gold text were tried against it and set aside. The dialog is composed over a
-dimmed copy of the frame on a Lip Gloss canvas: every cell's colors, backgrounds included, move
-halfway toward black. The dialog itself is a shaded block with a hairline border of one-eighth
-blocks in the title's gradient: the sides `▏` and `▕` flush with the outer edge, the top `▁` and
-bottom `▔` on the inner edge of their cells and running through the corner cells. A rule in a corner
-cell ends at the outer edge exactly where the side rule below it starts, so the corners close to the
-pixel without a joining glyph. The dialog sits in a ring one cell wide, the top and bottom border
-rows and a blank column outside each side, that is transparent: those cells take the dimmed frame's
-background, so the ring looks the same over a child that paints its own background, as OpenCode
-does, as over one on the terminal's. Every rule lies where the fill meets the ring. The sides sat on
-the inner edge of their cells for a while, `▕` left and `▏` right with the corner cells blank, which
-let the title bar's rules meet them but left each corner missing an eighth-square that no Block
-Element can fill; and the Legacy Computing flush corners were tried twice, for the frame and for the
-title bar's lower rule, and set aside both times for the fonts that lack them. While the dialog is
-open no key, paste, or mouse event reaches either pane. The right pane is the child. `ctrl+]` moves
-focus between them, and a mouse click focuses the pane under it. `ctrl+^` (typed as `ctrl+6` on a US
-keyboard) hides the sidebar and gives the child its width, or shows it again; hiding it moves focus
-to the child, and `ctrl+]` on a hidden sidebar shows it and focuses it. The panes are colored blocks
-rather than boxes, in OpenCode's Material palette (`packages/tui/src/theme/assets/ material.json`
-there): the sidebar on `#1e272c`, and the status bar, dialog, and selected bead on `#37474f`. In
-those, every cell left on the terminal's default colors is painted with the block's background and
-`#eeffff`. What is about to be acted on, the active button and the selection cursor, is the Material
-purple `#c792ea`, the end stop of the default title gradient. Those roles belonged to the Material
-blue `#82aaff` first and then to the one color outside Material, the website's accent, the gold
+inset nearer the one row above the title, a cell being twice as tall as it is wide. The frame is the
+one way a dialog is drawn, and it owns the padding on every side: a dialog hands it lines at the
+inner width and the frame sets each one in, and puts a blank row under the title bar and one above
+the help, so a new dialog gets the inset without knowing it. A selected row, in a dialog or the
+sidebar, is a blue-gray bar `#455a64` a step above the dialog fill, set inside the padding rather
+than under it, the margin and the padding left as fill on each side, with a purple `▎` as the bar's
+first cell for the cursor and a cursor column kept on the other rows so their text lines up: the
+purple stays one cell wide and means what it means on a button, that this is the one `enter` acts
+on. The cursor and the active button were gold until the purple took the action roles to match the
+default title gradient. A gold bar, teal and dark teal bars, a dark gold bar, and bare gold text
+were tried against it and set aside. The dialog is composed over a dimmed copy of the frame on a Lip
+Gloss canvas: every cell's colors, backgrounds included, move halfway toward black. The dialog
+itself is a shaded block with a hairline border of one-eighth blocks in the title's gradient: the
+sides `▏` and `▕` flush with the outer edge, the top `▁` and bottom `▔` on the inner edge of their
+cells and running through the corner cells. A rule in a corner cell ends at the outer edge exactly
+where the side rule below it starts, so the corners close to the pixel without a joining glyph. The
+dialog sits in a ring one cell wide, the top and bottom border rows and a blank column outside each
+side, that is transparent: those cells take the dimmed frame's background, so the ring looks the
+same over a child that paints its own background, as OpenCode does, as over one on the terminal's.
+Every rule lies where the fill meets the ring. The sides sat on the inner edge of their cells for a
+while, `▕` left and `▏` right with the corner cells blank, which let the title bar's rules meet them
+but left each corner missing an eighth-square that no Block Element can fill; and the Legacy
+Computing flush corners were tried twice, for the frame and for the title bar's lower rule, and set
+aside both times for the fonts that lack them. While the dialog is open no key, paste, or mouse
+event reaches either pane. The right pane is the child. `ctrl+]` moves focus between them, and a
+mouse click focuses the pane under it. `ctrl+^` (typed as `ctrl+6` on a US keyboard) hides the
+sidebar and gives the child its width, or shows it again; hiding it moves focus to the child, and
+`ctrl+]` on a hidden sidebar shows it and focuses it. The panes are colored blocks rather than
+boxes, in OpenCode's Material palette (`packages/tui/src/theme/assets/ material.json` there): the
+sidebar on `#1e272c`, and the status bar, dialog, and selected bead on `#37474f`. In those, every
+cell left on the terminal's default colors is painted with the block's background and `#eeffff`.
+What is about to be acted on, the active button and the selection cursor, is the Material purple
+`#c792ea`, the end stop of the default title gradient. Those roles belonged to the Material blue
+`#82aaff` first and then to the one color outside Material, the website's accent, the gold
 `#f2c25a`, the complement of the wordmark's teal; the gold keeps the focused title and the gradients
 that start or end in it. The selected row of a list is not purple: it marks a position, not a
 commitment, so it is a gray bar with a one-cell purple cursor. The terminal pane, margin included,

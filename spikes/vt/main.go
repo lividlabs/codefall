@@ -592,12 +592,15 @@ var (
 
 // help renders the items the way the Charm help bubble does: key, a space,
 // its description, the pairs separated by a dot.
-func help(items []helpItem) string {
+func help(items []helpItem) string { return helpIn(items, helpKey, helpDesc) }
+
+// helpIn renders the help items in the given key and description styles.
+func helpIn(items []helpItem, key, desc lipgloss.Style) string {
 	parts := make([]string, len(items))
 	for i, it := range items {
-		parts[i] = helpKey.Render(it.key) + " " + helpDesc.Render(it.desc)
+		parts[i] = key.Render(it.key) + " " + desc.Render(it.desc)
 	}
-	return strings.Join(parts, helpDesc.Render(" • "))
+	return strings.Join(parts, desc.Render(" • "))
 }
 
 // selected draws a row as the selection in the given style: the text on the
@@ -611,11 +614,12 @@ func selected(line string, width int, style lipgloss.Style) string {
 // content draws the sidebar as a block the full size of its pane, margin
 // included, so a selected row runs edge to edge; the text sits sidebarPad
 // cells in, under the wordmark's left edge. The top row is blank, the
-// wordmark standing for a title. The wordmark's name sits faint on the
-// second-to-last row while they are under comparison. While the sidebar has
-// focus the cursor is highlighted and the key help sits on the bottom row, or
-// an item a row when the sidebar is too narrow for one row; without it the
-// text is muted and neither is drawn.
+// wordmark standing for a title. While the sidebar has focus the cursor is
+// highlighted and the key help sits on the bottom row, a cell left of the
+// text so it is not flush with the right edge, or an item a row when the
+// sidebar is too narrow for one row; without it the text is muted and the
+// help is not drawn. The wordmark's name sat faint on the row above the help
+// while the marks were under comparison; the status bar still names it.
 func (s sidebar) content(width, height int, focused bool) string {
 	rows := []string{""} // the title row
 	rows = append(rows, strings.Split(logo(width), "\n")...)
@@ -632,20 +636,22 @@ func (s sidebar) content(width, height int, focused bool) string {
 		}
 		rows = append(rows, line)
 	}
+	// The help sits a cell left of the text, so it is not flush with the
+	// sidebar's right edge when it fills the row.
+	helpLead := strings.Repeat(" ", sidebarPad-1)
 	var foot []string
 	if focused {
 		foot = []string{help(menuHelp)}
-		if lipgloss.Width(foot[0]) > width-sidebarPad {
+		if lipgloss.Width(foot[0]) > width-len(helpLead)-1 {
 			foot = foot[:0]
 			for _, it := range menuHelp {
 				foot = append(foot, help([]helpItem{it}))
 			}
 		}
 	}
-	foot = append([]string{helpDesc.Render(logos[logoIndex].name)}, foot...)
 	block := fitBlock(strings.Join(rows, "\n"), width, height-len(foot))
 	for _, f := range foot {
-		block += "\n" + lead + f
+		block += "\n" + helpLead + f
 	}
 	return fitBlock(block, width, height)
 }
@@ -669,10 +675,11 @@ func dialogWidth(winW int) int {
 	return max(min(70, winW-6), 20)
 }
 
-// dialogPad is the cells between the pane's margin and the text, so the text
-// sits two cells in from the hairline, the margin and this one; it was three.
-// A selected row's bar starts at the margin, with the cursor in its first
-// cell.
+// dialogPad is the cells between the pane's margin and a dialog's lines, so
+// text sits two cells in from the hairline, the margin and this one; it was
+// three. The frame applies it, so a selected row's bar starts inside it,
+// with the cursor in the bar's first cell and a cursor column kept on the
+// other rows so their text lines up.
 const dialogPad = 1
 
 // hairline is a border of one-eighth blocks: the sides flush with the outer
@@ -854,26 +861,36 @@ var gradientIndex = func() int {
 	return 0
 }()
 
-// dialogFrame sets the title in the pane's title row, which gradientBorder
-// paints as the bar, then the lines, already w wide at most, in the shaded
-// pane with its border around it; the help row is the last line.
+// dialogFrame is the one way a dialog is drawn: the title in the pane's
+// title row, which gradientBorder paints as the bar, then the lines in the
+// shaded pane with its border around it, and the help row last. The frame
+// owns the padding: a dialog hands it lines at most dialogInner(w) wide and
+// the frame sets each one dialogPad cells in, so a selected row built at
+// that width lands inside the padding rather than under it, and it puts a
+// blank row under the bar and one above the help. The help is in the
+// dialog's own pair of colors, lighter than the sidebar's, which were
+// chosen against the darker sidebar fill and sink into this one.
 func dialogFrame(title string, lines []string, w int, items []helpItem) string {
 	paneTitle := pad(lipgloss.NewStyle().Bold(true).Render(title))
-	lines = append(lines, "", pad(help(items)))
+	lines = append([]string{""}, lines...)
+	lines = append(lines, "", helpIn(items, dialogHelpKey, dialogHelpDesc))
+	for i := range lines {
+		lines[i] = pad(lines[i])
+	}
 	body := fitBlock(strings.Join(lines, "\n"), w, len(lines))
 	return gradientBorder(dialogBorder.Render(pane(body, w, paneTitle, true, colBgLight)))
 }
 
-// pad indents a line by the dialog's padding.
+// dialogInner is the width a dialog's lines may use: the body width w less
+// the padding on each side.
+func dialogInner(w int) int { return w - 2*dialogPad }
+
+// pad indents a line by the dialog's padding; only the frame calls it.
 func pad(line string) string { return strings.Repeat(" ", dialogPad) + line }
 
-// wrap word-wraps text to the width inside the padding and pads each line.
-func wrap(text string, w int) []string {
-	lines := strings.Split(lipgloss.NewStyle().Width(w-2*dialogPad).Render(text), "\n")
-	for i := range lines {
-		lines[i] = pad(lines[i])
-	}
-	return lines
+// wrap word-wraps text to the given inner width.
+func wrap(text string, inner int) []string {
+	return strings.Split(lipgloss.NewStyle().Width(inner).Render(text), "\n")
 }
 
 // --- bead list ---------------------------------------------------------------------------------
@@ -894,12 +911,13 @@ func (d *beadList) render(winW, winH int) string {
 	if d.cursor >= visible {
 		start = d.cursor - visible + 1
 	}
-	lines := []string{""}
+	inner := dialogInner(w)
+	var lines []string
 	for i := start; i < len(d.items) && i < start+visible; i++ {
 		it := d.items[i]
-		line := pad(it.id + "  " + it.title)
+		line := " " + it.id + "  " + it.title // the cursor column, then the text
 		if i == d.cursor {
-			line = selectRow(it.id+"  "+it.title, w, dialogPad-1)
+			line = selectRow(it.id+"  "+it.title, inner, 0)
 		}
 		lines = append(lines, line)
 	}
@@ -940,18 +958,19 @@ type beadDialog struct {
 func (d beadDialog) render(winW, winH int) string {
 	b := d.bead
 	w := dialogWidth(winW)
+	inner := dialogInner(w)
 	row := func(label, value string) string {
-		return pad(dialogLabel.Render(fmt.Sprintf("%-9s", label)) + value)
+		return dialogLabel.Render(fmt.Sprintf("%-9s", label)) + value
 	}
 	lines := []string{
-		pad(lipgloss.NewStyle().Bold(true).Render(b.title)),
+		lipgloss.NewStyle().Bold(true).Render(b.title),
 		"",
 		row("status", b.status),
 		row("priority", b.priority),
 		row("deps", strings.Join(b.deps, ", ")),
 		"",
 	}
-	lines = append(lines, wrap(b.description, w)...)
+	lines = append(lines, wrap(b.description, inner)...)
 	impl, cancel := buttonStyle, buttonStyle
 	if d.button == 0 {
 		impl = buttonActive
@@ -959,7 +978,7 @@ func (d beadDialog) render(winW, winH int) string {
 		cancel = buttonActive
 	}
 	buttons := impl.Render("Implement") + "  " + cancel.Render("Cancel")
-	lines = append(lines, "", lipgloss.PlaceHorizontal(w-dialogPad, lipgloss.Right, buttons))
+	lines = append(lines, "", lipgloss.PlaceHorizontal(inner, lipgloss.Right, buttons))
 	return dialogFrame(b.id, lines, w, beadHelp)
 }
 
@@ -991,15 +1010,16 @@ var childCommand string
 
 func (aboutDialog) render(winW, winH int) string {
 	w := dialogWidth(winW)
+	inner := dialogInner(w)
 	lines := []string{
-		pad(lipgloss.NewStyle().Bold(true).Render("VT spike")),
+		lipgloss.NewStyle().Bold(true).Render("VT spike"),
 		"",
 	}
 	lines = append(lines, wrap("A terminal program inside a Bubble Tea pane, beside a pane the host draws itself: "+
-		"x/xpty for the PTY, x/vt for the terminal, keys and mouse re-encoded through the emulator.", w)...)
+		"x/xpty for the PTY, x/vt for the terminal, keys and mouse re-encoded through the emulator.", inner)...)
 	lines = append(lines, "")
-	lines = append(lines, wrap(dialogLabel.Render("child    ")+childCommand, w)...)
-	lines = append(lines, "", lipgloss.PlaceHorizontal(w-dialogPad, lipgloss.Right, buttonActive.Render("OK")))
+	lines = append(lines, wrap(dialogLabel.Render("child    ")+childCommand, inner)...)
+	lines = append(lines, "", lipgloss.PlaceHorizontal(inner, lipgloss.Right, buttonActive.Render("OK")))
 	return dialogFrame("Codefall", lines, w, aboutHelp)
 }
 
@@ -1107,8 +1127,13 @@ var (
 	colText      = lipgloss.Color("#eeffff")
 	colMuted     = lipgloss.Color("#546e7a")
 	colMutedDark = lipgloss.Color("#415a64") // the help descriptions, a step under colMuted
-	colPrimary   = lipgloss.Color("#82aaff")
-	colAccent    = lipgloss.Color("#89ddff")
+	// Steps up from colMuted, Material's blue-gray 400 and 200, for the help
+	// on the dialog fill, where colMuted and colMutedDark sink in and the
+	// text color shouts.
+	colMutedLight   = lipgloss.Color("#78909c")
+	colMutedLighter = lipgloss.Color("#b0bec5")
+	colPrimary      = lipgloss.Color("#82aaff")
+	colAccent       = lipgloss.Color("#89ddff")
 	// The rest of the Material accents, for the title gradients.
 	colPurple   = lipgloss.Color("#c792ea")
 	colPink     = lipgloss.Color("#f07178")
@@ -1130,6 +1155,12 @@ var (
 	blurredTitle = lipgloss.NewStyle().Foreground(colMuted)
 	helpKey      = lipgloss.NewStyle().Foreground(colMuted)
 	helpDesc     = lipgloss.NewStyle().Foreground(colMutedDark)
+	// The dialog's help, lighter than the sidebar's at each part: the
+	// sidebar's pair sits on the darker fill and sinks into the dialog's.
+	// The text color for the keys was tried and was too bright, blue-gray
+	// 300 a touch dull, and colMuted for the descriptions too dark.
+	dialogHelpKey  = lipgloss.NewStyle().Foreground(colMutedLighter)
+	dialogHelpDesc = lipgloss.NewStyle().Foreground(colMutedLight)
 )
 
 // paint fills in what a block leaves to the terminal's defaults: every cell
