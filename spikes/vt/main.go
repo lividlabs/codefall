@@ -673,28 +673,101 @@ func dialogWidth(winW int) int {
 // bar starts one cell in from the hairline, with the cursor in that cell.
 const dialogPad = 2
 
-// hairline is a border of one-eighth blocks: the sides flush with the outer
-// edge, the top and bottom on the inner edge of their cells. A rule in a corner
-// cell then ends at the outer edge, exactly where the side rule below it
-// starts, so the corner closes without a joining glyph. Every glyph is a
-// standard Block Element; the flush corners (U+1FB7C..7F) are missing from
-// some fonts.
+// hairline is a border of one-eighth blocks, every rule on the inner edge of
+// its cell: ▁ across the top, ▔ across the bottom, ▕ on the left, and ▏ on
+// the right, with the corner cells blank. The top rule ends at the inner
+// corner of the corner cell, exactly where the side rule in the cell below
+// begins, so the corners close without a joining glyph and nothing overshoots.
+// Every glyph is a standard Block Element; the flush corners (U+1FB7C..7F)
+// are missing from some fonts and are not used.
 var hairline = lipgloss.Border{
-	Top: "▁", Bottom: "▔", Left: "▏", Right: "▕",
-	TopLeft: "▁", TopRight: "▁", BottomLeft: "▔", BottomRight: "▔",
+	Top: "▁", Bottom: "▔", Left: "▕", Right: "▏",
+	TopLeft: " ", TopRight: " ", BottomLeft: " ", BottomRight: " ",
 }
 
 var (
 	dialogLabel  = lipgloss.NewStyle().Foreground(colMuted)
 	buttonStyle  = lipgloss.NewStyle().Padding(0, 2).Foreground(colMuted)
 	buttonActive = lipgloss.NewStyle().Padding(0, 2).Background(colGold).Foreground(colBgDark).Bold(true)
-	// The dialog sits in a ring of the terminal's own background: the top and
-	// bottom border rows carry no fill, and a blank column is left outside each
-	// side. Every hairline then lies on the boundary between fill and ring.
-	dialogBorder = lipgloss.NewStyle().Border(hairline).BorderForeground(colAccent).
-			BorderLeftBackground(colBgLight).BorderRightBackground(colBgLight).
-			Margin(0, 1)
+	// The dialog sits in a ring of the terminal's own background: the border
+	// cells carry no fill, so each hairline lies on the boundary between the
+	// fill and the ring, and a blank column outside each side widens the ring
+	// there to about what the border rows give above and below, a cell being
+	// twice as tall as it is wide.
+	dialogBorder = lipgloss.NewStyle().Border(hairline).BorderForeground(colAccent).Margin(0, 1)
 )
+
+// gradientBorder recolors a rendered dialog's hairlines in the title's
+// gradient, run from the top-left corner to the bottom-right along both
+// ways round: across the top and down the right side, and down the left side
+// and along the bottom. The two runs are the same length, so they meet at
+// the bottom-right corner on the last stop. The margin columns outside the
+// sides are left alone. With the title bar on, the row under the top
+// hairline takes the gradient as its background from hairline to hairline
+// and its text the dark fill color. The top hairline then runs the bar's
+// own gradient, the whole of it across the top, and so does a hairline of
+// ▔ on the row under the bar, so the bar is padded an eighth above and
+// below: the top hairline sits on the bottom edge of its cell and the ▔ on
+// the top edge of its, both flush with the bar, and both meeting the side
+// rules, which sit on the inner edge of their cells. The right side takes
+// the gradient's last stop throughout, so the frame agrees with the bar at
+// both ends; the left side and the bottom run the corner-to-corner path as
+// in rule mode.
+func gradientBorder(rendered string) string {
+	g := gradients[gradientIndex]
+	w, h := lipgloss.Width(rendered), lipgloss.Height(rendered)
+	left, right := 1, w-2 // the margin takes column 0 and the last
+	n := right - left + 1 // cells across the top or bottom
+	if n < 2 || h < 2 {
+		return rendered
+	}
+	colors := lipgloss.Blend1D(n+h-1, g.from, g.to)
+	canvas := lipgloss.NewCanvas(w, h)
+	canvas.Compose(lipgloss.NewLayer(rendered))
+	tint := func(x, y, i int) {
+		if cell := canvas.CellAt(x, y); cell != nil && cell.Width > 0 {
+			cell.Style.Fg = colors[i]
+		}
+	}
+	for x := left; x <= right; x++ {
+		tint(x, 0, x-left)       // the top, left to right
+		tint(x, h-1, h-1+x-left) // the bottom, left to right, after the left side
+	}
+	for y := 1; y < h; y++ {
+		tint(right, y, n-1+y) // the right side, downward, after the top
+		tint(left, y, y)      // the left side, downward
+	}
+	if titleBar && h > 3 {
+		bar := lipgloss.Blend1D(n, g.from, g.to)
+		for x := left + 1; x < right; x++ { // inside the side rules
+			c := bar[x-left]
+			if cell := canvas.CellAt(x, 0); cell != nil && cell.Width > 0 {
+				cell.Style.Fg = c
+			}
+			if cell := canvas.CellAt(x, 1); cell != nil && cell.Width > 0 {
+				cell.Style.Bg = c
+				if strings.TrimSpace(cell.Content) != "" {
+					cell.Style.Fg = colBgDark
+				}
+			}
+			if cell := canvas.CellAt(x, 2); cell != nil && cell.Width > 0 {
+				cell.Content, cell.Style.Fg = "▔", c
+			}
+		}
+		for y := 1; y < h-1; y++ {
+			if cell := canvas.CellAt(right, y); cell != nil {
+				cell.Style.Fg = g.to
+			}
+		}
+	}
+	// The canvas trims trailing blanks, which takes the right margin column
+	// off; put it back so the dialog keeps its width and its place.
+	lines := strings.Split(canvas.Render(), "\n")
+	for i, l := range lines {
+		lines[i] = l + strings.Repeat(" ", max(0, w-lipgloss.Width(l)))
+	}
+	return strings.Join(lines, "\n")
+}
 
 // --- selection ---------------------------------------------------------------------------------
 
@@ -720,7 +793,8 @@ func selectRow(text string, width, inset int) string {
 
 // gradient is the pair of stops for the rule under a dialog's title, which
 // Blend1D spreads across the row one color per cell; the title takes the
-// first stop so the rule continues from it. Several are in to compare, cycled
+// first stop so the rule continues from it, and the border runs the same
+// stops corner to corner. Several are in to compare, cycled
 // with tab while a dialog is open. A fade ends in another hue, never in the
 // fill gray: a blend into the neutral passes through desaturated mud and
 // reads as the same color dimming.
@@ -741,6 +815,11 @@ var gradients = []gradient{
 
 // gradientIndex is the gradient in use; tab cycles it while a dialog is open.
 var gradientIndex int
+
+// titleBar sets the title as dark text on a bar of the gradient, flush with
+// the hairlines, in place of the title and its rule; shift+tab toggles it
+// while a dialog is open.
+var titleBar bool
 
 // titleRows draws a dialog's title, and under it a hairline of ▔ across the
 // full width in the gradient. The rule is the top eighth of the next row
@@ -766,10 +845,16 @@ func titleRows(title string, w int) []string {
 // blank so the top is padded like the bottom, and the help row is the last
 // line.
 func dialogFrame(title string, lines []string, w int, items []helpItem) string {
-	lines = append(titleRows(title, w), lines...)
+	paneTitle := ""
+	if titleBar { // the bar takes the pane's title row, then a row for its lower hairline
+		paneTitle = pad(lipgloss.NewStyle().Bold(true).Render(title))
+		lines = append([]string{""}, lines...)
+	} else {
+		lines = append(titleRows(title, w), lines...)
+	}
 	lines = append(lines, "", pad(help(items)))
 	body := fitBlock(strings.Join(lines, "\n"), w, len(lines))
-	return dialogBorder.Render(pane(body, w, "", true, colBgLight))
+	return gradientBorder(dialogBorder.Render(pane(body, w, paneTitle, true, colBgLight)))
 }
 
 // pad indents a line by the dialog's padding.
@@ -1187,6 +1272,9 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			case "tab": // try the next gradient
 				gradientIndex = (gradientIndex + 1) % len(gradients)
 				return m, nil
+			case "shift+tab": // try the title on a bar
+				titleBar = !titleBar
+				return m, nil
 			}
 			var implement *bead
 			m.dialog, implement = m.dialog.update(msg)
@@ -1333,7 +1421,11 @@ func (m model) View() tea.View {
 		}
 	}
 	if m.dialog != nil {
-		alt += fmt.Sprintf("  [gradient: %s · tab]", gradients[gradientIndex].name)
+		title := "rule"
+		if titleBar {
+			title = "bar"
+		}
+		alt += fmt.Sprintf("  [gradient: %s · tab · title: %s · shift+tab]", gradients[gradientIndex].name, title)
 	} else if m.logoMode && m.focus == focusSidebar {
 		alt += fmt.Sprintf("  [logo: %s · ← mark · → center · ↓ glow · ctrl+l done]", logoState())
 	} else if m.focus == focusSidebar {
