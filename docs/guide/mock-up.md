@@ -76,8 +76,9 @@ apply.
 
 ## How mockups connect to specs
 
-When [`/codefall-specify`](specify.md) records a requirement whose screen has no picture yet, it runs
-this skill for that screen in the same run and on the same branch, so the spec and its mockups arrive
+When a screen comes up in [`/codefall-specify`](specify.md)'s interview and has no picture yet, it
+runs this skill for that screen then and there, iterates on the first screen with you while it asks
+its questions, and carries the files onto the spec's branch, so the spec and its mockups arrive
 together. A requirement whose mockup you chose to skip says `Mockup: pending` under its Design
 notes, with a `requires-mockup` label on its GitHub issue when the project has one, and
 [`/codefall-plan`](plan.md) runs this skill for it before planning, instead of refusing. When the

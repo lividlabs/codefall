@@ -1880,6 +1880,29 @@ Decided at scaffold, 2026-08-16.
   skills (every project would carry the bridge, and dropping it later is a second breaking change);
   renaming the documents in the projects that have them (the epics would stay `<prefix>-DESIGN-NNN`
   whatever the file was called).
+- **Specify interviews with the mockup open, asks rather than proposes, and has a subagent review
+  the draft as an engineer, 2026-10-15.** A user compared `codefall-specify` to a skill their
+  project had written for the same job and found it interviewed less and asked the wrong questions.
+  Four interview changes: the mockup is made during the interview through `codefall-mock-up` and
+  iterated with the person, each pass asking a design question; the design concerns to flag are a
+  table in `reference/interview.md` again instead of one example; UI preferences are a topic when
+  there is a visual surface; and a preference is asked open, never put as a suggestion to confirm,
+  which the eval transcript showed happening on most questions. A project adds its own interview
+  topics through `CUSTOMIZE.md`. Then a new step 10, the engineering review: the engineer a product
+  manager would run the draft by is one subagent of the current harness, read-only, prompted from
+  `engineering-review-prompt.md`, reading the drafted criteria against the code and the project's
+  stance for contradictions, data the system already holds, assumptions it cannot meet, broken or
+  over-built mechanisms, and — only for a person as consumer under the `product-manager` persona —
+  a criterion that is a mechanism rather than an outcome. The session puts each finding to the
+  person as a flag, and the answer edits the spec; a kept mechanism is recorded under Design notes
+  so plan builds it as written. The former step 10 read against the code became the review's
+  contradiction check. Seen and not taken: parking the engineer's questions on the spec as open
+  questions from `plan`, or having `plan` re-run `specify` for them (the person answers and the
+  requirement changes, in the same conversation, and before `plan` nothing cites the criteria so
+  rewording is free); using the `review` or `consult` agent lists (this is the skill's own reader,
+  like implement's workers, not a configurable second opinion); a shared findings schema file (the
+  return format lives in the prompt); and moving the schema-placement check or the build-coupling
+  rule into specify (both decide how, and stay with `plan`).
 
 ## Open
 
