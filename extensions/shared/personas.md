@@ -45,8 +45,9 @@ run or asks about in a sentence.
 
 **`envision`, `specify`.** The interview is the main event and gets the room. The code audit still
 runs, and what it finds is stated as a product fact ("the profile screen has three tabs today")
-without naming files. Open questions and what is out of scope are written out in full rather than
-compressed.
+without naming files; `specify`'s engineering review runs too, and each of its findings is put the
+same way, as a product fact and a question, never as the engineer's evidence. Open questions and
+what is out of scope are written out in full rather than compressed.
 
 **`report`.** The interview is the main event. The reproduction attempt is described by what the
 person would see on the screen, not by the driver or the commands it ran.

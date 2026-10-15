@@ -8,9 +8,9 @@ before planning any feature larger than a small fix.
 /codefall-specify Travelers can export a trip itinerary as a file.
 ```
 
-The skill interviews you, checks whether the feature already exists, reads your criteria against
-the code before writing, writes the spec, and, in a project that uses GitHub Issues, copies it
-there. It decides *what* will be true when the work is done and never *how* it gets built; that is
+The skill interviews you, drawing the mockup while the questions are still open, checks whether the
+feature already exists, has a subagent review the draft as an engineer before writing, writes the
+spec, and, in a project that uses GitHub Issues, copies it there. It decides *what* will be true when the work is done and never *how* it gets built; that is
 [`/codefall-plan`](plan.md)'s job.
 
 ## What it writes
@@ -94,11 +94,25 @@ pull requests do not stack on each other; each one branches from `main` and land
 
 ## Mockups, visions, and large features
 
-**Mockups.** When a requirement has a screen and no mockup yet, the skill runs
-[`/codefall-mock-up`](mock-up.md) for it in the same run, on the same branch, so the spec and its
-mockups arrive together. If you have a mockup already, it is imported instead. If you choose to skip
-it, the requirement's Design notes say `Mockup: pending`, its issue gets a `requires-mockup` label
-when the project has one, and `/codefall-plan` makes the mockup before it starts. The spec links to each mockup by path under **Design notes**.
+**Mockups.** When a screen comes up in the interview and you have no mockup for it, the skill runs
+[`/codefall-mock-up`](mock-up.md) for it then and there, and iterates on it with you while it asks
+its questions: where the main action lives, what the screen looks like empty, what you see when
+something fails, what differs on a phone. The answers become criteria. The mockup lands on the
+spec's branch, so the spec and its mockups arrive together. If you have a mockup already, it is
+imported and walked through the same way. If you choose to skip it, the requirement's Design notes
+say `Mockup: pending`, its issue gets a `requires-mockup` label when the project has one, and
+`/codefall-plan` makes the mockup before it starts. The spec links to each mockup by path under
+**Design notes**.
+
+**Engineering review.** Once you have confirmed the recap, the skill hands the draft to a subagent
+that reads it the way an engineer would, with the code open, and comes back with questions: two
+criteria that cannot both hold, data the system already has under another name, something a
+criterion assumes that does not exist, a workflow that cannot deliver what it promises or goes
+against the project's architecture decisions, and, when you are specifying as a product manager, a
+criterion that describes how rather than what. Each one is put to you as a flag, in plain words,
+and your answer edits the spec. A workflow you keep after it was flagged is noted as a product
+requirement so planning builds it as written. The review runs once, and the skill tells you what it
+found, including nothing.
 
 **Visions.** If a [vision](envision.md) covers the feature, the skill offers it as context and adds
 the spec's identifier to the vision's `Related` line. A vision is never required. When the interview
@@ -113,7 +127,12 @@ holds a list.
 system behaves in some case, the skill puts it once to the project's *consult agents*: the agents
 [configured](configuration.md) to give a second opinion, or a subagent of your current coding agent
 when none are. The answer comes back as a proposal you confirm. Questions of preference are never
-sent to them.
+sent to them, and never arrive with a suggested answer either: the skill asks what you want and
+writes down what you say.
+
+**Your project's own questions.** A project can give the skill questions it should always ask, such
+as which travel policy a feature falls under, in `.codefall/skills/codefall-specify/CUSTOMIZE.md`.
+They are asked in the interview beside the skill's own.
 
 ## Statuses
 
