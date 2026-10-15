@@ -1903,6 +1903,14 @@ Decided at scaffold, 2026-08-16.
   like implement's workers, not a configurable second opinion); a shared findings schema file (the
   return format lives in the prompt); and moving the schema-placement check or the build-coupling
   rule into specify (both decide how, and stay with `plan`).
+- **Plan cuts tasks at build boundaries, 2026-10-15.** The one rule from the project describe
+  skill compared above that was left for `plan` and never written there. A task that deletes,
+  narrows, or renames something other tasks' code still uses cannot build on its own: step 6 now
+  checks each such task, and the plan either keeps it add-only, moving the deletion into the task
+  that updates that code, or merges the coupled tasks, and says which. The check and its example,
+  three tickets that had to land as one pull request, are in `reference/beads.md`. Seen and not
+  taken: putting the rule in `specify` (requirements are cut by what a consumer observes, and a
+  consumer never observes an enum member).
 
 ## Open
 
