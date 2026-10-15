@@ -90,14 +90,13 @@ Three tiers. The work picks the tier; the user can overrule it.
 | **2 — full document** | The same, plus any conditional section whose trigger fires | Required three plus what triggered |
 
 - **Tier 1 and 2 are not decided separately**: write the required three, then walk the triggers.
-- **An ADR is not gated on the tier.**
-- **Say the tier out loud before writing** — step 4.
+- **An ADR is not gated on the tier.** **Say the tier out loud before writing**, at step 4.
 
 ## The document
 
 `docs/plans/PLAN-NNN-slug.md`, git-tracked. Three digits, zero-padded, the highest existing
-number plus one. **A plan is never renumbered and its identifier is never reused**, including
-after it is archived — the file moves, the identifier does not.
+number plus one. **A plan is never renumbered and its identifier is never reused**; archiving moves
+the file, not the identifier.
 
 Three required sections — **Overview**, **Architecture**, **Tasks** — and seven conditional ones,
 each with a trigger. The header, the section tables, the Technical Context and Hard Constraints
@@ -239,8 +238,8 @@ per `reference/document.md`: never decided by the run, never taken from silence.
 ### 6. Stage the tasks
 
 **Tasks decompose by what can be built and verified on its own**, against the plan — a different
-cut from `codefall-specify`'s, where requirements decompose by what a consumer observes, and one
-requirement routinely becomes several tasks.
+cut from `codefall-specify`'s by what a consumer observes; one requirement often becomes several
+tasks.
 
 The sizing test: could one person pick the task up, finish it, and have something that either works
 or does not? A task nobody can tell is done is too big or too vague.
@@ -248,6 +247,10 @@ or does not? A task nobody can tell is done is too big or too vague.
 **Wire the edges, and check the ordering by reading it backwards**: for each task, what must exist
 before it can start? A task with no answer is a root. A cycle is an error in the cut — fix the cut,
 not the edges.
+
+**A task that deletes or renames something other tasks' code still uses cannot build on its own.**
+Make it add-only and move the deletion into the task that updates that code, or merge the tasks;
+say which. Check and example: `reference/beads.md`.
 
 **A task that introduces a tool carries the script change as a criterion.** A compose file, a
 migrations directory, a lockfile, a codegen config, or an `.env.example` among its predicted files

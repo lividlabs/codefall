@@ -16,6 +16,13 @@ away from the full artifact, which is tier 0.
 the shape of the Alternatives table; and numbered-identifier traceability, which here is the local
 task IDs and the Plan ref column.
 
+**From a project's own describe skill**, compared against `codefall-specify` in October 2026: the
+check at step 6 that a task deleting or renaming something other tasks still use cannot build on
+its own, with its two fixes — keep the first task add-only, or merge the coupled tasks. That skill
+had learned it from an epic cut into three tickets that had to land as one pull request. It was
+weighed for `codefall-specify` and refused there: requirements are cut by what a consumer observes,
+and a consumer never observes an enum member.
+
 **From `codefall-envision`**: the `Related` row as a labeled list rather than a set of rows. A
 new kind of upstream artifact costs a label rather than an edit to the template and the skill; when
 a bug-report verb lands, its plans carry `bug: BUG-012` and nothing else moves.

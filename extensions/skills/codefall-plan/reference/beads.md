@@ -1,11 +1,13 @@
 # Beads: creating and verifying the graph
 
-Read before creating the graph (step 9).
+Read before creating the graph (step 9); *Cut at build boundaries* is read at step 6, while the
+tasks are being staged.
 
 ## Contents
 
 - What gets created
 - The test case in a bead's criteria
+- Cut at build boundaries
 - The graph file
 - Name the beads
 - Verify the graph
@@ -88,6 +90,33 @@ plan's beads from the graph side, as `bd list --parent <prefix>-PLAN-NNN` does f
 The epic gains children this run never creates: `codefall-implement`, `codefall-review`, and
 `codefall-test` file what they find under it, with `--parent` and a `discovered-from` edge, and
 those are not Tasks rows; `revising.md` says how a later run tells them apart.
+
+## Cut at build boundaries
+
+Tasks are usually cut by feature, and the compiler does not respect that cut. A task that deletes,
+narrows, or renames something other code uses — a type, an enum member, an interface, an exported
+function, a database column — breaks every piece of code that uses it the moment it lands. When
+that code belongs to other tasks, there is no point at which the first task builds and passes its
+tests on its own, so it cannot be merged by itself, whatever the staging table says.
+
+The example this rule comes from: a trip had states that included `SENT` and `ACCEPTED`, and a
+feature replaced them with a `TEMPLATE` state. The work was cut into three tickets — change the list
+of states, the sharing work, the templates work. The moment the first ticket removed the two states,
+the sharing and templates code that still used them stopped compiling. The three tickets had to land
+as one pull request, after each one had absorbed part of the others.
+
+**Before writing the staging table**, look at each task that deletes or renames something. List the
+code that uses it. If any of that code is another task's, do one of two things and say which in the
+plan:
+
+| Fix | When | What the tasks become |
+| --- | --- | --- |
+| **Keep the first task add-only** | The new thing can live beside the old one for a while | The first task adds the new state, the new optional field, the new function, and touches nothing that uses the old one. The deletion of the old thing moves into the later task that updates that code |
+| **Merge the coupled tasks** | The change is a deletion or rename and cannot be split | One task does the change and updates every user of it. Do not stage it as three |
+
+The cost of missing this is a round trip: `codefall-implement`'s worker is told to report a task cut
+wrong as a `plan` discovery rather than widen its scope, and the discovery comes back here as a
+revision. Catching it at the cut is cheaper.
 
 ## The graph file
 
