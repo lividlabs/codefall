@@ -11,7 +11,9 @@ you loaded it, and follow it for this run. `<verb>` is the name of the skill tha
 `codefall-specify` reads `.codefall/skills/codefall-specify/CUSTOMIZE.md` and nothing else.
 
 It carries procedure this extension cannot know — a system to consult, a question this project always
-asks, a section every document carries, a step that runs after writing.
+asks, a section every document carries, a step that runs after writing. For `codefall-specify` that
+includes interview topics: a question asked at its interview step beside the skill's own, such as
+which travel policy a feature falls under, or which of the project's roles can see it.
 
 It extends the skill and never relaxes it: the skill's **Rules** hold regardless. A customization
 that would suspend one is asking for a different skill — say so and stop.

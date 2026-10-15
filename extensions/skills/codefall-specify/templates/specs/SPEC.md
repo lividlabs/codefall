@@ -63,7 +63,8 @@ As a <consumer>, I want <capability>, so that <benefit>.
 
 [Visual direction, mockup path, distilled research the user confirmed. `Mockup: pending` on its
 own line for a requirement whose mockup was skipped; the mirror labels it, and the line comes out
-when the mockup lands. Omit if empty.]
+when the mockup lands. One line per mechanism the user kept after the engineering review flagged
+it, naming the requirement and saying it is a product requirement. Omit if empty.]
 
 ## Open questions
 

@@ -220,7 +220,10 @@ run, and say so.
 **No precondition check.** This skill needs a place to write and nothing else.
 
 **Run from `codefall-specify` or `codefall-plan`**, the spec and the surfaces are given: read the
-spec and go to step 2. Otherwise ask one question, and offer the three answers:
+spec and go to step 2. **Run from `codefall-specify`'s interview**, there is no spec yet: the surface
+and what the interview has settled so far are given, the first screen is what it wants back, and the
+interview's questions drive the iteration; go to step 2. Otherwise ask one question, and offer the
+three answers:
 
 > Is this mockup for a spec, for a vision, or are we starting fresh?
 
@@ -289,7 +292,8 @@ user move it.
 
 Before the first file, read `../../../.codefall/shared/landing.md` and take its branch step:
 `mockup/<slug>`, from the default branch. **Run from another verb, stay on its branch**; the files
-are part of its commit.
+are part of its commit. Run from `codefall-specify`'s interview, before it has branched, the files
+sit uncommitted where the checkout is; its branch step carries them.
 
 Build the first screen and show it: the path, and what to open it with.
 
@@ -321,7 +325,8 @@ landed.
 
 When a spec prompted this run, offer to add the directory path to its **Design notes**. When a
 vision did, offer to add it to the vision's `Related` line. Add the path and change nothing else in
-either document — they belong to `codefall-specify` and `codefall-envision`.
+either document — they belong to `codefall-specify` and `codefall-envision`. Run from
+`codefall-specify`'s interview there is no document yet; hand the path back and it writes it.
 
 ### 10. Land and wrap up
 
