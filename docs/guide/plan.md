@@ -107,6 +107,12 @@ or a missing prerequisite is the mistake a review of the plan is most likely to 
 list of tasks would hide it. The **Plan ref** column names the section of the plan that motivated
 each task, so the agent building it reads that section instead of the whole document.
 
+Before the table is final, the skill checks each task that deletes or renames something other code
+uses. If that code belongs to other tasks, the first task cannot be built and merged on its own,
+because the moment it lands the other code stops compiling. The skill then either keeps the first
+task add-only, with the new thing beside the old one and the deletion moved into the task that
+updates the code using it, or merges the coupled tasks into one, and the plan says which.
+
 When you approve the plan, each row becomes a bead, and the note above the table is rewritten:
 
 ```
