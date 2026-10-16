@@ -128,6 +128,35 @@ file then needs a network to open.
 Say what you found and what you are matching before you draw. When there is nothing to match, say
 that too, then either take a direction from the user or pick one and name the choice.
 
+### When the surface already exists
+
+A mockup of a screen the app already has is a change to that screen, and a change that leaves
+something out is read by an implementer as a deletion. So:
+
+- **Start from what is there, as far as the change needs it.** Open the page, the component, the
+  route as it is on the default branch and read what is on it before drawing. A change to one region
+  reproduces that region and names the rest in a comment; a change that reorganizes the screen
+  reproduces the screen. Never draw the new version from the description alone.
+- **Mark the deltas.** Every element added gets `<!-- NEW: … -->`. Every element taken away gets
+  `<!-- REMOVED: … (confirmed) -->`, and that tag is legitimate **only after the user said in so many
+  words that it goes**. An element missing from the file without the tag is a mistake, not a
+  decision. Preserved elements carry no tag; preservation is the default.
+- **Put a deletions manifest at the top of the file** whenever it has a `REMOVED` tag, one line per
+  removal quoting what the user said:
+
+  ```html
+  <!--
+    DELETIONS, each confirmed by the user:
+    - Saved Passengers tab — "yes, that's going away in this redesign"
+    - Quick-search bar — "we're replacing it with the filter panel"
+  -->
+  ```
+
+  A `REMOVED` tag with no line in the manifest is suspect, and an implementer treats it as one.
+
+Run from `codefall-specify`, each removal in the manifest is also its own acceptance criterion in the
+spec; that is specify's audit rule, and the manifest is how the drawing agrees with it.
+
 ### Defaults, not rules
 
 Where to begin, not what is permitted. Each gives way to a user who wants something else, and each
@@ -357,6 +386,8 @@ and nothing is pending.
 - **Never edit an imported asset.** It is the record of what someone decided. Add alongside it.
 - **A mockup is a reference, never source.** Working ones included.
 - **Mockups are keyed by surface**, never filed under a spec or a vision.
+- **A mockup of an existing screen marks what is new and what was removed**, and a removal is
+  tagged only after the user confirmed it, with their words in the manifest.
 - **Say what it looks like, not how it is built.** Naming a component, a route, or a data source is
   `codefall-plan`'s work happening in the wrong document.
 - **Clear `Mockup: pending` only when files landed**, and only for the requirements this mockup covers.
