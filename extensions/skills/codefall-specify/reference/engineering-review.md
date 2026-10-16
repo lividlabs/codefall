@@ -101,8 +101,10 @@ list is a result.
 ## What each finding becomes
 
 Each finding is one flag to the person, put the way step 5 puts a design concern: name it once,
-say why, let them decide, two rounds at most. Under the `product-manager` persona the evidence is
-restated as a product fact and no file is named.
+say why, let them decide, two rounds at most. The `evidence` is for the session, not the person: the
+flag names the surface and what it does there — "the landing page a shared link opens also creates
+an account" — and the file follows that only when the person would need to open it. Under the
+`product-manager` persona the evidence is restated as a product fact and no file is named.
 
 | Kind | The question | The answer becomes |
 | --- | --- | --- |
