@@ -1911,6 +1911,19 @@ Decided at scaffold, 2026-08-16.
   three tickets that had to land as one pull request, are in `reference/beads.md`. Seen and not
   taken: putting the rule in `specify` (requirements are cut by what a consumer observes, and a
   consumer never observes an enum member).
+- **Specify's recap names the UI direction and the concerns it flagged; a mockup of an existing
+  screen draws what is there first and marks its deltas, 2026-10-15.** The last two items from the
+  describe-skill comparison. The recap at specify's step 9 gains two lines, the mockup's path and
+  direction, and each concern the interviewer flagged with what the person decided, so the person
+  confirms both before the document is written. `mock-up` gains *When the surface already exists*:
+  start from the current screen, reproducing as much of it as the change touches, tag every
+  addition `NEW` and every removal
+  `REMOVED (confirmed)`, the latter only after the person said in so many words that it goes, and
+  open the file with a manifest quoting their words for each removal. A removal with no manifest
+  line is suspect. This is the drawing's side of specify's rule that silent omission is never a
+  deletion. Seen and not taken: a line in `docs/mockups/AGENTS.md` for the tags (every installed
+  project's copy would then differ from the template and prompt a question on the next run; the
+  manifest comment explains itself at the top of the file).
 
 ## Open
 

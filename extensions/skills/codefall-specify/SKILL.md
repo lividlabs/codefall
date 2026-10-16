@@ -194,9 +194,9 @@ Three searches before the interview:
 - **It exists in code.** Describe what is there, with file paths. Ask whether that is what they
   meant, and what differs.
 - **An issue already covers it.** Link it. Ask whether it is the same thing.
-- **Nothing found.** Say so and move on.
+- **Nothing found.** Say so.
 
-If existing work covers their need, **stop the skill**.
+If existing work covers it, **stop**.
 
 ### 5. Interview
 
@@ -280,14 +280,15 @@ and `codefall-plan` makes before it starts. The only question is whether to skip
 > **Failure behavior**: …
 > **Boundary conditions being left alone**: …
 > **Already exists and must keep working**: …
+> **UI direction and mockup path**: …
+> **Concerns I flagged, your call**: …
 > **Assuming without asking**: …
 > **Out of scope**: …
 > **Unresolved**: …
 >
 > Does that match what you have in mind?
 
-**Every line is at least a sentence.** A fragment or a dash means that topic was not interviewed;
-go back and ask.
+**Every line is at least a sentence.** A fragment or a dash means that topic was not interviewed.
 
 Advance when every line is substantive, the user has confirmed it, and the criteria could be
 written without guessing.
@@ -305,7 +306,7 @@ You are the facilitator. Put each finding to the user as a flag, in their vocabu
 a time, two rounds at most. An answer edits a requirement, a criterion, Key entities, or Out of
 scope; a mechanism the user keeps gets one line under **Design notes** saying it is a product
 requirement. One review per run; the edits are not re-reviewed. Say what the review found, even
-when it found nothing.
+nothing.
 
 ### 11. Write, then confirm
 
@@ -328,8 +329,8 @@ number into the document.
 ### 13. Mirror to the tracker
 
 Follow the creation sequence in `trackers/<name>/PROFILE.md`. The issues are generated from the
-document, so this step never asks the user to re-approve content. `requires-mockup` goes only on a
-requirement whose Design notes say `Mockup: pending`.
+document, so this step never asks the user to re-approve content. `requires-mockup` only where
+Design notes say `Mockup: pending`.
 
 ### 14. Link back, commit, and wrap up
 
