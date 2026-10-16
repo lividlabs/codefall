@@ -6,6 +6,21 @@ below were written by hand, before that was wired up.
 Tags are bare version numbers (`0.1.2`), not `v`-prefixed, so they match the `ref` the marketplace
 pins. A `v0.1.1` tag also exists from before that convention was settled.
 
+## [0.32.0](https://github.com/lividlabs/codefall/compare/v0.31.0...v0.32.0) (2026-10-16)
+
+
+### Features
+
+* **skills:** plan checks that a task deleting or renaming what other tasks use can build on its own ([#209](https://github.com/lividlabs/codefall/issues/209)) ([2ab3ee0](https://github.com/lividlabs/codefall/commit/2ab3ee0b790592f3775e992cb737a906bb36a810))
+* **skills:** read the draft criteria against the code before specify writes ([#207](https://github.com/lividlabs/codefall/issues/207)) ([f96964f](https://github.com/lividlabs/codefall/commit/f96964fdd399f33053fb3bc5ce099e813ed56efc))
+* **skills:** specify interviews with the mockup open and has a subagent review the draft as an engineer ([#208](https://github.com/lividlabs/codefall/issues/208)) ([f5a281a](https://github.com/lividlabs/codefall/commit/f5a281a62e710f013744956f071bcfb21f2cb03f))
+* **skills:** specify recaps the UI direction and flagged concerns, and a mockup of an existing screen marks its deltas ([#210](https://github.com/lividlabs/codefall/issues/210)) ([3e88df9](https://github.com/lividlabs/codefall/commit/3e88df92c09c28f29482887c694174d3570f9f31))
+
+
+### Documentation
+
+* **plan:** name the plan document as a software design document ([#205](https://github.com/lividlabs/codefall/issues/205)) ([ee99f53](https://github.com/lividlabs/codefall/commit/ee99f53eb581d4e985e17552c2aaca511d564304))
+
 ## [0.31.0](https://github.com/lividlabs/codefall/compare/v0.30.0...v0.31.0) (2026-10-09)
 
 
