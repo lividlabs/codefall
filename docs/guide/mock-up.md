@@ -74,6 +74,15 @@ features come back from review. The skill pushes for at least three states: popu
 main failure. It also asks about loading, permission-denied, and overflowing content where they
 apply.
 
+## When the screen already exists
+
+A mockup of a screen the app already has starts from that screen as it is today, reproducing as
+much of it as the change touches, then adds and changes what you asked for. Anything added is
+marked `NEW` in the file, and anything removed is
+marked `REMOVED` only after you have said it goes, with a list at the top of the file quoting what
+you said about each removal. An element that is simply missing, with no mark, is treated as a
+mistake rather than a decision, so nothing disappears from a screen because nobody mentioned it.
+
 ## How mockups connect to specs
 
 When a screen comes up in [`/codefall-specify`](specify.md)'s interview and has no picture yet, it
