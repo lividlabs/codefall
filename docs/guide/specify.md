@@ -110,7 +110,9 @@ criteria that cannot both hold, data the system already has under another name, 
 criterion assumes that does not exist, a workflow that cannot deliver what it promises or goes
 against the project's architecture decisions, and, when you are specifying as a product manager, a
 criterion that describes how rather than what. Each one is put to you as a flag, in plain words,
-and your answer edits the spec. A workflow you keep after it was flagged is noted as a product
+and your answer edits the spec. Whatever persona you specify under, the skill names what it found
+in the code the way you would see it, the screen or the action, and gives you a file path only
+when you would need to open the file. A workflow you keep after it was flagged is noted as a product
 requirement so planning builds it as written. The review runs once, and the skill tells you what it
 found, including nothing.
 
