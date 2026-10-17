@@ -1924,6 +1924,22 @@ Decided at scaffold, 2026-08-16.
   deletion. Seen and not taken: a line in `docs/mockups/AGENTS.md` for the tags (every installed
   project's copy would then differ from the template and prompt a question on the next run; the
   manifest comment explains itself at the top of the file).
+- **Specify names surfaces as the person sees them under every persona, 2026-10-16.** A run of
+  `codefall-specify` under the `engineer` persona referred to screens by their file paths and
+  component names, forty-odd characters where the page's name would do. The plain-language rule
+  lived only in the `product-manager` section of `personas.md`, which the skill reads only when the
+  persona is not `engineer`, and the skill itself told step 4 to describe what exists "with file
+  paths"; under `engineer` nothing overrode that, and the harness's own habit of citing code as
+  path and line filled the gap. Now the rule is the skill's, under every persona: a surface is
+  named as the person sees it, the screen, the action, the result, and a file, component, or route
+  is named beside that only when the person would need to open it, never instead of it. Step 4,
+  the step 10 facilitation, and `reference/engineering-review.md` say so; the review subagent still
+  returns file-and-line evidence, which is for the session. The `product-manager` section is
+  untouched: its "no file is named" sits above the new floor and still applies. Seen and not
+  taken: a shared baseline register every verb reads regardless of persona, with the
+  `product-manager` communications rule reduced to a delta on it (restructures prompt text that is
+  working well, and needs a place every verb reads unconditionally, which `personas.md` is not;
+  reconsider if `plan` or `report` show the same problem under `engineer`).
 
 ## Open
 

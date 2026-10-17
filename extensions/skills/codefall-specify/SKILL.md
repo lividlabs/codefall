@@ -191,8 +191,9 @@ Three searches before the interview:
 
 - **A spec already covers it.** Link it. Ask whether it is the same thing, and whether to revise
   it rather than write another.
-- **It exists in code.** Describe what is there, with file paths. Ask whether that is what they
-  meant, and what differs.
+- **It exists in code.** Describe what is there as the user would see it, each surface named the
+  way they would, a path only where they must open the file. Ask whether that is what they meant,
+  and what differs.
 - **An issue already covers it.** Link it. Ask whether it is the same thing.
 - **Nothing found.** Say so.
 
@@ -224,9 +225,9 @@ and **Design notes**.
 
 **Draw the mockup while the questions are open.** When a visual surface comes up and the user has
 no mockup for it, run `codefall-mock-up` for that surface now and iterate on it with the user as
-`reference/interview.md` says: every pass asks a design question, and every answer is interview
-material. A mockup they already have is imported per `../../../.codefall/shared/import-mockup.md`.
-The files sit uncommitted until step 12 branches. Nothing is drawn here.
+`reference/interview.md` says. A mockup they already have is imported per
+`../../../.codefall/shared/import-mockup.md`. The files sit uncommitted until step 12 branches.
+Nothing is drawn here.
 
 **Push back on vague answers**, naming the word and asking for a concrete one. **Raise design
 concerns as flags, not rulings**: name a problem once, let them decide, two rounds per concern at
@@ -248,8 +249,7 @@ A specification describes what the user wants **added**. **Silent omission from 
 not a deletion.** Read `reference/audit.md`. For each surface the feature touches — named by the
 user or found at step 3 — read the current artifact, enumerate what is there and every path that
 reaches the outcome this feature controls, and ask about the difference from what the user
-described. Preserved goes under **Existing behavior preserved**; merged is covered by a criterion;
-removed is its own criterion; a second path to a gated outcome gets a criterion either way.
+described. Its table says what each answer becomes; a removal is its own criterion.
 
 ### 7. Shape the requirements
 
@@ -297,16 +297,15 @@ written without guessing.
 
 Draft the criteria, then read `reference/engineering-review.md` and hand the draft to **one
 subagent of this harness**, prompted from `engineering-review-prompt.md`, read-only, to read it as
-an engineer with the code open: contradictions between criteria, data the system already holds
-elsewhere, assumptions it cannot meet, mechanisms that are broken or against the project's stance,
-and — only when the gate in the reference allows — a criterion that is a mechanism rather than an
-outcome.
+an engineer with the code open, for the five kinds of finding the reference lists, the fifth only
+when its gate allows.
 
 You are the facilitator. Put each finding to the user as a flag, in their vocabulary, one or two at
-a time, two rounds at most. An answer edits a requirement, a criterion, Key entities, or Out of
-scope; a mechanism the user keeps gets one line under **Design notes** saying it is a product
-requirement. One review per run; the edits are not re-reviewed. Say what the review found, even
-nothing.
+a time, two rounds at most. The evidence names files; the flag names the surface, the file beside
+it only where the user must open it. An answer edits a requirement, a criterion, Key entities, or
+Out of scope; a mechanism the user keeps gets one line under **Design notes** saying it is a
+product requirement. One review per run; the edits are not re-reviewed. Say what the review found,
+even nothing.
 
 ### 11. Write, then confirm
 
@@ -379,6 +378,8 @@ Every one is the user's decision: report the state and offer. Each lands per
 - **Status describes the document, never the work.**
 - **Silent omission is never a deletion**; a removal is its own criterion.
 - **The code raises questions and never answers them**; what should happen is the user's.
+- **Surfaces are named as the user sees them**, under every persona; a file, component, or route
+  is named beside that only where the user must open it, never instead.
 - **A preference is asked, never proposed.** A proposal is for a question of fact, and the user
   confirms it.
 - **Mockups are keyed by surface**, not by spec.
