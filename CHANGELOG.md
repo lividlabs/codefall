@@ -6,6 +6,13 @@ below were written by hand, before that was wired up.
 Tags are bare version numbers (`0.1.2`), not `v`-prefixed, so they match the `ref` the marketplace
 pins. A `v0.1.1` tag also exists from before that convention was settled.
 
+## [0.32.1](https://github.com/lividlabs/codefall/compare/v0.32.0...v0.32.1) (2026-10-17)
+
+
+### Bug Fixes
+
+* **skills:** specify names surfaces as the user sees them under every persona ([#211](https://github.com/lividlabs/codefall/issues/211)) ([fcfb31b](https://github.com/lividlabs/codefall/commit/fcfb31b8530cac911a2ba00cd1526043aa36d462))
+
 ## [0.32.0](https://github.com/lividlabs/codefall/compare/v0.31.0...v0.32.0) (2026-10-16)
 
 
