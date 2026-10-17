@@ -1,0 +1,90 @@
+# <app name>
+
+<One line: what this surface is.>
+
+## Applicable ADRs
+
+The why lives in the ADRs. This file is the operative rules only — never restate the reasoning here.
+
+- [ADR-BASE-01 Clean Architecture](<path>/docs/adrs/ADR-BASE-01-clean-architecture.md) ·
+  [ADR-BASE-02 Package-by-component](<path>/docs/adrs/ADR-BASE-02-package-by-component.md) ·
+  [ADR-DART-01 Dependency Injection](<path>/docs/adrs/ADR-DART-01-dependency-injection.md) ·
+  [ADR-DART-02 App state](<path>/docs/adrs/ADR-DART-02-app-state.md) ·
+  [ADR-DART-03 Boundary enforcement](<path>/docs/adrs/ADR-DART-03-boundary-enforcement.md)
+- <plus any surface-specific ADRs>
+- <plus this project's own ADRs, numbered separately from ADR-001>
+
+## Structure
+
+- Package-by-component: capabilities as folders under `lib/components/<name>/`, each fronted by
+  `<name>.dart`, which `export`s the public API with `show`. Everything else is under `src/`.
+- Clean layers nest inside `src/`: `domain/` `application/` `infrastructure/` `presentation/`.
+- Shared technical modules under `lib/shared/<module>/`, same facade-and-`src/` shape.
+- App wiring under `lib/app/` — `injection.dart`, `router.dart` — and the composition root in
+  `lib/main.dart`, one `lib/main_<env>.dart` per extra environment. These import facades only.
+
+## Layer rules
+
+- Dependencies point inward only. Interfaces are `abstract interface class`es in `application/`
+  with the use cases that need them; `domain/` = entities + value objects + errors.
+- No `package:flutter`, `flutter_riverpod`, `go_router`, `get_it`, `dio`, `retrofit`, or a storage
+  driver in `domain/` or `application/`. `package:injectable` annotations are the one exception.
+- Widgets and notifiers are thin; use cases never see a `BuildContext`, a `Ref`, or a DTO.
+
+## DI
+
+- `get_it` registered by `injectable`. `@injectable` on use cases, `@LazySingleton(as: Interface)`
+  on implementations, `@module` for third-party objects, `@Environment` to switch them.
+  `configureDependencies(environment:)` is called once, in the composition root.
+- Constructor injection, interfaces only. `Thing` / `<Qualifier>Thing` naming — `OrderRepository`,
+  `RemoteOrderRepository`, `DefaultClock`. No `I` prefix.
+- **`GetIt.I` is called in two places and no others**: the composition root, and one bridge
+  provider per use case in `presentation/`:
+
+  ```dart
+  @riverpod
+  CreateOrder createOrder(Ref ref) => GetIt.I<CreateOrder>();
+  ```
+
+- Tests pass hand-written fakes to the same constructors. Notifier and widget tests override the
+  bridge providers. One smoke test resolves every use case from the container per environment.
+
+## State
+
+- Server → Riverpod async providers · navigation → go_router · shared client → `Notifier` · local →
+  `setState` or hooks. Never mirror server or navigation state into a `Notifier`.
+- Providers call use cases through the bridge, never gateways. Riverpod 3 forms only; no
+  `legacy.dart`. `riverpod_generator` and `riverpod_lint` are on.
+
+## Network and models
+
+- API clients are `retrofit` services on `dio`, in `infrastructure/`, behind a gateway interface in
+  `application/`. With an OpenAPI document, `swagger_parser` writes them. Call `dio` directly only
+  for an endpoint `retrofit` cannot express.
+- Models: `freezed` with `json_serializable` for unions, `copyWith`, and JSON; a plain class with a
+  primary constructor when none of those is needed. One `build_runner` command generates
+  everything; generated files are committed.
+
+## Enforcement
+
+- `import_lint` in `analysis_options.yaml`, severity `error`, generated for this project. Layer
+  rules are wildcarded; facade rules are one per component — adding a component adds its rule.
+- Run `flutter analyze`, `dart run import_lint`, `flutter test`, and `dart run build_runner build
+  --delete-conflicting-outputs` followed by a clean `git diff`.
+- A rule that matches no file reports nothing. Only a deliberate violation proves it.
+
+## Workflow
+
+- Conventional commits, with a body that says *why*.
+- Work happens on a branch or worktree, never on `main`. Stacked branches are fine for landing
+  large work as smaller reviewable pieces.
+- Add a dependency with `flutter pub add <name>`, never by writing a version into `pubspec.yaml`.
+- Deliberately minimal: no branching model beyond this is decided here.
+
+## Gotchas
+
+- The analysis server loads `import_lint` at start. After changing `plugins:` restart the IDE; the
+  CLI command needs no restart.
+- A class nobody annotated is not registered and fails at first `GetIt.I<T>()` on a device. The
+  container smoke test is what catches it.
+- <plus project-specific things a contributor must know>

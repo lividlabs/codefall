@@ -92,6 +92,7 @@ Scaffold writes two kinds of ADRs into the new project:
 | `ADR-BASE-01` to `ADR-BASE-03` | every project | Clean Architecture, package-by-component, and keeping components cheap to split |
 | `ADR-TS-01` and up | `typescript-react` projects | Inversify for dependency injection; TanStack Query, Zustand, and `useState` for front-end state; `eslint-plugin-boundaries` for boundaries |
 | `ADR-GO-01` and up | `go` projects | dependency injection, boundary enforcement, and optional values |
+| `ADR-DART-01` and up | `dart-flutter` projects | `get_it` with `injectable` for dependency injection; Riverpod and go_router for app state; `import_lint` for boundaries |
 
 The base ADRs are in
 [`extensions/skills/codefall-scaffold/templates/adrs/`](../../extensions/skills/codefall-scaffold/templates/adrs/).
@@ -116,27 +117,40 @@ already has a profile.
 | --- | --- | --- |
 | `typescript-react` | TypeScript and Node backends; React front ends for the web and React Native, including Tauri, Electron, and React Native apps whose native side is only wiring | supported |
 | `go` | Go services, APIs, workers, daemons, and command-line tools that hold domain logic | supported |
+| `dart-flutter` | Flutter apps on mobile, desktop, and the web, whose platform code is only wiring | supported |
 | `rust-native` | Rust services, and Tauri shells that hold domain logic | planned |
-| `kotlin-native`, `swift-native` | Android and iOS | planned |
-| `dart-flutter` | Flutter, on mobile and desktop | planned |
+| `kotlin-native`, `swift-native` | Android and iOS, including Flutter platform code that holds domain logic | planned |
 | `python`, `java` | backends and services | planned |
 
 A profile counts as supported only once its `templates/surfaces/<name>/PROFILE.md` is complete.
 
 ### Desktop and mobile apps
 
-You can scaffold a Tauri desktop app or a React Native mobile app today, as a whole, when its native
-side is boilerplate plus a few commands that wrap operating-system APIs. Those commands are gateways
-in the `infrastructure/` ring. As `ADR-BASE-01` puts it, a Tauri `invoke`, a native bridge call, an
-HTTP request, and a platform channel are all gateways, and the use case never learns which one it
-got. Rust or Kotlin in the repository does not make a native surface, just as a Postgres driver does
-not make SQL a surface.
+You can scaffold a Tauri desktop app, a React Native mobile app, or a Flutter app today, as a
+whole, when its native side is boilerplate plus a few commands that wrap operating-system APIs.
+Those commands are gateways in the `infrastructure/` ring. As `ADR-BASE-01` puts it, a Tauri
+`invoke`, a native bridge call, an HTTP request, and a platform channel are all gateways, and the
+use case never learns which one it got. Rust or Kotlin in the repository does not make a native
+surface, just as a Postgres driver does not make SQL a surface.
 
 The app becomes two surfaces only when the native side holds real domain logic, such as heavy
 computation or security-sensitive work that must not run in the web view. Then the native side needs
 its own profile, plus a *seam ADR* in the project's own sequence that decides which side owns the
 domain. Scaffold asks you directly whether the native side holds business logic, because the file
-listing cannot tell it: React Native ships its `android/` and `ios/` directories empty.
+listing cannot tell it: React Native ships its `android/` and `ios/` directories empty, and
+`flutter create` ships every platform directory with code in it.
+
+### Flutter
+
+The `dart-flutter` profile covers a Flutter app on iOS, Android, macOS, Windows, Linux, and the
+web as one surface. It is the first profile with a decision the user may override at the interview:
+scaffold says it will use Riverpod for state management unless you want to override that now, and
+proposes nothing else. Dependency injection is `get_it` registered by `injectable`, with the locator
+called in two places only, so a different state tool changes the state ADR and nothing inward.
+Dart has no package-private visibility, so, as in TypeScript, both the facade rule and the layer
+rule are enforced by a linter, `import_lint`. Flutter projects drop `ADR-BASE-03`, because an app
+can never be split into services. `codefall-equip` still has no end-to-end runner for Flutter; see
+[Test](test.md).
 
 ### React on the web and on mobile
 

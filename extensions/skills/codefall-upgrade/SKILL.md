@@ -142,8 +142,8 @@ all three — they differ only in how much step 3 must reconstruct:
   files. Read `reference/pre-provenance.md`; it covers this case from here on.
 - **Never scaffolded** — no codefall docs at all. This is **first-time adoption**: every applicable
   template is simply missing, and the same report-then-take flow installs the stance. Detect the
-  surfaces from the repo (`package.json`/`tsconfig` suggests `typescript-react`, `go.mod` suggests
-  `go`) and confirm rather than assume — the profile catalog and its refusal rule are `codefall-scaffold`'s.
+  surfaces from the repo (`package.json`, `go.mod`, or `pubspec.yaml` suggests a profile) and
+  confirm rather than assume — the profile catalog and its refusal rule are `codefall-scaffold`'s.
   If a surface has no supported profile, refuse the same way `codefall-scaffold` does: say plainly that the
   stack isn't supported yet, name what is, offer to record the request, and stop. Do not improvise.
 

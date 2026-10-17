@@ -84,6 +84,11 @@ in `docs/adrs/` under the same basename.
 | `surfaces/go/adrs/ADR-GO-01-dependency-injection.md` | 0.3.0 | — |
 | `surfaces/go/adrs/ADR-GO-02-boundary-enforcement.md` | 0.3.0 | — |
 | `surfaces/go/adrs/ADR-GO-03-optional-values.md` | 0.3.0 | — |
+| `surfaces/dart-flutter/PROFILE.md` | 0.33.0 | — |
+| `surfaces/dart-flutter/AGENTS.md.skeleton` | 0.33.0 | — |
+| `surfaces/dart-flutter/adrs/ADR-DART-01-dependency-injection.md` | 0.33.0 | — |
+| `surfaces/dart-flutter/adrs/ADR-DART-02-app-state.md` | 0.33.0 | — |
+| `surfaces/dart-flutter/adrs/ADR-DART-03-boundary-enforcement.md` | 0.33.0 | — |
 
 The 0.3.0 rename changed identifiers inside the files as well as the filenames — `ADR-001` became
 `ADR-BASE-01` in every cross-reference. A renamed project file therefore cites old identifiers

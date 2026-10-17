@@ -1940,6 +1940,42 @@ Decided at scaffold, 2026-08-16.
   `product-manager` communications rule reduced to a delta on it (restructures prompt text that is
   working well, and needs a place every verb reads unconditionally, which `personas.md` is not;
   reconsider if `plan` or `report` show the same problem under `engineer`).
+- **The `dart-flutter` surface profile, 2026-10-17.** Scaffold refused Flutter projects because the
+  profile was planned and nothing had been written down for it; an earlier conversation about the
+  libraries was lost with its session. Researched afresh against the current package pages and
+  the Riverpod and Flutter documentation, then decided item by item. Prefix `DART`, scoped to the
+  Flutter app as one surface on mobile, desktop, and the web; platform code is wiring unless the
+  user says it holds domain logic, in which case the project stops on a planned profile.
+  **Dependency injection is `get_it` registered by `injectable`**, constructor injection against
+  `abstract interface class`es in `application/`, `GetIt.I` called in two places only: the
+  composition root and one bridge provider per use case in `presentation/`. Seen and not taken:
+  Riverpod providers as the container, a common community pattern and the first draft here; the
+  current Riverpod docs call it a caching and data-binding framework, keep providers for shared
+  business state, and the idiom its API reference suggests for a many-dependency object puts a
+  Riverpod import in the application layer, so it was dropped after checking the documentation.
+  Also not taken: a hand-written root with no library, which is what Flutter's own sample does
+  and checks nothing. **App state is Riverpod 3** with the generator and lint on, go_router for
+  navigation, `Notifier` for shared client state, the widget for local state, and the four-category
+  split from ADR-TS-02; this is the one decision a profile offers to override, phrased as *we will
+  use Riverpod unless you want to override that now* with nothing else proposed, and an override
+  amends ADR-DART-02 for the project. Because the container is not Riverpod, a different state
+  tool changes only that ADR and the shape of the bridge. **The API client is `retrofit` on `dio`**,
+  `swagger_parser` writing the service when an OpenAPI document exists, and `dio` called directly
+  where `retrofit` cannot express an endpoint; it is a toolchain default rather than an ADR because
+  the gateway interface already contains it. Chopper is alive and current and was not chosen
+  because the `dio` ecosystem is several times larger. **Boundary enforcement is `import_lint`**
+  for both the facade rule and the layer rule, severity error, generated per project because the
+  facade rules are one per component. Seen and not taken: one package per component in a pub
+  workspace, which gives compiler-grade facades at the cost of a `pubspec.yaml` per component;
+  named in ADR-DART-03 as the upgrade for a repository with several apps. **Models are `freezed`
+  with `json_serializable`**, a primary constructor where none of that is needed, one
+  `build_runner` command, generated files committed and checked by CI. **ADR-BASE-03 is dropped**
+  for the profile, the same gate the CLI used. **No end-to-end runner**: equip's refusal of the
+  `spec` modality for Flutter stands, and lifting it is its own roadmap item, between
+  `integration_test` and Patrol, with ADR-007 and the test and equip skills to change. Scaffold's
+  `SKILL.md` is at about 4,998 tokens against the 5,000 guideline after moving the stack-question
+  list and the override wording into `reference/catalog.md`; the next addition to it moves text to
+  a reference file first.
 
 ## Open
 

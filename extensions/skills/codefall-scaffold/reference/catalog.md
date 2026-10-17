@@ -23,6 +23,17 @@ the profile's own ADRs.
   `useState`), and boundary enforcement (`eslint-plugin-boundaries`).
 - `go` supplies DI (`samber/do`), boundary enforcement (`internal/` packages plus `depguard`), and
   optional values (`samber/mo`'s `Option`).
+- `dart-flutter` supplies DI (`get_it` registered by `injectable`), app state (Riverpod 3 and
+  go_router, the one decision a project may override at the interview), and boundary enforcement
+  (`import_lint`). It drops ADR-BASE-03: a Flutter app can never be split into services.
+
+### Profile overrides
+
+A profile may offer **one decision of its own** for the user to override at the interview, and its
+`PROFILE.md` says so. `dart-flutter` offers state management. Say *we will use Riverpod for state
+management unless you want to override that decision now*, and propose nothing else. On an
+override, amend `ADR-DART-02` for the project — Context and Decision rewritten for the tool chosen —
+and report it as an amendment, which provenance records. No other profile offers one.
 
 ## Consulting before the stack question
 
@@ -71,15 +82,16 @@ is either one web surface or a web surface plus a native one.
 | --- | --- | --- |
 | `typescript-react` | TypeScript/Node backends; React frontends, web and Native — including Tauri, Electron, and RN apps whose native side is only wiring | **supported** |
 | `go` | Go services, APIs, workers, daemons, and CLIs that hold domain logic | **supported** |
+| `dart-flutter` | Flutter apps on mobile, desktop, and the web, whose platform code is only wiring | **supported** |
 | `rust-native` | Rust services, and Tauri shells that hold domain logic | planned |
-| `kotlin-native` · `swift-native` | Android, iOS | planned |
-| `dart-flutter` | Flutter, mobile and desktop | planned |
+| `kotlin-native` · `swift-native` | Android, iOS — including Flutter platform code that holds domain logic | planned |
 | `python` · `java` | backends and services | planned |
 
 A profile is **supported** only when `../templates/surfaces/<name>/PROFILE.md` is complete. Nothing
 else counts — not a language this skill mentions, not one you know well, not one that is "basically
 the same as" a supported profile.
 
-A Tauri desktop app or a React Native mobile app is scaffoldable today when its native side is a
-thin shell; neither is when that side carries domain logic. That is a question for the user, not a
-guess from the directory listing — React Native ships `android/` and `ios/` empty.
+A Tauri desktop app, a React Native mobile app, or a Flutter app is scaffoldable today when its
+native side is a thin shell; none is when that side carries domain logic. That is a question for
+the user, not a guess from the directory listing — React Native ships `android/` and `ios/` empty,
+and `flutter create` ships every platform directory with code in it.
