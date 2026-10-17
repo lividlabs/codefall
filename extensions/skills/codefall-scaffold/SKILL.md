@@ -170,12 +170,8 @@ because the frontend is React is the steering this skill promises not to do.
 
 **Do not present every supported profile as a co-equal menu** where one was clearly named. Ask with
 the full list **only when the description genuinely leaves it open** — "an API", "a service", "a
-background worker" with no language named:
-
-- `typescript-react` — TypeScript/Node backends, React frontends (web and Native), and Tauri or
-  Electron apps whose native side is only wiring
-- `go` — Go services, APIs, workers, daemons, and CLIs
-- **None of these**
+background worker" with no language named: every **supported** profile in `reference/catalog.md`'s
+surface catalog, each with its one-line cover, and **None of these**.
 
 **Never list a planned profile as an option**, in this question or any other. When the directory
 holds files that could answer it, consult once first, per `reference/catalog.md`, and fold the
@@ -263,6 +259,9 @@ opinion, and let the user choose. Never label an option "Recommended" without an
    decision log at step 4.
 4. **Depth** — docs only, docs + project files, or a runnable skeleton? Default to **docs only**
    unless the user wants more. See `reference/depth.md`.
+
+A profile may offer **one override of its own**, asked in this batch; `reference/catalog.md` says
+which and how.
 
 **Ask where it goes**, in the same batch. The current working directory is not a default. Only then
 check the chosen target: never scaffold into a

@@ -38,4 +38,5 @@ The process resembles the waterfall process of yore but the ability it iterate o
  - [x] test skill: case files under the testing root, the `spec` and `agentic` modalities, run reports under `.codefall/tests/`
  - [x] equip sets the test harness up as well as the local scripts: a spec runner per surface, declared in `test.runners` and with its commands recorded in the testing root's `AGENTS.md`
  - [x] plan decides which tasks need a test case and drafts its criteria into the bead; implement writes the case file from those criteria before the code, and stops a bead whose harness is not equipped
- - [ ] scaffold skill for Flutter projects
+ - [x] scaffold skill for Flutter projects: the `dart-flutter` surface profile
+ - [ ] an end-to-end runner for Flutter, so equip stops refusing the `spec` modality for it

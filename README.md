@@ -308,7 +308,8 @@ decisions for that language:
 | --- | --- | --- |
 | `typescript-react` | TypeScript and Node backends; React front ends for the web and React Native | supported |
 | `go` | Go services, APIs, workers, and command-line tools | supported |
-| `rust-native`, `kotlin-native`, `swift-native`, `dart-flutter`, `python`, `java` | | planned |
+| `dart-flutter` | Flutter apps on mobile, desktop, and the web | supported |
+| `rust-native`, `kotlin-native`, `swift-native`, `python`, `java` | | planned |
 
 When a project needs a profile that is not supported yet, scaffold stops instead of guessing.
 [The architecture guide](docs/guide/architecture.md) explains the rules and how scaffold matches a
