@@ -6,6 +6,18 @@ below were written by hand, before that was wired up.
 Tags are bare version numbers (`0.1.2`), not `v`-prefixed, so they match the `ref` the marketplace
 pins. A `v0.1.1` tag also exists from before that convention was settled.
 
+## [0.33.0](https://github.com/lividlabs/codefall/compare/v0.32.0...v0.33.0) (2026-10-17)
+
+
+### Features
+
+* **scaffold:** add the dart-flutter surface profile ([#213](https://github.com/lividlabs/codefall/issues/213)) ([2267907](https://github.com/lividlabs/codefall/commit/2267907a4cc2a038bce7a4c81113abed6ade6ff9))
+
+
+### Bug Fixes
+
+* **skills:** specify names surfaces as the user sees them under every persona ([#211](https://github.com/lividlabs/codefall/issues/211)) ([fcfb31b](https://github.com/lividlabs/codefall/commit/fcfb31b8530cac911a2ba00cd1526043aa36d462))
+
 ## [0.32.0](https://github.com/lividlabs/codefall/compare/v0.31.0...v0.32.0) (2026-10-16)
 
 
