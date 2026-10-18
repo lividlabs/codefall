@@ -221,7 +221,7 @@ When a client does hold domain logic, settle where the two meet:
   channel are the same shape to a use case. The inner rings must not name the transport.
 
 Record the answers as `ADR-001`, the first in this project's own sequence, from
-`templates/adrs/_TEMPLATE.md`. This is the one place this skill writes a new decision rather than
+`templates/adrs/TEMPLATE.md`. This is the one place this skill writes a new decision rather than
 instantiating a template — draft it, then have the user confirm it before writing.
 
 ### 3. Interview
@@ -273,7 +273,7 @@ holding only `docs/visions/` is the expected state, not a non-empty directory.
 Branch first, per `../../../.codefall/shared/landing.md` — `scaffold/<project-or-surface>`.
 
 - `docs/adrs/` — `ADR-BASE-01` through `ADR-BASE-03` plus every ADR the matched profiles supply, plus
-  `_TEMPLATE.md`. One flat directory. Dated and Accepted, amended per the interview. Drop ADRs that
+  `TEMPLATE.md`. One flat directory. Dated and Accepted, amended per the interview. Drop ADRs that
   do not apply: a backend-only project has no use for `ADR-TS-02`, and a surface that could never be
   split into services at all — a CLI, a desktop or mobile app, a library — has no use for
   `ADR-BASE-03`. That gate is about the surface, not its layout; having no *current* plan to split an

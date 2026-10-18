@@ -1,6 +1,6 @@
 ---
 name: codefall-upgrade
-description: Bring a project's installed codefall and its documents current. The installed skills, shared files, and hooks come through `codefall upgrade`, offered first when the manifest is behind the binary and run only on a yes. The documents — inherited ADRs, `docs/adrs/_TEMPLATE.md`, `AGENTS.md` skeletons, `.codefall/scaffold.json` — are compared against the current templates, every difference is reported with its provenance, and only the pieces the user takes are applied, one at a time. Works on projects scaffolded before provenance existed, and on repos adopting the stance for the first time. A declined template is not offered again until `adopt` is given.
+description: Bring a project's installed codefall and its documents current. The installed skills, shared files, and hooks come through `codefall upgrade`, offered first when the manifest is behind the binary and run only on a yes. The documents — inherited ADRs, `docs/adrs/TEMPLATE.md`, `AGENTS.md` skeletons, `.codefall/scaffold.json` — are compared against the current templates, every difference is reported with its provenance, and only the pieces the user takes are applied, one at a time. Works on projects scaffolded before provenance existed, and on repos adopting the stance for the first time. A declined template is not offered again until `adopt` is given.
 argument-hint: "[path] [adopt]"
 disable-model-invocation: true
 allowed-tools:
@@ -52,7 +52,7 @@ The install is `codefall upgrade`'s, and this verb only offers it (step 1). Past
 | In scope | Out of scope |
 | --- | --- |
 | Inherited ADRs — new ones; revisions, landed as superseding ADRs; renames | Moving code between architectures or topologies |
-| `docs/adrs/_TEMPLATE.md` | Extracting a component into a service |
+| `docs/adrs/TEMPLATE.md` | Extracting a component into a service |
 | `AGENTS.md` skeleton drift, reported | Re-slicing component boundaries |
 | `.codefall/scaffold.json` — written or brought current | Touching source, build config, or lint rules |
 | A `docs/decision-log.md` line recording the run | The project's own `ADR-NNN` decisions |

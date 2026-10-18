@@ -39,7 +39,7 @@ The why lives in the ADRs. This file is the operative rules only — never resta
 - This project's own decisions: [ADR-001 Facade contracts](../docs/adrs/ADR-001-facade-contracts.md) ·
   [ADR-002 CLI libraries](../docs/adrs/ADR-002-cli-libraries.md) ·
   [ADR-003 Pure shared modules](../docs/adrs/ADR-003-pure-shared-modules.md). New ones use
-  [`docs/adrs/_TEMPLATE.md`](../docs/adrs/_TEMPLATE.md); decisions still moving live in
+  [`docs/adrs/TEMPLATE.md`](../docs/adrs/TEMPLATE.md); decisions still moving live in
   [`docs/decision-log.md`](../docs/decision-log.md).
 
 ## Structure

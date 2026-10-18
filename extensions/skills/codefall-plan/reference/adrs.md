@@ -3,7 +3,7 @@
 Read at step 4, when deciding whether this plan writes one, and at step 7, when it is shown.
 
 A separate artifact, `docs/adrs/ADR-NNN-title.md`, in the Nygard shape — Status, Context, Decision,
-Consequences, Related — written from `../../codefall-scaffold/templates/adrs/_TEMPLATE.md`.
+Consequences, Related — written from `../../codefall-scaffold/templates/adrs/TEMPLATE.md`.
 
 - **The number continues the project's own sequence:** the highest bare `ADR-NNN` in `docs/adrs/`
   plus one, starting at `ADR-001`. The prefixed sequences — `ADR-BASE-NN`, `ADR-<PREFIX>-NN` — are
