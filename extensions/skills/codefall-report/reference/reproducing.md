@@ -25,10 +25,10 @@ Read the preflight lines from step 1 first.
 
 | Line | What happens |
 | --- | --- |
-| `behind` above `0`, or `refresh=stale` | Say the environment may not match `main`, offer `/codefall-refresh`, and wait |
+| `behind` above `0`, or `refresh=stale` | Say the environment may not match `main`, and run `/codefall-refresh` before the attempt |
 | `refresh=undeclared` | Say so and name `/codefall-equip`. A command-line surface the repository runs directly can still be tried; anything that needs services running is `Not attempted` |
 
-**Never run the remedy.** It is the user's.
+**Never run `/codefall-equip`.** It is the user's.
 
 ## The driver
 

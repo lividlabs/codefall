@@ -223,11 +223,10 @@ command that fixes it, say to rerun this verb after it, and stop:
 | `not_initialized` | this repository has no beads database | `bd init` |
 | `unreadable` | bd found a database and could not read it | quote `beads_detail` |
 
-**Never run the remedy.** That is the user's decision.
-
 Then read the checkout lines. `behind` above `0` or `refresh=stale` means the environment may not
 match what the work will build on: say so and run `/codefall-refresh` before continuing.
-`refresh=undeclared` names `/codefall-equip` instead.
+`refresh=undeclared` names `/codefall-equip` instead. **Never run the other remedies.** They are
+the user's.
 
 **Then read the `test=` line**, and hold it against the beads in scope once step 3 has read them. A
 bead whose acceptance criteria name a test case needs an equipped harness:

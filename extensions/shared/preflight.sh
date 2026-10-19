@@ -4,8 +4,9 @@
 #
 # Two things, in order. First, where the checkout stands: against the default branch, and whether
 # the local environment has been refreshed since HEAD last moved (ADR-005). That part is a report —
-# nothing in it changes the exit code, and a skill reads the lines, says what it found, and offers
-# `/codefall-refresh`. It never pulls and never runs the local commands. Second, the Beads
+# nothing in it changes the exit code, and a skill reads the lines, says what it found, and runs
+# `/codefall-refresh` — or offers it, where the skill says so. This script never pulls and never
+# runs the local commands. Second, the Beads
 # precondition: setup is done or it is not. The script reports which, and never repairs anything —
 # a skill reads the key=value lines to tell the user what is missing and which command fixes it.
 #

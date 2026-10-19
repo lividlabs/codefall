@@ -151,9 +151,7 @@ over the command that fixes it, say to rerun this verb after it, and **stop**:
 
 Then read the checkout lines. `behind` above `0` or `refresh=stale` means the environment may not
 match `main`: say so and run `/codefall-refresh` before continuing. `refresh=undeclared` names
-`/codefall-equip` instead.
-
-**Never run the remedy.** That is the user's decision.
+`/codefall-equip` instead. **Never run the other remedies.** They are the user's.
 
 ### 2. Take the input
 
