@@ -110,10 +110,14 @@ finding into one of four classes:
 | Agent variance | A product that plans its own actions took a different route, recorded with how often it happened, such as "2 of 6 runs" |
 
 A finding becomes an issue on your project's tracker, or a bead in a project that keeps no issue
-tracker, only when you say so. When the run tested an
-epic, it asks one question, "I found N problems. Fix them all?", and each problem you take also
-becomes a bead under the epic. The same session then runs `/codefall-implement` on the epic to fix
-them.
+tracker, only when you say so. Every bug is filed with the same fields whoever found it: its area,
+its priority on one scale, how big the fix is, and what found it. When the run tested an epic, it
+asks one question, "I found N problems. Fix them all?", and shows for each bug whether it belongs
+to the epic. A bug that stops the epic from shipping, that the epic's changes caused, or that is
+near the work and worth fixing with it becomes a bead under the epic, and the same session then
+runs `/codefall-implement` on the epic to fix those. A bug in a part of the product the epic never
+touched is filed on its own instead, where [`/codefall-fix`](fix.md) or a sweep picks it up, so the
+delivery stays the size of the feature. You can change the call for any bug in the same answer.
 
 The skill does not fix what is missing around a test. Setting up the runner belongs to
 `/codefall-equip`, and writing a case belongs to `/codefall-implement`. When either is missing, the

@@ -65,12 +65,12 @@ report ends with one next command. In order:
 | `envision` | whatever the user arrived with: a sentence, a pitch document, a folder of mockups | `docs/visions/VISION-NNN-slug.md`, the *why*; sources kept verbatim under `docs/visions/sources/` | `scaffold` requires one; `specify` may draw on one |
 | `scaffold` | a vision; an interview for what a template cannot decide; the project's consult agents when a stack stays open | ratified ADRs, scoped `AGENTS.md` files, optionally project files, boundary lint, and the `start` and `update` scripts | a project ready for `specify` |
 | `specify` | the idea or vision, an audit of what already exists, and an engineering review of the draft by a subagent reading it against the code; the project's consult agents for a question of fact the user cannot answer | `docs/specs/SPEC-NNN-slug.md`, the *what*: requirements with EARS acceptance criteria, mirrored to the tracker, when the project has one, as a parent issue and one child per requirement; the mockups its requirements need, made through `mock-up` in the same run | `plan` |
-| `report` | the person who saw a bug, interviewed; the running product, driven through their steps; a test run's report or an issue they filed | `docs/bugs/BUG-NNN-slug.md`, what is wrong: the steps, the expected and actual result, evidence committed beside it, whether it reproduced, and EARS acceptance criteria, mirrored to one tracker issue when the project has one | `plan` |
+| `report` | the person who saw a bug, interviewed; the running product, driven through their steps; a test run's report or an issue they filed; in its `triage` mode, the bug backlog in Beads | `docs/bugs/BUG-NNN-slug.md`, what is wrong: the steps, the expected and actual result, evidence committed beside it, whether it reproduced, and EARS acceptance criteria, mirrored to one tracker issue when the project has one; one bug bead, triaged by area, priority, and size per `.codefall/shared/triage.md`; in `triage` mode, the backlog's fields and a sweep epic cut from the bugs the person picked | `fix` or `plan`; `implement`, for a sweep |
 | `mock-up` | a design-tool export, or nothing; run by `specify` or `plan` for a requirement that needs one, or alone | `docs/mockups/<slug>/`, matching the app's own design system | `plan`; a requirement whose Design notes still say `Mockup: pending` is one `plan` runs `mock-up` for before it starts |
 | `plan` | the spec, the vision, the code; the project's consult agents for a technical point it cannot settle | `docs/plans/PLAN-NNN-slug.md`, the *how*, scaled to the change; ADRs for hard-to-reverse choices; beads with dependency edges, each carrying its acceptance criteria and, where the task is verified through the wired product, the test case and its criteria; or, when the person chose to leave the decisions it set aside for an engineer, a `Draft` carrying them | `implement`; `plan` again, for a `Draft` with decisions needed |
 | `implement` | ready beads, an epic, or a plan; the project's consult agents when a worker fails | a worktree per task, the test case before the code, verification against the bead's criteria and the project's checks, a pull request per task, walked as a serial stack or in waves on an epic branch until the frontier is empty | `review` and `test` on the epic's work; `implement` again, the next round, when they added children; the human, who merges when the graph is empty; `plan`, for a disagreement that moves work, filed as a revision bead |
-| `review` | anything live: uncommitted work, a branch, a PR, a commit range, a path, a document, an epic's work; the project's consult agents for what the reviewer could not settle | `.codefall/reviews/`, a JSON and Markdown pair per review; fixes on the target's branch for the findings the user takes; on an epic's work, children of the epic for the problems the person took, built by `implement` in the same session | the human; `implement`, which it runs itself on an epic's work; `plan`, for a deferred finding that moves work |
-| `test` | what the project declares: suites, the changed subset, one case in its `spec` or `agentic` modality, or an epic's work on its branch | `.codefall/tests/`, a report per run; findings triaged, never an edit that makes a run pass; on an epic's work, children of the epic for the problems the person took, built by `implement` in the same session | `implement`, which it runs itself on an epic's work; `fix` or `plan` for work outside a delivery; `report`, when the user wants a bug document |
+| `review` | anything live: uncommitted work, a branch, a PR, a commit range, a path, a document, an epic's work; the project's consult agents for what the reviewer could not settle | `.codefall/reviews/`, a JSON and Markdown pair per review; fixes on the target's branch for the findings the user takes; on an epic's work, the problems the person took as beads triaged per `.codefall/shared/triage.md`: children of the epic when they are the epic's, built by `implement` in the same session, and open bugs beside it otherwise | the human; `implement`, which it runs itself on an epic's work; `plan`, for a deferred finding that moves work |
+| `test` | what the project declares: suites, the changed subset, one case in its `spec` or `agentic` modality, or an epic's work on its branch | `.codefall/tests/`, a report per run; findings triaged, never an edit that makes a run pass; on an epic's work, the problems the person took as beads triaged per `.codefall/shared/triage.md`: children of the epic when they are the epic's, built by `implement` in the same session, and open bugs beside it otherwise | `implement`, which it runs itself on an epic's work; `fix` or `plan` for work outside a delivery; `report`, when the user wants a bug document |
 
 A contained fix skips the documents: `plan` writes beads only when a change stays inside one
 component and comes to a task or two, and `specify` is for features, not every change. A bug a
@@ -96,13 +96,20 @@ records the rule.
 
 Every bead a verb files during a delivery — a code discovery, a deferred review finding, a bug a
 test run found, a revision bead — is a child of the epic, created `deferred` so the round still
-running does not pick it up, and reopened at the next round's go. The round number is metadata on
+running does not pick it up, and reopened at the next round's go, with one exception: a bug is
+triaged first, per `.codefall/shared/triage.md`. A bug that stops the epic from shipping, that the
+epic's changes caused, or that sits in code the epic is changing is the epic's; one in a feature
+the epic never touched sits beside it, as an `open` bead with no parent, typed `bug` and labelled
+with its area, priority, and size, where `fix` picks it up or `report`'s triage mode cuts a sweep
+epic from it; the rest is judged by whether it is near the work, P1 to P3, and leaves the delivered
+work better. The same fields go on every bug a verb files, so the backlog reads as one list
+whoever found it. The round number is metadata on
 the epic, written by `implement` alone. Each verb prints the delivery's one-line chart from
 `.codefall/shared/delivery.sh` at its start and in its close-out — the epic, the round, and the
 children closed over the children in all, counted as `bd epic status` counts them — appends one
 line to the epic's notes (`round N (verb) [date]: what happened`), records in a `bd comment`
 anything decided in conversation that no artifact holds, and then says it is safe to `/clear`.
-[ADR-013.4](https://github.com/lividlabs/codefall/blob/main/docs/adrs/ADR-013.4-deliveries.md)
+[ADR-013.5](https://github.com/lividlabs/codefall/blob/main/docs/adrs/ADR-013.5-deliveries.md)
 records the rule.
 
 ## Keeping the project current

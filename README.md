@@ -227,7 +227,8 @@ go back through `implement`.
 Some skills work outside this sequence. `/codefall-envision` writes down a rough idea before it is
 ready to specify: the problem, who has it, and the questions nobody has answered yet.
 `/codefall-report` writes a bug report, tries to reproduce the bug, and copies it to GitHub Issues
-when the project uses them.
+when the project uses them; with `triage` it sorts the bug backlog by area and priority and cuts an
+epic from the bugs you pick.
 `/codefall-fix` handles a small change in one run by planning a single task and building it.
 `/codefall-mock-up` adds a mockup of a screen to the repository, drawn to match the app's existing
 design.
@@ -245,7 +246,7 @@ merge or push to `main`.
 | **Ideas and requirements** | | |
 | [`/codefall-envision`](docs/guide/envision.md) | Writes down an idea: the problem, who has it, and the open questions. | `docs/visions/` |
 | [`/codefall-specify`](docs/guide/specify.md) | Turns a feature into requirements with acceptance criteria, copied to GitHub Issues when the project uses them. | `docs/specs/` |
-| [`/codefall-report`](docs/guide/report.md) | Writes a bug report, tries to reproduce the bug, and copies it to GitHub Issues when the project uses them. | `docs/bugs/` |
+| [`/codefall-report`](docs/guide/report.md) | Writes a bug report, tries to reproduce the bug, and copies it to GitHub Issues when the project uses them. With `triage`, sorts the bug backlog and cuts an epic from the bugs you pick. | `docs/bugs/`, Beads |
 | [`/codefall-mock-up`](docs/guide/mock-up.md) | Imports or draws a mockup of a screen that matches the app's design. | `docs/mockups/` |
 | **Building** | | |
 | [`/codefall-plan`](docs/guide/plan.md) | Writes a software design document for the change, breaks the work into tasks with dependencies, and records hard-to-reverse decisions as ADRs. | `docs/plans/`, Beads |

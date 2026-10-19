@@ -112,8 +112,11 @@ request #51 from another branch, the fixes go on #51's branch. A fix to your unc
 in your working tree.
 
 When you review an epic's work, the skill asks one question: "I found N problems. Fix them all?"
-Each code problem you take becomes a new task in the epic, and the same session then runs
-`/codefall-implement` to build them. You type one command.
+Each code problem you take on a line the epic changed becomes a new task in the epic, and the same
+session then runs `/codefall-implement` to build them. You type one command. A bug the reviewer
+found in code the epic did not change is filed on its own, with its area, priority, and size, unless
+it is near the work and worth fixing with it; the skill shows its call for each bug, and you can
+change it in the same answer.
 
 The skill can also file a bead for a finding you deferred, or for a problem in the plan that a fix
 here cannot settle. It offers each one and never files a bead without asking.

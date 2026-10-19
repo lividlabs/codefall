@@ -64,14 +64,46 @@ pushes, and opens a pull request. If you filed an issue first, the skill adopts 
 of creating a duplicate. You merge the
 pull request the way [`docs/landing-documents.md`](../landing-documents.md) describes.
 
+## How the bug is triaged
+
+Before the report is written, the recap shows one more line: the bug's triage. It names the
+priority the severity maps to, P1 for `critical` down to P4 for `trivial`; the *area*, the part of
+the product the bug belongs to, such as `checkout` or `search`, picked from the areas already in use
+or proposed as a new name; and the size of the fix, `fix` when [`/codefall-fix`](fix.md) can take it
+alone and `plan` when it needs a plan document. You can change any of the three. Every bug in the
+project is filed with these same fields, whether a person reported it or a test run found it, so
+the backlog in Beads reads as one list.
+
+The skill files one *bead*, a task in Beads, for the report, carrying the triage and a link back to
+the report. [`/codefall-plan`](plan.md) and `/codefall-fix` fill that bead in with the cause rather
+than creating a second one.
+
 ## What happens next
 
-The report ends by naming `/codefall-plan BUG-012`. [`/codefall-plan`](plan.md) takes a bug report
-the way it takes a spec: it reproduces what the report could not and finds the cause before it
-decides how much planning the fix needs. Most fixes land at *tier 0*, the size that needs no plan
-document, as a single *bead*, which is a task in Beads. For a fix that small,
-[`/codefall-fix`](fix.md) plans and builds it in one run. The pull request that carries the fix
-closes the issue when you merge it.
+The report ends by naming `/codefall-fix BUG-012` when the fix is small, or `/codefall-plan BUG-012`
+when it needs a plan. [`/codefall-plan`](plan.md) takes a bug report the way it takes a spec: it
+reproduces what the report could not and finds the cause before it decides how much planning the
+fix needs. Most fixes land at *tier 0*, the size that needs no plan document, as a single bead. For
+a fix that small, [`/codefall-fix`](fix.md) plans and builds it in one run. The pull request that
+carries the fix closes the issue when you merge it.
+
+## Triaging the backlog
+
+```
+/codefall-report triage
+/codefall-report triage checkout
+```
+
+With `triage`, the skill writes no report. It walks the open bugs in Beads, or one area's, and
+fills in what is missing: an area, a priority, a size. It names bugs that look like duplicates and
+closes the later one when you agree, and it names a priority that no longer fits the description.
+Nothing changes unless you say so.
+
+When an area holds more than a few open bugs, the skill offers to cut a *sweep*: an ordinary epic
+made of the bugs you pick, which [`/codefall-implement`](implement.md) builds as a delivery and
+which closes when its bugs have merged. A sweep is how an area gets burned down. Until one exists,
+a bug waits in the backlog with its fields set, and `/codefall-fix` with no argument lists the
+backlog and asks which one to fix.
 
 ## Statuses
 

@@ -1976,6 +1976,26 @@ Decided at scaffold, 2026-08-16.
   `SKILL.md` is at about 4,998 tokens against the 5,000 guideline after moving the stack-question
   list and the override wording into `reference/catalog.md`; the next addition to it moves text to
   a reference file first.
+- **Bugs are triaged before they are filed, and only the epic's go under the epic, 2026-10-19.**
+  Recorded as `ADR-013.5`. ADR-013.4 made every finding a child of the epic and never asked whether
+  it belonged there, so a worker's tangent in a file the plan never named and a sweep anomaly on a
+  page the feature did not touch both landed under the epic: `fix` refused them while the
+  delivery's gates were open, and the next round built them on the feature's stack. The bugs that
+  did not belong had nowhere else to go, and one project reached a hundred open bugs with no field
+  saying which part of the product any of them was about. Now `shared/triage.md` holds one rule
+  for every verb that files a bug: three classes for whose it is, the epic's, beside it, and a
+  middle judged by near the work, P1 to P3, and leaving the delivered work better; one priority
+  scale, `report`'s severity by impact, replacing review's and test's own tables, so a cosmetic
+  real bug is no longer P1; an `area:` label from the labels in use; `size` and `found` in
+  metadata; `caused-by` for a regression against `discovered-from` for a bug that was there.
+  `report` files one triaged bead per report and gains a `triage` mode that fills in the backlog's
+  fields, merges duplicates, and cuts a sweep epic from the bugs the person picks; `fix` with no
+  argument shows the backlog. Seen and not taken: a mechanical relevance test (caused by the epic
+  or fails a criterion), which punted a pre-existing bug that blocked the epic; a standing
+  container epic per area, which never closes while an epic exists to be emptied; the count of
+  bugs already filed as an input to the middle class, left out until a run shows it is needed;
+  the area list in `.codefall/settings.json`, which would leave an uncommitted change on a branch
+  `test` checked out, so the list is the labels in use instead.
 
 ## Open
 
