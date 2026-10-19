@@ -82,7 +82,7 @@ this verb after it, and stop: `not_installed` is `brew install beads`, `not_init
 `behind` above `0` or `refresh=stale`: say so and run `/codefall-refresh` before continuing.
 `refresh=undeclared` names `/codefall-equip`. Keep the `test=` line for step 3.
 
-Read the project's `AGENTS.md`, root and scoped. **Never run a remedy.**
+Read the project's `AGENTS.md`, root and scoped. **Never run the other remedies.**
 
 ### 2. Establish the bead
 

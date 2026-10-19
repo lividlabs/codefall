@@ -1997,6 +1997,19 @@ Decided at scaffold, 2026-08-16.
   the area list in `.codefall/settings.json`, which would leave an uncommitted change on a branch
   `test` checked out, so the list is the labels in use instead.
 
+- **The verbs run refresh; the sentence that said otherwise was older than refresh, 2026-10-19.**
+  **`codefall-refresh` is model-invocable, 2026-09-22** had `specify`, `plan`, `implement`, and
+  `fix` run `/codefall-refresh` at preflight when the checkout is behind or the environment stale,
+  and each of those verbs still carried "Never run the remedy. That is the user's decision" a line
+  away, written on 2026-09-11 when the only remedies were `brew install beads`, `bd init`, and
+  `codefall-equip`. Read together they told a session to do both, and a reader could take either
+  as the rule. The sentence now says what it covered all along: the other
+  remedies are the user's, and refresh is run. `report` joins the four, since its reproduction
+  happens on the default branch and refresh costs nothing there; `test` keeps offering, for the
+  reason the 2026-09-22 entry gives. ADR-005 is untouched: its rule is that no hook pulls or runs
+  `update`, and that holds. The preflight script's header, which said a skill "offers" refresh,
+  says runs.
+
 ## Open
 
 - (nothing open; the last item graduated to ADR-012 on 2026-09-27)
