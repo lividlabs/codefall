@@ -70,7 +70,7 @@ in `docs/adrs/` under the same basename.
 
 | Current template | First shipped | Former identity (releases) |
 | --- | --- | --- |
-| `adrs/_TEMPLATE.md` | 0.1.0 | same name throughout |
+| `adrs/TEMPLATE.md` | 0.1.0 | `adrs/_TEMPLATE.md` (0.1.0 – 0.33.0) — Go's `embed` skips `_` names, so no `codefall init` ever copied it; a project's copy is whatever the scaffold skill wrote in its place |
 | `adrs/ADR-BASE-01-clean-architecture.md` | 0.1.0 | `adrs/ADR-001-clean-architecture.md` (0.1.0 – 0.2.1) |
 | `adrs/ADR-BASE-02-package-by-component.md` | 0.1.0 | `adrs/ADR-002-package-by-component.md` (0.1.0 – 0.2.1) |
 | `adrs/ADR-BASE-03-extraction-readiness.md` | 0.4.0 | — |

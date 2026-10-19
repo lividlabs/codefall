@@ -12,7 +12,7 @@ Every project gets these:
 | `../templates/adrs/ADR-BASE-01-clean-architecture.md` | The dependency rule and the four layers |
 | `../templates/adrs/ADR-BASE-02-package-by-component.md` | Top-level organization; when to prefer p&a |
 | `../templates/adrs/ADR-BASE-03-extraction-readiness.md` | Keeping components cheap to split out later — **surfaces that can never be split skip this one** |
-| `../templates/adrs/_TEMPLATE.md` | Thin ADR template for new decisions |
+| `../templates/adrs/TEMPLATE.md` | Thin ADR template for new decisions |
 
 ## Surface profiles
 

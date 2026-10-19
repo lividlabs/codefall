@@ -45,8 +45,8 @@
       "sha256": "3aa2dced240b5d6fe36bb12128b72e726d93a8dba7b4880865ba847aa631d853"
     },
     {
-      "id": "_TEMPLATE",
-      "file": "docs/adrs/_TEMPLATE.md",
+      "id": "TEMPLATE",
+      "file": "docs/adrs/TEMPLATE.md",
       "amended": false,
       "sha256": "e0bd63ab6689c41040252b9882716e1779ddb04de8a07c2a3d95eaa89ff24ad6"
     }

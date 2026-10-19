@@ -44,7 +44,7 @@ current ones.
 | In scope | Out of scope |
 | --- | --- |
 | Inherited ADRs: new ones, revised ones, and renamed ones | Moving code to a different architecture |
-| `docs/adrs/_TEMPLATE.md` | Extracting a component into a separate service |
+| `docs/adrs/TEMPLATE.md` | Extracting a component into a separate service |
 | Changes to the `AGENTS.md` skeleton, reported for you to merge | Changing component boundaries |
 | `.codefall/scaffold.json` | Source code, build configuration, and lint rules |
 | One line in `docs/decision-log.md` recording the run | The project's own `ADR-NNN` decisions |
