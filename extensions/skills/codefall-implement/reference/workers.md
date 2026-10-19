@@ -57,7 +57,7 @@ The worker's final message is exactly one JSON object:
 {"bead": "booking-PLAN-007-T2", "status": "success", "pr": 102,
  "branch": "feat/booking-PLAN-007-T2-wire-context",
  "discovered": [{"kind": "code", "title": "Parser drops trailing comma", "context": "…",
-                 "from": "booking-PLAN-007-T2"},
+                 "from": "booking-PLAN-007-T2", "bug": true, "caused": false},
                 {"kind": "plan", "title": "§ Architecture names a StageStore the code replaced",
                  "context": "…", "from": "booking-PLAN-007-T2", "blocks": "Tasks row T4"}],
  "amended": [{"document": "docs/plans/PLAN-007-stage-context.md", "section": "Architecture",
@@ -66,8 +66,10 @@ The worker's final message is exactly one JSON object:
 
 or `{"bead": "…", "status": "failure", "reason": "…"}`. The `discovered` list is how tangent work
 reaches the root, which files it — the worker's diff stays scoped to its bead. `kind` is `code` or
-`plan` and picks the form under *Discovered work* in `beads.md`. A `code` item is filed as it
-stands. The `amended` list names each upstream document the worker amended in its branch; the root
+`plan` and picks the form under *Discovered work* in `beads.md`. A `code` item that is a bug says
+so with `"bug": true` and whether the worker's own change caused it with `"caused"`; the root
+triages it per `../../../../.codefall/shared/triage.md` before filing. Any other `code` item is
+filed as it stands. The `amended` list names each upstream document the worker amended in its branch; the root
 reads it at the wave boundary per *Amendments* in `beads.md`, and records each entry as a closed
 `plan-amended` bead there.
 

@@ -87,20 +87,27 @@ where a tracker issue exists; `<prefix>-<slug>` otherwise. A taken ID is refused
 retry. Never `--force`. Workers report discoveries in their result JSON; the root files them — and
 files its own, from the reconciliation at step 3 — and pushes as after every other write.
 
-**Every discovered bead is a child of the epic**, created `deferred` so this round's `bd ready`
-does not pick it up, with the parent set in a second call because `--id` and `--parent` do not
-combine. The next round's go reopens it. At single-bead scope there is no epic: the edge alone, and
-status `open`. `codefall-review` and `codefall-test` file what they find in the same two forms.
+**A discovered bug is triaged before it is filed**, per `../../../../.codefall/shared/triage.md`:
+whose it is, how bad it is, which area, and every field its bead carries, the `code` form below
+included. A bug that is the epic's is a `deferred` child of the epic; one beside the epic is an
+`open` bead with no parent, or a child of the open sweep for its area. The worker's item says
+whether its own change caused the bug (`"caused": true`) or found it already there, which is the
+source edge, `caused-by` or `discovered-from`, and the first of the triage classes.
+
+**Every other discovered bead is a child of the epic**, created `deferred` so this round's
+`bd ready` does not pick it up, with the parent set in a second call because `--id` and `--parent`
+do not combine. The next round's go reopens it. At single-bead scope there is no epic: the edge
+alone, and status `open`. `codefall-review` and `codefall-test` file what they find in the same
+two forms.
 
 The `-p 2` in both forms below is `codefall-implement`'s own priority for what a worker discovers
-in the code. When `codefall-review` or `codefall-test` files a bead in either form, `-p` is the
-finding's own priority, from the Priority table in that verb's own reference: for review, the
-findings-file reference (blocker P1, important P2, minor P3); for test, the triage reference (a real
-bug P1, a wrong expectation P2, variance and anomalies P3, a flake P4). P0 is a person's to set by
-hand; no verb assigns it.
+in the code that is not a bug. A bug's priority is the triage scale's, whichever verb files it. P0
+is a person's to set by hand; no verb assigns it.
 
 **`code`** — a tangent in the code: a bug, a missing test, a refactor. A task under the epic,
-linked to the bead that found it.
+linked to the bead that found it. A bug adds the triage fields: `-t bug`, `-l area:<name>`, the
+`caused-by` or `discovered-from` edge, `--metadata` with `size` and `found`, and `--spec-id` when
+it falls under a spec.
 
 ```bash
 bd create "Parser drops trailing comma" --id "$(bd config get issue_prefix)-parser-trailing-comma" \

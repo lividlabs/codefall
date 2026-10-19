@@ -11,8 +11,9 @@ an anomaly.
 - Issues
 - What triage never does
 
-**Search the tracker before classifying anything as new.** A failure already reported is a comment
-on that issue, not a second issue.
+**Search the tracker and the graph before classifying anything as new**, per *Duplicates* in
+`../../../../.codefall/shared/triage.md`. A failure already reported is a comment on that issue or
+bead, not a second one.
 
 ## The four classes
 
@@ -36,12 +37,15 @@ not a criterion; it does not fail one.
 Every finding carries a Beads priority beside its class, and a bead filed for it is created with
 `-p <n>` set to that priority. The class word stays; the priority is what `bd ready` sorts by.
 
+**A real bug takes its priority from the shared scale** in `../../../../.codefall/shared/triage.md`,
+by how bad it is for a user: critical P1, major P2, minor P3, trivial P4. Failing a criterion says
+the product is wrong, not how wrong. The other classes are not bugs and take these:
+
 | Finding | Priority |
 | --- | --- |
-| Real bug that fails a criterion | P1 |
 | Wrong expectation | P2 |
 | Agent variance | P3 |
-| Anomaly from the sweep | P3 |
+| Anomaly from the sweep, when it is not a real bug | P3 |
 | Flake | P4 |
 
 P0 is a person's to set by hand on a bead they judge urgent; no verb assigns it. The run record
@@ -78,25 +82,32 @@ run: the case and variant, the criterion that failed with its verdict, the evide
 `<root>/.artifacts/`, and the run report's path. A comment on an existing issue carries the same.
 Record the number in the run record's `issue` field and in the Markdown report's Triage section.
 
-**In a delivery, the issue is also a child of the epic.** When the run's target was an epic's work,
-the question is one line — "I found N problems. Fix them all? (I recommend yes.)" — and the person
-may take all, some, or none. Each one taken files an issue and a bead beside it, in the `code` form
-under *Discovered work* in `../../codefall-implement/reference/beads.md`; once the report is
-written, the session runs `codefall-implement` on the epic, whose go gate reopens those children
-and builds them, and the chart shows it:
+**Every real bug is also a bead**, filed per `../../../../.codefall/shared/triage.md`: whose it
+is, how bad it is, which area, how big the fix is, and every field the bead carries. When the run's
+target was an epic's work, the question is one line — "I found N problems. Fix them all? (I
+recommend yes.)" — and the person may take all, some, or none; each bug's line shows the triage the
+reference proposes, which the person may change in the same answer. Each one taken files an issue
+and a bead beside it, in the `code` form under *Discovered work* in
+`../../codefall-implement/reference/beads.md` with the triage fields. A bug that is the epic's is a
+`deferred` child of it, and once the report is written the session runs `codefall-implement` on
+the epic, whose go gate reopens those children and builds them, and the chart shows it. A bug
+beside the epic is filed `open` with no parent, or under the open sweep for its area, and the report
+names where it went:
 
 ```bash
 bd create "<the issue's title>" --id "$(bd config get issue_prefix)-gh-<n>" --external-ref gh-<n> \
-  -t bug -s deferred --deps discovered-from:<bead> -p <n>
+  -t bug -s deferred -p <n> -l area:<name> --deps caused-by:<bead> \
+  --metadata '{"size":"fix","found":"test"}'
 bd update "$(bd config get issue_prefix)-gh-<n>" --parent <epic>
 bd dolt push
 ```
 
-`-p <n>` is the finding's priority from the table above: `1` for a real bug that fails a criterion.
-`<bead>` is the child whose criteria name the failed case: the one citing the failed criterion's
-identifier where two children name the same case, every such child (one edge each) where none
-does, and the epic itself for a suite failure that names no case. Record the bead's ID in the run
-record's `bead` field beside `issue`.
+`-p <n>` is the bug's priority from the shared scale. The edge is `caused-by` when the epic's
+change made the bug and `discovered-from` when the run found one already there; `<bead>` is the
+child whose criteria name the failed case: the one citing the failed criterion's identifier where
+two children name the same case, every such child (one edge each) where none does, and the epic
+itself for a suite failure that names no case. Record the bead's ID in the run record's `bead`
+field beside `issue`.
 
 **A wrong expectation whose criterion a bead cites** is offered, on the user's word, as a
 `plan-revision` child in the `plan` form of the same reference, with `--spec-id` taken from that

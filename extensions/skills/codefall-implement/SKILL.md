@@ -36,7 +36,8 @@ Read each when its step says to; none is loaded up front.
 - `reference/resume.md` — picking up an interrupted run, and telling a crashed round from the next
   one. Read at step 2 when the epic already has closed children.
 - `reference/beads.md` — every `bd` command a run issues: session start, claim and close, the
-  landed bead and its gates, discovered work as children of the epic, session end. Read at step 5.
+  landed bead and its gates, discovered work, session end. Read at step 5.
+- `../../../.codefall/shared/triage.md` — triaging a discovered bug. Read at step 6.
 - `../../../.codefall/shared/delivery.sh <epic>` — the chart line. Run at the go gate, each wave
   boundary, and the report.
 - `../../../.codefall/shared/stacks.md` — how GitHub stacks work, and how a report points at one.
@@ -62,7 +63,7 @@ Read each when its step says to; none is loaded up front.
 | Every test the current work needs | Regression campaigns and fresh-context retesting | `codefall-test` |
 | Writing the case file the criteria name | Deciding which tasks need a case; installing a runner | `codefall-plan`, `codefall-equip` |
 | Harness checks on its own diffs | Independent review and verdicts | `review` |
-| Bead lifecycle: claim, close, discovered work filed as children of the epic | Creating or re-cutting the task graph | `codefall-plan` |
+| Bead lifecycle: claim, close, discovered work filed | Creating or re-cutting the task graph | `codefall-plan` |
 | The vision's `Active` transition | Any other document transition | the owning verb |
 | Mirroring work state to the spec's tracker issue | The mirror's lifecycle and labels | `codefall-specify` |
 
@@ -76,10 +77,9 @@ re-mirrors a spec change per `reference/mirror.md`. A fix that would move work i
 `.codefall/shared/workflow.md` holds the rule.
 
 - **Implement writes every test the current work needs** — named in the plan's Testing Strategy
-  or discovered mid-task, unit through end-to-end. A missing test is written, not sent back to
-  `codefall-plan`. **`codefall-test` owns the run against the epic's work and everything after
-  it**: the cases the beads named, run on the epic's branch before the merge; regression passes;
-  coverage campaigns; agentic testing in a fresh context.
+  or discovered mid-task. A missing test is written, not sent back to `codefall-plan`.
+  **`codefall-test` owns the run against the epic's work and everything after it**: the cases the
+  beads named, run on the epic's branch before the merge, and the regression passes after it.
 
 ## One bead or the graph
 
@@ -88,17 +88,17 @@ The argument fixes the scope; the skill never infers it.
 | Invocation | Scope |
 | --- | --- |
 | `/implement booking-parser-trailing-comma` | That bead, alone |
-| `/implement booking-PLAN-007` (an epic) | The epic's whole graph, until its ready set is empty or a gate stops the run |
+| `/implement booking-PLAN-007` (an epic) | The epic's graph, until its ready set is empty or a gate stops the run |
 | `/implement PLAN-007` | The plan's epic, `<prefix>-PLAN-007`, checked to exist with `bd show` |
 | `/implement` | Show ready work grouped by epic and ask |
 
-A plan whose Tasks callout still says `Staged. Not yet in Beads` has no graph to walk. Refuse and
-point at `/plan`.
+A plan whose Tasks callout still says `Staged. Not yet in Beads` has no graph to walk: refuse and
+name `/plan`.
 
-**An epic with closed children and `deferred` ones is the next round.** `codefall-review` and
-`codefall-test` file what they find as `deferred` children of the epic; a run on that epic reopens
-them, claims them, and builds them on top of the round before. The delivery is done when every
-child but the landed bead is closed and the last test run against the epic passed.
+**An epic with closed children and `deferred` ones is the next round.** A run on it reopens the
+children `codefall-review` and `codefall-test` filed, claims them, and builds them on top of the
+round before. The delivery is done when every child but the landed bead is closed and the last
+test run against the epic passed.
 
 **Tier 0 is not a separate mode.**
 
@@ -119,7 +119,8 @@ Per bead, in order, before any plan is formed:
 6. **Mockups** under `docs/mockups/` when referenced: a drawing to rebuild in the app's stack, never
    markup to copy.
 
-A tier-0 bead has no document; the list collapses to bead + `AGENTS.md` + ADRs.
+A tier-0 bead has no document; the list collapses to bead + `AGENTS.md` + ADRs. A sweep epic,
+`<prefix>-SWEEP-<area>-NNN`, holds bug beads of that kind.
 
 ## Landing strategies
 
@@ -286,8 +287,9 @@ Per `reference/workers.md`. Per wave: render worker prompts, launch the batch, w
 Verify each success — branch on the remote, PR exists, or it did not happen. A failed bead is
 consulted on and retried once; a second failure is consulted on and escalates, per
 `reference/workers.md`. Check each `plan` discovery per `reference/workers.md`, sending back
-what the worker could have amended; file the rest in the form its `kind` names, and read each
-`amended` list, recording every entry as a closed `plan-amended` bead, per `reference/beads.md`. Comment the PR link, close
+what the worker could have amended; file the rest in the form its `kind` names, a bug triaged
+first per `../../../.codefall/shared/triage.md`; read each `amended` list, recording every entry
+as a closed `plan-amended` bead, per `reference/beads.md`. Comment the PR link, close
 the bead with what was verified, gate the landed bead with the new PR (stacked runs), `bd dolt push`. `--suggest-next` names the next wave; print the
 chart line, claim the wave, and go again. Epic branch: merge each worker PR into the epic branch,
 serialized, at the wave boundary. Update the mirror per `reference/mirror.md`.
@@ -311,9 +313,9 @@ Do not merge, and do not wait for merges; the next session's `bd gate check` fin
 - The link to the pull request the person merges, per *Pointing at a stack*, and what is blocked
   on the user.
 - Upstream amendments, by document and PR, each with its `plan-amended` bead, and every
-  `plan` item sent back to its worker; then discovered work filed, in two buckets: code
-  follow-ups, and what was handed back to plan — "PLAN-NNN has N revision beads" — with the
-  `bd comment` on the epic that names them.
+  `plan` item sent back to its worker; then discovered work filed, in three buckets: bugs with
+  where each went, code follow-ups, and what went back to plan — "PLAN-NNN has N revision
+  beads" — with the `bd comment` on the epic that names them.
 - Every consult: the bead, who answered, what it changed.
 - The tracker mirror's state, the vision transition if one fired.
 - The worktree list, with the cleanup offer.
@@ -344,9 +346,9 @@ Do not merge, and do not wait for merges; the next session's `bd gate check` fin
 - **Closed means done — criteria verified, checks green, PR open.** Merged is the gates' to say.
 - **Publish the claim before the work.** `bd dolt push` follows every claim and every close.
 - **The graph is the sequencer.** `bd ready` decides what runs next; never start a blocked bead.
-- **Scope is exactly the bead.** Tangents become `deferred` children of the epic with a
-  `discovered-from` edge, filed by the root and taken at the next round's go, never fixed in
-  passing; a plan or spec found wrong is amended in the PR or becomes a `plan-revision` bead,
+- **Scope is exactly the bead.** Tangents are filed by the root, never fixed in passing: a bug
+  per the triage reference, other work as a `deferred` child of the epic, taken at the next
+  round's go; a plan or spec found wrong is amended in the PR or becomes a `plan-revision` bead,
   never a quiet workaround.
 - **Nothing is rebased or force-pushed by hand.** `gh stack` cascades; GitHub rebases on merge.
 - **The epic's `round` is the one metadata key implement writes.**

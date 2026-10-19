@@ -115,8 +115,11 @@ round is a run of `implement`, then [`/codefall-review`](review.md), then
 [`/codefall-test`](test.md), all against the epic's work before you merge.
 
 Review and test each end with one question: "I found N problems. Fix them all?" Each problem you
-take becomes a new bead under the epic, and the same session then runs `/codefall-implement` on the
-epic to build them. You type one command, and the next round starts.
+take that belongs to the epic becomes a new bead under it, and the same session then runs
+`/codefall-implement` on the epic to build them. You type one command, and the next round starts.
+A bug in a part of the product the epic never touched is filed beside the epic instead, with its
+area, priority, and size, so the delivery stays the size of the feature; [`/codefall-fix`](fix.md)
+or a sweep from [`/codefall-report triage`](report.md#triaging-the-backlog) picks it up later.
 
 Every skill in the delivery prints the same progress line when it starts and when it finishes. The
 line shows the epic, the round, and how many of the epic's beads are closed:
@@ -137,7 +140,7 @@ round 1 (test) [2026-10-08]: FAIL 2/7, 1 child filed
 
 The delivery is done when nothing under the epic is open except the landed bead and the last test
 run passed. At that point, only the merge remains.
-[ADR-013.4](../adrs/ADR-013.4-deliveries.md) records the rule.
+[ADR-013.5](../adrs/ADR-013.5-deliveries.md) records the rule.
 
 ## Who merges?
 

@@ -42,6 +42,9 @@ Read each when its step says to; none is loaded up front.
   Names `../../../.codefall/shared/consult-prompt.md` and `../../../.codefall/shared/consult.schema.json`.
 - `reference/findings-file.md` — naming, the Markdown shape, when the files are committed, and
   `revision`. Read at step 4.
+- `reference/beads.md` — what a finding does to an upstream document, and the `plan` and `code`
+  beads offered at triage. Read at step 5. Names `../codefall-implement/reference/beads.md`,
+  `../codefall-specify/trackers/<name>/PROFILE.md`, and `../../../.codefall/shared/triage.md`.
 - `reference/posting.md` — posting findings to a pull request. Read at step 5 when the target is
   an open pull request.
 - `reviewer-prompt.md` and `findings.schema.json` — the prompt each reviewer is rendered from and
@@ -189,7 +192,8 @@ say the fixes were not applied and why, and leave the tree as it is.
 Present the findings as one numbered list, most severe first, each with its priority and severity,
 its location, its claim, and the conditions under which it matters. Then ask which to fix. **On an
 epic's work the question is one line** — "I found N problems. Fix them all? (I recommend yes.)" — and the person may take all,
-some, or none.
+some, or none. A bug's line also shows its triage per `../../../.codefall/shared/triage.md`, which
+the person may change in the same answer.
 
 | Status | Meaning |
 | --- | --- |
@@ -203,33 +207,20 @@ before the write.
 Apply the accepted fixes, code and documents alike. A finding's proposed `patch` is a starting
 point, not a script — apply the intent, matching the surrounding code. Fixes are not re-reviewed
 here. **On an epic's work, a taken code finding is not fixed here**: it is
-filed as a `deferred` child of the epic in the `code` form below, or the `plan` form where the
-plan caused it, its status is `deferred` with the bead's ID, and step 8 runs `codefall-implement`
-on the epic to build them in this session. Document fixes on an epic's work still land
+filed in the `code` form below, or the `plan` form where the plan caused it, its status is
+`deferred` with the bead's ID, and step 8 runs `codefall-implement` on the epic to build the ones
+that are the epic's in this session. Whose a finding is, `../../../.codefall/shared/triage.md`
+decides; a bug beside the epic is filed `open` with no parent, for `codefall-fix` or a sweep.
+Document fixes on an epic's work still land
 here as text, under the rule below. **A code fix that changes behaviour the plan or spec describes amends
 that document in the same commit**, under the rule below: the document is part of the fix, not a
 second finding.
 
-**A finding that an upstream document is wrong is fixed like any other document finding.** When the
-plan behind the work says one thing and the code needed another, or the plan and its spec
-disagree, and the document is `Draft` or `Ready`, the fix is text on the target's branch: the
-plan's section amended, or a criterion appended to the spec with the requirement's tracker issue
-regenerated per `../codefall-specify/trackers/<name>/PROFILE.md`. Fix every document between the
-change and the code that restates the point; when one of them fails these tests, fix none, and name
-each document in the bead offered below, so the whole chain reaches `codefall-plan` together.
-Each document fix is recorded as a closed `plan-amended` bead, per *Amendments* in
-`../codefall-implement/reference/beads.md`, with a `discovered-from` edge to the bead the branch
-names when there is one.
-
-**What that fix cannot do, and what the user defers, is offered as a bead.** A finding left in the
-findings file alone is one no verb reads again. Offer, at triage, to file each in the form under
-*Discovered work* in `../codefall-implement/reference/beads.md`: the `plan` form — `--spec-id`
-the plan's path, the label `plan-revision` — for a finding the plan caused that a fix here
-cannot settle because it moves work, the document is frozen, or the user deferred it; the `code`
-form for a `deferred` finding whose cause is the code. Either carries a `discovered-from` edge to
-the bead the branch names when there is one, and is a `deferred` child of that bead's epic, read
-from `bd show <bead> --json`, when there is one. On yes, create it with `-p` set to the finding's
-priority, `bd dolt push`, and record its ID as the finding's `bead`. Never file one unasked.
+**A finding that an upstream document is wrong is fixed like any other document finding**, as text
+on the target's branch recorded as a `plan-amended` bead, and **what that fix cannot do, or the
+user defers, is offered as a bead**: the `plan` form for a finding the plan caused, the `code` form
+for a deferred finding the code caused, a bug among them triaged per the shared reference. Both
+are in `reference/beads.md`. Never file one unasked.
 
 ## The findings file
 
@@ -329,8 +320,9 @@ run, and say so.
 - **An identifier that resolves to nothing is a stop**, not a guess.
 - **Only `fixed` and `deferred` findings reach a pull request.** A dismissed one was judged wrong.
 - **A bead is offered, never filed unasked**: a `plan-revision` bead for a finding the plan
-  caused that a fix here cannot settle, a `code` bead for a deferred finding the code caused, each a
-  `deferred` child of the epic when there is one.
+  caused that a fix here cannot settle, a `code` bead for a deferred finding the code caused. A
+  `plan-revision` bead is a `deferred` child of the epic when there is one; a bug goes where the
+  shared triage reference puts it.
 - **On an epic's work, the problems the person takes are built by `codefall-implement`**, run by
   this session after the report, never fixed by hand on the stack. The person's one typed command
   was the review.

@@ -47,6 +47,8 @@ Read each when its step says to; none is loaded up front.
   epic target.
 - `../codefall-implement/reference/beads.md` — the `code` and `plan` forms a finding is filed in
   under the epic. Read at step 6 for an epic target.
+- `../../../.codefall/shared/triage.md` — whose a bug is, how bad it is, which area, and every
+  field its bead carries. Read at step 6 before a real bug is filed.
 - `../../../.codefall/shared/delivery.sh <epic>` — the delivery's one-line chart. Run at the
   confirmation and in the report for an epic target.
 - `../../../.codefall/shared/stacks.md` — *Pointing at a stack*: how a report names the pull
@@ -251,14 +253,15 @@ still gets a report, marked as the run it was, with every side effect it created
 
 Read `reference/triage.md` when anything failed, was unreachable, or turned up in the anomaly sweep.
 Classify each, write the working notes it names, and stop there: a finding becomes a tracker issue,
-and in a delivery a child of the epic, only on the user's explicit word. Every finding is listed
-with the Beads priority its class carries — a real bug that fails a criterion P1, a wrong
-expectation P2, agent variance or an anomaly from the sweep P3, a flake P4, per the table in
-`reference/triage.md` — and a bead filed for it is created with `-p` set to that priority. P0 is a
-person's to set by hand. **For an epic target the
+and a bead, only on the user's explicit word. Every finding is listed with its Beads priority: a
+real bug's from the scale in `../../../.codefall/shared/triage.md`, the other classes' from the
+table in `reference/triage.md`. A bead filed for it is created with `-p` set to that priority. P0
+is a person's to set by hand. A real bug also shows its triage from the shared reference, whose it
+is, its area, and its size, in a line the person may change. **For an epic target the
 question is one line** — "I found N problems. Fix them all? (I recommend yes.)" — and the person
 may take all, some, or none; each one taken is filed as the triage reference says, an issue and a
-`deferred` child of the epic.
+bead, a `deferred` child of the epic when the bug is the epic's and an `open` bead beside it
+otherwise.
 
 ### 7. Report
 
@@ -271,7 +274,8 @@ issue holds goes in a `bd comment` on the epic; the report then says it is safe 
 **End with what the user does next.** For an epic target: when children were filed, say this run
 is now running `codefall-implement <epic>` to fix them, then run that skill with the epic as its
 argument, through the `Skill` tool, in this session; its go gate reopens the children, and its
-report ends the session with its own one command. When nothing was filed, this run is the last
+report ends the session with its own one command. A bug filed beside the epic is named with where
+it went, and is not built here. When no child was filed, this run is the last
 test passed, and the merge is what remains: give the link to the pull request the person merges —
 the top of the stack, or the aggregate pull request on an epic branch — and say that merging it on
 GitHub lands the whole stack, per *Pointing at a stack* in `../../../.codefall/shared/stacks.md`;
@@ -305,7 +309,7 @@ nothing.
 - **Side effects are recorded the moment they exist**, and cleaned up the way `<root>/AGENTS.md`
   says.
 - **A finding becomes a tracker issue — a bead, when `tracker` is `beads` — and in a delivery a
-  `deferred` child of the epic, only on the user's word**, and the existing issues are searched first. The tracker is the project's own,
+  `deferred` child of the epic when it is the epic's, only on the user's word**, and the existing issues are searched first. The tracker is the project's own,
   per *Who is authoritative for what* in `../../../.codefall/shared/workflow.md`; a bug in codefall
   itself goes to the person as issue text, never filed. In a delivery the word is the
   answer to one question, "Fix them all?", and the children it files are built by

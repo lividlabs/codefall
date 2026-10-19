@@ -52,7 +52,9 @@ created with `-p <n>` set to it. The severity word stays; the priority is what `
 
 P0 is a person's to set by hand on a bead they judge urgent; no verb assigns it. The JSON carries
 the priority as `priority`, one of `P0` to `P4`, and the Markdown shows it first on the finding's
-line.
+line. The words are the shared triage scale's, blocker for critical and important for major, so a
+bead filed for a finding carries the same priority every other verb's bug does; the bead's other
+fields are the shared triage reference's, named from `SKILL.md`.
 
 ## The Markdown shape
 
