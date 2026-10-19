@@ -143,4 +143,5 @@ Never close an issue without asking.
 
 The issue closes when the fix merges, not before. `codefall-implement` puts `Fixes #<issue>` in the
 body of the pull request that carries the fix, so GitHub closes the issue at the human's merge. This
-profile never closes an issue for a fix.
+profile never closes an issue for a fix. The bead `codefall-report` files at step 10 carries the
+issue's number as its ID and `--external-ref`, so the two are found from each other.

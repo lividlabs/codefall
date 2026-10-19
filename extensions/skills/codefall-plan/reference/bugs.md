@@ -17,6 +17,14 @@ the target the way a spec is:
 When the input describes a bug and no report exists, offer `/codefall-report` once. On no, continue
 from the description, and the bead carries the reproduction you establish below.
 
+**The report's bead already exists.** `codefall-report` files one bug bead per report, triaged
+with the report's path as its `spec_id`; find it with `bd list -t bug --all --spec
+docs/bugs/BUG-NNN` and fill it in with the cause and the criteria rather than creating a second. A
+tier-1 plan reparents it under the plan's epic as a task row. A bug with no bead, one reported
+before `codefall-report` filed beads or described in the input alone, gets one created here with
+the same fields `codefall-report` sets: type `bug`, a priority, an `area:` label, and `size` and
+`found` in metadata.
+
 ## Reproduce it when the report could not
 
 Read the `**Reproduced:**` row. On `Yes`, the report's steps are the reproduction. On `No` or

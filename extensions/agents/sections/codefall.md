@@ -9,7 +9,7 @@ the person to. They chain from an idea to open pull requests — `envision` → 
 delivery runs as rounds of `implement`, `review`, and `test` with a `/clear` between verbs, and ends
 when the epic has no open children and the last test run passed. A bug a person saw enters at
 `report`, and `plan` takes its report as it takes a spec; a bug `test` found enters as the issue
-it files on the user's word, and as a child of the epic inside a delivery; `fix` runs `plan` at
+it files on the user's word, a child of the epic when the bug is the epic's; `fix` runs `plan` at
 tier 0 and `implement` on one bead in a single run. Beside the chain, `scaffold` starts a project,
 `upgrade` brings its install and documents current, and `equip` and `refresh` keep the local
 environment level with the checkout. No verb merges to `main`: a person merges code pull requests,

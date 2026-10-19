@@ -11,9 +11,11 @@ git-authority note or close protocol, decides Dolt sync here.
 - `bd dolt push` after every write — a create, a claim, a close, a dependency change — and
   before the work that follows it.
 - Work found along the way becomes an issue linked `discovered-from` the current one, and a
-  `deferred` child of the epic (`--parent`) when one is in scope. A plan the work proves wrong
-  gets one labelled `plan-revision`, with `--spec-id` the plan's path; a document the work
-  amended gets a closed one labelled `plan-amended`, the same way.
+  `deferred` child of the epic (`--parent`) when one is in scope. A bug is triaged first, per
+  `.codefall/shared/triage.md`: a child of the epic only when it is the epic's, and otherwise an
+  `open` bead with no parent, typed `bug`, with an `area:` label, a priority, and its source edge.
+  A plan the work proves wrong gets one labelled `plan-revision`, with `--spec-id` the plan's
+  path; a document the work amended gets a closed one labelled `plan-amended`, the same way.
 - Every bead is created with `--id`, never with the hash `bd` would pick: a plan's epic is
   `<prefix>-PLAN-NNN` and its tasks `<prefix>-PLAN-NNN-Tn`; other work is `<prefix>-<tracker
   ref>` (`gh-123`, `jira-ABC-42`) where an issue exists, else `<prefix>-<slug>`. `<prefix>` is what

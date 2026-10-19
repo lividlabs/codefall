@@ -3,8 +3,8 @@
 **Status:** supported.
 
 No mirror. `tracker` is `beads` in `.codefall/settings.json`, which means the project copies its bug
-reports nowhere: the document is the whole record, and Beads holds the fix from the moment
-`codefall-plan` or `codefall-fix` creates its bead, as it does under every tracker. Nothing in this
+reports nowhere: the document is the whole record, and Beads holds the bug from the moment
+`codefall-report` files its bead at step 10, as it does under every tracker. Nothing in this
 profile touches GitHub, and `gh` is used only for the pull request.
 
 Every section below answers the question the `github` profile answers under the same heading, so a
@@ -46,5 +46,6 @@ Nothing beyond the report's own archiving.
 
 ## Work state
 
-Beads' to say, from the bead `codefall-plan` or `codefall-fix` creates for the fix. The fix's pull
-request carries no `Fixes #` line, and the report stays `Ready` as it does under every tracker.
+Beads' to say, from the bead `codefall-report` files for the bug, which `codefall-plan` or
+`codefall-fix` fills in with the cause and the criteria. The fix's pull request carries no
+`Fixes #` line, and the report stays `Ready` as it does under every tracker.

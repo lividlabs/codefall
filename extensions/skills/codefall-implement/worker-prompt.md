@@ -83,7 +83,9 @@ a `plan` discovery in step 3 and carry on.
   `codefall-equip` skill's section *When another verb follows this skill*: the smallest revision,
   idempotent, never destructive. Name the change in the PR body.
 - Scope is exactly this bead. Anything adjacent you find — a bug, a missing test, a refactor —
-  goes in your result's `discovered` list with `kind` `code`, not in your diff.
+  goes in your result's `discovered` list with `kind` `code`, not in your diff. A bug carries
+  `"bug": true` and `"caused"`: `true` when your own change made it, `false` when it was already
+  there, with the file and line in `context`.
 - Where the plan's text and the code disagree, or the spec's, and you can still finish the task,
   amend the document in this branch when its Status is `Draft` or `Ready` and the fix is text that
   moves no work — no Tasks row, no criterion your acceptance cites retired or reworded. Text a
@@ -143,7 +145,8 @@ Your final message is exactly one JSON object, no prose around it:
 
 ```json
 {"bead": "{{BEAD_ID}}", "status": "success", "pr": <number>, "branch": "{{BRANCH}}",
- "discovered": [{"kind": "code", "title": "…", "context": "…", "from": "{{BEAD_ID}}"},
+ "discovered": [{"kind": "code", "title": "…", "context": "…", "from": "{{BEAD_ID}}",
+                 "bug": true, "caused": false},
                 {"kind": "plan", "title": "…", "context": "…", "from": "{{BEAD_ID}}",
                  "blocks": "Tasks row T4"}],
  "amended": [{"document": "docs/specs/SPEC-003-trip-export.md", "section": "REQ-01",
