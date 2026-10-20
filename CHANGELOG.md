@@ -6,6 +6,19 @@ below were written by hand, before that was wired up.
 Tags are bare version numbers (`0.1.2`), not `v`-prefixed, so they match the `ref` the marketplace
 pins. A `v0.1.1` tag also exists from before that convention was settled.
 
+## [0.34.0](https://github.com/lividlabs/codefall/compare/v0.33.0...v0.34.0) (2026-10-19)
+
+
+### Features
+
+* **triage:** triage every bug before filing it, and parent only the epic's own ([#219](https://github.com/lividlabs/codefall/issues/219)) ([8d323f6](https://github.com/lividlabs/codefall/commit/8d323f67a426756172a3a2dfb46914446a59aec7))
+
+
+### Bug Fixes
+
+* **init:** ship the ADR template by renaming it out of embed's exclusion rule ([#214](https://github.com/lividlabs/codefall/issues/214)) ([5c7747c](https://github.com/lividlabs/codefall/commit/5c7747c0d28ea99b45d774231dc8d1a26023b1f0))
+* **skills:** the verbs run refresh, and say that the other remedies are the user's ([#220](https://github.com/lividlabs/codefall/issues/220)) ([2904849](https://github.com/lividlabs/codefall/commit/2904849b1a6476017facc473e4d2df7bb2887b46))
+
 ## [0.33.0](https://github.com/lividlabs/codefall/compare/v0.32.0...v0.33.0) (2026-10-17)
 
 
