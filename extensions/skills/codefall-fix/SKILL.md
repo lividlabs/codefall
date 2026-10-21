@@ -1,7 +1,7 @@
 ---
 name: codefall-fix
 description: Fix something small in one run — a bead, a bug report, an issue, or a description. Establish one bead at tier 0 with its cause and acceptance criteria, build it in a worktree with tests as part of done, and open a pull request, behind a single confirmation. Stops and names codefall-plan when the work needs a plan document, an ADR, or more than one bead. Never merges to main.
-argument-hint: "[a bead, a bug report, an issue, or what to fix — nothing to pick from the bug backlog]"
+argument-hint: "[a bead, a bug report, an issue, or what to fix — nothing to pick from the backlog]"
 allowed-tools:
   - Read
   - Glob
@@ -44,8 +44,8 @@ Read each when its step says to; none is loaded up front.
   and consulting. Read at step 6. Names `../codefall-implement/worker-prompt.md`,
   `../../../.codefall/shared/running-agents.md`, `../../../.codefall/shared/run-agent.sh`,
   `../../../.codefall/shared/consult-prompt.md`, `../../../.codefall/shared/consult.schema.json`.
-- `../../../.codefall/shared/triage.md` — the fields a bug bead carries, and the size that says a
-  bug is this verb's. Read at step 2 with no argument, and at step 6 for a discovered bug.
+- `../../../.codefall/shared/triage.md` — the fields a triaged bead carries, and the size that says
+  an item is this verb's. Read at step 2 with no argument, and at step 6 for a discovered bug.
 
 ## Scope — one bead, tier 0
 
@@ -94,7 +94,7 @@ Read the project's `AGENTS.md`, root and scoped. **Never run the other remedies.
 | A bead with a title and little else | Fill it in below: the cause, the criteria. Only if nobody holds it |
 | A bug report, `BUG-NNN`, or the issue a report mirrors | `../codefall-plan/reference/bugs.md`: the report is the target, reproduce if it could not be, find the cause |
 | Another issue, or a description | Establish what to change from the code; for a bug, `bugs.md` as well, without its offer of `/codefall-report` |
-| Nothing | The backlog: `bd list -t bug -s open --no-parent --sort priority --limit 0`, shown by priority and area with each bead's `size`, and one question, which to fix. A `size=plan` bug names `/codefall-plan` instead |
+| Nothing | The backlog: `bd list -s open --no-parent --exclude-type epic --sort priority --limit 0`, every open item whatever its type, shown by priority and area with each item's type and `size`, and one question, which to fix. A `size=plan` item names `/codefall-plan` instead |
 
 A bead someone else holds is a stop: say who. A bead already closed, or with an open pull request,
 is reported, and the run stops. A bead whose parent epic still has open gates on `<epic>-MERGED` —

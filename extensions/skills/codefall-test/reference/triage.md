@@ -39,7 +39,7 @@ Every finding carries a Beads priority beside its class, and a bead filed for it
 
 **A real bug takes its priority from the shared scale** in `../../../../.codefall/shared/triage.md`,
 by how bad it is for a user: critical P1, major P2, minor P3, trivial P4. Failing a criterion says
-the product is wrong, not how wrong. The other classes are not bugs and take these:
+the product is wrong, not how wrong. The other classes take these:
 
 | Finding | Priority |
 | --- | --- |

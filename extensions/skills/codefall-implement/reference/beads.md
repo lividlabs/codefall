@@ -92,7 +92,9 @@ whose it is, how bad it is, which area, and every field its bead carries, the `c
 included. A bug that is the epic's is a `deferred` child of the epic; one beside the epic is an
 `open` bead with no parent, or a child of the open sweep for its area. The worker's item says
 whether its own change caused the bug (`"caused": true`) or found it already there, which is the
-source edge, `caused-by` or `discovered-from`, and the first of the triage classes.
+source edge, `caused-by` or `discovered-from`, and the first of the triage classes. The `bug` flag
+is the worker's reading, not a gate: an item whose text says the product is wrong is triaged as a
+bug whether or not it carries the flag.
 
 **Every other discovered bead is a child of the epic**, created `deferred` so this round's
 `bd ready` does not pick it up, with the parent set in a second call because `--id` and `--parent`

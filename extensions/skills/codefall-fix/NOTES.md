@@ -9,7 +9,7 @@ Fix is `codefall-plan` at tier 0 followed by `codefall-implement` on one bead, w
 procedure. It links the reference files it can use as they are, so those reach it without anyone
 editing it: plan's `reference/bugs.md` and `reference/beads.md`, implement's
 `reference/done.md`, `reference/beads.md`, and `reference/workers.md`, and the shared
-`triage.md`, which says what a bug bead carries and which bugs are this verb's size.
+`triage.md`, which says what a triaged bead carries and which items are this verb's size.
 
 The rest it restates, because it lives in a `SKILL.md`. **A change to any of these checks fix in
 the same pull request** (`extensions/skills/AGENTS.md` holds the rule):

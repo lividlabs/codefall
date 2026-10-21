@@ -1,26 +1,42 @@
 # Triage
 
-Shared reference. Read before a bug is filed as a bead, whoever found it: a worker in
-`codefall-implement`, a reviewer in `codefall-review`, a run in `codefall-test`, or the person
-`codefall-report` interviewed. Every bug is triaged the same way and carries the same fields, so
-the backlog reads as one list however the bugs reached it. The verb that found the bug asks its
-own question and files on the answer; this file says what the question proposes and what the bead
-carries. Nothing here is filed unasked.
+Shared reference. Read before anything found along the way is filed as a bead, whoever found it: a
+worker in `codefall-implement`, a reviewer in `codefall-review`, a run in `codefall-test`, or the
+person `codefall-report` interviewed, and before `codefall-report`'s triage mode walks the backlog.
+Every item is triaged the same way and carries the same fields, so the backlog reads as one list
+however its items reached it. The verb that found the item asks its own question and files on the
+answer; this file says what the question proposes and what the bead carries. Nothing here is filed
+unasked.
 
 ## Contents
 
+- What triage takes
 - Three questions
 - Whose is it
 - How bad is it
 - Which area
 - How big is the fix
-- What a bug bead carries
+- What a triaged bead carries
 - Duplicates
 - Sweeps
 
+## What triage takes
+
+Everything it is given. Most items are bugs, and this file says "bug" where only a bug can be meant,
+but a cleanup, a missing test, a refactor, a request for something that never existed, and a bead
+in the backlog typed `task` whose title says something is wrong all go through the same questions
+and leave with the same fields. **What kind of thing an item is, is a field triage sets, never a
+reason to skip the item, decline it, or hand it to another verb.** The type is proposed the way the
+area is: from the types already in the graph, or any `bd create -t` accepts, with the reason in a
+line, and the person's own word for it wins over yours. A bead someone typed `chore` stays `chore`.
+
+Two things have routes of their own and are not beads this file files: a wrong expectation, a flake,
+and agent variance, which `codefall-test`'s triage reference routes; and the `plan` form of a
+discovered item, which `codefall-plan`'s Revise mode takes.
+
 ## Three questions
 
-Every bug is triaged by three questions, and the fix's size is recorded beside the answers:
+Every item is triaged by three questions, and the fix's size is recorded beside the answers:
 
 1. **Whose is it** — the epic's, or beside it. Asked only inside a delivery.
 2. **How bad is it** — the priority, from one scale.
@@ -28,11 +44,14 @@ Every bug is triaged by three questions, and the fix's size is recorded beside t
 
 The session proposes an answer to each, with a reason in a line, and the person confirms them in
 the verb's own question: "I found N problems. Fix them all?" on an epic's work, the recap in
-`codefall-report`, the bead offer in `codefall-review`. A person may change any answer there.
+`codefall-report`, the bead offer in `codefall-review`, the one block in `codefall-report`'s triage
+mode. A person may change any answer there. Nothing is asked per item.
 
 ## Whose is it
 
-Inside a delivery, a bug belongs to the epic or sits beside it. Three classes, read in order:
+Inside a delivery, a bug belongs to the epic or sits beside it. An item that is not a bug, a missing
+test or a refactor a worker met, is the epic's, per *Discovered work* in `codefall-implement`'s beads
+reference: the work found it, and the next round builds it. For a bug, three classes, read in order:
 
 **The epic's**, when any one of these holds:
 
@@ -55,9 +74,10 @@ ships fine with it still there.
 
 Yes to all three keeps it with the epic, whether the bug is old or new. A P4 goes beside the epic.
 A fix big enough to need its own plan goes beside the epic too, whatever its priority, with a line
-in its description saying it was found near the epic; a round cannot absorb a plan.
+in its description saying it was found near the epic; a round cannot absorb a plan. When the three
+do not settle it, keep it with the epic and say why.
 
-Outside a delivery there is no epic, and every bug sits beside. A bug beside any epic goes to the
+Outside a delivery there is no epic, and every item sits beside. An item beside any epic goes to the
 open sweep epic for its area when one exists, per *Sweeps* below, and has no parent otherwise.
 
 How each verb answers the question:
@@ -71,7 +91,7 @@ How each verb answers the question:
 
 ## How bad is it
 
-One scale for every bug, whoever found it. It asks how bad the bug is for a user.
+One scale for every item, whoever found it. It asks how bad the item is for a user.
 
 | Severity | When | Priority |
 | --- | --- | --- |
@@ -82,34 +102,38 @@ One scale for every bug, whoever found it. It asks how bad the bug is for a user
 
 P0 is a person's to set by hand on a bead they judge urgent; no verb assigns it.
 
-`codefall-review` keeps its words, and they are this scale: a blocker is P1, important is P2, minor
-is P3. `codefall-test`'s classes are not priorities: a real bug takes its priority from this table
-like every other bug, and a wrong expectation, a flake, and agent variance are not bugs and keep the
-routes `codefall-test`'s triage reference gives them.
+An item that is not a bug sits on the same scale by what leaving it costs a user: a cleanup or a
+missing test is `trivial` or `minor` unless leaving it blocks or breaks something, and a request
+for something that never existed is placed by what its absence stops. `codefall-review` keeps its
+words, and they are this scale: a blocker is P1, important is P2, minor is P3. `codefall-test`'s
+classes are not priorities: a real bug takes its priority from this table like every other item, and
+a wrong expectation, a flake, and agent variance keep the routes `codefall-test`'s triage reference
+gives them.
 
-Inside a delivery, every bug that is the epic's is built next round, and priority orders the round.
-Beside the epic, priority is what decides whether a bug is picked up at all, and it feeds the
+Inside a delivery, every item that is the epic's is built next round, and priority orders the round.
+Beside the epic, priority is what decides whether an item is picked up at all, and it feeds the
 middle class above.
 
 ## Which area
 
-Every bug carries one label, `area:<name>`, naming the part of the product it belongs to: `checkout`,
-`search`, `billing`. An area is a part of the product as a person meets it, not a layer and not a
-runner, the same word the testing root uses for `test-cases/<area>/`.
+Every item carries one label, `area:<name>`, naming the part of the product it belongs to:
+`checkout`, `search`, `billing`. An area is a part of the product as a person meets it, not a layer
+and not a runner, the same word the testing root uses for `test-cases/<area>/`.
 
 The list of areas is the `area:` labels in use, which `bd label list-all` prints; no file holds
-it, so filing a bug mid-run changes nothing in the checkout. When no `area:` label exists yet,
+it, so filing an item mid-run changes nothing in the checkout. When no `area:` label exists yet,
 propose names from what the project already has: the directories under `<root>/test-cases/`, the
 directories that hold a scoped `AGENTS.md`, and the specs under `docs/specs/`. Pick the area that
-fits the bug, or propose a new name when none does, and say so in the question. Never invent a
+fits the item, or propose a new name when none does, and say so in the question. Never invent a
 second spelling of a name already in use; `codefall-report`'s triage mode merges one that slipped
 through.
 
-`bd list -t bug -l area:<name>` is the view of one area.
+`bd list -s open,deferred --exclude-type epic -l area:<name>` is the view of one area.
 
 ## How big is the fix
 
-Two sizes, recorded as metadata so `codefall-fix` and a sweep can read them without opening the bug:
+Two sizes, recorded as metadata so `codefall-fix` and a sweep can read them without opening the
+item:
 
 - `size=fix`: the change stays inside one component, changes no public interface, is one bead, and
   calls for no ADR. `codefall-fix` can take it alone.
@@ -118,24 +142,24 @@ Two sizes, recorded as metadata so `codefall-fix` and a sweep can read them with
 The judgment is `codefall-fix`'s scope test, made once at triage from what the finder saw. A later
 run that finds the size wrong changes the metadata and says so.
 
-## What a bug bead carries
+## What a triaged bead carries
 
-Every bug bead is created with these, and nothing is left for a later verb to fill in:
+Every triaged bead is created with these, and nothing is left for a later verb to fill in:
 
 | Field | Value |
 | --- | --- |
 | ID | `<prefix>-gh-<n>` where a tracker issue exists, `<prefix>-BUG-NNN` for a bug report under `tracker: beads`, `<prefix>-<slug>` otherwise. `<prefix>` is `bd config get issue_prefix`. A taken ID is refused: add `-2` and retry, never `--force` |
-| Type | `bug` |
+| Type | `bug` when the product is wrong; otherwise the type proposed under *What triage takes*, or the one the person set |
 | Priority | P1 to P4, from the scale above |
-| Status | `deferred` when the bug is the epic's, so the running round leaves it alone; `open` otherwise |
-| Parent | The epic when the bug is the epic's; the open sweep epic for its area when one exists and the bug is beside; none otherwise. Set in a second call, because `--id` and `--parent` do not combine |
+| Status | `deferred` when the item is the epic's, so the running round leaves it alone; `open` otherwise |
+| Parent | The epic when the item is the epic's; the open sweep epic for its area when one exists and the item is beside; none otherwise. Set in a second call, because `--id` and `--parent` do not combine |
 | Area | `-l area:<name>` |
-| Source edge | `caused-by:<bead>` when the epic's change caused the bug; `discovered-from:<bead>` when the work found a bug that was already there. `<bead>` is the task whose work found it, or the epic for a suite failure that names no case. A bug a person reported has no edge |
-| Spec | `--spec-id`: the bug report's path when one exists, since `codefall-plan` and `codefall-fix` read it; otherwise the spec the bug falls under, when there is one |
+| Source edge | `caused-by:<bead>` when the epic's change caused the bug; `discovered-from:<bead>` when the work found something that was already there. `<bead>` is the task whose work found it, or the epic for a suite failure that names no case. An item a person reported has no edge |
+| Spec | `--spec-id`: the bug report's path when one exists, since `codefall-plan` and `codefall-fix` read it; otherwise the spec the item falls under, when there is one |
 | External reference | `--external-ref gh-<n>` when the project mirrors to a tracker and an issue was filed |
 | Size | `size=fix` or `size=plan`, in metadata |
 | Found by | `found=test`, `found=review`, `found=implement`, or `found=report`, in metadata |
-| Description | What is wrong, with the evidence the finder has: the case, variant, and criterion for a test run, with evidence paths under `<root>/.artifacts/`; the file and line for a review or a worker; the report's path for `codefall-report`. A bug in the middle class carries the line that says why it stayed with the epic, or that it was found near it |
+| Description | What is wrong, or what is wanted, with the evidence the finder has: the case, variant, and criterion for a test run, with evidence paths under `<root>/.artifacts/`; the file and line for a review or a worker; the report's path for `codefall-report`. An item in the middle class carries the line that says why it stayed with the epic, or that it was found near it |
 
 ```bash
 prefix=$(bd config get issue_prefix)
@@ -148,14 +172,15 @@ bd update "$prefix-gh-212" --parent booking-PLAN-007
 bd dolt push
 ```
 
-The parent line is left out when the bug has none. `-s open` replaces `-s deferred` beside an epic.
+The parent line is left out when the item has none. `-s open` replaces `-s deferred` beside an
+epic.
 
 ## Duplicates
 
-Search before anything is classified. A bug already filed is a comment on that bead or issue, with
-the new evidence, never a second one.
+Search before anything is classified. An item already filed is a comment on that bead or issue,
+with the new evidence, never a second one.
 
-- The graph: `bd list -t bug --all --title-contains "<keywords>"`, and `bd search "<keywords>"`.
+- The graph: `bd list --all --title-contains "<keywords>"`, and `bd search "<keywords>"`.
 - The tracker, when the project has one, with the search command in
   `codefall-report`'s profile for it.
 - The reports under `docs/bugs/`, not `archive/`.
@@ -164,14 +189,14 @@ A match that is closed and reproduces again is reopened with the new evidence, n
 
 ## Sweeps
 
-A bug beside every epic waits in the backlog with its fields set, where `codefall-fix` picks one up
-or a sweep takes a batch. A **sweep** is an ordinary epic cut from the open bugs of one area when a
-person wants that area burned down: `codefall-report`'s triage mode creates it as
-`<prefix>-SWEEP-<area>-NNN`, type `epic`, titled for the area, and reparents the bugs the person
+An item beside every epic waits in the backlog with its fields set, where `codefall-fix` picks one
+up or a sweep takes a batch. A **sweep** is an ordinary epic cut from the open items of one area
+when a person wants that area burned down: `codefall-report`'s triage mode creates it as
+`<prefix>-SWEEP-<area>-NNN`, type `epic`, titled for the area, and reparents the items the person
 picked under it. It has no plan document; `codefall-implement` takes it as a delivery, reads each
-bug bead as a tier-0 bead, and `codefall-review` and `codefall-test` run on its work. It closes
-when its bugs have merged, like any epic.
+child as a tier-0 bead, and `codefall-review` and `codefall-test` run on its work. It closes when
+its children have merged, like any epic.
 
-A sweep that is open is where a new bug beside an epic in that area goes, so the sweep's next round
+A sweep that is open is where a new item beside an epic in that area goes, so the sweep's next round
 picks it up. No container that never closes is ever created: the organization is the fields on the
-bug, and an epic exists to be emptied.
+item, and an epic exists to be emptied.
