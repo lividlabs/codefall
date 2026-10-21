@@ -1,6 +1,6 @@
 ---
 name: codefall-report
-description: Turn a bug someone ran into into a report another session can fix — interview the person who saw it for the steps, the expected and actual result, screenshots, and the environment, push back on vague answers, try to reproduce it on the spot, then write a bug report with acceptance criteria into the repository, mirrored to the issue tracker, and file its bug bead triaged by area, priority, and size. Also triages the bug backlog — `triage`, with an area to narrow it — and cuts a sweep epic from the bugs the person picks.
+description: Turn a bug someone ran into into a report another session can fix — interview the person who saw it for the steps, the expected and actual result, screenshots, and the environment, push back on vague answers, try to reproduce it on the spot, then write a bug report with acceptance criteria into the repository, mirrored to the issue tracker, and file its bead triaged by type, area, priority, and size. Also triages the backlog — `triage`, with an area to narrow it, every open item whatever its type — and cuts a sweep epic from the items the person picks.
 argument-hint: "[what went wrong, or a test run's report | triage [area]]"
 allowed-tools:
   - Read
@@ -41,8 +41,9 @@ Read each when its step says to; none is loaded up front.
   at step 3 for the duplicate search and at step 9.
 - `../../../.codefall/shared/landing.md` — the branch, the commit, the push, and the pull request.
   Read at step 8.
-- `../../../.codefall/shared/triage.md` — whose a bug is, how bad it is, which area, how big the
-  fix is, every field its bead carries, and sweeps. Read at step 6, and for the triage mode.
+- `../../../.codefall/shared/triage.md` — what triage takes, whose an item is, how bad it is, which
+  area, how big the fix is, every field its bead carries, and sweeps. Read at step 6, and for the
+  triage mode.
 
 ## Scope — what is wrong, not why
 
@@ -51,7 +52,7 @@ Read each when its step says to; none is loaded up front.
 | What the reporter did, expected, and saw | Why the code does it | `codefall-plan` |
 | Reproducing it through the running product | Changing code, data, or a test to see what happens | `codefall-plan`, `codefall-implement` |
 | Evidence: screenshots, recordings, logs, output | The fix, and its task graph | `codefall-plan` |
-| The expected behaviour, as acceptance criteria | A new capability nobody specified | `codefall-specify` |
+| The expected behaviour, as acceptance criteria | Specifying a capability nobody built: its requirements beyond what the reporter expected | `codefall-specify` |
 | Severity as the reporter judges it, and the triage it sets: priority, area, size | Assignment | the team |
 
 **You may read the codebase, but only to answer two questions**: is this already reported, and which
@@ -162,8 +163,10 @@ none, describe what the image shows under Evidence, in words, and say that is wh
 **Insist for at most two rounds.** When the reporter overrules, write what there is and record every
 gap under **Open questions** — recorded, never dropped.
 
-**When the expected behaviour was never specified or built**, it reads as a feature request. Say so
-once and offer `/codefall-specify`. If the reporter still wants a bug report, write it.
+**When the expected behaviour was never specified or built**, it reads as a request for something
+new. Say so once, in the recap, and write the report anyway: its bead is typed `feature` rather than
+`bug`, per *What triage takes* in `../../../.codefall/shared/triage.md`, and the rest of the triage
+is the same. Never point the reporter at another verb instead of writing.
 
 **Severity** is the reporter's call. Offer the scale and push back once when the impact they
 described does not fit:
@@ -197,14 +200,15 @@ move on.
 > **Impact and severity**: …
 > **Reproduced**: …
 > **Unresolved**: …
-> **Triage**: P2 · area:checkout · size=fix · beside every epic
+> **Triage**: bug · P2 · area:checkout · size=fix · beside every epic
 
 **Every line is at least a sentence.** A fragment means that topic was not covered — go back and ask.
 
-**The Triage line** is from `../../../.codefall/shared/triage.md`: the priority the severity maps to,
-the area picked from the labels in use or proposed, the size from `codefall-fix`'s scope test, and
-whose the bug is, which is beside every epic unless the reporter says it belongs to a delivery in
-flight. Each comes with its reason in a line, and the reporter may change any of them here.
+**The Triage line** is from `../../../.codefall/shared/triage.md`: the type, `bug` unless the recap
+says what else it is, the priority the severity maps to, the area picked from the labels in use or
+proposed, the size from `codefall-fix`'s scope test, and whose the item is, which is beside every
+epic unless the reporter says it belongs to a delivery in flight. Each comes with its reason in a
+line, and the reporter may change any of them here.
 
 ### 7. Write, then confirm
 
@@ -235,11 +239,11 @@ is pending.
 
 ### 10. File the bead
 
-One bug bead per report, with every field *What a bug bead carries* in
+One bead per report, with every field *What a triaged bead carries* in
 `../../../.codefall/shared/triage.md` names: the ID `<prefix>-gh-<n>` when the mirror made an
-issue and `<prefix>-BUG-NNN` otherwise, type `bug`, the Triage line's priority, area, and size,
+issue and `<prefix>-BUG-NNN` otherwise, the Triage line's type, priority, area, and size,
 `found=report`, `--spec-id` the report's path, `-s open`, and the body naming the report and its
-severity. A parent only when the reporter put the bug in a delivery in flight, or an open sweep
+severity. A parent only when the reporter put the item in a delivery in flight, or an open sweep
 holds its area. `bd dolt push`. When Beads is not ready, say the bead is pending and give the
 command; the report does not wait for it.
 
@@ -272,30 +276,34 @@ Each lands per `../../../.codefall/shared/landing.md`.
 
 ## Triage mode
 
-`/codefall-report triage`, with an area after it to narrow the list, walks the bug backlog in
-Beads and writes no document. Read `../../../.codefall/shared/triage.md` first; it holds every
-rule this mode applies.
+`/codefall-report triage`, with an area after it to narrow the list, walks the backlog in Beads and
+writes no document. Read `../../../.codefall/shared/triage.md` first; it holds every rule this mode
+applies, and *What triage takes* is the first of them: every open item is triaged, whatever its
+type and whatever its title calls it. Nothing is asked per item; the whole list is proposed once
+and what the person takes is applied.
 
-1. `bd dolt pull`. List the open bugs: `bd list -t bug -s open,deferred --no-parent --sort priority
-   --limit 0`, and with an area, `-l area:<name>`. Say how many there are and how many lack a
-   triage field: no `area:` label, no `size` in metadata, or a type other than `bug` on a bead
-   whose title says bug.
-2. **Fill in what is missing.** For each bead lacking a field, propose the field with its reason in
-   a line, the whole list in one block, and apply what the person takes with `bd update`. Two
-   spellings of one area are named and merged on yes with `bd label add` and `bd label remove`.
-3. **Find duplicates.** Beads whose titles or descriptions describe one bug are listed in pairs;
+1. `bd dolt pull`. List the backlog: `bd list -s open,deferred --no-parent --exclude-type epic
+   --sort priority --limit 0`, and with an area, `-l area:<name>`. Say how many items there are and
+   how many lack a triage field: no `area:` label, no `size` in metadata, or a type that does not
+   fit the description, `task` on a title that says something is wrong, `bug` on a request for
+   something that never existed.
+2. **Fill in what is missing.** For each item lacking a field, propose the field with its reason in
+   a line, type included, the whole list in one block, and apply what the person takes with `bd
+   update`. A type the person set themselves stays. Two spellings of one area are named and merged
+   on yes with `bd label add` and `bd label remove`.
+3. **Find duplicates.** Items whose titles or descriptions describe one thing are listed in pairs;
    on yes the later one is closed with `-r "duplicate of <id>"` and its evidence commented on the
    one kept.
-4. **Re-triage priority.** A bead whose priority does not fit its description under the shared
+4. **Re-triage priority.** An item whose priority does not fit its description under the shared
    scale is named with the priority proposed. Nothing changes unasked.
-5. **Offer a sweep.** When an area holds more than a few open bugs, offer to cut a sweep epic from
+5. **Offer a sweep.** When an area holds more than a few open items, offer to cut a sweep epic from
    the ones the person picks, per *Sweeps* in the shared reference: `bd create "<area> sweep"
    --id <prefix>-SWEEP-<area>-NNN -t epic`, NNN the next number free under that area, then
-   `bd update <bead> --parent <sweep>` for each bug taken, and `bd dolt push`. Say what was not
+   `bd update <bead> --parent <sweep>` for each item taken, and `bd dolt push`. Say what was not
    taken and why it stays.
 6. **Report.** The counts before and after, every field changed, every duplicate closed, the sweep
    with its children, and `bd dolt push`. **End with one command**: `/codefall-implement <sweep>`
-   when one was cut, else `/codefall-fix <bead>` naming the highest-priority `size=fix` bug.
+   when one was cut, else `/codefall-fix <bead>` naming the highest-priority `size=fix` item.
 
 ## Rules
 
@@ -309,9 +317,11 @@ rule this mode applies.
 - **Acceptance criteria are EARS**, and cite a spec criterion rather than restate it.
 - **Numbering is append-only**; retired numbers are never reused.
 - **Status describes the document, never the work.**
-- **Push back once, then defer** — on vagueness, on severity, on whether it is a bug at all.
+- **Push back once, then defer** — on vagueness and on severity. What kind of item it is goes in
+  the bead's type, never in a refusal or a hand-off.
 - **Unresolved is recorded** as open questions, never dropped.
 - **Never overwrite a file that has drifted.** Show the difference and ask.
-- **Every report files one bug bead**, triaged per the shared reference, and the triage mode
-  changes a bead only on the person's word.
-- **The triage mode writes no document** and cuts a sweep only from the bugs the person picked.
+- **Every report files one bead**, triaged per the shared reference, and the triage mode changes a
+  bead only on the person's word.
+- **The triage mode writes no document**, skips no item for its type, and cuts a sweep only from
+  the items the person picked.

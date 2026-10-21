@@ -2010,6 +2010,29 @@ Decided at scaffold, 2026-08-16.
   `update`, and that holds. The preflight script's header, which said a skill "offers" refresh,
   says runs.
 
+- **Triage takes every item, and the root `AGENTS.md` says how the rules are read, 2026-10-21.**
+  `shared/triage.md` was written with "bug" as the subject of every rule, `report`'s triage mode
+  listed the backlog with `bd list -t bug`, and `report` told a session to push back on "whether it
+  is a bug at all" and to offer `specify` for a request that read as a feature. Sessions applied
+  that as written: a bead typed `task` whose title said something was wrong never appeared in the
+  mode's list, and an item a person brought to triage was declined as not a bug and left where it
+  was, so a triage run stalled on the first item that was not a bug by type. Now the reference
+  opens with what triage takes, everything it is given, and the type is a field triage sets the way
+  it sets the area, from the types in use, with the person's own word winning; the triage mode and
+  `fix`'s no-argument backlog list every open parentless item with `--exclude-type epic` and no type
+  filter; `report` writes the report for a request that reads as a feature and types its bead
+  `feature` instead of pointing at another verb; and the worker's `bug` flag in `implement` is the
+  worker's reading, so an item whose text says the product is wrong is triaged as a bug without it.
+  The root `AGENTS.md` gains *How the rules are read*, because this is the second rule in a week
+  that a session read as a gate and stalled on (the refresh remedy sentence, above), and the
+  pattern was asked for in every triage design session: a word names the common case, an exit is
+  for what a verb cannot do, a list lives in the project's data, a case the rule leaves out is
+  decided from its purpose, and a mechanical test is written only where no judgment is wanted.
+  ADR-013.5 is untouched: "every finding that survives triage becomes a bead" meant the test
+  classes with routes of their own, and the reference now names those two exceptions in words that
+  do not read as a filter. Seen and not taken: a fixed list of types in the reference, which is the
+  same shape as the rule it replaces; a new ADR edition for one sentence.
+
 ## Open
 
 - (nothing open; the last item graduated to ADR-012 on 2026-09-27)

@@ -11,6 +11,28 @@ Decisions for the whole repository live in [`docs/adrs/`](docs/adrs/); the in-fl
 [`docs/decision-log.md`](docs/decision-log.md). Provenance for the scaffolded documents is
 `.codefall/scaffold.json`.
 
+## How the rules are read
+
+Every skill, shared reference, and `AGENTS.md` section here is read by a model that applies it as
+written, and a rule written as a gate stops a run on the first case it did not foresee. So a rule is
+written to guide a run, not to gate it. These hold for every file in this repository and for every
+document codefall installs:
+
+- **A word names the common case, not an entry condition.** A rule written for a bug applies to a
+  cleanup, a missing test, or a request that reaches it: what kind of thing the item is becomes a
+  field on it, and the item is never turned away for being the wrong kind of thing.
+- **An exit is for what a verb cannot do**: a missing tool, an unsupported tracker, a missing surface
+  profile. Disagreement about kind, size, or fit is said once, then the run does what the person
+  asked. [`extensions/skills/AGENTS.md`](extensions/skills/AGENTS.md) states this for skills.
+- **A list lives in the project's data, not in the rule**, where the project has one: the labels in
+  use, the types `bd` accepts, the directories under a root. The rule reads from there and takes the
+  person's word for a new entry. A fixed list in a rule is for what a tool can do.
+- **A case the rule leaves out is decided from the rule's purpose**, and the run says what it decided
+  and carries on. It does not stop to ask whether the case is covered, and it does not ask one
+  question per item: it proposes the whole list once and applies what the person takes.
+- **Exact steps where the operation is fragile; the goal and its reasons where several readings are
+  valid.** A mechanical test is applied mechanically, so write one only where no judgment is wanted.
+
 ## How codefall works
 
 `codefall init` installs the verbs into each harness a project uses, and `.codefall/` beside them
