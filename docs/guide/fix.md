@@ -8,8 +8,8 @@ Use it for a bug fix or a small change that needs no plan document.
 ```
 
 You can give it a bead (a task in Beads), a bug report, a GitHub issue, or a sentence describing the
-change. With nothing after it, the skill lists the open bugs nobody is working on, by priority and
-area, and asks which one to fix.
+change. With nothing after it, the skill lists the open items nobody is working on, bugs and
+anything else in the backlog, by priority and area, and asks which one to fix.
 
 ## What counts as small
 
