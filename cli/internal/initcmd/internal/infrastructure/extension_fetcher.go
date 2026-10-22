@@ -127,7 +127,7 @@ func (f *EmbeddedExtensionFetcher) mirror(
 	})
 }
 
-// excluded reports whether a path in the tree is one the install leaves behind. An entry holding a
+// excluded reports whether a path in the tree is one the install does not copy. An entry holding a
 // slash names a path, and everything under it; an entry that is a bare file name matches that file
 // wherever it sits, which is what a rule about a file beside every skill needs.
 func excluded(path string, exclude []string) bool {

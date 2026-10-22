@@ -190,7 +190,7 @@ A match that is closed and reproduces again is reopened with the new evidence, n
 ## Sweeps
 
 An item beside every epic waits in the backlog with its fields set, where `codefall-fix` picks one
-up or a sweep takes a batch. A **sweep** is an ordinary epic cut from the open items of one area
+up or a sweep takes a batch. A **sweep** is an ordinary epic created from the open items of one area
 when a person wants that area burned down: `codefall-report`'s triage mode creates it as
 `<prefix>-SWEEP-<area>-NNN`, type `epic`, titled for the area, and reparents the items the person
 picked under it. It has no plan document; `codefall-implement` takes it as a delivery, reads each

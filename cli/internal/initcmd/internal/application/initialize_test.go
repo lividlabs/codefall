@@ -672,7 +672,7 @@ func TestRunStopsOnACancelledContext(t *testing.T) {
 
 // --- a run over a current install ---------------------------------------------------------------
 
-// installedProject is a project a full run has just set up, and the file system it left behind: the
+// installedProject is a project a full run has just set up, and the file system it produced: the
 // starting point of every run over a current install.
 func installedProject(t *testing.T) *fakeFileSystem {
 	t.Helper()

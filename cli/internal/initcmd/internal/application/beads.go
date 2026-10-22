@@ -53,7 +53,7 @@ const (
 func (i *Initialize) beads(ctx context.Context, request Request) (domain.StepResult, error) {
 	// Preflight asked bd this same question, to decide whether what the directory had waiting was
 	// any of its business. It is asked again rather than carried across, because a step takes no
-	// state from preflight: what preflight leaves behind is a run that was allowed to start.
+	// state from preflight: all preflight passes on is that the run was allowed to start.
 	initialized, err := i.beadsInitialized(ctx, request.Dir)
 	if err != nil {
 		return domain.StepResult{}, err

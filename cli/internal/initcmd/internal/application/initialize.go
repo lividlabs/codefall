@@ -58,7 +58,7 @@ type ExtensionSource interface {
 	// path it has in the tree, and returns every path it installed, relative to destDir, so the
 	// caller can put it on record, and the ones that were missing or held other bytes, so the caller
 	// can say whether the copy changed anything. A file that already holds the tree's bytes is left
-	// as it is. A path under exclude is left behind: an entry holding a slash names a path in the
+	// as it is. A path under exclude is not copied: an entry holding a slash names a path in the
 	// tree, and an entry that is a bare file name matches that file wherever it sits.
 	Fetch(ctx context.Context, destDir string, sources, exclude []string) (Fetched, error)
 	// Read returns one file from the tree.

@@ -82,7 +82,7 @@ works, the run refuses the agentic modality for that case instead of faking a re
 Nothing is mocked, at any layer. When a state cannot be produced through the product's own
 interfaces, the criterion that needs it is recorded as `unreachable`.
 
-## What does a run leave behind?
+## What does a run write?
 
 Every run writes a report under `.codefall/tests/`, as a Markdown file to read and a JSON file for
 counting across runs. The report records:

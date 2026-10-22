@@ -65,7 +65,7 @@ second runner brings its own checks or none.
 **The report is Markdown plus a JSON record.** The model git-ignored everything a run produced. The
 Markdown is what a person reads; the JSON is what makes a question about several runs answerable by
 reading files rather than by remembering — how often one criterion failed, which drivers have run a
-case, whether a side effect was ever left behind. Triage's agent-variance class asks for an
+case, whether a run ever failed to clean up a side effect. Triage's agent-variance class asks for an
 occurrence count, and a count nobody can compute is a count nobody keeps. `run.schema.json` follows
 `codefall-review`'s `findings.schema.json`: a closed enum wherever a free-text value would produce
 two spellings of one thing.

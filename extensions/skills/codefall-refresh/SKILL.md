@@ -232,8 +232,8 @@ One block, short:
 
 - Where the user is now: `<primary>`, on the default branch at `<short>`, and whether it moved
   from a branch, from `<short>`, or was not pulled and why.
-- What was left behind: each branch and worktree from steps 3, 5, and 9, removed with its old tip
-  or kept and why, and a merged branch still on the remote.
+- The branches and worktrees: each one from steps 3, 5, and 9, removed with its old tip or kept
+  and why, and a merged branch still on the remote.
 - The beads: synced, no remote, skipped because beads is blocked, or halted and why.
 - The environment: `start` ran; `update` ran or was skipped as current.
 - The stamp: written at `<short>`, or not, and why.

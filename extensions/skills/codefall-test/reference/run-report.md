@@ -105,7 +105,7 @@ attempt counts, the side effects, and the anomaly sweep.
 
 It exists so that a question about several runs is answered by reading files rather than by
 remembering — how often one criterion failed across the last ten runs of a case, which drivers have
-run it, whether a side effect was ever left behind. The agent-variance occurrence count `triage.md`
+run it, whether a run ever failed to clean up a side effect. The agent-variance occurrence count `triage.md`
 asks for is that question.
 
 Write it beside the Markdown, at the same moment, from the same run.

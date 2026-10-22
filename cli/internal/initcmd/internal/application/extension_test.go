@@ -65,8 +65,8 @@ func TestExtensionStepCopiesIntoTheHarnessSkillsDirectory(t *testing.T) {
 	}
 
 	// The per-harness definitions are the hook step's, read from the embedded tree rather than
-	// copied, and the maintainer documents belong to this repository. Both are left behind by the
-	// step naming the three subtrees it installs: a step that asked for the tree whole would write
+	// copied, and the maintainer documents belong to this repository. Neither is copied, because the
+	// step names the three subtrees it installs: a step that asked for the tree whole would write
 	// every harness's definition into every project's skills directory and record them in the
 	// manifest, which is the stray-definition problem the unified hooks change set out to remove.
 	if got, want := fetcher.calls[0].sources, []string{"skills"}; !slices.Equal(got, want) {
@@ -84,7 +84,7 @@ func TestExtensionStepCopiesIntoTheHarnessSkillsDirectory(t *testing.T) {
 
 // Nothing a project has no reader for is installed: the rules for changing a skill, each skill's
 // lineage note, and the three documents that sit outside skills/ — the extension's own README.md and
-// AGENTS.md, and docs/ROADMAP.md, which are left behind by never being named as a subtree to copy.
+// AGENTS.md, and docs/ROADMAP.md, which are not copied because no subtree to copy names them.
 func TestExtensionStepInstallsNoMaintainerDocument(t *testing.T) {
 	fetcher := newFakeExtensionSource()
 
