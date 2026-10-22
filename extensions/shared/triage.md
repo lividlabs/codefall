@@ -18,7 +18,7 @@ unasked.
 - How big is the fix
 - What a triaged bead carries
 - Duplicates
-- Sweeps
+- Followups
 
 ## What triage takes
 
@@ -78,7 +78,7 @@ in its description saying it was found near the epic; a round cannot absorb a pl
 do not settle it, keep it with the epic and say why.
 
 Outside a delivery there is no epic, and every item sits beside. An item beside any epic goes to the
-open sweep epic for its area when one exists, per *Sweeps* below, and has no parent otherwise.
+open followup epic for its area when one exists, per *Followups* below, and has no parent otherwise.
 
 How each verb answers the question:
 
@@ -132,7 +132,7 @@ through.
 
 ## How big is the fix
 
-Two sizes, recorded as metadata so `codefall-fix` and a sweep can read them without opening the
+Two sizes, recorded as metadata so `codefall-fix` and a followup can read them without opening the
 item:
 
 - `size=fix`: the change stays inside one component, changes no public interface, is one bead, and
@@ -152,7 +152,7 @@ Every triaged bead is created with these, and nothing is left for a later verb t
 | Type | `bug` when the product is wrong; otherwise the type proposed under *What triage takes*, or the one the person set |
 | Priority | P1 to P4, from the scale above |
 | Status | `deferred` when the item is the epic's, so the running round leaves it alone; `open` otherwise |
-| Parent | The epic when the item is the epic's; the open sweep epic for its area when one exists and the item is beside; none otherwise. Set in a second call, because `--id` and `--parent` do not combine |
+| Parent | The epic when the item is the epic's; the open followup epic for its area when one exists and the item is beside; none otherwise. Set in a second call, because `--id` and `--parent` do not combine |
 | Area | `-l area:<name>` |
 | Source edge | `caused-by:<bead>` when the epic's change caused the bug; `discovered-from:<bead>` when the work found something that was already there. `<bead>` is the task whose work found it, or the epic for a suite failure that names no case. An item a person reported has no edge |
 | Spec | `--spec-id`: the bug report's path when one exists, since `codefall-plan` and `codefall-fix` read it; otherwise the spec the item falls under, when there is one |
@@ -187,16 +187,16 @@ with the new evidence, never a second one.
 
 A match that is closed and reproduces again is reopened with the new evidence, not refiled.
 
-## Sweeps
+## Followups
 
 An item beside every epic waits in the backlog with its fields set, where `codefall-fix` picks one
-up or a sweep takes a batch. A **sweep** is an ordinary epic created from the open items of one area
-when a person wants that area burned down: `codefall-report`'s triage mode creates it as
-`<prefix>-SWEEP-<area>-NNN`, type `epic`, titled for the area, and reparents the items the person
-picked under it. It has no plan document; `codefall-implement` takes it as a delivery, reads each
-child as a tier-0 bead, and `codefall-review` and `codefall-test` run on its work. It closes when
-its children have merged, like any epic.
+up or a followup takes a batch. A **followup** is an ordinary epic created from the open items of
+one area when a person wants that area burned down: `codefall-report`'s triage mode creates it as
+`<prefix>-FOLLOWUP-<area>-NNN`, type `epic`, titled for the area, and reparents the items the
+person picked under it. It has no plan document; `codefall-implement` takes it as a delivery, reads
+each child as a tier-0 bead, and `codefall-review` and `codefall-test` run on its work. It closes
+when its children have merged, like any epic.
 
-A sweep that is open is where a new item beside an epic in that area goes, so the sweep's next round
-picks it up. No container that never closes is ever created: the organization is the fields on the
-item, and an epic exists to be emptied.
+A followup that is open is where a new item beside an epic in that area goes, so the followup's
+next round picks it up. No container that never closes is ever created: the organization is the
+fields on the item, and an epic exists to be emptied.

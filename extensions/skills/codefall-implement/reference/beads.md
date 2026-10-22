@@ -90,7 +90,7 @@ files its own, from the reconciliation at step 3 — and pushes as after every o
 **A discovered bug is triaged before it is filed**, per `../../../../.codefall/shared/triage.md`:
 whose it is, how bad it is, which area, and every field its bead carries, the `code` form below
 included. A bug that is the epic's is a `deferred` child of the epic; one beside the epic is an
-`open` bead with no parent, or a child of the open sweep for its area. The worker's item says
+`open` bead with no parent, or a child of the open followup for its area. The worker's item says
 whether its own change caused the bug (`"caused": true`) or found it already there, which is the
 source edge, `caused-by` or `discovered-from`, and the first of the triage classes. The `bug` flag
 is the worker's reading, not a gate: an item whose text says the product is wrong is triaged as a
