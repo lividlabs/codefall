@@ -6,6 +6,18 @@ below were written by hand, before that was wired up.
 Tags are bare version numbers (`0.1.2`), not `v`-prefixed, so they match the `ref` the marketplace
 pins. A `v0.1.1` tag also exists from before that convention was settled.
 
+## [0.35.0](https://github.com/lividlabs/codefall/compare/v0.34.0...v0.35.0) (2026-10-22)
+
+
+### ⚠ BREAKING CHANGES
+
+* **triage:** a project with an open `<prefix>-SWEEP-<area>-NNN` epic keeps it as an ordinary epic, and triage will not parent new items under it; create a followup for the area instead.
+
+### Bug Fixes
+
+* **triage:** the sweep epic is a followup, and "left behind" says what it meant ([#224](https://github.com/lividlabs/codefall/issues/224)) ([b222d58](https://github.com/lividlabs/codefall/commit/b222d581735bac6c9986dee48767fbdcd2b84970))
+* **triage:** triage takes every item, and the root AGENTS.md says how the rules are read ([#222](https://github.com/lividlabs/codefall/issues/222)) ([175eefa](https://github.com/lividlabs/codefall/commit/175eefa0b8c50f7c02058c6588f9e8e7ba595f2c))
+
 ## [0.34.0](https://github.com/lividlabs/codefall/compare/v0.33.0...v0.34.0) (2026-10-19)
 
 
