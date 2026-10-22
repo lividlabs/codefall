@@ -55,7 +55,7 @@ done
 exec 3<&-
 
 # preflight emits a beads line last, whatever it found, so a report without one is a run the bound
-# cut off partway. The run left behind is a read-only fetch that ends on its own.
+# cut off partway. The preflight still running is a read-only fetch that ends on its own.
 if ! printf '%s' "$report" | grep -q '^beads'; then
   report=$(bash "$preflight" --no-fetch "$project_dir" 2>/dev/null)
 fi

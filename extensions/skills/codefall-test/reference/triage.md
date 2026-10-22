@@ -91,8 +91,8 @@ and a bead beside it, in the `code` form under *Discovered work* in
 `../../codefall-implement/reference/beads.md` with the triage fields. A bug that is the epic's is a
 `deferred` child of it, and once the report is written the session runs `codefall-implement` on
 the epic, whose go gate reopens those children and builds them, and the chart shows it. A bug
-beside the epic is filed `open` with no parent, or under the open sweep for its area, and the report
-names where it went:
+beside the epic is filed `open` with no parent, or under the open followup for its area, and the
+report names where it went:
 
 ```bash
 bd create "<the issue's title>" --id "$(bd config get issue_prefix)-gh-<n>" --external-ref gh-<n> \

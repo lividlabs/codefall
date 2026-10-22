@@ -82,7 +82,7 @@ works, the run refuses the agentic modality for that case instead of faking a re
 Nothing is mocked, at any layer. When a state cannot be produced through the product's own
 interfaces, the criterion that needs it is recorded as `unreachable`.
 
-## What does a run leave behind?
+## What does a run write?
 
 Every run writes a report under `.codefall/tests/`, as a Markdown file to read and a JSON file for
 counting across runs. The report records:
@@ -116,8 +116,8 @@ asks one question, "I found N problems. Fix them all?", and shows for each bug w
 to the epic. A bug that stops the epic from shipping, that the epic's changes caused, or that is
 near the work and worth fixing with it becomes a bead under the epic, and the same session then
 runs `/codefall-implement` on the epic to fix those. A bug in a part of the product the epic never
-touched is filed on its own instead, where [`/codefall-fix`](fix.md) or a sweep picks it up, so the
-delivery stays the size of the feature. You can change the call for any bug in the same answer.
+touched is filed on its own instead, where [`/codefall-fix`](fix.md) or a followup picks it up, so
+the delivery stays the size of the feature. You can change the call for any bug in the same answer.
 
 The skill does not fix what is missing around a test. Setting up the runner belongs to
 `/codefall-equip`, and writing a case belongs to `/codefall-implement`. When either is missing, the

@@ -119,8 +119,8 @@ Per bead, in order, before any plan is formed:
 6. **Mockups** under `docs/mockups/` when referenced: a drawing to rebuild in the app's stack, never
    markup to copy.
 
-A tier-0 bead has no document; the list collapses to bead + `AGENTS.md` + ADRs. A sweep epic,
-`<prefix>-SWEEP-<area>-NNN`, holds bug beads of that kind.
+A tier-0 bead has no document; the list collapses to bead + `AGENTS.md` + ADRs. A followup epic,
+`<prefix>-FOLLOWUP-<area>-NNN`, holds such beads.
 
 ## Landing strategies
 

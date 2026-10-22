@@ -95,7 +95,7 @@ func repoFromRemoteURL(raw string) mo.Option[string] {
 // gitHubPath splits a remote URL into the part naming the host and the part naming the repository,
 // and reports whether the host was GitHub's. It handles the two shapes git writes: a URL with a
 // scheme, which every https and ssh:// remote has, and the scp-like `git@github.com:owner/name.git`
-// that `git clone git@…` leaves behind.
+// that `git clone git@…` writes.
 //
 // A local path remote has neither shape and falls out here, which is what should happen: a directory
 // on this machine is not a repository on GitHub.

@@ -210,7 +210,7 @@ here. **On an epic's work, a taken code finding is not fixed here**: it is
 filed in the `code` form below, or the `plan` form where the plan caused it, its status is
 `deferred` with the bead's ID, and step 8 runs `codefall-implement` on the epic to build the ones
 that are the epic's in this session. Whose a finding is, `../../../.codefall/shared/triage.md`
-decides; a bug beside the epic is filed `open` with no parent, for `codefall-fix` or a sweep.
+decides; a bug beside the epic is filed `open` with no parent, for `codefall-fix` or a followup.
 Document fixes on an epic's work still land
 here as text, under the rule below. **A code fix that changes behaviour the plan or spec describes amends
 that document in the same commit**, under the rule below: the document is part of the fix, not a

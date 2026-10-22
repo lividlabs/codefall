@@ -193,7 +193,7 @@ func TestTheTreeShipsEverySubtreeAnInstallCopies(t *testing.T) {
 	}
 }
 
-// The maintainer documents stay embedded and are left behind at copy time, so this pins that they are
+// The maintainer documents stay embedded and are excluded from the copy, so this pins that they are
 // still in the tree the step reads: a document that went missing would make the exclusion silently
 // stop excluding anything.
 func TestTheTreeStillHoldsTheDocumentsAnInstallLeavesBehind(t *testing.T) {

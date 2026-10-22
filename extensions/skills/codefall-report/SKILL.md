@@ -1,6 +1,6 @@
 ---
 name: codefall-report
-description: Turn a bug someone ran into into a report another session can fix — interview the person who saw it for the steps, the expected and actual result, screenshots, and the environment, push back on vague answers, try to reproduce it on the spot, then write a bug report with acceptance criteria into the repository, mirrored to the issue tracker, and file its bead triaged by type, area, priority, and size. Also triages the backlog — `triage`, with an area to narrow it, every open item whatever its type — and cuts a sweep epic from the items the person picks.
+description: Turn a bug someone ran into into a report another session can fix — interview the person who saw it for the steps, the expected and actual result, screenshots, and the environment, push back on vague answers, try to reproduce it on the spot, then write a bug report with acceptance criteria into the repository, mirrored to the issue tracker, and file its bead triaged by type, area, priority, and size. Also triages the backlog — `triage`, with an area to narrow it, every open item whatever its type — and creates a followup epic from the items the person picks.
 argument-hint: "[what went wrong, or a test run's report | triage [area]]"
 allowed-tools:
   - Read
@@ -42,7 +42,7 @@ Read each when its step says to; none is loaded up front.
 - `../../../.codefall/shared/landing.md` — the branch, the commit, the push, and the pull request.
   Read at step 8.
 - `../../../.codefall/shared/triage.md` — what triage takes, whose an item is, how bad it is, which
-  area, how big the fix is, every field its bead carries, and sweeps. Read at step 6, and for the
+  area, how big the fix is, every field its bead carries, and followups. Read at step 6, and for the
   triage mode.
 
 ## Scope — what is wrong, not why
@@ -243,7 +243,7 @@ One bead per report, with every field *What a triaged bead carries* in
 `../../../.codefall/shared/triage.md` names: the ID `<prefix>-gh-<n>` when the mirror made an
 issue and `<prefix>-BUG-NNN` otherwise, the Triage line's type, priority, area, and size,
 `found=report`, `--spec-id` the report's path, `-s open`, and the body naming the report and its
-severity. A parent only when the reporter put the item in a delivery in flight, or an open sweep
+severity. A parent only when the reporter put the item in a delivery in flight, or an open followup
 holds its area. `bd dolt push`. When Beads is not ready, say the bead is pending and give the
 command; the report does not wait for it.
 
@@ -296,14 +296,15 @@ and what the person takes is applied.
    one kept.
 4. **Re-triage priority.** An item whose priority does not fit its description under the shared
    scale is named with the priority proposed. Nothing changes unasked.
-5. **Offer a sweep.** When an area holds more than a few open items, offer to cut a sweep epic from
-   the ones the person picks, per *Sweeps* in the shared reference: `bd create "<area> sweep"
-   --id <prefix>-SWEEP-<area>-NNN -t epic`, NNN the next number free under that area, then
-   `bd update <bead> --parent <sweep>` for each item taken, and `bd dolt push`. Say what was not
-   taken and why it stays.
-6. **Report.** The counts before and after, every field changed, every duplicate closed, the sweep
-   with its children, and `bd dolt push`. **End with one command**: `/codefall-implement <sweep>`
-   when one was cut, else `/codefall-fix <bead>` naming the highest-priority `size=fix` item.
+5. **Offer a followup.** When an area holds more than a few open items, offer to create a followup
+   epic from the ones the person picks, per *Followups* in the shared reference:
+   `bd create "<area> followup" --id <prefix>-FOLLOWUP-<area>-NNN -t epic`, NNN the next number
+   free under that area, then `bd update <bead> --parent <followup>` for each item taken, and
+   `bd dolt push`. Say what was not taken and why it stays.
+6. **Report.** The counts before and after, every field changed, every duplicate closed, the
+   followup with its children, and `bd dolt push`. **End with one command**:
+   `/codefall-implement <followup>` when one was created, else `/codefall-fix <bead>` naming the
+   highest-priority `size=fix` item.
 
 ## Rules
 
@@ -323,5 +324,5 @@ and what the person takes is applied.
 - **Never overwrite a file that has drifted.** Show the difference and ask.
 - **Every report files one bead**, triaged per the shared reference, and the triage mode changes a
   bead only on the person's word.
-- **The triage mode writes no document**, skips no item for its type, and cuts a sweep only from
-  the items the person picked.
+- **The triage mode writes no document**, skips no item for its type, and creates a followup only
+  from the items the person picked.
