@@ -68,9 +68,10 @@
 # this script refuses them.
 #
 # `run-agent.sh` and this script share the agent syntax, the `harnessConfig`
-# read, the provider switch, the env command, and the polled timeout, copied
-# rather than shared so that `run-agent.sh` stayed as it was. A change to any of
-# those in one script is made in the other in the same change.
+# read, the provider switch, the env command, OpenCode's version and flags, and
+# the polled timeout, copied rather than shared so that `run-agent.sh` stayed as
+# it was. A change to any of those in one script is made in the other in the
+# same change.
 #
 # Usage: run-worker.sh <agent> <worktree> <prompt-file> <out-file>
 #
@@ -445,17 +446,6 @@ git_changes() {
     }' <(printf '%s' "$1") <(printf '%s' "$2") | LC_ALL=C sort
 }
 
-# --- what this OpenCode takes ----------------------------------------------------------------
-
-# OpenCode's flags differ by version, and it refuses one it does not know, so
-# each optional flag is passed only when `opencode run --help` lists it.
-opencode_flags=()
-if [ "$harness" = opencode ]; then
-  opencode_help=$(opencode run --help 2>&1)
-  case $opencode_help in *--standalone*) opencode_flags+=(--standalone) ;; esac
-  case $opencode_help in *--pure*) opencode_flags+=(--pure) ;; esac
-fi
-
 # --- the harnesses ---------------------------------------------------------------------------
 
 # OpenCode's `build` agent is its editing one, and the permission block narrows
@@ -466,16 +456,18 @@ fi
 # which approves every permission a rule does not deny: one run that used it
 # had the host session's next command refused as creating an unsafe agent.
 #
+# This is written for OpenCode 2, the only version codefall supports.
 # --standalone runs a private server, which inherits this process's PATH,
 # working directory, and OPENCODE_CONFIG_CONTENT; OpenCode 2's default
-# background service was started elsewhere and would run the tools with none of
-# them. --pure ran without external plugins, which is where OpenCode's hooks
-# live, but OpenCode 2 has no such flag and refuses the run that passes it
-# ("Unrecognized flag: --pure"), and no other switch for plugins that could be
-# confirmed. So both go in only when this OpenCode lists them, and under
-# OpenCode 2 the project's codefall plugin loads: its merge guard runs on every
-# shell command, its `bd prime` is refused by the shim, and its session notice
-# reaches the worker's context.
+# background service may have been started elsewhere and would run the tools
+# with none of them. --pure ran without external plugins, which is where
+# OpenCode's hooks live, but OpenCode 2 refuses it ("Unrecognized flag: --pure
+# in command opencode run") and exits 1 before the model starts, so it is not
+# passed. The one switch for plugins found, OPENCODE_CONFIG_PROJECT_DISABLE,
+# drops all of the project's OpenCode configuration with its plugins, so it is
+# not set. A project plugin therefore loads if OpenCode 2 accepts it; codefall's
+# own, a named export, fails to load under 2.1.4, which wants a default export
+# with an id, so no merge guard or session notice from it reaches the worker.
 #
 # The message comes before --file because --file takes every value up to the
 # next flag (#215). Every text part goes to stdout, so out-file holds the
@@ -502,7 +494,7 @@ run_opencode() {
     opencode run \
     "${model_flag[@]+"${model_flag[@]}"}" \
     "${extra_args[@]+"${extra_args[@]}"}" \
-    "${opencode_flags[@]+"${opencode_flags[@]}"}" \
+    --standalone \
     --agent build \
     "You are the worker the attached prompt describes. Work only in the current directory, follow the prompt exactly, and end with the single JSON object it asks for." \
     --file "$prompt" \
