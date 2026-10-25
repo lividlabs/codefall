@@ -15,13 +15,13 @@ import (
 // agentsRemedy is what to do about an agent this machine cannot start. A run skips one it cannot
 // start and moves to the next in its list (ADR-009.2), so nothing is broken; the person may want the
 // binary anyway, may want the agent gone from the list, or may leave it.
-const agentsRemedy = "install the missing binary, run codefall config agents <activeAgent> <review|consult> " +
+const agentsRemedy = "install the missing binary, run codefall config agents <activeAgent> <review|consult|work> " +
 	"<harness[:model]>... to write the list without it, or leave it: a run skips an agent it cannot start here" +
 	", or run /codefall-equip agents to set the entry up"
 
 // currentRemedy is what to do about a list that names no agent on current: name one in it, or clear
 // it so the default entry's list applies.
-const currentRemedy = "run codefall config agents <activeAgent> <review|consult> <harness[:model]>... " +
+const currentRemedy = "run codefall config agents <activeAgent> <review|consult|work> <harness[:model]>... " +
 	"naming current, or --clear the list so the default entry's applies, so a run always has a reader it can start"
 
 // agents runs checks 15 and 16: every agent the settings name runs on a harness this machine can

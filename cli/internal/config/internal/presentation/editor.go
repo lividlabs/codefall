@@ -36,7 +36,7 @@ const (
 	screenMenu screen = iota
 	// screenEntries lists the active agents: default, then each harness, with or without an entry.
 	screenEntries
-	// screenEntry is one active agent's two lists, Review and Consult.
+	// screenEntry is one active agent's lists, Review, Consult, and Work.
 	screenEntry
 	// screenList is one list being edited: reorder, add, remove, clear, save.
 	screenList
@@ -662,7 +662,7 @@ func newMenu(shown domain.Configuration) list.Model {
 	}
 
 	items := []list.Item{
-		row{title: "Agents", detail: "Who reviews and consults, by the harness you run codefall in", leads: screenEntries},
+		row{title: "Agents", detail: "Who reviews, consults, and builds, by the harness you run codefall in", leads: screenEntries},
 		row{title: "Reviews", detail: "Posting findings to the pull request: " + posting, leads: screenReviews},
 		row{title: "Persona", detail: personaLine(shown.Persona), leads: screenPersona},
 		row{title: "Quit", detail: "Leave the editor", leads: screenQuit},
@@ -689,23 +689,23 @@ func harnessNames() []string {
 	return slices.DeleteFunc(settings.ActiveAgents(), func(name string) bool { return name == settings.ActiveDefault })
 }
 
-// entryDetail is one active agent's row: its two lists, or that it has no entry of its own.
+// entryDetail is one active agent's row: its lists, or that it has no entry of its own.
 func entryDetail(shown domain.Configuration, active string) string {
 	for _, entry := range shown.Entries {
 		if entry.ActiveAgent != active {
 			continue
 		}
 
-		parts := make([]string, 0, 2)
+		parts := make([]string, 0, len(settings.Features()))
 		for _, feature := range settings.Features() {
-			parts = append(parts, feature+": "+listLabel(entry.List(feature)))
+			parts = append(parts, feature+": "+entryListLabel(active, entry.List(feature)))
 		}
 
 		return strings.Join(parts, " · ")
 	}
 
 	if active == settings.ActiveDefault {
-		return "review: this harness · consult: this harness (built in; nothing set)"
+		return "review: this harness · consult: this harness · work: this harness (built in; nothing set)"
 	}
 
 	return "no entry of its own; uses the default"
@@ -724,8 +724,11 @@ func newEntryList(shown domain.Configuration, active string) list.Model {
 
 // featureTitle is what a list is for, as a person reads it.
 func featureTitle(feature string) string {
-	if feature == settings.FeatureReview {
+	switch feature {
+	case settings.FeatureReview:
 		return "Review: who reviews"
+	case settings.FeatureWork:
+		return "Work: who builds a bead"
 	}
 
 	return "Consult: who is asked when a run is stuck"
@@ -742,7 +745,7 @@ func featureDetail(shown domain.Configuration, active, feature string) string {
 	}
 
 	if active == settings.ActiveDefault {
-		return "this harness (built in; nothing set)"
+		return builtInLabel
 	}
 
 	return "same as default"

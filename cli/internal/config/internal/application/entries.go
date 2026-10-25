@@ -88,7 +88,7 @@ func (c *Config) SetList(dir, active, feature string, agents []settings.Agent) (
 }
 
 // ClearList removes one active agent's list for a feature, so a session in that harness uses the
-// default entry's list again. An entry left with neither list is removed with it, since it would say
+// default entry's list again. An entry left with no list is removed with it, since it would say
 // nothing.
 func (c *Config) ClearList(dir, active, feature string) (domain.Write, error) {
 	active, feature, err := parseTarget(active, feature)
@@ -111,7 +111,7 @@ func (c *Config) ClearList(dir, active, feature string) (domain.Write, error) {
 
 	detail := fmt.Sprintf("removed %s from %s", path, settingsName)
 
-	if entry.List(otherFeature(feature)).IsAbsent() {
+	if !holdsOtherList(entry, feature) {
 		list.items = slices.Delete(list.items, at, at+1)
 		detail += ", and the " + active + " entry with it, since it named nothing else"
 	} else {
@@ -152,12 +152,15 @@ func listPath(active, feature string) string {
 	return active + " " + feature
 }
 
-func otherFeature(feature string) string {
-	if feature == settings.FeatureReview {
-		return settings.FeatureConsult
+// holdsOtherList reports whether an entry holds a list for any feature but the one given.
+func holdsOtherList(entry settings.Entry, feature string) bool {
+	for _, other := range settings.Features() {
+		if other != feature && entry.List(other).IsPresent() {
+			return true
+		}
 	}
 
-	return settings.FeatureReview
+	return false
 }
 
 // startEntries is what every entries write starts from: settings that exist and that the settings
@@ -258,11 +261,17 @@ func renderEntries(list entryList, indent string) ([]byte, error) {
 func freshEntry(active, feature string, agents []settings.Agent) any {
 	documents := agentDocuments(agents)
 
-	if feature == settings.FeatureReview {
+	switch feature {
+	case settings.FeatureReview:
 		return struct {
 			Active string          `json:"activeAgent"`
 			Review []agentDocument `json:"review"`
 		}{Active: active, Review: documents}
+	case settings.FeatureWork:
+		return struct {
+			Active string          `json:"activeAgent"`
+			Work   []agentDocument `json:"work"`
+		}{Active: active, Work: documents}
 	}
 
 	return struct {

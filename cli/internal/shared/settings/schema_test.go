@@ -123,7 +123,7 @@ func TestSchemaMatchesTheFieldTables(t *testing.T) {
 	}
 
 	// The agents list is keyed by active agent: each entry names one, from the harnesses codefall
-	// can set up plus default, and holds a review list and a consult list of agents on a harness it
+	// can set up plus default, and holds a review, a consult, and a work list of agents on a harness it
 	// can start or current, at least one each when present. Nothing is required of the document as a
 	// whole, because absent means the default (ADR-009.2).
 	agents := schemaObject(t, properties, FieldAgents)

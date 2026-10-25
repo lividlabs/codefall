@@ -213,6 +213,31 @@ func TestEditorOpensAnAbsentListFromTheDefault(t *testing.T) {
 	}
 }
 
+// The work list is the entry's third row, edited like the other two.
+func TestEditorOpensTheWorkList(t *testing.T) {
+	e := newTestEditor(t, &fakeConfig{shown: twoEntries()})
+
+	// muse, then its work list.
+	e = send(t, e, enter, down, down, down, down, enter, down, down, enter)
+	if e.screen != screenList || e.feature != settings.FeatureWork {
+		t.Fatalf("screen = %v, feature = %q, want muse's work list", e.screen, e.feature)
+	}
+
+	if got := e.orderedWorking(); !slices.Equal(got, []settings.Agent{glm, current}) {
+		t.Errorf("the work list shows %+v, want opencode on glm, then current", got)
+	}
+
+	// The default entry writes no work list, so it opens on what a run would use: current.
+	e = send(t, e, escape, escape, press(tea.KeyHome, "", 0), enter, down, down, enter)
+	if e.screen != screenList || e.active != settings.ActiveDefault || e.feature != settings.FeatureWork {
+		t.Fatalf("screen = %v, active = %q, feature = %q, want the default's work list", e.screen, e.active, e.feature)
+	}
+
+	if got := e.orderedWorking(); !slices.Equal(got, []settings.Agent{current}) {
+		t.Errorf("the default's work list shows %+v, want current", got)
+	}
+}
+
 func TestEditorQuitsFromTheMenuWithoutWriting(t *testing.T) {
 	e := newTestEditor(t, &fakeConfig{shown: twoEntries()})
 

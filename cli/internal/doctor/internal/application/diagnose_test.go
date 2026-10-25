@@ -994,6 +994,48 @@ func TestDiagnoseRun(t *testing.T) {
 			wantRemedy: mo.Some(currentRemedy),
 		},
 		{
+			// The work list is checked like the other two: a run that cannot start opencode builds
+			// nothing unless the list ends on current.
+			name: "a work list names no agent on current",
+			mutate: func(f *fakeFileSystem, r *fakeCommandRunner) {
+				f.files[settingsPath] = []byte(withAgents(`[
+    { "activeAgent": "default", "review": [{ "harness": "current" }], "consult": [{ "harness": "current" }] },
+    { "activeAgent": "claude", "work": [{ "harness": "opencode", "model": "digitalocean/glm-5.3#max" }] }
+  ]`))
+				r.paths["opencode"] = "/opt/homebrew/bin/opencode"
+			},
+			want:       outcomes(map[string]domain.Status{domain.AgentsCurrent.ID: domain.StatusWarn}),
+			target:     domain.AgentsCurrent.ID,
+			wantDetail: "claude work names no agent on current",
+			wantRemedy: mo.Some(currentRemedy),
+		},
+		{
+			name: "a work agent runs on a harness that is not on PATH",
+			mutate: func(f *fakeFileSystem, _ *fakeCommandRunner) {
+				f.files[settingsPath] = []byte(withAgents(`[
+    { "activeAgent": "default", "review": [{ "harness": "current" }], "consult": [{ "harness": "current" }] },
+    { "activeAgent": "claude", "work": [{ "harness": "opencode", "model": "digitalocean/glm-5.3#max" }, { "harness": "current" }] }
+  ]`))
+			},
+			want:       outcomes(map[string]domain.Status{domain.AgentsRunnable.ID: domain.StatusWarn}),
+			target:     domain.AgentsRunnable.ID,
+			wantDetail: "opencode is not on PATH",
+			wantRemedy: mo.Some(agentsRemedy),
+		},
+		{
+			name: "every work agent runs on a harness this machine has",
+			mutate: func(f *fakeFileSystem, r *fakeCommandRunner) {
+				f.files[settingsPath] = []byte(withAgents(`[
+    { "activeAgent": "default", "review": [{ "harness": "current" }], "consult": [{ "harness": "current" }] },
+    { "activeAgent": "claude", "work": [{ "harness": "opencode", "model": "digitalocean/glm-5.3#max" }, { "harness": "current" }] }
+  ]`))
+				r.paths["opencode"] = "/opt/homebrew/bin/opencode"
+			},
+			want:       allPass,
+			target:     domain.AgentsRunnable.ID,
+			wantDetail: "default: review current, consult current; claude: work opencode:digitalocean/glm-5.3#max, current",
+		},
+		{
 			name: "the default entry's lists have no agent on current",
 			mutate: func(f *fakeFileSystem, r *fakeCommandRunner) {
 				f.files[settingsPath] = []byte(withAgents(

@@ -151,6 +151,25 @@ func TestAgents(t *testing.T) {
 			},
 		},
 		{
+			name: "a work list is read beside the other two",
+			doc: with(complete(), FieldAgents, []any{map[string]any{
+				"activeAgent": "claude",
+				"work": []any{
+					map[string]any{"harness": "opencode", "model": "digitalocean/glm-5.3#max"},
+					map[string]any{"harness": "current"},
+				},
+			}}),
+			want: []Entry{{
+				ActiveAgent: "claude",
+				Review:      mo.None[[]Agent](),
+				Consult:     mo.None[[]Agent](),
+				Work: mo.Some([]Agent{
+					{Harness: "opencode", Model: mo.Some("digitalocean/glm-5.3#max")},
+					CurrentAgent(),
+				}),
+			}},
+		},
+		{
 			name: "a list Validate refuses reads as the default",
 			doc:  with(complete(), FieldAgents, []any{map[string]any{"activeAgent": "cursor"}}),
 			want: DefaultAgents(),
@@ -192,6 +211,26 @@ func TestOrderResolvesTheActiveAgentThenTheDefaultThenCurrent(t *testing.T) {
 		if got := Order(doc, tc.active, tc.feature); !reflect.DeepEqual(got, tc.want) {
 			t.Errorf("Order(%s, %s) = %+v, want %+v", tc.active, tc.feature, got, tc.want)
 		}
+	}
+
+	// Nobody wrote a work list, so every active agent's resolves to current, the way the default
+	// entry init writes leaves it.
+	if got := Order(doc, "muse", FeatureWork); !reflect.DeepEqual(got, []Agent{CurrentAgent()}) {
+		t.Errorf("Order(muse, work) = %+v, want current alone", got)
+	}
+
+	// A work list on the default entry is what an active agent without one walks.
+	withWork := with(complete(), FieldAgents, []any{
+		map[string]any{"activeAgent": "default", "work": []any{map[string]any{"harness": "codex"}, map[string]any{"harness": "current"}}},
+		map[string]any{"activeAgent": "claude", "work": []any{map[string]any{"harness": "opencode"}}},
+	})
+
+	if got, want := Order(withWork, "muse", FeatureWork), []Agent{codex, CurrentAgent()}; !reflect.DeepEqual(got, want) {
+		t.Errorf("Order(muse, work) = %+v, want %+v", got, want)
+	}
+
+	if got, want := Order(withWork, "claude", FeatureWork), []Agent{{Harness: "opencode", Model: mo.None[string]()}}; !reflect.DeepEqual(got, want) {
+		t.Errorf("Order(claude, work) = %+v, want %+v", got, want)
 	}
 
 	// Settings that carry no list at all resolve to the default entry's lists.
@@ -320,6 +359,17 @@ func TestValidateAgents(t *testing.T) {
 			doc: with(complete(), FieldAgents, []any{map[string]any{"activeAgent": "muse",
 				"consult": []any{map[string]any{"harness": "codex", "model": 5.0}}}}),
 			want: []string{"agents: [0].consult[0].model: must be a string"},
+		},
+		{
+			name: "an empty work list",
+			doc:  with(complete(), FieldAgents, []any{map[string]any{"activeAgent": "claude", "work": []any{}}}),
+			want: []string{"agents: [0].work: must name at least one agent; leave the key out to use the default entry's list"},
+		},
+		{
+			name: "a work agent on a harness codefall cannot start",
+			doc:  with(complete(), FieldAgents, []any{map[string]any{"activeAgent": "claude", "work": []any{map[string]any{"harness": "cursor"}}}}),
+			want: []string{`agents: [0].work[0].harness: unknown value "cursor" ` +
+				`(expected "agy", "claude", "codex", "current", "muse", "opencode", or a harnessConfig key)`},
 		},
 		{
 			// An entry with neither list is allowed: it says nothing, and the default applies.

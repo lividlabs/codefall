@@ -11,19 +11,23 @@ import (
 )
 
 // The agents a project reaches for when a verb needs another reader: a reviewer, or a second
-// opinion on a decision the run cannot settle (ADR-009.2). The list is keyed by the harness the
-// session is running in, the active agent, because which agent to reach for is a question asked
-// from inside a harness: a session in Muse may want Claude to review, a session in Claude Code may
-// want Codex. Each entry holds one ordered list per feature, review and consult.
+// opinion on a decision the run cannot settle, or a worker that builds a bead (ADR-009.5). The list
+// is keyed by the harness the session is running in, the active agent, because which agent to reach
+// for is a question asked from inside a harness: a session in Muse may want Claude to review, a
+// session in Claude Code may want Codex. Each entry holds one ordered list per feature, review,
+// consult, and work.
 const (
 	// FieldAgents is the top-level array of entries, one per active agent.
 	FieldAgents = "agents"
 	// FieldActiveAgent is the harness an entry is for: one of the five harness names, or default,
 	// which covers every harness without an entry of its own.
 	FieldActiveAgent = "activeAgent"
-	// FeatureReview and FeatureConsult are the two lists an entry holds, under the feature's name.
+	// FeatureReview, FeatureConsult, and FeatureWork are the lists an entry holds, under the
+	// feature's name. Work is the agents codefall-implement offers to build a bead, which run with
+	// write access to a worktree; the other two only read.
 	FeatureReview  = "review"
 	FeatureConsult = "consult"
+	FeatureWork    = "work"
 	// The two fields of one agent in a list.
 	FieldAgentHarness = "harness"
 	FieldAgentModel   = "model"
@@ -42,12 +46,13 @@ type Agent struct {
 	Model   mo.Option[string]
 }
 
-// Entry is what one active agent reaches for: its review list and its consult list, each absent
-// when the entry leaves that feature to the default entry.
+// Entry is what one active agent reaches for: its review list, its consult list, and its work list,
+// each absent when the entry leaves that feature to the default entry.
 type Entry struct {
 	ActiveAgent string
 	Review      mo.Option[[]Agent]
 	Consult     mo.Option[[]Agent]
+	Work        mo.Option[[]Agent]
 }
 
 // List returns the entry's list for a feature, absent when the entry has none.
@@ -57,14 +62,16 @@ func (e Entry) List(feature string) mo.Option[[]Agent] {
 		return e.Review
 	case FeatureConsult:
 		return e.Consult
+	case FeatureWork:
+		return e.Work
 	}
 
 	return mo.None[[]Agent]()
 }
 
-// Features returns the two features an entry holds a list for, in the order the file writes them.
+// Features returns the features an entry holds a list for, in the order the file writes them.
 func Features() []string {
-	return []string{FeatureReview, FeatureConsult}
+	return []string{FeatureReview, FeatureConsult, FeatureWork}
 }
 
 // CurrentAgent is the one agent every list falls back to: a subagent of the harness running the
@@ -76,7 +83,8 @@ func CurrentAgent() Agent {
 // DefaultAgents is the list a project has when settings carry none: one default entry whose two
 // lists each hold the current harness's own subagent, which is what every verb did before the list
 // existed. init writes it explicitly into a new project's settings, and every reader takes it when
-// the field is absent, so the two agree.
+// the field is absent, so the two agree. It holds no work list: a work list left out resolves to
+// current as well, which is what codefall-implement did before the list existed.
 func DefaultAgents() []Entry {
 	return []Entry{{
 		ActiveAgent: ActiveDefault,
@@ -169,7 +177,12 @@ func Agents(doc Document) []Entry {
 		fields, _ := item.(map[string]any)
 		active, _ := fields[FieldActiveAgent].(string)
 
-		entry := Entry{ActiveAgent: active, Review: mo.None[[]Agent](), Consult: mo.None[[]Agent]()}
+		entry := Entry{
+			ActiveAgent: active,
+			Review:      mo.None[[]Agent](),
+			Consult:     mo.None[[]Agent](),
+			Work:        mo.None[[]Agent](),
+		}
 
 		if value, ok := lookup(fields, FeatureReview); ok {
 			entry.Review = mo.Some(agentList(value))
@@ -177,6 +190,10 @@ func Agents(doc Document) []Entry {
 
 		if value, ok := lookup(fields, FeatureConsult); ok {
 			entry.Consult = mo.Some(agentList(value))
+		}
+
+		if value, ok := lookup(fields, FeatureWork); ok {
+			entry.Work = mo.Some(agentList(value))
 		}
 
 		entries = append(entries, entry)
@@ -260,7 +277,7 @@ func agentList(value any) []Agent {
 }
 
 // isAgents accepts the top-level array: any number of entries, each an object naming an active
-// agent nobody else in the array names, with a review list, a consult list, or both, each a
+// agent nobody else in the array names, with any of a review, a consult, and a work list, each a
 // non-empty array of agents whose harness is written. An empty array is accepted and means the
 // default, the same as an absent one. What a harness may name is checked against the whole document
 // afterwards, by agentHarnessProblem, because a harnessConfig key is one of the answers.
