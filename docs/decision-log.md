@@ -2069,6 +2069,29 @@ Decided at scaffold, 2026-08-16.
   findings, re-runs the checks, commits the findings files, and pushes. One list, not a second one,
   because which agents may write code is one decision for a project.
 
+- **Codefall supports OpenCode 2 only, and calls it with `--standalone` and without `--pure`, 2026-10-25.**
+  OpenCode 2.1.4 refuses `--pure` ("Unrecognized flag: --pure in command opencode run") and exits 1
+  before the model starts, so every OpenCode review or consult through `run-agent.sh` exited 76 and
+  was skipped (#228). `run-agent.sh` also never passed `--standalone`, so `opencode run` sent the
+  request to a background service that may have been started elsewhere, without the run's PATH,
+  working directory, or environment. Now both scripts call `opencode run --standalone`, never
+  `--pure`, with the message before `--file`, and neither reads `opencode run --help`; OpenCode 1.x
+  is unsupported, a project on it upgrades by hand, and the change is breaking. The running-agents
+  reference, the configuration and setup guides, and the README say OpenCode 2 is required, and
+  equip's agents track reads `opencode --version` and says to upgrade on 1.x, writing nothing.
+  Doctor is unchanged, since it runs nothing a project declares. ADR-009.6 is the edition;
+  ADR-009.5's status flipped and nothing else in it moved. Checked without a model run, against a
+  private server on 2.1.4: the codefall OpenCode plugin does not load at all, because OpenCode 2
+  wants a default export with an `id` and the plugin is a named export in OpenCode 1's form, so no
+  plugin guard or session notice reaches an OpenCode run, the reverse of what ADR-009.5 said.
+  A plugin in OpenCode 2's form would load, and `OPENCODE_CONFIG_PROJECT_DISABLE=1` keeps it out, and
+  also drops the project's own OpenCode configuration, so it is not set. Seen and not taken:
+  supporting 1.x and 2.x by reading the help, which `run-worker.sh` briefly did (the user chose
+  2.x only, for simplicity and independence from help text); `"-*"` to remove plugins (it removes
+  OpenCode's own); leaving `--standalone` off the reviewer's call. Left open: the codefall plugin
+  in OpenCode 2's form, and whether its guard is worth the cost of the one switch that keeps plugins
+  out of a headless run.
+
 ## Open
 
 - (nothing open; the last item graduated to ADR-012 on 2026-09-27)

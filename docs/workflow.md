@@ -124,7 +124,7 @@ Four verbs sit beside the chain rather than in it:
   ([ADR-007](https://github.com/lividlabs/codefall/blob/main/docs/adrs/ADR-007-test-cases.md)).
   The third is the agents: how another harness is called, under `harnessConfig`, and who reviews,
   consults, and builds, in the `agents` lists, set up from any harness
-  ([ADR-009.5](https://github.com/lividlabs/codefall/blob/main/docs/adrs/ADR-009.5-agents.md)).
+  ([ADR-009.6](https://github.com/lividlabs/codefall/blob/main/docs/adrs/ADR-009.6-agents.md)).
   The fourth is the document landing: the GitHub Action that merges a document pull request once
   a person adds the `auto-merge` label to it or approves it, and the label itself, with the branch
   rule read and

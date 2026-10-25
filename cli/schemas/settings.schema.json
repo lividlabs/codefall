@@ -24,7 +24,7 @@
       }
     },
     "agents": {
-      "description": "Who codefall reaches for when a verb needs another reader, by the harness the session is running in (ADR-009.2). Each entry is for one active agent, one of the five harness names or default, and holds a review list, a consult list, and a work list, each the agents to try in order. A list left out means the default entry's list; a default entry left out means the current harness's own subagent. Absent means one default entry whose review and consult lists each hold current, which codefall init writes explicitly; a work list left out resolves to current the same way (ADR-009.5).",
+      "description": "Who codefall reaches for when a verb needs another reader, by the harness the session is running in (ADR-009.2). Each entry is for one active agent, one of the five harness names or default, and holds a review list, a consult list, and a work list, each the agents to try in order. A list left out means the default entry's list; a default entry left out means the current harness's own subagent. Absent means one default entry whose review and consult lists each hold current, which codefall init writes explicitly; a work list left out resolves to current the same way (ADR-009.6).",
       "type": "array",
       "items": {
         "type": "object",
