@@ -262,14 +262,19 @@ run_claude() {
 # OpenCode's `plan` agent is its read-only one. It has no schema flag, so the
 # copy of the schema in the prompt is all it gets. --pure runs without external
 # plugins, which is where OpenCode's hooks live.
+#
+# The message comes before --file because --file is an array option: it takes
+# every value up to the next flag, so a message placed after it is read as a
+# second file path and the run fails with "File not found" before the model
+# starts. Last on the line, --file takes exactly one value.
 run_opencode() {
   opencode run \
     "${model_flag[@]+"${model_flag[@]}"}" \
     "${extra_args[@]+"${extra_args[@]}"}" \
     --pure \
     --agent plan \
-    --file "$prompt" \
-    "Answer as the attached prompt says. Reply with the JSON it asks for and nothing else." >"$out"
+    "Answer as the attached prompt says. Reply with the JSON it asks for and nothing else." \
+    --file "$prompt" >"$out"
 }
 
 # Muse's headless mode is `exec`. Its read-only mode is three flags rather than
