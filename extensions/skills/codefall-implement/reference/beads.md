@@ -53,6 +53,9 @@ bd close <bead> -r "done: criteria R1,R2 verified, checks green, PR #101 open" -
 bd dolt push
 ```
 
+A bead built in another harness names its agent as the `work` list writes it, `built with
+opencode:digitalocean/glm-5.3#max`, so the record says which harness and model wrote the code.
+
 **The close is the engine.** Closing a bead removes it as a blocker, so `--suggest-next` prints the
 next wave straight from the graph. **Closed means done, not merged**; the merge is tracked by the
 gates below.

@@ -322,7 +322,7 @@ project to its profiles.
 | --- | --- |
 | See every install option | [Installing codefall](docs/guide/install.md) |
 | Find out what `init` adds to a repository | [Setting up a project](docs/guide/setup.md) |
-| Choose which agents review and consult, or set your persona | [Configuration](docs/guide/configuration.md) |
+| Choose which agents review, consult, and build, or set your persona | [Configuration](docs/guide/configuration.md) |
 | Learn how one skill works | [The guide](docs/guide/) |
 | See what each skill reads and writes | [`docs/workflow.md`](docs/workflow.md) |
 | Merge document pull requests automatically | [`docs/landing-documents.md`](docs/landing-documents.md) |

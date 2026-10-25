@@ -55,14 +55,15 @@ Otherwise render it in exactly this shape, with the running harness in place of 
 
 - **Review**: codex (gpt-6-sol), then itself
 - **Consult**: codex (gpt-6-astra), then itself
+- **Work**: itself
 ```
 
 - **Harnesses** lists every name under `harnesses`, one line each. A name with a `harnessConfig`
   block gets its `provider` in plain words, and `credentials from aws` when the block has an `env`
   command. A variant key is its own line under the harness it runs, as
   `**codex-direct**: codex, first-party`. A name with no block is `not set up`.
-- **Who `<harness>` asks** shows the `review` and `consult` lists of this harness's entry, falling
-  back to `default` per *Resolving the list*. Each item is `<harness> (<model>)`, with the model
+- **Who `<harness>` asks** shows the `review`, `consult`, and `work` lists of this harness's entry,
+  falling back to `default` per *Resolving the list*; a `work` list nothing sets is `itself`. Each item is `<harness> (<model>)`, with the model
   shortened to what a person says: `gpt-6-sol`, not `codex:us.openai.gpt-6-sol`. `current` is
   `itself`. Items are joined with `, then`. A list that is one `current` agent is `itself`.
 
@@ -76,7 +77,7 @@ Directly under the configuration, ask:
 Would you like to change anything?
 
 1. Set up a harness
-2. Add, reorder, or remove reviewers or consultants
+2. Add, reorder, or remove reviewers, consultants, or workers
 3. Nothing, this is fine
 ```
 
@@ -99,7 +100,9 @@ without narrating the search, and work out the block:
   user names some. `modelFlag` only when the harness's flag is not `--model`.
 - **The lists.** `<key>:<model>` first, `current` kept last, in the `review` and `consult` lists of
   every other harness under `harnesses` and of `default`. Never in the entry of the harness being
-  set up: codex reviewing through codex is the second opinion ADR-009 says is worth less.
+  set up: codex reviewing through codex is the second opinion ADR-009 says is worth less. Never in
+  a `work` list unless the user names it: a worker writes code, and which harness builds is their
+  call, made in choice 2. Muse and agy have no write mode, so neither goes in a `work` list.
 - **Hooks stay off.** `run-agent.sh` starts codex, claude, and opencode with their hooks off, and
   a headless run must stay that way: one that loaded the project's session hooks followed them
   into a refresh instead of answering. `args` never carries a flag that turns hooks back on. Muse
@@ -204,6 +207,7 @@ Write through the CLI, since it validates the whole file and keeps its formattin
 codefall config harness <key> [--harness <binary>] [--provider <name>] [--arg <a>]... [--env <cmd>]
 codefall config agents <activeAgent> review <key>:<model> current
 codefall config agents <activeAgent> consult <key>:<model> current
+codefall config agents <activeAgent> work <key>:<model> current
 ```
 
 The `agents` command replaces a list, so pass the whole list the user confirmed, not only the new
@@ -224,7 +228,9 @@ printf 'Reply with the single word ok.\n' > /tmp/codefall-probe.txt
   ../../../../.codefall/shared/consult.schema.json /tmp/codefall-probe.out
 ```
 
-Exit `0` and a non-empty out-file is the proof, reported as one line: `claude answered the probe.`
+The probe runs read-only for every list, `work` included: it proves the harness starts with this
+block, which is what `run-worker.sh` needs too, and starts no build. Exit `0` and a non-empty
+out-file is the proof, reported as one line: `claude answered the probe.`
 Any other exit is reported in one line with the script's stderr, and the block is revised, not
 left: `76` with a credentials error means the `env` command is missing or wrong; `64` names a field
 the harness cannot take; `69` means the binary is not on this machine's `PATH`, which `doctor` will

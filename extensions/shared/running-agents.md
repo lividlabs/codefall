@@ -1,10 +1,11 @@
 # Running another agent
 
-Shared procedure. Every verb that hands a question to another agent — `codefall-review` for its
-reviewer, and the verbs that consult when a run cannot settle something on its own — follows it, so
-the rules about which agent runs, in what order, and what its answer is allowed to do are stated
-once. [ADR-009.2](https://github.com/lividlabs/codefall/blob/main/docs/adrs/ADR-009.2-agents.md)
-holds the reasoning.
+Shared procedure. Every verb that hands work to another agent — `codefall-review` for its
+reviewer, the verbs that consult when a run cannot settle something on its own, and
+`codefall-implement` for a worker in another harness — follows it, so the rules about which agent
+runs, in what order, and what it is allowed to do are stated once.
+[ADR-009.2](https://github.com/lividlabs/codefall/blob/main/docs/adrs/ADR-009.2-agents.md) holds the
+reasoning.
 
 ## Contents
 
@@ -15,6 +16,7 @@ holds the reasoning.
 - `via=` overrides for one run
 - An agent proposes
 - Consulting
+- Building in another harness
 
 ## Which harness this is
 
@@ -43,12 +45,13 @@ may run in:
 ```
 
 `activeAgent` is the harness the session is running in, one of the five above, or `default`. Each
-entry has a `review` list and a `consult` list, and each item names a `harness`, one of the five or
-`current`, meaning a subagent of this harness, with an optional `model`.
+entry may have a `review` list, a `consult` list, and a `work` list, and each item names a
+`harness`, one of the five or `current`, meaning a subagent of this harness, with an optional
+`model`.
 
 Take the entry whose `activeAgent` is the harness answered above, else the `default` entry; an
 `unknown` answer takes the `default` entry. Within it, take the feature's list: `review` for a
-review, `consult` for a consult. A list the entry does not have is the `default` entry's list, and
+review, `consult` for a consult, `work` for a worker that builds a bead. A list the entry does not have is the `default` entry's list, and
 with no `default` entry it is one `current` agent. The list's order is the order to try.
 
 ## How a harness is called
@@ -121,7 +124,8 @@ list for that run with that one agent, and writes nothing.
 
 ## An agent proposes
 
-An agent run this way is read-only, and the script starts each harness in the mode that enforces it.
+An agent run through `run-agent.sh` is read-only, and the script starts each harness in the mode
+that enforces it.
 It proposes; this session decides. Its answer never writes a file, never settles a hard-to-reverse
 choice, and never stands in for the person the verb's own rules name: a disagreement with the user
 is a preference and not a question for another agent, and a missing precondition is an exit and
@@ -149,3 +153,29 @@ The list's default is one `current` agent, so a project that has configured noth
 consults its own harness's subagent: a fresh context reading the same files, which is worth having
 at no configuration cost. What configuration adds is a second model.
 
+## Building in another harness
+
+A worker builds one bead in a worktree, so it writes, and it runs through the script built for
+that, beside this file (run-worker.sh):
+
+```
+run-worker.sh <harness>[:<model>] <worktree> <prompt-file> <out-file>
+```
+
+It takes the same agents and the same `harnessConfig` blocks as `run-agent.sh`, and its exit codes
+mean the same: `0` finished, `70` run a subagent yourself, `69` and `64` not runnable here, `73`,
+`75`, and `76` ran and failed. It starts codex, claude, and opencode in their build modes with
+scoped permissions, never a blanket approval: edits allowed, the shell allowed except `git push`,
+`gh`, and `bd`, the network tools and other directories denied. Shims first on the worker's PATH
+refuse the same three commands, except `bd hooks run`, which the beads git hooks call on every
+commit. Muse and agy have no write mode yet, and the script exits `64` for them. A run is killed
+after `CODEFALL_WORK_TIMEOUT` seconds, an hour by default. The final message lands in the out-file
+and the transcript in `<out-file>.transcript`; after an OpenCode run the script prints the model and
+variant OpenCode recorded for the session.
+
+A worker never runs `bd`, never pushes, and never opens a pull request. The session that ran it
+creates the worktree and installs the dependencies first, and afterwards reviews the diff against
+the bead, re-runs the checks, breaks the code each new test covers to see the test fail, and then
+pushes and opens the pull request itself. `codefall-implement`'s `reference/workers.md` holds that
+procedure. A worker is chosen per bead at implement's gate from the `work` list; nothing walks the
+list on its own.

@@ -40,10 +40,11 @@ Read each when its step says to; none is loaded up front.
   `../../../.codefall/shared/check-cases.sh`.
 - `../codefall-implement/reference/beads.md` — the `bd` commands: session start, claim and close,
   discovered work, session end. Read at step 5.
-- `../codefall-implement/reference/workers.md` — launching the worker, its result, failure handling,
-  and consulting. Read at step 6. Names `../codefall-implement/worker-prompt.md`,
+- `../codefall-implement/reference/workers.md` — launching the worker, here or in another harness,
+  its result, failure handling, and consulting. Read at steps 4 and 6. Names `../codefall-implement/worker-prompt.md`,
   `../../../.codefall/shared/running-agents.md`, `../../../.codefall/shared/run-agent.sh`,
-  `../../../.codefall/shared/consult-prompt.md`, `../../../.codefall/shared/consult.schema.json`.
+  `../../../.codefall/shared/run-worker.sh`, `../../../.codefall/shared/consult-prompt.md`,
+  `../../../.codefall/shared/consult.schema.json`.
 - `../../../.codefall/shared/triage.md` — the fields a triaged bead carries, and the size that says
   an item is this verb's. Read at step 2 with no argument, and at step 6 for a discovered bug.
 
@@ -128,7 +129,8 @@ Show everything the run will do, in one block, and wait. Nothing is written befo
   acceptance criteria, and the test case when there is one. For an existing bead, what changes in it,
   or that nothing does.
 - **The approach**: the files to touch, the approach, the test plan, the branch
-  (`feat/<bead>-<slug>`), and the model the worker runs on.
+  (`feat/<bead>-<slug>`), and the harness and model the worker runs on, from the `work` list per
+  `../codefall-implement/reference/workers.md`.
 - **The verification commands** and where they came from, per
   `../codefall-implement/reference/done.md`.
 - **The permissions condition**: the worker runs in the background and cannot answer a permission
@@ -148,6 +150,9 @@ One worker, in its own worktree, per `../codefall-implement/reference/workers.md
 `PR_TARGET` are the default branch. The pull request body carries `Fixes #<issue>` when the bead
 traces to a bug report with an issue, `Relates to #<spec-issue>` when it traces to a spec with a
 mirror, and neither otherwise.
+
+A worker in another harness never pushes: the root reviews its branch, pushes it, and opens the pull
+request, per *Workers in another harness* in `workers.md`.
 
 **Verify the worker, never trust it**: the branch is on the remote, the pull request exists, and the
 bead is done per `../codefall-implement/reference/done.md`. A failure is consulted on and retried

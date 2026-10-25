@@ -1,6 +1,6 @@
 ---
 name: codefall-equip
-description: Equip a project with the four things it has to have before the other verbs work. The local environment — start and update, declared under local in .codefall/settings.json and run by codefall-refresh. The test harness — a spec runner per surface, pointed at the testing root, declared in test.runners, its commands recorded in the testing root's AGENTS.md, which codefall-test runs cases through. The agents — how another harness is called, under harnessConfig, and who reviews and consults, in the agents lists — set up from any harness. The document landing — the GitHub Action that merges a document pull request once a person adds the auto-merge label to it or approves it. Each finds what the project already has, or drafts it from what the repository or the session shows, confirms, writes, and declares. Builds and rebuilds; codefall-scaffold and codefall-implement follow the local-scripts procedure.
+description: Equip a project with the four things it has to have before the other verbs work. The local environment — start and update, declared under local in .codefall/settings.json and run by codefall-refresh. The test harness — a spec runner per surface, pointed at the testing root, declared in test.runners, its commands recorded in the testing root's AGENTS.md, which codefall-test runs cases through. The agents — how another harness is called, under harnessConfig, and who reviews, consults, and builds, in the agents lists — set up from any harness. The document landing — the GitHub Action that merges a document pull request once a person adds the auto-merge label to it or approves it. Each finds what the project already has, or drafts it from what the repository or the session shows, confirms, writes, and declares. Builds and rebuilds; codefall-scaffold and codefall-implement follow the local-scripts procedure.
 argument-hint: "[local | test | agents | landing] [path]"
 disable-model-invocation: true
 allowed-tools:
@@ -41,7 +41,7 @@ its own proof, and its own pull request.
 | --- | --- | --- |
 | `local`, or a path alone | the two local-environment scripts | [Process — the local scripts](#process--the-local-scripts) |
 | `test` | the test harness | [Process — the test harness](#process--the-test-harness) |
-| `agents` | how this harness is called, and who reviews and consults | [Process — the agents](#process--the-agents) |
+| `agents` | how this harness is called, and who reviews, consults, and builds | [Process — the agents](#process--the-agents) |
 | `landing` | the Action that merges document pull requests | [Process — the document landing](#process--the-document-landing) |
 
 A path may follow any word; it is the project directory, and the working directory is the default.

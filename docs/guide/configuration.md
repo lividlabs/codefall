@@ -42,13 +42,14 @@ It says three things:
 
 The rest of this page explains each part.
 
-## Choose who reviews and who answers questions
+## Choose who reviews, who answers questions, and who builds
 
 Some skills need a second reader. `/codefall-review` hands the code or document to a *reviewer*, a
 different agent from the one that wrote it. Several skills also *consult*: when a run reaches a
 question of fact it cannot settle, such as how the existing system behaves in a case nobody
-described, it asks another agent once and brings the answer to you as a proposal. The `agents` list
-in `settings.json` decides who those readers are.
+described, it asks another agent once and brings the answer to you as a proposal. And
+`/codefall-implement` can give a task to a *worker* in another harness, such as a cheaper model for
+a mechanical change. The `agents` list in `settings.json` decides who these agents are.
 
 Codefall calls each coding agent a *harness* and names it after its command: `claude`, `codex`,
 `opencode`, `agy`, or `muse`. The harness you are running Codefall in is the *active agent*, and each
@@ -57,6 +58,8 @@ entry in `agents` applies to one active agent:
 - `activeAgent` is a harness name, or `default` for every harness without an entry of its own.
 - `review` is the list of agents that review, tried in order.
 - `consult` is the list of agents that answer questions, tried in order.
+- `work` is the list of agents `/codefall-implement` offers to build a task. It proposes one per
+  task when it asks you to approve the run, and you can change any of them there.
 
 Each agent in a list names a harness and, optionally, a model. The harness `current` means a
 subagent of whichever harness you are running in.
@@ -69,8 +72,14 @@ A run picks its list this way:
 
 Because a run skips agents it cannot start, one checked-in file works on every machine on the team.
 
+A worker in another harness can edit files only in its task's worktree. It cannot push, open a pull
+request, or use beads; the session that started it reviews its changes, runs the project's checks
+again, and opens the pull request itself. Codex, Claude Code, and OpenCode can be workers. Muse and
+agy cannot yet, so a run skips them in a `work` list.
+
 `init` writes a single `default` entry whose `review` and `consult` lists each hold `current`. That
-matches what every skill did before the list existed. `codefall doctor` reports which of the listed
+matches what every skill did before the list existed. With no `work` list, every task is built by a
+subagent of the harness you are running in, as before. `codefall doctor` reports which of the listed
 harnesses this machine can run, and which lists never fall back to `current`.
 [ADR-009.3](../adrs/ADR-009.3-agents.md) records the shape of the list.
 
@@ -102,12 +111,12 @@ and runs the agent once to prove it works.
 Run `codefall config` in a terminal to open an editor with four entries:
 
 - **Agents** lists the active agents, `default` first and then each harness. Open one to see its
-  Review and Consult lists.
+  Review, Consult, and Work lists.
 - **Reviews** sets whether `/codefall-review` posts its findings to the pull request.
 - **Persona** sets your persona, described below.
 - **Quit** leaves the editor.
 
-In a Review or Consult list, these keys apply:
+In a Review, Consult, or Work list, these keys apply:
 
 | Key | Action |
 | --- | --- |
@@ -132,6 +141,7 @@ Each setting also has a subcommand, for scripts and for setting one value quickl
 | `codefall config agents` | Prints the agents lists. |
 | `codefall config agents muse review claude codex:gpt-5-codex` | Sets one list: here, the review list for sessions in Muse. Each agent is a harness with an optional model after a colon. |
 | `codefall config agents muse review --clear` | Removes that list, so the `default` entry's list applies. |
+| `codefall config agents claude work opencode:digitalocean/glm-5.3#max current` | Sets the work list for sessions in Claude Code: OpenCode on that model, then Claude Code's own subagent. |
 | `codefall config harness` | Prints the `harnessConfig` blocks. |
 | `codefall config harness codex --provider amazon-bedrock-runtime --env "aws configure export-credentials --format env"` | Replaces one block with exactly the flags given. The flags are `--harness`, `--model-flag`, `--provider`, `--arg` (repeat it for several), and `--env`. |
 | `codefall config harness codex --clear` | Removes the block, so the harness runs with no extra settings. |
