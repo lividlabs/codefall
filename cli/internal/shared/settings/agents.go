@@ -23,8 +23,8 @@ const (
 	// which covers every harness without an entry of its own.
 	FieldActiveAgent = "activeAgent"
 	// FeatureReview, FeatureConsult, and FeatureWork are the lists an entry holds, under the
-	// feature's name. Work is the agents codefall-implement offers to build a bead, which run with
-	// write access to a worktree; the other two only read.
+	// feature's name. Work is the agents that may write code: codefall-implement offers them to
+	// build a bead, and codefall-review to apply the fixes taken on a branch. The other two only read.
 	FeatureReview  = "review"
 	FeatureConsult = "consult"
 	FeatureWork    = "work"

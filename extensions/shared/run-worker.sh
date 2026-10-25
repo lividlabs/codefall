@@ -1,16 +1,16 @@
 #!/usr/bin/env bash
 #
-# Run one worker in another harness, headless, with write access to one worktree.
+# Run one worker in another harness, headless, building in one worktree.
 #
-# `codefall-implement` writes the prompt — the bead, the criteria, the branch, the
-# checks — and creates the worktree the worker builds in. This script starts the
-# harness the agent names, with its model when it names one, inside that
-# worktree, and puts the worker's final message in one file and the run's
-# transcript in another. It parses nothing and decides nothing: whether the
-# branch is any good is the root's to judge, and the root reviews the diff,
-# re-runs the checks, pushes, and opens the pull request itself. Which harness
-# to use for a bead is the root's to choose from the `work` list, per
-# `running-agents.md` beside this file; this script runs exactly one entry.
+# A verb writes the prompt — `codefall-implement` for a bead, `codefall-review`
+# for the fixes the person took on a branch — and creates the worktree the worker
+# builds in. This script starts the harness the agent names, with its model when
+# it names one, inside that worktree, and puts the worker's final message in one
+# file and the run's transcript in another. It parses nothing and decides
+# nothing: whether the branch is any good is the root's to judge, and the root
+# reviews the diff, re-runs the checks, and pushes itself. Which harness to use
+# is the root's to choose from the `work` list, per `running-agents.md` beside
+# this file; this script runs exactly one entry.
 #
 # This is the one runner that may write, and the reason `run-agent.sh` gives for
 # never writing still holds: a subprocess that edits bypasses the host's

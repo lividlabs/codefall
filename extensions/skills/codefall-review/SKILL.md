@@ -47,6 +47,9 @@ Read each when its step says to; none is loaded up front.
   `../codefall-specify/trackers/<name>/PROFILE.md`, and `../../../.codefall/shared/triage.md`.
 - `reference/posting.md` — posting findings to a pull request. Read at step 5 when the target is
   an open pull request.
+- `reference/worker-fixes.md` — fixes applied by a worker in another harness from the `work` list:
+  when it is offered, the worktree, the run, and what this session checks before it pushes. Read at
+  step 5 when fixes land on a branch, and at step 6. Names `../../../.codefall/shared/run-worker.sh`.
 - `reviewer-prompt.md` and `findings.schema.json` — the prompt each reviewer is rendered from and
   the shape every reviewer returns.
 - `../../../.codefall/shared/running-agents.md` — which harness this is, resolving and walking the
@@ -204,7 +207,8 @@ the person may change in the same answer.
 A dismissed finding is written with its `reason`; a dismissal with no reason is asked for one
 before the write.
 
-Apply the accepted fixes, code and documents alike. A finding's proposed `patch` is a starting
+Apply the accepted fixes, code and documents alike, here or, when the person picks one, through a
+worker in another harness per `reference/worker-fixes.md`. A finding's proposed `patch` is a starting
 point, not a script — apply the intent, matching the surrounding code. Fixes are not re-reviewed
 here. **On an epic's work, a taken code finding is not fixed here**: it is
 filed in the `code` form below, or the `plan` form where the plan caused it, its status is
@@ -298,7 +302,7 @@ run, and say so.
 ## Rules
 
 - **The reviewer never fixes.** Review in a subagent or another harness; triage and fix in this
-  session.
+  session, or through a worker it runs and checks.
 - **Nothing is changed before triage.** The user decides what gets fixed.
 - **Confirm the scope before reviewing it.** A review of the wrong files costs the whole run.
 - **Be certain, or put it in `notChecked`.** Uncertainty is recorded, never dressed as a finding.

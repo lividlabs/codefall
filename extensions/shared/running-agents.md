@@ -178,8 +178,11 @@ and the transcript in `<out-file>.transcript`; after an OpenCode run the script 
 variant OpenCode recorded for the session.
 
 A worker never runs `bd`, never pushes, and never opens a pull request. The session that ran it
-creates the worktree and installs the dependencies first, and afterwards reviews the diff against
-the bead, re-runs the checks, breaks the code each new test covers to see the test fail, and then
-pushes and opens the pull request itself. `codefall-implement`'s `reference/workers.md` holds that
-procedure. A worker is chosen per bead at implement's gate from the `work` list; nothing walks the
-list on its own.
+creates the worktree and installs the dependencies first, and afterwards restores anything the
+git-directory report names, reviews the diff against what the worker was asked to do, re-runs the
+checks, breaks the code each new test covers to see the test fail, and then pushes itself. Two
+verbs run workers from the same `work` list. `codefall-implement` builds a bead, choosing a worker
+per bead at its gate; its `reference/workers.md` holds the procedure, and it opens the pull request
+itself. `codefall-review` applies the fixes the person took on a branch or pull request, when the
+person picks a worker at triage; its `reference/worker-fixes.md` holds the procedure. Nothing walks
+the list on its own.

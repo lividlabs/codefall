@@ -58,8 +58,9 @@ entry in `agents` applies to one active agent:
 - `activeAgent` is a harness name, or `default` for every harness without an entry of its own.
 - `review` is the list of agents that review, tried in order.
 - `consult` is the list of agents that answer questions, tried in order.
-- `work` is the list of agents `/codefall-implement` offers to build a task. It proposes one per
-  task when it asks you to approve the run, and you can change any of them there.
+- `work` is the list of agents that may write code for a run. `/codefall-implement` proposes one
+  per task when it asks you to approve the run, and you can change any of them there.
+  `/codefall-review` offers them when you choose which findings to fix on a branch or pull request.
 
 Each agent in a list names a harness and, optionally, a model. The harness `current` means a
 subagent of whichever harness you are running in.

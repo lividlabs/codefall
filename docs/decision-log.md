@@ -2062,7 +2062,12 @@ Decided at scaffold, 2026-08-16.
   and exits 77, naming each file, when the run changed one, and the root restores them before any
   other git command; the header, the ADR, and the docs say what each harness can reach instead of
   claiming a bad run costs only a branch. OpenCode 2 refuses `--pure`, so the worker passes it and
-  `--standalone` only when the installed OpenCode lists them.
+  `--standalone` only when the installed OpenCode lists them. Review's fix step was decided the
+  same day instead of left open: on a branch or pull request target, triage may give the accepted
+  fixes to one worker from the same `work` list, run in a worktree off the target's branch, and the
+  session restores what the git-directory report names, checks the diff against the accepted
+  findings, re-runs the checks, commits the findings files, and pushes. One list, not a second one,
+  because which agents may write code is one decision for a project.
 
 ## Open
 

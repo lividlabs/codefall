@@ -48,7 +48,7 @@
             "items": { "$ref": "#/$defs/agent" }
           },
           "work": {
-            "description": "Who codefall-implement offers to build a bead for a session in this harness, one per bead at the go gate. A worker on another harness runs through the shared run-worker script with write access to its worktree and no push, gh, or bd; the session reviews its branch and opens the pull request.",
+            "description": "Who may write code for a session in this harness: codefall-implement offers one per bead at the go gate, and codefall-review offers them for the fixes taken on a branch or pull request. A worker on another harness runs through the shared run-worker script in a worktree, with no push, gh, or bd; the session checks its work and pushes it.",
             "type": "array",
             "minItems": 1,
             "items": { "$ref": "#/$defs/agent" }
