@@ -101,9 +101,9 @@ Four verbs sit beside the chain rather than in it:
   The other is the test harness: a spec runner per surface, declared in `test.runners`, its
   commands recorded in the testing root's `AGENTS.md`
   ([ADR-007](https://github.com/lividlabs/codefall/blob/main/docs/adrs/ADR-007-test-cases.md)).
-  The third is the agents: how another harness is called, under `harnessConfig`, and who reviews
-  and consults, in the `agents` lists, set up from any harness
-  ([ADR-009.4](https://github.com/lividlabs/codefall/blob/main/docs/adrs/ADR-009.4-agents.md)).
+  The third is the agents: how another harness is called, under `harnessConfig`, and who reviews,
+  consults, and builds, in the `agents` lists, set up from any harness
+  ([ADR-009.5](https://github.com/lividlabs/codefall/blob/main/docs/adrs/ADR-009.5-agents.md)).
   The fourth is the document landing: the GitHub Action that merges a document pull request once
   a person adds the `auto-merge` label to it or approves it, and the label itself, with the branch
   rule read and
