@@ -2055,6 +2055,14 @@ Decided at scaffold, 2026-08-16.
   extracting the shared logic (edits `run-agent.sh`); blocking `bd` outright (blocks the git hooks);
   the worker pushing its own branch (removes the review before the remote). Left open:
   `codefall-review`'s fix step, which still applies fixes in its own session.
+  Corrected the same day, before merge: the worktree confines only a Codex worker, to itself and
+  the repository's git directory; a Claude Code or OpenCode worker's shell can write anywhere the
+  user can, including the git config and hooks the root's next git command would run. So the
+  script now records the git config and every hooks directory outside the worktree before the run
+  and exits 77, naming each file, when the run changed one, and the root restores them before any
+  other git command; the header, the ADR, and the docs say what each harness can reach instead of
+  claiming a bad run costs only a branch. OpenCode 2 refuses `--pure`, so the worker passes it and
+  `--standalone` only when the installed OpenCode lists them.
 
 ## Open
 

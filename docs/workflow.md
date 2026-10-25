@@ -214,8 +214,10 @@ dependency, a migration, or generated code changes `start` or `update` in the sa
   once to the consult list of the project's entry for the harness the session is in, else its
   `default` entry, a subagent of the current harness when nothing is configured, and reads the answer as analysis: never a write, never an ADR, never a stand-in for a
   preference the user has stated, and every consult named in the report.
-- **A worker in another harness writes only its worktree.** `implement` may give a bead to an agent
-  from the work list, which builds through `.codefall/shared/run-worker.sh` with scoped
-  permissions and with `git push`, `gh`, and `bd` refused. The session that ran it reviews the
-  diff against the bead, re-runs the checks, confirms each new test fails against broken code, and
-  pushes and opens the pull request itself.
+- **A worker in another harness never pushes.** `implement` may give a bead to an agent from the
+  work list, which builds through `.codefall/shared/run-worker.sh` in a worktree, with scoped
+  permissions and with `git push`, `gh`, and `bd` refused. The worktree is not a sandbox for every
+  harness, so the script also reports any change to the repository's git config or hooks. The
+  session that ran it restores what that report names, reviews the diff against the bead, re-runs
+  the checks, confirms each new test fails against broken code, and pushes and opens the pull
+  request itself.

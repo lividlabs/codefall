@@ -164,9 +164,13 @@ run-worker.sh <harness>[:<model>] <worktree> <prompt-file> <out-file>
 
 It takes the same agents and the same `harnessConfig` blocks as `run-agent.sh`, and its exit codes
 mean the same: `0` finished, `70` run a subagent yourself, `69` and `64` not runnable here, `73`,
-`75`, and `76` ran and failed. It starts codex, claude, and opencode in their build modes with
-scoped permissions, never a blanket approval: edits allowed, the shell allowed except `git push`,
-`gh`, and `bd`, the network tools and other directories denied. Shims first on the worker's PATH
+`75`, and `76` ran and failed. It adds `77`: the run changed the repository's git config or a hooks
+directory outside the worktree, which is a failure too, and the files it names are inspected and
+restored before any other git command in the primary checkout. It starts codex, claude, and
+opencode in their build modes with scoped permissions, never a blanket approval: edits allowed, the
+shell allowed except `git push`, `gh`, and `bd`, the network tools denied. Only Codex's sandbox
+confines the shell, to the worktree and the repository's git directory; a Claude Code or OpenCode
+worker's shell can write anywhere the user can. Shims first on the worker's PATH
 refuse the same three commands, except `bd hooks run`, which the beads git hooks call on every
 commit. Muse and agy have no write mode yet, and the script exits `64` for them. A run is killed
 after `CODEFALL_WORK_TIMEOUT` seconds, an hour by default. The final message lands in the out-file

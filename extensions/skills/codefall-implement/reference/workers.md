@@ -55,6 +55,11 @@ scoped permissions inside a worktree the root made, with `git push`, `gh`, and `
 PATH. Everything else a subagent worker does itself, the root does for this one, before and after.
 The worker still never runs `bd`, never pushes, and never opens a pull request.
 
+The worktree is where the work is meant to land, not a wall. A Codex worker can write the worktree
+and the repository's common git directory, which holds its config and hooks. A Claude Code or
+OpenCode worker's shell can write anywhere the user can. The script checks the git config and the
+hooks directories outside the worktree, which the diff never shows; nothing checks the rest.
+
 ### The `work` list at the gate
 
 Resolve the entry's `work` list exactly as *Resolving the list* in
@@ -96,20 +101,29 @@ the gate's one approval covers the run.
 | `70` | The agent is on `current` | Launch a subagent worker per *Launching* |
 | `69`, `64` | Not runnable here | Take the next agent in the `work` list, else a subagent; say so |
 | `73`, `75`, `76` | Ran and failed | A failure result, handled per *Failure handling* |
+| `77` | Ran and changed the git config or a hooks directory | Step 1 below first, then a failure result |
 
 ### After the run
 
-A `success` result is where the root's work starts, not where it ends:
+Step 1 follows every run. After a `success` result all of them follow, since that is where the
+root's work starts, not where it ends:
 
-1. **Review the diff** — `git -C <worktree> diff origin/<BASE_REF>...HEAD` — against the bead's
+1. **Read the git-directory report.** On exit `77` the script's stderr and the transcript list each
+   file it found added, removed, or changed in the repository's git config, its own worktree's
+   config, the common `hooks` directory, and the `core.hooksPath` directory when that is outside
+   the worktree. Before any further git command in the primary checkout, which would run a planted
+   hook, read each one and restore it: `git config --unset` the planted key, delete or restore the
+   hook, `chmod -x` a sample made executable. Say in the report what was found and restored. The
+   bead is then a failure result, whatever the worker's own result said.
+2. **Review the diff** — `git -C <worktree> diff origin/<BASE_REF>...HEAD` — against the bead's
    acceptance criteria, one by one, and against its scope.
-2. **Re-run the project's checks** in the worktree: the `VERIFY_COMMANDS` the prompt carried, and
+3. **Re-run the project's checks** in the worktree: the `VERIFY_COMMANDS` the prompt carried, and
    `.codefall/shared/check-cases.sh` when a case file was written.
-3. **Break what each new test covers.** For every test the worker added, change the code it covers
+4. **Break what each new test covers.** For every test the worker added, change the code it covers
    so the behavior is wrong — invert the condition, drop the line — run that test, confirm it
    fails, and restore the code. A test that still passes covers nothing; fix it, or treat the bead
    as failed.
-4. **Confirm the model.** OpenCode: the script prints a `run-worker: opencode session` line, to
+5. **Confirm the model.** OpenCode: the script prints a `run-worker: opencode session` line, to
    stderr and the transcript, with the model and variant OpenCode recorded in `session_v2.model`.
    When the line is missing, read it by hand, with the worktree's physical path:
 
@@ -121,7 +135,7 @@ A `success` result is where the root's work starts, not where it ends:
    A variant OpenCode does not know fails the run with "reasoning_effort must be one of […]"
    rather than falling back. Claude Code: the `system` `init` event at the top of the transcript
    carries `model`. Codex: the transcript's header names it.
-5. **Push and open the pull request.** `git -C <worktree> push -u origin <BRANCH>`, with the branch
+6. **Push and open the pull request.** `git -C <worktree> push -u origin <BRANCH>`, with the branch
    named: the guard hook denies a push with no refspec while the primary checkout is on the default
    branch. Then `gh pr create --base <PR_TARGET> --head <BRANCH>` with the `body` the worker's
    result carries and the `RELATES_LINE`. From here the bead is verified, commented, and closed like any other, with

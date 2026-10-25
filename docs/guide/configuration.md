@@ -72,9 +72,12 @@ A run picks its list this way:
 
 Because a run skips agents it cannot start, one checked-in file works on every machine on the team.
 
-A worker in another harness can edit files only in its task's worktree. It cannot push, open a pull
-request, or use beads; the session that started it reviews its changes, runs the project's checks
-again, and opens the pull request itself. Codex, Claude Code, and OpenCode can be workers. Muse and
+A worker in another harness works in its task's worktree. It cannot push, open a pull request, or
+use beads, and the session that started it reviews its changes, runs the project's checks again,
+and opens the pull request itself. A Codex worker is sandboxed to the worktree and the repository's
+git directory. A Claude Code or OpenCode worker's shell can reach anything you can, so give one
+those only on a machine where that is acceptable. Codefall checks the repository's git config and
+hooks after every worker and says if anything there changed. Codex, Claude Code, and OpenCode can be workers. Muse and
 agy cannot yet, so a run skips them in a `work` list.
 
 `init` writes a single `default` entry whose `review` and `consult` lists each hold `current`. That
