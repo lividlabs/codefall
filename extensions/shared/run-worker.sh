@@ -469,8 +469,8 @@ git_changes() {
 # own, a named export, fails to load under 2.1.4, which wants a default export
 # with an id, so no merge guard or session notice from it reaches the worker.
 #
-# The message comes before --file because --file takes every value up to the
-# next flag (#215). Every text part goes to stdout, so out-file holds the
+# The message comes before --file and --file ends the line, as in run-agent.sh,
+# which says why (#215). Every text part goes to stdout, so out-file holds the
 # worker's narration with its final message last, and the transcript holds the
 # same with stderr beside it.
 readonly OPENCODE_PERMISSION='{

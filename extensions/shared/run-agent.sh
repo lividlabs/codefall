@@ -274,10 +274,11 @@ run_claude() {
 # without it `opencode run` sends the request to a background service that may
 # have been started elsewhere and runs the tools with none of them.
 #
-# The message comes before --file because --file is an array option: it takes
-# every value up to the next flag, so a message placed after it is read as a
-# second file path and the run fails with "File not found" before the model
-# starts. Last on the line, --file takes exactly one value.
+# The message comes before --file, and --file ends the line. OpenCode 2 takes a
+# single value for --file. OpenCode 1 took every value up to the next flag, so a
+# message placed after it was read as a second file path and the run failed with
+# "File not found" before the model started (#215). This order is correct in
+# both forms.
 run_opencode() {
   opencode run \
     "${model_flag[@]+"${model_flag[@]}"}" \
