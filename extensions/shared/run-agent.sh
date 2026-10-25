@@ -13,10 +13,11 @@
 #
 # Every harness runs in its own read-only mode, with its own hooks off where it
 # has a switch for them: a headless run that loaded the project's session-start
-# hooks has been seen to follow them into a refresh instead of answering. An
-# agent run this way proposes; a subprocess that edited would bypass the host's
-# PreToolUse hooks and its checkpoints, so nothing it did would be guarded or
-# reversible.
+# hooks has been seen to follow them into a refresh instead of answering.
+# OpenCode 2, the only OpenCode version supported, has no such switch (see
+# run_opencode). An agent run this way proposes; a subprocess that edited would
+# bypass the host's PreToolUse hooks and its checkpoints, so nothing it did
+# would be guarded or reversible.
 #
 # Usage: run-agent.sh <agent> <prompt-file> <schema-file> <out-file>
 #
@@ -260,8 +261,18 @@ run_claude() {
 }
 
 # OpenCode's `plan` agent is its read-only one. It has no schema flag, so the
-# copy of the schema in the prompt is all it gets. --pure runs without external
-# plugins, which is where OpenCode's hooks live.
+# copy of the schema in the prompt is all it gets. This call is for OpenCode 2,
+# the only version codefall supports. OpenCode 2 refuses --pure ("Unrecognized
+# flag: --pure in command opencode run") and exits 1 before the model starts, so
+# the flag that once ran OpenCode without plugins is not passed. The one switch
+# found, OPENCODE_CONFIG_PROJECT_DISABLE, drops all of the project's OpenCode
+# configuration with its plugins, so it is not set. A project plugin therefore
+# loads if OpenCode 2 accepts it; codefall's own, a named export, fails to load
+# under 2.1.4, which wants a default export with an id. --standalone runs a
+# private server, which inherits this process's PATH, working directory, and
+# environment, including whatever a `harnessConfig` `env` command exported;
+# without it `opencode run` sends the request to a background service that may
+# have been started elsewhere and runs the tools with none of them.
 #
 # The message comes before --file because --file is an array option: it takes
 # every value up to the next flag, so a message placed after it is read as a
@@ -271,7 +282,7 @@ run_opencode() {
   opencode run \
     "${model_flag[@]+"${model_flag[@]}"}" \
     "${extra_args[@]+"${extra_args[@]}"}" \
-    --pure \
+    --standalone \
     --agent plan \
     "Answer as the attached prompt says. Reply with the JSON it asks for and nothing else." \
     --file "$prompt" >"$out"
