@@ -89,6 +89,12 @@ configuration has to stay on screen with the question.
 Ask which, as a numbered list of the names under `harnesses`, each with its state from the
 configuration: `codex (not set up)`, `claude (bedrock)`. One name only skips the question.
 
+For `opencode`, read `opencode --version` first. Codefall supports OpenCode 2 and later only, since
+both scripts call `opencode run --standalone`. A 1.x version stops the setup with one line, `OpenCode
+<version> is too old: codefall needs OpenCode 2 or later. Upgrade it (opencode upgrade) and run
+/codefall-equip agents again.`, and writes nothing. A version this cannot read, or no `opencode` on
+`PATH`, does not stop it: the block is written, and the probe reports a missing binary.
+
 Find that harness's parameters per [Finding a harness's parameters](#finding-a-harnesss-parameters)
 without narrating the search, and work out the block:
 
@@ -103,11 +109,12 @@ without narrating the search, and work out the block:
   set up: codex reviewing through codex is the second opinion ADR-009 says is worth less. Never in
   a `work` list unless the user names it: a worker writes code, and which harness builds is their
   call, made in choice 2. Muse and agy have no write mode, so neither goes in a `work` list.
-- **Hooks stay off.** `run-agent.sh` starts codex, claude, and opencode with their hooks off, and
-  a headless run must stay that way: one that loaded the project's session hooks followed them
-  into a refresh instead of answering. `args` never carries a flag that turns hooks back on. Muse
-  and agy have no switch, so a block for either says so in the confirmation, in one clause: `its
-  hooks run during headless calls`.
+- **Hooks stay off** where the harness has a switch. `run-agent.sh` starts codex and claude with
+  their hooks off, and a headless run must stay that way: one that loaded the project's session
+  hooks followed them into a refresh instead of answering. `args` never carries a flag that turns
+  hooks back on. Muse and agy have no switch, and neither has OpenCode 2, which refuses `--pure`, so
+  a block for any of the three says so in the confirmation, in one clause: `its hooks run during
+  headless calls`.
 
 Then show the result in the same shape as the configuration, and ask one yes-or-no:
 
@@ -185,7 +192,7 @@ the first item of `recent`, as `providerID/modelID`. Recent session:
 `~/.local/share/opencode/opencode.db`, table `session`, the newest row whose `directory` is the
 project and whose `parent_id` is null; its `model` column holds `{"id", "providerID"}`. OpenCode's
 `--model` takes `providerID/id` whole, so the list item's `model` carries it and the block needs no
-`provider`.
+`provider`. These paths are OpenCode 2's; the version check in choice 1 comes before them.
 
 **muse.** This session: Muse tells its agent the session log's path in the session-identity note
 in its context, and the last `run.model.configured` record carries `model_id` and `provider_id`.

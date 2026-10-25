@@ -182,7 +182,7 @@ on one screen: the configuration, one question, one change.
    harness, change the lists, or nothing. A file `codefall doctor` says does not match the schema
    is not shown: say so in one line and rebuild it.
 3. **Do the one thing chosen**, showing what will be written and asking `Write this?`. Nothing
-   stops.
+   stops, except OpenCode 1.x, which the reference says to upgrade first.
 4. **Write** on `equip/agents` through `codefall config`; no CLI means stop and say to install it.
    A file out of date with the schema is written directly, then checked by `codefall doctor`.
 5. **Prove it**: one run through `../../../.codefall/shared/run-agent.sh`, exit `0` and a

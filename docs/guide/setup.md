@@ -75,6 +75,9 @@ records:
 | Antigravity | `agy` |
 | Muse | `muse` |
 
+Codefall supports OpenCode 2 and later. A project on OpenCode 1.x upgrades it by hand, with
+`opencode upgrade`, before an OpenCode agent will run.
+
 Earlier releases called Claude Code `claude-code` and Antigravity `antigravity`. A project set up with
 those names keeps working: `codefall doctor` warns about the old names, and the next
 `codefall upgrade` rewrites them.
