@@ -4,7 +4,7 @@ Shared procedure. Every verb that hands work to another agent — `codefall-revi
 reviewer, the verbs that consult when a run cannot settle something on its own, and
 `codefall-implement` for a worker in another harness — follows it, so the rules about which agent
 runs, in what order, and what it is allowed to do are stated once.
-[ADR-009.5](https://github.com/lividlabs/codefall/blob/main/docs/adrs/ADR-009.5-agents.md) holds the
+[ADR-009.6](https://github.com/lividlabs/codefall/blob/main/docs/adrs/ADR-009.6-agents.md) holds the
 reasoning.
 
 ## Contents
@@ -83,6 +83,13 @@ defaults to `--model`; `provider` becomes the harness's own switch (the script h
 harnesses have one); `args` are appended as given; `env` is a shell command whose output is
 evaluated before the harness starts, which is how a run gets credentials an interactive shell would
 have exported. A harness name with no block runs bare.
+
+**OpenCode must be version 2 or later.** Both scripts call `opencode run --standalone`, which OpenCode
+2 has and runs on a private server so that the PATH, the working directory, and the environment
+reach the tools. OpenCode 1.x is not supported: an `opencode` agent on it is not expected to run,
+and the person upgrades OpenCode by hand. OpenCode 2 refuses `--pure`, so neither
+script passes it, and OpenCode has no switch for its hooks alone. `codefall-equip agents` reads
+`opencode --version` when it sets OpenCode up and says to upgrade when it finds 1.x.
 
 The model string is whatever the harness accepts for the provider in use, and the easiest way to
 get it right is to run `/codefall-equip agents` from any harness: it finds the model and provider

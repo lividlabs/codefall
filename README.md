@@ -49,7 +49,8 @@ Codefall needs these tools on your `PATH`:
   `brew install beads`.
 - The [GitHub CLI](https://cli.github.com/), `gh`, logged in to github.com. Codefall opens pull
   requests and issues with it, so your project needs a GitHub repository.
-- At least one supported coding agent: Claude Code, Codex, OpenCode, Antigravity, or Muse.
+- At least one supported coding agent: Claude Code, Codex, OpenCode (version 2 or later), Antigravity,
+  or Muse.
 
 ### Install script
 
