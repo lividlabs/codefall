@@ -47,7 +47,7 @@ report ends with one next command. In order:
 | `report` | the person who saw a bug, interviewed; the running product, driven through their steps; a test run's report or an issue they filed; in its `triage` mode, the backlog in Beads, every open item whatever its type | `docs/bugs/BUG-NNN-slug.md`, what is wrong: the steps, the expected and actual result, evidence committed beside it, whether it reproduced, and EARS acceptance criteria, mirrored to one tracker issue when the project has one; one bead, triaged by type, area, priority, and size per `.codefall/shared/triage.md`; in `triage` mode, the backlog's fields and a followup epic created from the items the person picked | `fix` or `plan`; `implement`, for a followup |
 | `mock-up` | a design-tool export, or nothing; run by `specify` or `plan` for a requirement that needs one, or alone | `docs/mockups/<slug>/`, matching the app's own design system | `plan`; a requirement whose Design notes still say `Mockup: pending` is one `plan` runs `mock-up` for before it starts |
 | `plan` | the spec, the vision, the code; the project's consult agents for a technical point it cannot settle | `docs/plans/PLAN-NNN-slug.md`, the *how*, scaled to the change; ADRs for hard-to-reverse choices; beads with dependency edges, each carrying its acceptance criteria and, where the task is verified through the wired product, the test case and its criteria; or, when the person chose to leave the decisions it set aside for an engineer, a `Draft` carrying them | `implement`; `plan` again, for a `Draft` with decisions needed |
-| `implement` | ready beads, an epic, or a plan; the project's consult agents when a worker fails | a worktree per task, the test case before the code, verification against the bead's criteria and the project's checks, a pull request per task, walked as a serial stack or in waves on an epic branch until the frontier is empty | `review` and `test` on the epic's work; `implement` again, the next round, when they added children; the human, who merges when the graph is empty; `plan`, for a disagreement that moves work, filed as a revision bead |
+| `implement` | ready beads, an epic, or a plan; the project's work agents, offered per bead at the gate; its consult agents when a worker fails | a worktree per task, the test case before the code, verification against the bead's criteria and the project's checks, a pull request per task, walked as a serial stack or in waves on an epic branch until the frontier is empty | `review` and `test` on the epic's work; `implement` again, the next round, when they added children; the human, who merges when the graph is empty; `plan`, for a disagreement that moves work, filed as a revision bead |
 | `review` | anything live: uncommitted work, a branch, a PR, a commit range, a path, a document, an epic's work; the project's consult agents for what the reviewer could not settle | `.codefall/reviews/`, a JSON and Markdown pair per review; fixes on the target's branch for the findings the user takes; on an epic's work, the problems the person took as beads triaged per `.codefall/shared/triage.md`: children of the epic when they are the epic's, built by `implement` in the same session, and open bugs beside it otherwise | the human; `implement`, which it runs itself on an epic's work; `plan`, for a deferred finding that moves work |
 | `test` | what the project declares: suites, the changed subset, one case in its `spec` or `agentic` modality, or an epic's work on its branch | `.codefall/tests/`, a report per run; findings triaged, never an edit that makes a run pass; on an epic's work, the problems the person took as beads triaged per `.codefall/shared/triage.md`: children of the epic when they are the epic's, built by `implement` in the same session, and open bugs beside it otherwise | `implement`, which it runs itself on an epic's work; `fix` or `plan` for work outside a delivery; `report`, when the user wants a bug document |
 
@@ -101,9 +101,9 @@ Four verbs sit beside the chain rather than in it:
   The other is the test harness: a spec runner per surface, declared in `test.runners`, its
   commands recorded in the testing root's `AGENTS.md`
   ([ADR-007](https://github.com/lividlabs/codefall/blob/main/docs/adrs/ADR-007-test-cases.md)).
-  The third is the agents: how another harness is called, under `harnessConfig`, and who reviews
-  and consults, in the `agents` lists, set up from any harness
-  ([ADR-009.4](https://github.com/lividlabs/codefall/blob/main/docs/adrs/ADR-009.4-agents.md)).
+  The third is the agents: how another harness is called, under `harnessConfig`, and who reviews,
+  consults, and builds, in the `agents` lists, set up from any harness
+  ([ADR-009.5](https://github.com/lividlabs/codefall/blob/main/docs/adrs/ADR-009.5-agents.md)).
   The fourth is the document landing: the GitHub Action that merges a document pull request once
   a person adds the `auto-merge` label to it or approves it, and the label itself, with the branch
   rule read and
@@ -193,3 +193,9 @@ dependency, a migration, or generated code changes `start` or `update` in the sa
   once to the consult list of the project's entry for the harness the session is in, else its
   `default` entry, a subagent of the current harness when nothing is configured, and reads the answer as analysis: never a write, never an ADR, never a stand-in for a
   preference the user has stated, and every consult named in the report.
+- **A worker in another harness never pushes.** `implement` may give a bead, and `review` the fixes
+  the person took on a branch, to an agent from the work list, which works through `.codefall/shared/run-worker.sh` in a worktree, with scoped
+  permissions and with `git push`, `gh`, and `bd` refused. The worktree is not a sandbox for every
+  harness, so the script also reports any change to the repository's git config or hooks. The
+  session that ran it restores what that report names, reviews the diff against the bead, re-runs
+  the checks, confirms each new test fails against broken code, and pushes itself.

@@ -2033,6 +2033,42 @@ Decided at scaffold, 2026-08-16.
   do not read as a filter. Seen and not taken: a fixed list of types in the reference, which is the
   same shape as the rule it replaces; a new ADR edition for one sentence.
 
+- **A bead can be built in another harness, through a runner that writes, 2026-10-25.** A project
+  had sixteen beads built by OpenCode on a cheaper model in one implement round, and a review's
+  fixes applied the same way, all by hand, and each time the root rebuilt the guards from notes and
+  hit something a script settles once: no `timeout` on macOS, OpenCode's `--auto` getting the host
+  session's next command refused, a `bd` block that also stopped the beads git hooks and so every
+  commit, and OpenCode's argument order (#215). `run-agent.sh` stays read-only and unchanged;
+  `run-worker.sh` beside it takes the same agents, settings, timeout logic, and exit codes, with its
+  own `CODEFALL_WORK_TIMEOUT` of an hour, runs in a worktree, and writes the final message and a
+  transcript. Each harness runs in its build mode with scoped permissions and never a blanket
+  approval (OpenCode's build agent with a permission block on a private server, Claude Code in
+  `acceptEdits` with deny rules, Codex in `workspace-write` with the network off), shims on PATH
+  refuse `git push`, `gh`, and `bd` except `bd hooks run`, hooks stay off, and Muse and agy exit 64
+  until they have a write mode. Settings gain a `work` list beside `review` and `consult`, through
+  the format, `codefall config`, the editor, and doctor; implement's gate offers a harness and model
+  per bead from it, and the root creates the worktree and installs dependencies before the run,
+  then reviews the diff, re-runs the checks, breaks what each new test covers, confirms the model,
+  and pushes and opens the pull request itself. ADR-009.5 is the edition; ADR-009.4's status
+  flipped and nothing else in it moved. Seen and not taken: a mode flag on `run-agent.sh` (every
+  reader would be read-only because a flag was left off); renaming it (breaking, for a name);
+  extracting the shared logic (edits `run-agent.sh`); blocking `bd` outright (blocks the git hooks);
+  the worker pushing its own branch (removes the review before the remote). Left open:
+  `codefall-review`'s fix step, which still applies fixes in its own session.
+  Corrected the same day, before merge: the worktree confines only a Codex worker, to itself and
+  the repository's git directory; a Claude Code or OpenCode worker's shell can write anywhere the
+  user can, including the git config and hooks the root's next git command would run. So the
+  script now records the git config and every hooks directory outside the worktree before the run
+  and exits 77, naming each file, when the run changed one, and the root restores them before any
+  other git command; the header, the ADR, and the docs say what each harness can reach instead of
+  claiming a bad run costs only a branch. OpenCode 2 refuses `--pure`, so the worker passes it and
+  `--standalone` only when the installed OpenCode lists them. Review's fix step was decided the
+  same day instead of left open: on a branch or pull request target, triage may give the accepted
+  fixes to one worker from the same `work` list, run in a worktree off the target's branch, and the
+  session restores what the git-directory report names, checks the diff against the accepted
+  findings, re-runs the checks, commits the findings files, and pushes. One list, not a second one,
+  because which agents may write code is one decision for a project.
+
 ## Open
 
 - (nothing open; the last item graduated to ADR-012 on 2026-09-27)

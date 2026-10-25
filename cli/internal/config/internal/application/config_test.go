@@ -222,6 +222,45 @@ func TestSetListAddsTheOtherListToAnEntry(t *testing.T) {
 	}
 }
 
+// A work list goes into an entry the same way, as its last key, and leaves the entry's other lists
+// alone.
+func TestSetListAddsAWorkListToAnEntry(t *testing.T) {
+	files := project(twoEntries)
+
+	write, err := NewConfig(files).SetList(workingDir, "muse", "work",
+		[]settings.Agent{{Harness: "opencode", Model: mo.Some("digitalocean/glm-5.3#max")}, agent("current")})
+	if err != nil {
+		t.Fatalf("SetList: %v", err)
+	}
+
+	if want := domain.Changed("set muse work in .codefall/settings.json: opencode:digitalocean/glm-5.3#max, current"); write != want {
+		t.Errorf("write = %+v, want %+v", write, want)
+	}
+
+	want := strings.Replace(twoEntries, `"consult": [{"harness": "codex"}]}`,
+		`"consult": [{"harness": "codex"}], "work": [{"harness":"opencode","model":"digitalocean/glm-5.3#max"},{"harness":"current"}]}`, 1)
+	if got := string(files.files[settingsFull]); got != want {
+		t.Errorf("settings.json =\n%s\nwant\n%s", got, want)
+	}
+}
+
+// An entry the file does not hold yet is written with the work list alone, in the key order init
+// writes.
+func TestSetListAddsAnEntryForAWorkList(t *testing.T) {
+	files := project(`{"version": 1, "tracker": "beads", "harnesses": ["claude"], "beads": {},
+  "agents": [{"activeAgent": "default", "review": [{"harness": "current"}]}]}
+`)
+
+	if _, err := NewConfig(files).SetList(workingDir, "claude", "work", []settings.Agent{agent("codex"), agent("current")}); err != nil {
+		t.Fatalf("SetList: %v", err)
+	}
+
+	want := `, {"activeAgent":"claude","work":[{"harness":"codex"},{"harness":"current"}]}]}`
+	if got := string(files.files[settingsFull]); !strings.Contains(got, want) {
+		t.Errorf("settings.json =\n%s\nwant it to hold\n%s", got, want)
+	}
+}
+
 // Settings that write no list start from nothing: the entry set is the only one written, since the
 // default entry is what absence already means.
 func TestSetListOnSettingsThatWriteNoneAddsTheList(t *testing.T) {
@@ -332,7 +371,7 @@ func TestSetListRefuses(t *testing.T) {
 			settings: initSettings,
 			active:   "default", feature: "testing",
 			agents: []settings.Agent{agent("current")},
-			want:   `"testing" is not a list an entry holds`,
+			want:   `"testing" is not a list an entry holds; name review, consult, or work`,
 		},
 		{
 			// The agent parsed, so it is the settings module that refuses the result.
@@ -420,6 +459,43 @@ func TestClearListRemovesAnEntryLeftEmpty(t *testing.T) {
     {"activeAgent": "muse", "review": [{"harness": "claude"}], "consult": [{"harness": "codex"}]}`, "", 1)
 	if got := string(files.files[settingsFull]); got != want {
 		t.Errorf("settings.json =\n%s\nwant\n%s", got, want)
+	}
+}
+
+// An entry that still holds a work list is not left empty when its review and consult lists go, and
+// goes with the work list when that is cleared last.
+func TestClearListCountsTheWorkList(t *testing.T) {
+	withWork := strings.Replace(twoEntries, `"consult": [{"harness": "codex"}]}`,
+		`"consult": [{"harness": "codex"}], "work": [{"harness": "codex"}]}`, 1)
+	files := project(withWork)
+	config := NewConfig(files)
+
+	for _, feature := range []string{"consult", "review"} {
+		write, err := config.ClearList(workingDir, "muse", feature)
+		if err != nil {
+			t.Fatalf("ClearList %s: %v", feature, err)
+		}
+
+		if want := domain.Changed("removed muse " + feature + " from .codefall/settings.json"); write != want {
+			t.Errorf("write = %+v, want %+v", write, want)
+		}
+	}
+
+	if got, want := string(files.files[settingsFull]), `{"activeAgent": "muse", "work": [{"harness": "codex"}]}`; !strings.Contains(got, want) {
+		t.Errorf("settings.json =\n%s\nwant it to hold\n%s", got, want)
+	}
+
+	write, err := config.ClearList(workingDir, "muse", "work")
+	if err != nil {
+		t.Fatalf("ClearList work: %v", err)
+	}
+
+	if want := domain.Changed("removed muse work from .codefall/settings.json, and the muse entry with it, since it named nothing else"); write != want {
+		t.Errorf("write = %+v, want %+v", write, want)
+	}
+
+	if got := string(files.files[settingsFull]); strings.Contains(got, `"muse"`) {
+		t.Errorf("settings.json =\n%s\nwant the muse entry gone", got)
 	}
 }
 

@@ -42,10 +42,11 @@ Read each when its step says to; none is loaded up front.
   boundary, and the report.
 - `../../../.codefall/shared/stacks.md` — how GitHub stacks work, and how a report points at one.
   Read at steps 4, 7, and 8.
-- `reference/workers.md` — launching a worker, the worktree seeding rule, chain sequencing, the
-  result JSON, failure handling, and consulting. Read at step 6. Names
+- `reference/workers.md` — launching a worker here or in another harness, chains, results,
+  failures, and consulting. Read at steps 5 and 6. Names
   `../../../.codefall/shared/running-agents.md`, `../../../.codefall/shared/run-agent.sh`,
-  `../../../.codefall/shared/consult-prompt.md`, `../../../.codefall/shared/consult.schema.json`.
+  `../../../.codefall/shared/run-worker.sh`, `../../../.codefall/shared/consult-prompt.md`,
+  `../../../.codefall/shared/consult.schema.json`.
 - `reference/done.md` — when a bead is done: where the verification commands come from, the
   checks, tests and the local scripts as part of done, and the test case written before the code.
   Read at step 3 and step 6. Names `../codefall-test/reference/case-file.md` and
@@ -142,8 +143,8 @@ One approval, before any work starts. Everything the run will do, in one block:
 - the branch diagram;
 - on an epic branch, the waves and how many workers run concurrently in each — **there is no
   default cap**; the wave is sized by the graph, and the user trims it here if it is too wide;
-- the model proposed per bead, and one session-level effort recommendation as the exact command —
-  "recommend `/effort high` before go";
+- the harness and model proposed per bead, from the `work` list, and one session-level effort
+  recommendation as the exact command — "recommend `/effort high` before go";
 - what will be claimed in beads, and — when a vision sits behind the work — that go flips it to
   `Active`;
 - that workers amend a plan's or spec's text where the code disagrees, in their own PR, per
@@ -157,9 +158,9 @@ test plan, one branch.
 
 **After go, waves proceed on their own.** Failures are the only mid-run stop.
 
-Model choice is the root's, made at the gate. A bead's own execution metadata is a recommendation
-shown in the table; **implement never writes bead metadata** — what ran goes in a `bd comment`
-beside the PR link. The one exception is the epic's `round`, set at the go gate of a later round.
+Harness and model choice is the root's, made at the gate. A bead's own execution metadata is a
+recommendation shown in the table; **implement never writes bead metadata** but the epic's `round`
+— what ran goes in a `bd comment` beside the PR link.
 
 ## Verification and done
 
@@ -282,11 +283,11 @@ When the user overrules the classifier the same way twice, offer to record the p
 
 ### 6. Execute the waves
 
-Per `reference/workers.md`. Per wave: render worker prompts, launch the batch, wait for results.
-Verify each success — branch on the remote, PR exists, or it did not happen. A failed bead is
-consulted on and retried once; a second failure is consulted on and escalates, per
-`reference/workers.md`. Check each `plan` discovery per `reference/workers.md`, sending back
-what the worker could have amended; file the rest in the form its `kind` names, a bug triaged
+Per `reference/workers.md` throughout. Per wave: render worker prompts, launch the batch, wait for
+results. Verify each success — branch on the remote, PR exists, or it did not happen; the root
+reviews and pushes a bead built in another harness itself. A failed bead is consulted on and
+retried once; a second failure is consulted on and escalates. Check each `plan` discovery, sending
+back what the worker could have amended; file the rest in the form its `kind` names, a bug triaged
 first per `../../../.codefall/shared/triage.md`; read each `amended` list, recording every entry
 as a closed `plan-amended` bead, per `reference/beads.md`. Comment the PR link, close
 the bead with what was verified, gate the landed bead with the new PR (stacked runs), `bd dolt push`. `--suggest-next` names the next wave; print the
@@ -350,7 +351,6 @@ Do not merge, and do not wait for merges; the next session's `bd gate check` fin
   round's go; a plan or spec found wrong is amended in the PR or becomes a `plan-revision` bead,
   never a quiet workaround.
 - **Nothing is rebased or force-pushed by hand.** `gh stack` cascades; GitHub rebases on merge.
-- **The epic's `round` is the one metadata key implement writes.**
 - **Bead IDs ride every commit message.**
 - **Verify workers, never trust them.**
 - **One consult, one automatic retry, one more consult, then a human.** The root consults; a worker
@@ -362,7 +362,7 @@ Do not merge, and do not wait for merges; the next session's `bd gate check` fin
 - **A test harness is never set up inside a task's pull request.** An unequipped bead is not
   started; `/codefall-equip` is named.
 - **The local scripts are part of done**, changed in the same PR per `codefall-equip`'s local track.
-- **Implement never writes bead metadata and never re-cuts the graph.**
+- **Implement never writes bead metadata but the epic's `round`, and never re-cuts the graph.**
 - **`Active` is a fact, recorded once.**
 - **Worktrees are cleaned up by offer, never by default.**
 - **Never overwrite a file that has drifted.** Show the difference and ask.

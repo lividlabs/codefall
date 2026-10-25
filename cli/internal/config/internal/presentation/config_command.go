@@ -50,10 +50,10 @@ const settingsName = ".codefall/settings.json"
 func NewConfigCommand(config ConfigUseCase) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "config",
-		Short: "Edit who reviews and consults for this project, how each harness is called, and your persona",
+		Short: "Edit who reviews, consults, and builds for this project, how each harness is called, and your persona",
 		Long: "With no arguments in a terminal, opens an editor over the agents, reviews, and your persona. " +
-			"The agents are who codefall asks to review or for a second opinion, chosen by the harness you " +
-			"are running in; they, how each harness is called, and the review settings live in " + settingsName +
+			"The agents are who codefall asks to review, for a second opinion, or to build a bead, chosen by " +
+			"the harness you are running in; they, how each harness is called, and the review settings live in " + settingsName +
 			", which is checked in. " +
 			"The persona lives in " + userfile.Name + ", which is yours alone and kept out of version " +
 			"control. The subcommands change one value each, take every value as an argument, and never " +
@@ -96,7 +96,7 @@ func NewConfigCommand(config ConfigUseCase) *cobra.Command {
 func newShowCommand(config ConfigUseCase) *cobra.Command {
 	return &cobra.Command{
 		Use:   "show",
-		Short: "Print who reviews and consults, how each harness is called, whether review posts, and your persona",
+		Short: "Print who reviews, consults, and builds, how each harness is called, whether review posts, and your persona",
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			dir, err := os.Getwd()
@@ -176,7 +176,7 @@ func entryLines(entries []settings.Entry) []string {
 		lines = append(lines, "  "+activeAgentLabel(entry.ActiveAgent)+":")
 
 		for _, feature := range settings.Features() {
-			lines = append(lines, "    "+feature+": "+listLabel(entry.List(feature)))
+			lines = append(lines, "    "+feature+": "+entryListLabel(entry.ActiveAgent, entry.List(feature)))
 		}
 	}
 
@@ -191,6 +191,19 @@ func activeAgentLabel(active string) string {
 
 	return "when running in " + active
 }
+
+// entryListLabel is one entry's list as a person reads it. A list the default entry leaves out has no
+// default to be the same as: it is the harness's own subagent, as nothing set has always meant.
+func entryListLabel(active string, agents mo.Option[[]settings.Agent]) string {
+	if active == settings.ActiveDefault && agents.IsAbsent() {
+		return agentLabel(settings.CurrentAgent())
+	}
+
+	return listLabel(agents)
+}
+
+// builtInLabel is what a list nothing sets resolves to, as a person reads it.
+const builtInLabel = "this harness (built in; nothing set)"
 
 // listLabel is one list as a person reads it: the agents in order, or what an absent list means.
 func listLabel(agents mo.Option[[]settings.Agent]) string {
@@ -222,11 +235,11 @@ func newAgentsCommand(config ConfigUseCase) *cobra.Command {
 	cmd := &cobra.Command{
 		Use: "agents [<" + strings.Join(settings.ActiveAgents(), "|") + "> <" +
 			strings.Join(settings.Features(), "|") + "> <harness[:model]>...]",
-		Short: "Print the agents, or set who reviews or consults for sessions in one harness",
+		Short: "Print the agents, or set who reviews, consults, or builds for sessions in one harness",
 		Long: "With no arguments, prints the agents list. With arguments, sets one list in " + settingsName +
 			": the active agent is the harness you run codefall in (" + strings.Join(settings.ActiveAgents(), ", ") +
 			"; default covers every harness without an entry of its own), the feature is " +
-			strings.Join(settings.Features(), " or ") + ", and each agent is a harness (" +
+			domain.FeatureChoices() + ", and each agent is a harness (" +
 			strings.Join(settings.AgentHarnesses(), ", ") + ") with an optional model after a colon; " +
 			settings.HarnessCurrent + " is a subagent of the harness you are running in. Agents are tried in the order " +
 			"given. --clear in place of the agents removes the list, so the default entry's applies.",
@@ -289,7 +302,7 @@ func agentsArgs(clear *bool) cobra.PositionalArgs {
 		case len(args) == 0:
 			return nil
 		case len(args) == 1:
-			return fmt.Errorf("name the list too: %s", strings.Join(settings.Features(), " or "))
+			return fmt.Errorf("name the list too: %s", domain.FeatureChoices())
 		case *clear && len(args) > 2:
 			return errors.New("--clear takes no agents")
 		case !*clear && len(args) == 2:

@@ -106,6 +106,7 @@ var (
 	current = settings.Agent{Harness: "current", Model: mo.None[string]()}
 	claude  = settings.Agent{Harness: "claude", Model: mo.None[string]()}
 	codex   = settings.Agent{Harness: "codex", Model: mo.Some("gpt-5-codex")}
+	glm     = settings.Agent{Harness: "opencode", Model: mo.Some("digitalocean/glm-5.3#max")}
 
 	defaultEntry = settings.Entry{
 		ActiveAgent: "default",
@@ -116,6 +117,7 @@ var (
 		ActiveAgent: "muse",
 		Review:      mo.Some([]settings.Agent{claude, codex}),
 		Consult:     mo.None[[]settings.Agent](),
+		Work:        mo.Some([]settings.Agent{glm, current}),
 	}
 )
 
@@ -135,9 +137,11 @@ func TestShowPrintsTheEffectiveConfiguration(t *testing.T) {
 		"  default (any harness without its own entry):\n" +
 		"    review: this harness\n" +
 		"    consult: this harness\n" +
+		"    work: this harness\n" +
 		"  when running in muse:\n" +
 		"    review: claude, then codex:gpt-5-codex\n" +
 		"    consult: same as default\n" +
+		"    work: opencode:digitalocean/glm-5.3#max, then this harness\n" +
 		"review posting: on\n" +
 		"persona: product-manager (from .codefall/user.json)\n"
 	if out != want {
@@ -161,6 +165,7 @@ func TestShowSaysWhenTheListIsTheDefault(t *testing.T) {
 		"  default (any harness without its own entry):\n" +
 		"    review: this harness\n" +
 		"    consult: this harness\n" +
+		"    work: this harness\n" +
 		"review posting: off\n" +
 		"persona: engineer (default)\n"
 	if out != want {
@@ -172,7 +177,8 @@ func TestShowSaysWhenTheListIsTheDefault(t *testing.T) {
 func TestAgentsPrintsTheEntries(t *testing.T) {
 	config := &fakeConfig{entries: []settings.Entry{museEntry}}
 
-	want := "  when running in muse:\n    review: claude, then codex:gpt-5-codex\n    consult: same as default\n"
+	want := "  when running in muse:\n    review: claude, then codex:gpt-5-codex\n    consult: same as default\n" +
+		"    work: opencode:digitalocean/glm-5.3#max, then this harness\n"
 
 	for _, args := range [][]string{{"agents"}, {"agents", "list"}} {
 		out, err := run(t, config, args...)
@@ -204,6 +210,23 @@ func TestAgentsSetsAListAndPrintsTheWrite(t *testing.T) {
 	}
 }
 
+func TestAgentsSetsAWorkList(t *testing.T) {
+	config := &fakeConfig{write: domain.Changed("set claude work in .codefall/settings.json: opencode:digitalocean/glm-5.3#max, current")}
+
+	out, err := run(t, config, "agents", "claude", "work", "opencode:digitalocean/glm-5.3#max", "current")
+	if err != nil {
+		t.Fatalf("Execute: %v", err)
+	}
+
+	if config.active != "claude" || config.feature != "work" || !slices.Equal(config.agents, []settings.Agent{glm, current}) {
+		t.Errorf("SetList was given %q %q %+v, want claude work opencode:digitalocean/glm-5.3#max, current", config.active, config.feature, config.agents)
+	}
+
+	if want := "✓ set claude work in .codefall/settings.json: opencode:digitalocean/glm-5.3#max, current\n"; out != want {
+		t.Errorf("output = %q, want %q", out, want)
+	}
+}
+
 func TestAgentsClearsAList(t *testing.T) {
 	config := &fakeConfig{write: domain.Changed("removed muse consult from .codefall/settings.json")}
 
@@ -224,7 +247,7 @@ func TestAgentsRefusesTheWrongArguments(t *testing.T) {
 		args []string
 		want string
 	}{
-		{name: "an active agent alone", args: []string{"agents", "muse"}, want: "name the list too"},
+		{name: "an active agent alone", args: []string{"agents", "muse"}, want: "name the list too: review, consult, or work"},
 		{name: "no agents and no --clear", args: []string{"agents", "muse", "review"}, want: "name at least one agent"},
 		{name: "agents with --clear", args: []string{"agents", "muse", "review", "claude", "--clear"}, want: "--clear takes no agents"},
 		{name: "a harness written no way codefall reads", args: []string{"agents", "muse", "review", "Cursor"}, want: `agent "Cursor": harness "Cursor" is not a harness`},
@@ -297,6 +320,7 @@ func TestShowPrintsHowEachHarnessIsCalled(t *testing.T) {
 		"  default (any harness without its own entry):\n" +
 		"    review: this harness\n" +
 		"    consult: this harness\n" +
+		"    work: this harness\n" +
 		harnessBlockLines +
 		"review posting: off\n" +
 		"persona: engineer (default)\n"

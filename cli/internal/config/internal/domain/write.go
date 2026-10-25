@@ -6,6 +6,7 @@ package domain
 import (
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/lividlabs/codefall/cli/internal/shared/settings"
 )
@@ -57,7 +58,8 @@ func ParseAgents(texts []string) ([]settings.Agent, error) {
 	return agents, nil
 }
 
-// ParseFeature returns the feature name when it is one an entry holds a list for, review or consult.
+// ParseFeature returns the feature name when it is one an entry holds a list for: review, consult,
+// or work.
 func ParseFeature(name string) (string, error) {
 	for _, feature := range settings.Features() {
 		if name == feature {
@@ -65,5 +67,14 @@ func ParseFeature(name string) (string, error) {
 		}
 	}
 
-	return "", fmt.Errorf("%q is not a list an entry holds; name %s or %s", name, settings.FeatureReview, settings.FeatureConsult)
+	return "", fmt.Errorf("%q is not a list an entry holds; name %s", name, FeatureChoices())
+}
+
+// FeatureChoices is the features an entry holds a list for as a sentence offers them: "review,
+// consult, or work".
+func FeatureChoices() string {
+	features := settings.Features()
+	last := len(features) - 1
+
+	return strings.Join(features[:last], ", ") + ", or " + features[last]
 }

@@ -1,11 +1,12 @@
 # Workers
 
-One background agent per bead, each in its own worktree. Read at step 6, before rendering the first
-prompt.
+One background agent per bead, each in its own worktree. Read at step 5 for the `work` and `consult`
+lists the gate names, and at step 6, before rendering the first prompt.
 
 ## Contents
 
 - Launching
+- Workers in another harness
 - Chains
 - Results
 - Failure handling
@@ -17,7 +18,9 @@ prompt.
 `Agent` with `isolation: 'worktree'`, prompted from `../worker-prompt.md`, rendered by substituting
 `{{BEAD_ID}}`, `{{TITLE}}`, `{{BODY}}`, `{{ACCEPTANCE}}`, `{{PLAN_REF}}`, `{{BRANCH}}`,
 `{{BASE_REF}}`, `{{PR_TARGET}}`, `{{VERIFY_COMMANDS}}`, `{{RELATES_LINE}}`, `{{REPO}}`,
-`{{TESTING_ROOT}}`, and `{{CASE_FILE_FORMAT}}`.
+`{{TESTING_ROOT}}`, `{{CASE_FILE_FORMAT}}`, and `{{RUNNER}}`, which is `subagent` here. A bead the
+gate gave to another harness is launched per [Workers in another harness](#workers-in-another-harness)
+instead.
 
 **The two testing placeholders are resolved by the root, not the worker.**
 
@@ -43,11 +46,111 @@ name no case simply never reads them.
 - **Workers never run `bd`.** Everything a worker needs from the tracker travels in its prompt, and
   every tracker write is the root's.
 
+## Workers in another harness
+
+A bead may be built by an agent on another harness and model: a cheaper model for a mechanical
+bead, a stronger one for a hard one. The worker runs through
+`../../../../.codefall/shared/run-worker.sh`, which starts the harness in its build mode with
+scoped permissions inside a worktree the root made, with `git push`, `gh`, and `bd` refused on its
+PATH. Everything else a subagent worker does itself, the root does for this one, before and after.
+The worker still never runs `bd`, never pushes, and never opens a pull request.
+
+The worktree is where the work is meant to land, not a wall. A Codex worker can write the worktree
+and the repository's common git directory, which holds its config and hooks. A Claude Code or
+OpenCode worker's shell can write anywhere the user can. The script checks the git config and the
+hooks directories outside the worktree, which the diff never shows; nothing checks the rest.
+
+### The `work` list at the gate
+
+Resolve the entry's `work` list exactly as *Resolving the list* in
+`../../../../.codefall/shared/running-agents.md` resolves a `consult` list. With nothing configured
+it is one `current` agent, and every worker is a subagent as before; the gate shows nothing new.
+
+Otherwise the gate's per-bead table proposes one agent per bead from that list, written as the list
+writes it, `opencode:digitalocean/glm-5.3#max` or `current` with the model the root would use. The
+first agent the machine can start is the default; muse and agy have no write mode and are passed
+over, as is a harness not on PATH. Say in one line which beads you would move to another agent and
+why: a rename, a removed flag, or a doc aligned with the code suits a cheaper model; a bead that
+needs a design call suits the session's own. The person changes any bead's agent at the gate, and
+the gate's one approval covers the run.
+
+### Before the run
+
+1. **The worktree.** `git fetch origin`, then
+   `git worktree add -b <BRANCH> <path> origin/<BASE_REF>`, at the path this harness uses for its
+   own worktrees (`.claude/worktrees/<bead>` under Claude Code). In a chain, link N+1's base is
+   link N's branch once the root has pushed it.
+2. **The dependencies.** Install them in the worktree with the command the project's `AGENTS.md`
+   gives, or its declared `update` script. A worker may have no network, so it cannot fetch them.
+3. **The prompt.** Render `../worker-prompt.md` with `{{RUNNER}}` as `run-worker.sh` and
+   `{{CASE_FILE_FORMAT}}` as the copy of `case-file.md` inside the worktree, since a worker may not
+   read outside it. Write the prompt and the out-file outside the worktree, so the worker cannot
+   commit them.
+4. **The run.** From the primary checkout, in the background, since a run can take most of an hour:
+
+   ```
+   ../../../../.codefall/shared/run-worker.sh <harness>[:<model>] <worktree> <prompt-file> <out-file>
+   ```
+
+   The transcript lands in `<out-file>.transcript`. Waves of an epic branch run several at once, one
+   worktree each.
+
+| Exit | Meaning | Do |
+| --- | --- | --- |
+| `0` | The worker finished | Read its result: the last JSON object in the out-file, after any narration |
+| `70` | The agent is on `current` | Launch a subagent worker per *Launching* |
+| `69`, `64` | Not runnable here | Take the next agent in the `work` list, else a subagent; say so |
+| `73`, `75`, `76` | Ran and failed | A failure result, handled per *Failure handling* |
+| `77` | Ran and changed the git config or a hooks directory | Step 1 below first, then a failure result |
+
+### After the run
+
+Step 1 follows every run. After a `success` result all of them follow, since that is where the
+root's work starts, not where it ends:
+
+1. **Read the git-directory report.** On exit `77` the script's stderr and the transcript list each
+   file it found added, removed, or changed in the repository's git config, its own worktree's
+   config, the common `hooks` directory, and the `core.hooksPath` directory when that is outside
+   the worktree. Before any further git command in the primary checkout, which would run a planted
+   hook, read each one and restore it: `git config --unset` the planted key, delete or restore the
+   hook, `chmod -x` a sample made executable. Say in the report what was found and restored. The
+   bead is then a failure result, whatever the worker's own result said.
+2. **Review the diff** — `git -C <worktree> diff origin/<BASE_REF>...HEAD` — against the bead's
+   acceptance criteria, one by one, and against its scope.
+3. **Re-run the project's checks** in the worktree: the `VERIFY_COMMANDS` the prompt carried, and
+   `.codefall/shared/check-cases.sh` when a case file was written.
+4. **Break what each new test covers.** For every test the worker added, change the code it covers
+   so the behavior is wrong — invert the condition, drop the line — run that test, confirm it
+   fails, and restore the code. A test that still passes covers nothing; fix it, or treat the bead
+   as failed.
+5. **Confirm the model.** OpenCode: the script prints a `run-worker: opencode session` line, to
+   stderr and the transcript, with the model and variant OpenCode recorded in `session_v2.model`.
+   When the line is missing, read it by hand, with the worktree's physical path:
+
+   ```
+   sqlite3 -readonly ~/.local/share/opencode/opencode.db \
+     "select model from session_v2 where directory = '<worktree>' order by time_created desc limit 1"
+   ```
+
+   A variant OpenCode does not know fails the run with "reasoning_effort must be one of […]"
+   rather than falling back. Claude Code: the `system` `init` event at the top of the transcript
+   carries `model`. Codex: the transcript's header names it.
+6. **Push and open the pull request.** `git -C <worktree> push -u origin <BRANCH>`, with the branch
+   named: the guard hook denies a push with no refspec while the primary checkout is on the default
+   branch. Then `gh pr create --base <PR_TARGET> --head <BRANCH>` with the `body` the worker's
+   result carries and the `RELATES_LINE`. From here the bead is verified, commented, and closed like any other, with
+   `built with <harness>:<model>` in the comment per *Claim, work, close* in `beads.md`.
+
+A criterion that does not hold, a change outside the bead, or a test that covers nothing is the
+root's to fix in the worktree when the fix is small, and otherwise a failure result for the retry
+per *Failure handling*; the worker is not resumed.
+
 ## Chains
 
 **A serial stack is strictly sequential; parallelism is the epic branch's waves.** Link N+1
 launches only after the root has verified two facts about link N: the branch is on the remote, and
-the PR exists. The root checks, never trusts.
+the PR exists. The root checks, never trusts. A link built in another harness meets both only once
+the root has pushed it and opened its pull request.
 
 ## Results
 
@@ -64,7 +167,9 @@ The worker's final message is exactly one JSON object:
               "summary": "StageStore renamed to StageContext, matching the code"}]}
 ```
 
-or `{"bead": "…", "status": "failure", "reason": "…"}`. The `discovered` list is how tangent work
+or `{"bead": "…", "status": "failure", "reason": "…"}`. A worker run through `run-worker.sh` sends
+`"pr": null` and a `body`, the pull request body it would have written, since the root opens the
+pull request. The `discovered` list is how tangent work
 reaches the root, which files it — the worker's diff stays scoped to its bead. `kind` is `code` or
 `plan` and picks the form under *Discovered work* in `beads.md`. A `code` item that is a bug says
 so with `"bug": true` and whether the worker's own change caused it with `"caused"`; the root

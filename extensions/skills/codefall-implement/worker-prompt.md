@@ -34,6 +34,8 @@ one JSON object — nothing else is read.
 
 - **Plan ref:** {{PLAN_REF}}
 - **Branch:** `{{BRANCH}}`, cut from `origin/{{BASE_REF}}`, PR to `{{PR_TARGET}}`
+- **Runner:** `{{RUNNER}}` — `subagent` when you run inside the root's own harness, `run-worker.sh`
+  when the root started you in another one. Steps 1 and 5 say what changes.
 
 ## 1. Set up the branch
 
@@ -47,6 +49,10 @@ git checkout -b {{BRANCH}} origin/{{BASE_REF}}
 Branch off the remote-tracking ref exactly as written — a plain checkout of `{{BASE_REF}}` fails
 when another worktree holds that branch. Then install dependencies if the project has them;
 worktrees share nothing.
+
+When the runner is `run-worker.sh`, the root has already put this worktree on `{{BRANCH}}` and
+installed the dependencies, and you may have no network: skip both, and check with `git status`
+that you are on `{{BRANCH}}`.
 
 ## 2. Read before you act
 
@@ -139,6 +145,10 @@ an Amendments section naming each document you amended and why when there are an
 `{{RELATES_LINE}}` when it is non-empty. Do not write `Closes` for the bead — beads is
 not GitHub.
 
+When the runner is `run-worker.sh`, commit everything and stop there: `git push` and `gh` are
+refused on your PATH, and the root pushes and opens the pull request once it has reviewed your
+branch. Write the body above into your result's `body` instead, and send `"pr": null`.
+
 ## 6. Report
 
 Your final message is exactly one JSON object, no prose around it:
@@ -152,6 +162,9 @@ Your final message is exactly one JSON object, no prose around it:
  "amended": [{"document": "docs/specs/SPEC-003-trip-export.md", "section": "REQ-01",
               "summary": "appended AC-05: the declined-card path"}]}
 ```
+
+Under `run-worker.sh`, `pr` is `null` and the object also carries `"body"`, the pull request body
+from step 5.
 
 `kind` is `code` for work in the code and `plan` for a place a document is wrong that you could
 not amend, with `blocks` naming the row, cited criterion, or frozen document that stopped you;

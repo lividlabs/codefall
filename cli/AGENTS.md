@@ -12,7 +12,7 @@ first component and the reference for the rules below; `internal/initcmd/` (`cod
 follows it; `internal/create/` (`codefall create`) is the third, and runs init's command in the
 directory it makes; `internal/config/` (`codefall config`, an interactive editor in a terminal and
 subcommands for scripts, over one use case) is the fourth, and reads and writes the agents list, one
-entry per active agent with its review and consult lists, how each harness is called, whether review
+entry per active agent with its review, consult, and work lists, how each harness is called, whether review
 posts, and the persona. `internal/update/` (`codefall update`) is the fifth: it finds out how the
 running binary was installed and replaces it with a release only when the install script put it
 there (ADR-015). `internal/shared/ui/` holds the palette,

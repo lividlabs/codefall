@@ -9,8 +9,8 @@ writes; the pages here explain each skill for the people using it.
 - [Installing codefall](install.md): the install script's options, mise, and release downloads.
 - [Setting up a project](setup.md): what `init` and `upgrade` write, the hooks, and every CLI
   command in full.
-- [Configuration](configuration.md): review and consult agents, how each coding agent is started,
-  the `config` command, and personas.
+- [Configuration](configuration.md): review, consult, and work agents, how each coding agent is
+  started, the `config` command, and personas.
 
 ## The skills
 
