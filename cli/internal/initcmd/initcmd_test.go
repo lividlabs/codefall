@@ -128,6 +128,28 @@ func TestOpenCodePluginPointsAtTheSharedScripts(t *testing.T) {
 	}
 }
 
+// OpenCode 2 loads a plugin only as a default export with an id and a setup function, and refuses
+// the named export OpenCode 1 read, with an error only the server's plugin list shows. Nothing here
+// runs the plugin, so the pin is textual, on the real file: a plugin that lost its default export
+// would install cleanly into every project and load in none.
+func TestOpenCodePluginIsInOpenCode2sForm(t *testing.T) {
+	body, err := fs.ReadFile(extensions.Files(), "hooks/opencode/codefall.js")
+	if err != nil {
+		t.Fatalf("read hooks/opencode/codefall.js from the embedded tree: %v", err)
+	}
+
+	for _, want := range []string{"export default {", `id: "codefall",`, "async setup(ctx)"} {
+		if !strings.Contains(string(body), want) {
+			t.Errorf("the plugin does not contain %q — OpenCode 2 would not load it", want)
+		}
+	}
+
+	if named := regexp.MustCompile(`(?m)^export (const|let|var|function|async function|class) `); named.Match(body) {
+		t.Errorf("the plugin has a named export (%q) — OpenCode 2 reads the default export only",
+			named.Find(body))
+	}
+}
+
 // What the JSON harnesses register on SessionStart: the Beads prime, and the notice as a second
 // command, so an upgrade recognises the notice by its own script name and replaces that entry alone.
 // Antigravity has no session event, and its definition says nothing about one.
