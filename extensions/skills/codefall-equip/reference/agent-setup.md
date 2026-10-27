@@ -114,7 +114,8 @@ without narrating the search, and work out the block:
   hooks followed them into a refresh instead of answering. `args` never carries a flag that turns
   hooks back on. Muse and agy have no switch, and neither has OpenCode 2, which refuses `--pure`, so
   a block for any of the three says so in the confirmation, in one clause: `its hooks run during
-  headless calls`.
+  headless calls`. For OpenCode that is its merge guard: both scripts set `CODEFALL_HEADLESS=1`, and
+  the plugin's session notice reads it.
 
 Then show the result in the same shape as the configuration, and ask one yes-or-no:
 

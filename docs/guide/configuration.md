@@ -115,6 +115,11 @@ OpenCode 1.x is not supported, so a project on 1.x upgrades with `opencode upgra
 OpenCode agent will run. `/codefall-equip agents` reads `opencode --version` and says so
 when it finds 1.x.
 
+Every harness Codefall starts this way gets `CODEFALL_HEADLESS=1` in its environment, which keeps
+the session start notice quiet in a run that has a prompt to answer. OpenCode has no switch for its
+plugins, so an OpenCode agent loads the project's Codefall plugin, and the merge guard in it runs on
+the agent's shell commands.
+
 ## Edit the settings with codefall config
 
 Run `codefall config` in a terminal to open an editor with four entries:

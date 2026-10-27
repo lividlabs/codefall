@@ -88,8 +88,11 @@ have exported. A harness name with no block runs bare.
 2 has and runs on a private server so that the PATH, the working directory, and the environment
 reach the tools. OpenCode 1.x is not supported: an `opencode` agent on it is not expected to run,
 and the person upgrades OpenCode by hand. OpenCode 2 refuses `--pure`, so neither
-script passes it, and OpenCode has no switch for its hooks alone. `codefall-equip agents` reads
-`opencode --version` when it sets OpenCode up and says to upgrade when it finds 1.x.
+script passes it, and OpenCode has no switch for its hooks alone: the project's codefall plugin
+loads in the run. Its merge guard runs on the agent's shell commands. Its session notice does not,
+because both scripts set `CODEFALL_HEADLESS=1` in the environment of every harness they start, and
+the notice reads it. `codefall-equip agents` reads `opencode --version` when it sets OpenCode up
+and says to upgrade when it finds 1.x.
 
 The model string is whatever the harness accepts for the provider in use, and the easiest way to
 get it right is to run `/codefall-equip agents` from any harness: it finds the model and provider
