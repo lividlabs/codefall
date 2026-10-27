@@ -178,6 +178,16 @@ The notice names the skill that fixes each problem and prints nothing when every
 only reports: it never pulls, never runs the project's `update` script, and never fails a session
 whose state it could not read.
 
+OpenCode has no session start event, so its plugin acts on the event that announces a new session.
+It adds the Beads report and the notice as one message without starting a turn, and the model reads
+it with the first prompt. The plugin is in the form OpenCode 2 loads, and `codefall upgrade` replaces
+the plugin an earlier release installed, which OpenCode 2 refuses to load.
+
+The agents that review, consult, or build in another harness run headless, and the scripts that start
+them set `CODEFALL_HEADLESS=1` in every harness's environment. A session start notice stays silent
+under it, so a reviewer answers its prompt instead of following the notice into a refresh. The merge
+guard has no such switch and runs in every run, headless or not.
+
 ## Check the setup
 
 `codefall doctor` checks what Codefall needs and names a fix for each problem. It never runs the fix

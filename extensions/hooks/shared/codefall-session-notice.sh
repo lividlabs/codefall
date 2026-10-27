@@ -21,8 +21,16 @@
 # run again with --no-fetch, which answers from the refs the checkout already has; the fetch is
 # treated as failed, the same as a fetch that could not reach the remote.
 #
+# A headless run says nothing. The runners that start another harness for a review or a build
+# (run-agent.sh and run-worker.sh) set CODEFALL_HEADLESS=1 for every harness, and a run that was
+# given a prompt to answer has been seen to follow a notice into a refresh instead. The variable
+# means the same in every harness, so the script stands down for it whichever harness runs it.
+# The merge guard has no such switch: it stays on in every run.
+#
 # Usage: codefall-session-notice.sh [--hook-json] [project-dir]      (default: .)
 set -u
+
+[ -n "${CODEFALL_HEADLESS:-}" ] && exit 0
 
 # How long to wait for one line of the preflight report before giving up on the network and
 # reading what the checkout already knows.

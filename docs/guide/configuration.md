@@ -85,7 +85,7 @@ agy cannot yet, so a run skips them in a `work` list.
 matches what every skill did before the list existed. With no `work` list, every task is built by a
 subagent of the harness you are running in, as before. `codefall doctor` reports which of the listed
 harnesses this machine can run, and which lists never fall back to `current`.
-[ADR-009.6](../adrs/ADR-009.6-agents.md) records the shape of the list.
+[ADR-009.7](../adrs/ADR-009.7-agents.md) records the shape of the list.
 
 ## Configure how a harness starts
 
@@ -114,6 +114,11 @@ Codefall supports OpenCode 2 and later. It starts OpenCode with `opencode run --
 OpenCode 1.x is not supported, so a project on 1.x upgrades with `opencode upgrade` before an
 OpenCode agent will run. `/codefall-equip agents` reads `opencode --version` and says so
 when it finds 1.x.
+
+Every harness Codefall starts this way gets `CODEFALL_HEADLESS=1` in its environment, which keeps
+the session start notice quiet in a run that has a prompt to answer. OpenCode has no switch for its
+plugins, so an OpenCode agent loads the project's Codefall plugin, and the merge guard in it runs on
+the agent's shell commands.
 
 ## Edit the settings with codefall config
 

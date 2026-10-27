@@ -11,7 +11,7 @@ import (
 )
 
 // The agents a project reaches for when a verb needs another reader: a reviewer, or a second
-// opinion on a decision the run cannot settle, or a worker that builds a bead (ADR-009.6). The list
+// opinion on a decision the run cannot settle, or a worker that builds a bead (ADR-009.7). The list
 // is keyed by the harness the session is running in, the active agent, because which agent to reach
 // for is a question asked from inside a harness: a session in Muse may want Claude to review, a
 // session in Claude Code may want Codex. Each entry holds one ordered list per feature, review,

@@ -32,6 +32,12 @@ never restates the reasoning.
   decoration: `init` recognises its own registration in a file it shares with the project's hooks by
   the script a command names, and replaces that entry on an upgrade rather than appending beside it.
   A script renamed out of the prefix would leave every project's old registration running for ever.
+- **The OpenCode plugin is a default export with an `id` and a `setup` function**, the only form
+  OpenCode 2 loads; a named export installs cleanly and never loads. It imports nothing from
+  `@opencode/plugin`, which a project may not have installed.
+- **A hook that primes a session stands down when `CODEFALL_HEADLESS` is set.** `run-agent.sh` and
+  `run-worker.sh` set it for every harness they start, and a change to one is made to the other.
+  The merge guard never reads it.
 
 ## AGENTS.md sections
 
