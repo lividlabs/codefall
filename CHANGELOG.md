@@ -6,6 +6,24 @@ below were written by hand, before that was wired up.
 Tags are bare version numbers (`0.1.2`), not `v`-prefixed, so they match the `ref` the marketplace
 pins. A `v0.1.1` tag also exists from before that convention was settled.
 
+## [0.36.0](https://github.com/lividlabs/codefall/compare/v0.35.0...v0.36.0) (2026-10-27)
+
+
+### ⚠ BREAKING CHANGES
+
+* **run-agent:** a project on OpenCode 1.x must upgrade OpenCode to 2.x by hand (`opencode upgrade`, or reinstall) before an opencode agent in its review, consult, or work lists is supported. Check with `opencode --version`.
+
+### Features
+
+* **implement:** build a bead in another harness through a write-mode runner beside run-agent.sh ([#229](https://github.com/lividlabs/codefall/issues/229)) ([d4a404c](https://github.com/lividlabs/codefall/commit/d4a404c708452824a8f15a7a0678ac0181ad2d84))
+
+
+### Bug Fixes
+
+* **opencode:** load codefall's plugin under OpenCode 2 ([#233](https://github.com/lividlabs/codefall/issues/233)) ([e9e79a3](https://github.com/lividlabs/codefall/commit/e9e79a37f16cda340eed5ad1551962bdd900369c))
+* **run-agent:** call OpenCode 2 with --standalone and without --pure ([#232](https://github.com/lividlabs/codefall/issues/232)) ([aba9760](https://github.com/lividlabs/codefall/commit/aba976027f177e9ed2fa8b7a8ed226d8595a824b))
+* **run-agent:** put opencode's message before --file so it is not read as a second file ([#226](https://github.com/lividlabs/codefall/issues/226)) ([d7c9bdd](https://github.com/lividlabs/codefall/commit/d7c9bdd7afccdc525b894fc8c736a2ad8ae6a3bf))
+
 ## [0.35.0](https://github.com/lividlabs/codefall/compare/v0.34.0...v0.35.0) (2026-10-22)
 
 
