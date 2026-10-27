@@ -14,10 +14,13 @@
 # Every harness runs in its own read-only mode, with its own hooks off where it
 # has a switch for them: a headless run that loaded the project's session-start
 # hooks has been seen to follow them into a refresh instead of answering.
-# OpenCode 2, the only OpenCode version supported, has no such switch (see
-# run_opencode). An agent run this way proposes; a subprocess that edited would
-# bypass the host's PreToolUse hooks and its checkpoints, so nothing it did
-# would be guarded or reversible.
+# OpenCode 2, the only OpenCode version supported, has no such switch, so its
+# plugin loads in the run (see run_opencode). What the run does instead is say
+# that it is headless: every harness is started with CODEFALL_HEADLESS=1, and
+# codefall's session notice stands down for it. The merge guard does not: it
+# stays on in every run. An agent run this way proposes; a subprocess that
+# edited would bypass the host's PreToolUse hooks and its checkpoints, so
+# nothing it did would be guarded or reversible.
 #
 # Usage: run-agent.sh <agent> <prompt-file> <schema-file> <out-file>
 #
@@ -66,6 +69,13 @@
 #   CODEFALL_REVIEW_TIMEOUT   seconds before the run is killed (default 900)
 #   CODEFALL_SETTINGS         the settings file to read (default ../settings.json
 #                             beside this script)
+#
+# Set in the environment of every harness this script starts, whichever it is
+#   CODEFALL_HEADLESS         1; a hook or plugin that primes an interactive
+#                             session reads it and says nothing. The session
+#                             notice does (hooks/shared/codefall-session-notice.sh,
+#                             and the OpenCode plugin, which skips the Beads
+#                             prime with it); the merge guard does not.
 #
 # Exit codes — the caller walking a list reads them as three outcomes
 #   0    the agent ran and out-file holds its final message         answered
@@ -266,13 +276,16 @@ run_claude() {
 # flag: --pure in command opencode run") and exits 1 before the model starts, so
 # the flag that once ran OpenCode without plugins is not passed. The one switch
 # found, OPENCODE_CONFIG_PROJECT_DISABLE, drops all of the project's OpenCode
-# configuration with its plugins, so it is not set. A project plugin therefore
-# loads if OpenCode 2 accepts it; codefall's own, a named export, fails to load
-# under 2.1.4, which wants a default export with an id. --standalone runs a
-# private server, which inherits this process's PATH, working directory, and
-# environment, including whatever a `harnessConfig` `env` command exported;
-# without it `opencode run` sends the request to a background service that may
-# have been started elsewhere and runs the tools with none of them.
+# configuration with its plugins, so it is not set: a reviewer that needs the
+# project's provider settings would not reach its model. The project's plugins
+# therefore load, codefall's among them. Its merge guard runs on the agent's
+# shell commands, as it does in an interactive session. Its session notice does
+# not: it skips itself because CODEFALL_HEADLESS is set, which run_agent exports
+# for every harness. --standalone runs a private server, which inherits this
+# process's PATH, working directory, and environment, including that variable
+# and whatever a `harnessConfig` `env` command exported; without it
+# `opencode run` sends the request to a background service that may have been
+# started elsewhere and runs the tools with none of them.
 #
 # The message comes before --file, and --file ends the line. OpenCode 2 takes a
 # single value for --file. OpenCode 1 took every value up to the next flag, so a
@@ -337,6 +350,8 @@ run_agy() {
 # Exit 78 is this job's own signal that the env command failed, distinct from
 # anything a harness exits with.
 run_agent() {
+  export CODEFALL_HEADLESS=1
+
   if [ -n "$env_command" ]; then
     local exported
     if ! exported=$(eval "$env_command"); then

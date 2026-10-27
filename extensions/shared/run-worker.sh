@@ -54,8 +54,11 @@
 #     commands;
 #   - the harness's hooks are off where it has a switch, as in `run-agent.sh`:
 #     the project's session-start hooks run `bd prime` and the refresh notice,
-#     and a headless run has been seen to follow them instead of the prompt
-#     (OpenCode 2 has no such switch; see run_opencode);
+#     and a headless run has been seen to follow them instead of the prompt.
+#     OpenCode 2 has no such switch, so its plugin loads (see run_opencode), and
+#     every harness is started with CODEFALL_HEADLESS=1 instead, which the
+#     session notice reads. The merge guard does not read it: it stays on in
+#     every run;
 #   - the git-directory check above;
 #   - the root's duties after the run, in `codefall-implement` and
 #     `codefall-review`, which no script can do for it.
@@ -68,10 +71,10 @@
 # this script refuses them.
 #
 # `run-agent.sh` and this script share the agent syntax, the `harnessConfig`
-# read, the provider switch, the env command, OpenCode's version and flags, and
-# the polled timeout, copied rather than shared so that `run-agent.sh` stayed as
-# it was. A change to any of those in one script is made in the other in the
-# same change.
+# read, the provider switch, the env command, OpenCode's version and flags, the
+# headless variable, and the polled timeout, copied rather than shared so that
+# `run-agent.sh` stayed as it was. A change to any of those in one script is
+# made in the other in the same change.
 #
 # Usage: run-worker.sh <agent> <worktree> <prompt-file> <out-file>
 #
@@ -106,6 +109,13 @@
 #   CODEFALL_WORK_TIMEOUT   seconds before the run is killed (default 3600)
 #   CODEFALL_SETTINGS       the settings file to read (default ../settings.json
 #                           beside this script)
+#
+# Set in the environment of every harness this script starts, whichever it is
+#   CODEFALL_HEADLESS       1; a hook or plugin that primes an interactive
+#                           session reads it and says nothing. The session
+#                           notice does (hooks/shared/codefall-session-notice.sh,
+#                           and the OpenCode plugin, which skips the Beads
+#                           prime with it); the merge guard does not.
 #
 # Exit codes — the same as run-agent.sh's, read as the same three outcomes
 #   0    the worker ran and out-file holds its final message           answered
@@ -465,9 +475,11 @@ git_changes() {
 # in command opencode run") and exits 1 before the model starts, so it is not
 # passed. The one switch for plugins found, OPENCODE_CONFIG_PROJECT_DISABLE,
 # drops all of the project's OpenCode configuration with its plugins, so it is
-# not set. A project plugin therefore loads if OpenCode 2 accepts it; codefall's
-# own, a named export, fails to load under 2.1.4, which wants a default export
-# with an id, so no merge guard or session notice from it reaches the worker.
+# not set. The project's plugins therefore load, codefall's among them. Its merge
+# guard runs on the worker's shell commands, beside the shims and the permission
+# block below, as it does in an interactive session. Its session notice does not:
+# it skips itself because CODEFALL_HEADLESS is set, which run_agent exports for
+# every harness, and --standalone's private server inherits it.
 #
 # The message comes before --file and --file ends the line, as in run-agent.sh,
 # which says why (#215). Every text part goes to stdout, so out-file holds the
@@ -553,6 +565,8 @@ run_codex() {
 # worktree first, so every harness starts there.
 run_agent() {
   cd "$worktree" || exit 78
+
+  export CODEFALL_HEADLESS=1
 
   if [ -n "$env_command" ]; then
     local exported
