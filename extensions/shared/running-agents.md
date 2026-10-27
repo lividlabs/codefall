@@ -4,7 +4,7 @@ Shared procedure. Every verb that hands work to another agent — `codefall-revi
 reviewer, the verbs that consult when a run cannot settle something on its own, and
 `codefall-implement` for a worker in another harness — follows it, so the rules about which agent
 runs, in what order, and what it is allowed to do are stated once.
-[ADR-009.6](https://github.com/lividlabs/codefall/blob/main/docs/adrs/ADR-009.6-agents.md) holds the
+[ADR-009.7](https://github.com/lividlabs/codefall/blob/main/docs/adrs/ADR-009.7-agents.md) holds the
 reasoning.
 
 ## Contents

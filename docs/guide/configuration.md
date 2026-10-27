@@ -85,7 +85,7 @@ agy cannot yet, so a run skips them in a `work` list.
 matches what every skill did before the list existed. With no `work` list, every task is built by a
 subagent of the harness you are running in, as before. `codefall doctor` reports which of the listed
 harnesses this machine can run, and which lists never fall back to `current`.
-[ADR-009.6](../adrs/ADR-009.6-agents.md) records the shape of the list.
+[ADR-009.7](../adrs/ADR-009.7-agents.md) records the shape of the list.
 
 ## Configure how a harness starts
 

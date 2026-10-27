@@ -2092,6 +2092,38 @@ Decided at scaffold, 2026-08-16.
   in OpenCode 2's form, and whether its guard is worth the cost of the one switch that keeps plugins
   out of a headless run.
 
+- **The OpenCode plugin loads under OpenCode 2, and every harness run is told it is headless, 2026-10-26.**
+  `extensions/hooks/opencode/codefall.js` was a named export in OpenCode 1's form, and OpenCode
+  2.1.4 refused it, so no OpenCode session had the merge guard or the session notice (#231). It is
+  now a default export, a plain object with the id `codefall` and a `setup` function, with no import
+  from `@opencode/plugin`, still an adapter to the shared scripts. Checked on 2.1.4 without a model
+  run, against private servers and a scratch database: the shell tool is `shell`, not `bash`, and a
+  throw in `ctx.tool.hook("execute.before")` stops the call and reaches the model as the tool's
+  result, so the permission hook was not needed; there is no session-start hook, and
+  `session.created` plus `ctx.session.synthetic({ resume: false })` stands in for one; the event
+  stream reaches every plugin instance whatever the directory, so the plugin filters on
+  `event.location.directory`, and it skips sessions that have a parent; the plugin runs in Bun, and
+  `node:child_process`, `node:fs`, and `import.meta.dir` all work; plugins load under
+  `opencode run --standalone`. ADR-009.6 left open whether the plugin's guard was worth setting
+  `OPENCODE_CONFIG_PROJECT_DISABLE` for. It is not: the switch drops the merge guard from a headless
+  run along with the notice, and the project's OpenCode configuration too. Instead both runner
+  scripts export `CODEFALL_HEADLESS=1` for every harness they start, and the session notice stands
+  down for it: the notice script exits silently, and the OpenCode plugin skips the Beads prime and
+  the notice. The merge guard stays on in every run. Claude Code and Codex already run with their
+  hooks off in these scripts, and their `bd prime --hook-json` entries are Beads' command and do not
+  read the variable. ADR-009.7 is the edition, because ADR-009.6 recorded that the plugin does not
+  load and that no plugin is kept out of an OpenCode run for want of a plugin to keep out; ADR-009.6's
+  status flipped and nothing else in it moved. A real run on `digitalocean/glm-5.3#max` in a scratch
+  install had the guard refuse `git push origin main`, the bare origin did not receive the commit,
+  and the session had no notice under the variable; without it the notice was added and the model
+  followed it into `codefall init`. Not breaking: `codefall upgrade` copies the shipped plugin over
+  the installed one and nobody acts by hand. Seen and not taken: removing the plugin by its id
+  (drops the guard too); a variable only the plugin reads; priming through the `context` hook
+  (the event and the synthetic message work). Left open: whether the terminal interface creates a
+  session before its first prompt, which decides whether the notice precedes it; and the plugin
+  guards the tool named `shell`, so a rename in a later OpenCode would let commands through
+  unreported.
+
 ## Open
 
 - (nothing open; the last item graduated to ADR-012 on 2026-09-27)
