@@ -342,6 +342,35 @@ func TestHookCopySkipsAnInstallationItAlreadyHas(t *testing.T) {
 	}
 }
 
+// An upgrade runs this same step over a project that holds an earlier release's plugin, and the
+// plugin the binary ships replaces it: the file is codefall's own, so a copy that differs is the
+// old release, not the project's edit. OpenCode 2 refuses the form the earlier releases shipped, so
+// a project left on it would have neither the guard nor the notice, and nothing would say so.
+func TestHookCopyReplacesAnEarlierPlugin(t *testing.T) {
+	files := settled("")
+	path := filepath.Join(workingDir, ".opencode/plugins/codefall.js")
+	files.files[path] = []byte("export const CodefallPlugin = async () => ({});\n")
+
+	report, err := NewInitialize(files, toolsInstalled(), newFakeExtensionSource(), noChanges()).Run(t.Context(), beadsRequestHarness(harness.OpenCode), nil)
+	if err != nil {
+		t.Fatalf("Run: %v", err)
+	}
+
+	result := hookResult(t, report)
+	if result.Outcome != domain.OutcomeDone {
+		t.Errorf("outcome = %v, want DONE", result.Outcome)
+	}
+
+	want := "installed codefall's plugin at .opencode/plugins/codefall.js"
+	if result.Detail != want {
+		t.Errorf("detail = %q, want %q", result.Detail, want)
+	}
+
+	if got, shipped := files.files[path], hookDefinitions["hooks/opencode/codefall.js"]; !bytes.Equal(got, shipped) {
+		t.Errorf("%s = %q, want the shipped plugin %q", path, got, shipped)
+	}
+}
+
 // An installed plugin init cannot read stops the step with the read error, not a copy over it.
 func TestHookCopyReportsAFileItCannotRead(t *testing.T) {
 	files := settled("")
