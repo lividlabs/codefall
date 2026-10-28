@@ -1,6 +1,6 @@
 ---
 name: codefall-review
-description: Review something and fix what the user accepts — uncommitted work, a branch, an open pull request, a path, a document, or a description of what to look at. The reviewer is a subagent or another harness; this session triages the findings with the user and applies the ones they take. Every finding and what was decided about it is written to .codefall/reviews/.
+description: Review something and fix what is worth fixing — uncommitted work, a branch, an open pull request, a path, a document, or a description of what to look at. The reviewer is a subagent or another harness; this session triages the findings, applies the fixes it can give a reason for, and on an epic's work files them as beads for the next round. Every finding and what was decided about it is written to .codefall/reviews/.
 argument-hint: "[what to review — nothing for uncommitted work] [via=<harness>[:model]]"
 allowed-tools:
   - Read
@@ -16,8 +16,8 @@ allowed-tools:
 
 # Review
 
-Read something, say what is wrong with it, decide with the user what to do about each finding, do
-it, and write down what was found and decided.
+Read something, say what is wrong with it, decide what to do about each finding, do it, and write
+down what was found and decided.
 
 One invocation is one complete review. Nothing carries over: a second review of the same thing is a
 new review, with its own file.
@@ -43,12 +43,14 @@ Read each when its step says to; none is loaded up front.
 - `reference/findings-file.md` — naming, the Markdown shape, when the files are committed, and
   `revision`. Read at step 4.
 - `reference/beads.md` — what a finding does to an upstream document, and the `plan` and `code`
-  beads offered at triage. Read at step 5. Names `../codefall-implement/reference/beads.md`,
+  beads filed at triage. Read at step 5. Names `../codefall-implement/reference/beads.md`,
   `../codefall-specify/trackers/<name>/PROFILE.md`, and `../../../.codefall/shared/triage.md`.
+- `../../../.codefall/shared/decisions.md` — what this session decides, what it consults on, and
+  the record. Read at step 1.
 - `reference/posting.md` — posting findings to a pull request. Read at step 5 when the target is
   an open pull request.
 - `reference/worker-fixes.md` — fixes applied by a worker in another harness from the `work` list:
-  when it is offered, the worktree, the run, and what this session checks before it pushes. Read at
+  when it is used, the worktree, the run, and what this session checks before it pushes. Read at
   step 5 when fixes land on a branch, and at step 6. Names `../../../.codefall/shared/run-worker.sh`.
 - `reviewer-prompt.md` and `findings.schema.json` — the prompt each reviewer is rendered from and
   the shape every reviewer returns.
@@ -91,22 +93,23 @@ Five things are refused rather than attempted, and the refusal says which:
 
 ## The confirmation
 
-Every target is confirmed before anything is reviewed. Name what was resolved and which lenses will
-run, and offer to drop some:
+Every target is named before anything is reviewed, and the review starts; the confirmation is a
+report, per `../../../.codefall/shared/decisions.md`. Name what was resolved and which lenses will
+run:
 
 ```
 Resolved SPEC-004 to docs/specs/SPEC-004-trip-sharing.md,
 checked against VISION-002-trip-sharing.md.
 
-Lenses: structure, status, trace, criteria, precision, stories.
-
-Review now, or exclude any of these?
+Lenses: structure, status, trace, criteria, precision, stories. Reviewing now.
 ```
 
-Every lens that applies to the target runs unless the user drops it here. A prose argument that
-narrows — "review the auth code for security issues" — shows the reduced list. The confirmation also
-names the resolved agent list, or the `via=` override, and says where fixes will land when that
-would create a worktree or branch. For an epic's work it opens with the chart line.
+Every lens that applies to the target runs; a person present may drop one in reply, and a prose
+argument that narrows — "review the auth code for security issues" — shows the reduced list. The
+confirmation also names the resolved agent list, or the `via=` override, and says where fixes will
+land when that would create a worktree or branch. For an epic's work it opens with the chart line.
+A prose target is the one case that waits: the file list is confirmed before it is read, per
+`reference/targets.md`.
 
 ## What gets read
 
@@ -163,11 +166,11 @@ set. A `REVIEW.md` at the project root, if present, states what the project care
 
 The `review` list of the `agents` entry for this harness, else of the `default` entry, resolved and
 walked per `../../../.codefall/shared/running-agents.md`; the first agent that answers is the
-reviewer. `current` is a subagent of this harness, and with no `agents` configured it is the whole
-list. `via=` replaces the list for one run. This session reviews only when the work came
-from somewhere else. The lens groups, how each reviewer runs them, and the external call are in
-`reference/reviewers.md`. Every reviewer runs read-only, and every agent tried is named in the
-report and the findings file.
+reviewer. `current` is a subagent of this harness, run at high effort, and with no `agents`
+configured it is the whole list. `via=` replaces the list for one run. This session reviews only
+when the work came from somewhere else. The lens groups, how each reviewer runs them, and the
+external call are in `reference/reviewers.md`. Every reviewer runs read-only, and every agent tried
+is named in the report and the findings file.
 
 ## Where the fixes go
 
@@ -179,7 +182,7 @@ report and the findings file.
 | A branch | That branch |
 | An open pull request | That PR's branch |
 | A commit range | The branch whose tip is `<to>`; if no branch has it, stop and ask |
-| An epic's work | A document fix: the stack's top branch, or the epic branch. A code fix: a child of the epic, built by `codefall-implement` in this session |
+| An epic's work | A document fix: the stack's top branch, or the epic branch. A code fix: a child of the epic, built by `codefall-implement` in the next round |
 | A document or path, when something is already checked out for it | There |
 | A document or path on the default branch | A new worktree, branched from the default branch |
 
@@ -193,38 +196,39 @@ say the fixes were not applied and why, and leave the tree as it is.
 ## Triage and fixes
 
 Present the findings as one numbered list, most severe first, each with its priority and severity,
-its location, its claim, and the conditions under which it matters. Then ask which to fix. **On an
-epic's work the question is one line** — "I found N problems. Fix them all? (I recommend yes.)" — and the person may take all,
-some, or none. A bug's line also shows its triage per `../../../.codefall/shared/triage.md`, which
-the person may change in the same answer.
+its location, its claim, and the conditions under which it matters. Then decide each, per
+`../../../.codefall/shared/decisions.md`: a finding whose claim this session has checked on the
+lines it cites is fixed; one the lines do not bear out is dismissed, with the reason; one that is
+real and not for now is deferred and becomes a bead. A person present may change any decision in
+reply. **On an epic's work the list is a report** — "Found N problems; filing all N" — with each
+one's triage per `../../../.codefall/shared/triage.md` on its line: whose it is, where it goes,
+how bad, which area.
 
 | Status | Meaning |
 | --- | --- |
-| `fixed` | The user took it; the fix is applied in this invocation |
-| `dismissed` | The user rejected it, with a reason |
-| `deferred` | Real, but not now |
+| `fixed` | The fix is applied in this invocation |
+| `dismissed` | Judged wrong, with a reason |
+| `deferred` | Real, but not now; a bead carries it |
 
-A dismissed finding is written with its `reason`; a dismissal with no reason is asked for one
-before the write.
-
-Apply the accepted fixes, code and documents alike, here or, when the person picks one, through a
-worker in another harness per `reference/worker-fixes.md`. A finding's proposed `patch` is a starting
-point, not a script — apply the intent, matching the surrounding code. Fixes are not re-reviewed
-here. **On an epic's work, a taken code finding is not fixed here**: it is
-filed in the `code` form below, or the `plan` form where the plan caused it, its status is
-`deferred` with the bead's ID, and step 8 runs `codefall-implement` on the epic to build the ones
-that are the epic's in this session. Whose a finding is, `../../../.codefall/shared/triage.md`
-decides; a bug beside the epic is filed `open` with no parent, for `codefall-fix` or a followup.
-Document fixes on an epic's work still land
-here as text, under the rule below. **A code fix that changes behaviour the plan or spec describes amends
-that document in the same commit**, under the rule below: the document is part of the fix, not a
-second finding.
+Apply the fixes, code and documents alike, here or through a worker in another harness per
+`reference/worker-fixes.md` when the `work` list names one. A finding's proposed `patch` is a
+starting point, not a script — apply the intent, matching the surrounding code. Fixes are not
+re-reviewed here. **On an epic's work, a code finding is not fixed here**: it is filed in the
+`code` form, or the `plan` form where the plan caused it, its status `deferred` with the bead's
+ID, and `codefall-implement` builds it in the next round; this run builds nothing. Whose a finding
+is, and where it goes, `../../../.codefall/shared/triage.md` decides; a bug beside the epic is
+filed `open` with no parent, for `codefall-fix` or a followup. Document fixes on an epic's work
+still land here as text, under the rule below. **A code fix that changes behaviour the plan or
+spec describes amends that document in the same commit**, under the rule below: the document is
+part of the fix, not a second finding.
 
 **A finding that an upstream document is wrong is fixed like any other document finding**, as text
-on the target's branch recorded as a `plan-amended` bead, and **what that fix cannot do, or the
-user defers, is offered as a bead**: the `plan` form for a finding the plan caused, the `code` form
-for a deferred finding the code caused, a bug among them triaged per the shared reference. Both
-are in `reference/beads.md`. Never file one unasked.
+on the target's branch recorded as a `plan-amended` bead, and **what that fix cannot do, or is
+deferred, becomes a bead**: the `plan` form for a finding the plan caused, the `code` form for a
+deferred finding the code caused, a bug among them triaged per the shared reference. Both are in
+`reference/beads.md`. A `plan-revision` bead filed here is settled before the report: run the
+`codefall-plan` skill on the document through the `Skill` tool, in this session, for its Revise
+mode.
 
 ## The findings file
 
@@ -236,7 +240,7 @@ Naming, the Markdown shape, and `revision` are in `reference/findings-file.md`.
 ### Kept out of codebase search
 
 A `.ignore` file beside `.codefall/` holds one line, `.codefall/reviews/`, so ripgrep-backed
-harnesses skip old findings. When the line is missing, offer to append it before the review, in
+harnesses skip old findings. When the line is missing, append it before the review and say so, in
 the words `reference/findings-file.md` gives; never replace the file, and say nothing when the line
 is there.
 
@@ -251,11 +255,11 @@ run, and say so.
 
 1. **Resolve and confirm.** Resolve the target per [Targets](#targets); refuse what is not
    reviewable. Interview a prose scope until the file list is recognised. Read
-   `.codefall/settings.json`'s `review` block and `.codefall/skills/codefall-review/CUSTOMIZE.md`
-   if present. Answer which harness this is and take its `agents` entry's `review` list per
-   `../../../.codefall/shared/running-agents.md`, or take the `via=` override. Check the `.ignore`
-   entry and offer to add it if it is missing. Read `reference/lenses.md`, present
-   [the confirmation](#the-confirmation), and wait.
+   `.codefall/settings.json`'s `review` block, `../../../.codefall/shared/decisions.md`, and
+   `.codefall/skills/codefall-review/CUSTOMIZE.md` if present. Answer which harness this is and
+   take its `agents` entry's `review` list per `../../../.codefall/shared/running-agents.md`, or
+   take the `via=` override. Check the `.ignore` entry and append it if it is missing. Read
+   `reference/lenses.md` and present [the confirmation](#the-confirmation).
 2. **Read.** Everything in [What gets read](#what-gets-read).
 3. **Review.** Read `reference/reviewers.md`. Walk the list: `current` runs the lens groups as
    parallel subagents, any other agent runs one `../../../.codefall/shared/run-agent.sh` call
@@ -265,30 +269,23 @@ run, and say so.
    consult never becomes a finding on its own.
 4. **Write.** Read `reference/findings-file.md`. Merge the JSON and write the findings files, every
    finding `open`.
-5. **Triage.** Present the list, take a decision on each, update the files. Post to the pull request
+5. **Triage.** Present the list, decide each, update the files. Post to the pull request
    per `reference/posting.md` if that is enabled and the target is one.
-6. **Fix.** Apply what was taken, in the place [Where the fixes go](#where-the-fixes-go) names.
-   Update the files.
+6. **Fix.** Apply what was taken, in the place [Where the fixes go](#where-the-fixes-go) names;
+   file the beads; settle a `plan-revision` bead in Revise mode. Update the files.
 7. **Report.** The chart line for an epic's work; the target, the reviewer by harness and model,
    and every agent tried before it with why each was skipped or failed; every consult and what it
    changed; what was found, most severe first; what was fixed, dismissed, deferred, and the beads
-   filed; what could not be checked and why; where the files are; and the branch or worktree the
-   fixes landed on if one was created. On an epic's work, one line goes on the epic's notes —
+   filed, each with where it went; every decision and human bead per `decisions.md`; what could
+   not be checked and why; where the files are; and the branch or worktree the fixes landed on if
+   one was created. On an epic's work, one line goes on the epic's notes —
    `round N (review) [date]: what was fixed and filed` — per *Session end* in
-   `../codefall-implement/reference/beads.md`. Anything decided here that no bead, file, or PR
-   holds — a dismissal's reason is already in the file — goes in a `bd comment` on the epic or the
-   bead, and the report says it is safe to `/clear`. **End with what the user does next**: on an
-   epic's work, that this run is now running `codefall-implement <epic>` to fix the problems the
-   person took, or `/codefall-test <epic>` when none were taken; on another pull request or branch,
+   `../codefall-implement/reference/beads.md`, and the report says it is safe to `/clear`. **End
+   with what the user does next**: on an epic's work, `/codefall-test <epic>`, which
+   `codefall-implement` runs itself when it ran this review; on another pull request or branch,
    push the fixes and give the link to the pull request to merge, per *Pointing at a stack* in
    `../../../.codefall/shared/stacks.md`; on uncommitted work, the findings files are left unstaged
-   to commit with the work or not at all; otherwise nothing is pending. Where revision beads were
-   filed, `/codefall-plan PLAN-NNN` comes first, so the document is corrected while the work
-   that found it wrong is still in view.
-8. **Fix the epic's problems.** On an epic's work, when the person took at least one code finding,
-   run the `codefall-implement` skill with the epic as its argument, through the `Skill` tool, in
-   this session. Its go gate reopens the children this run filed, its workers build them, and its
-   report ends the session with its own one command.
+   to commit with the work or not at all; otherwise nothing is pending.
 
 **Three runs end early, and each ends cleanly.**
 
@@ -303,8 +300,8 @@ run, and say so.
 
 - **The reviewer never fixes.** Review in a subagent or another harness; triage and fix in this
   session, or through a worker it runs and checks.
-- **Nothing is changed before triage.** The user decides what gets fixed.
-- **Confirm the scope before reviewing it.** A review of the wrong files costs the whole run.
+- **Nothing is changed before triage.** Triage decides what gets fixed, per `decisions.md`.
+- **Name the scope before reviewing it.** A review of the wrong files costs the whole run.
 - **Be certain, or put it in `notChecked`.** Uncertainty is recorded, never dressed as a finding.
 - **A consult proposes.** It may move a `notChecked` entry to a finding this session has verified;
   it never decides a status.
@@ -323,11 +320,9 @@ run, and say so.
 - **Refuse what is not reviewable**, and say which of the five it is.
 - **An identifier that resolves to nothing is a stop**, not a guess.
 - **Only `fixed` and `deferred` findings reach a pull request.** A dismissed one was judged wrong.
-- **A bead is offered, never filed unasked**: a `plan-revision` bead for a finding the plan
-  caused that a fix here cannot settle, a `code` bead for a deferred finding the code caused. A
-  `plan-revision` bead is a `deferred` child of the epic when there is one; a bug goes where the
-  shared triage reference puts it.
-- **On an epic's work, the problems the person takes are built by `codefall-implement`**, run by
-  this session after the report, never fixed by hand on the stack. The person's one typed command
-  was the review.
-- **The `.ignore` entry is offered, never added unasked**, and appended rather than written over.
+- **A deferred finding becomes a bead**, where the shared triage reference puts it: a
+  `plan-revision` bead for a finding the plan caused that a fix here cannot settle, a `code` bead
+  for one the code caused. A finding left in the file alone is one no verb reads again.
+- **On an epic's work, a code finding is filed, never fixed by hand on the stack**;
+  `codefall-implement` builds it in the next round, and this run builds nothing.
+- **The `.ignore` entry is appended and said**, never written over.
