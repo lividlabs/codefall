@@ -50,6 +50,8 @@ Read each when its step says to; none is loaded up front.
   what their answer may do. Read at step 5 when one stays unsettled. Names
   `../../../.codefall/shared/running-agents.md`, `../../../.codefall/shared/run-agent.sh`,
   `../../../.codefall/shared/consult-prompt.md`, `../../../.codefall/shared/consult.schema.json`.
+- `../../../.codefall/shared/decisions.md` — what a run decides, consults on, or records as a
+  human bead. Read at step 1, and for the Revise mode.
 - `templates/plans/AGENTS.md` — the operative rules this skill installs at `docs/plans/AGENTS.md`.
 
 ## Scope — how, not what and not whether
@@ -74,7 +76,7 @@ A spec or vision this run finds wrong or incomplete is amended here, on this run
 is `Draft` or `Ready`, the amendment is text that moves no work, and the user takes it at step 7. A
 spec is amended by appending, and its requirement issue is regenerated per
 `../codefall-specify/trackers/<name>/PROFILE.md`. An `Active` vision is frozen: say so and name
-`codefall-envision`. The rule is in `../../../.codefall/shared/workflow.md`.
+`codefall-envision`.
 
 ## Scale the artifact to the work
 
@@ -105,8 +107,7 @@ blocks, and the Tasks callout are in `reference/document.md`.
 ## ADRs
 
 A separate artifact, `docs/adrs/ADR-NNN-title.md`, for a choice that is hard to reverse or that
-other components will build on; most plans need none. The number continues the project's own
-sequence, a ratified ADR is never rewritten, and the ADR is shown before it is written. The
+other components will build on; most plans need none, and a ratified ADR is never rewritten. The
 trigger, the numbering, and the template are in `reference/adrs.md`.
 
 ## Status and lifecycle
@@ -140,18 +141,13 @@ Run the shared check against the user's project.
 "../../../.codefall/shared/preflight.sh" .
 ```
 
-`beads=ok` advances to step 2. Otherwise read `beads_reason`, tell the user what is missing, hand
-over the command that fixes it, say to rerun this verb after it, and **stop**:
+`beads=ok` advances to step 2. Otherwise read `beads_reason`, hand over the remedy, say to rerun
+this verb after it, and **stop**: `not_installed` is `brew install beads`, `not_initialized` is
+`bd init`, `unreadable` quotes `beads_detail`.
 
-| `beads_reason` | What is wrong | Give them |
-| --- | --- | --- |
-| `not_installed` | `bd` is not on PATH | `brew install beads` |
-| `not_initialized` | this repository has no beads database | `bd init` |
-| `unreadable` | bd found a database and could not read it | quote `beads_detail` |
-
-Then read the checkout lines. `behind` above `0` or `refresh=stale` means the environment may not
-match `main`: say so and run `/codefall-refresh` before continuing. `refresh=undeclared` names
-`/codefall-equip` instead. **Never run the other remedies.** They are the user's.
+Then read the checkout lines. `behind` above `0` or `refresh=stale`: say so and run
+`/codefall-refresh` before continuing. `refresh=undeclared` names `/codefall-equip`. **Never run
+the other remedies.**
 
 ### 2. Take the input
 
@@ -269,8 +265,8 @@ Write the staging table.
 
 Compose the full document and **show it before anything is written**. Nothing lands unapproved.
 
-Say which conditional sections you left out and why — "no Data Models section, because nothing here
-persists" — so the user can catch an omission that was a gap.
+Say which conditional sections you left out and why, so the user can catch an omission that was a
+gap.
 
 **Show the acceptance criteria of every task that carries a test case**, derived criteria included,
 and every spec or vision amendment. Approving the plan is the sign-off those need; nothing later
@@ -363,13 +359,17 @@ Invoking this skill on an existing plan does one of four things. Ask which if it
 - **Add tasks** to an existing plan — new rows appended to the table, each with its bead, and
   the callout dated. Retired local IDs stay retired.
 
-Every one of these is the user's decision. Report the state and offer; never transition a plan on
-your own initiative.
+Promote, Archive, and Add tasks are the person's to ask for; never transition a plan unasked.
+Revise, run by `codefall-implement`, `codefall-review`, or `codefall-test` for the
+revision beads they filed, settles each per `../../../.codefall/shared/decisions.md`, with its
+reason; an ADR question takes the default the project's stance gives and writes the ADR, as
+*settle now* does.
 
 ## Rules
 
 - **Nothing is written without the user confirming it first** — the document, the ADR, and at tier 0
-  the beads.
+  the beads — when a person ran this skill; Revise mode run by another verb applies per
+  `decisions.md`.
 - **Scale the artifact to the work.** Tier 0 is a real outcome, not a failure to write a document.
 - **Never fill a heading.** An empty conditional section is deleted.
 - **A plan still carrying Decisions needed is `Draft`** and has no beads. The one question at

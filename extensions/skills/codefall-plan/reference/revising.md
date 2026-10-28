@@ -88,10 +88,11 @@ Its body says what the plan says, what was found instead, and which document it 
 `discovered-from` edge names the bead or the review that found it. A bead labelled `plan-amended`
 is different: `codefall-implement` and `codefall-review` file one, already closed, for each
 amendment they made, so the record of what was wrong is queryable. It asks nothing of this run and is not listed here. Read
-the revision beads before the row-by-row pass, show them to the user, and settle every one in one
-of three ways:
+the revision beads before the row-by-row pass, show them, and settle every one in one of three
+ways, per `../../../../.codefall/shared/decisions.md`, with the reason each; a person present may
+change any, and a question that is a person's becomes a human bead with the default taken:
 
-| The user decides | What happens |
+| The outcome | What happens |
 | --- | --- |
 | The document is wrong | The text is amended — the plan's, or the spec's by appending, with the requirement's tracker issue regenerated per `../../codefall-specify/trackers/<name>/PROFILE.md` and the bead's criteria updated in the same pass — and the bead closes with the amendment as its reason — `bd close <id> -r "amended: § Architecture now names StageContext"` |
 | The work is real | A new row on the table, per the row-is-new case above, and the bead closes with the new task's ID as its reason — the task carries the work, the request does not |
@@ -102,4 +103,5 @@ and the next run reads it again. Push after the closes, with the rest, and say p
 it went in the report. A revision bead filed during a delivery is already a child of the epic; a
 new row it becomes is a child too, as every row is, and the closed request stays where it is. This
 mode writes no round: the next round starts when `codefall-implement` claims the epic again, which
-is what the report's last line names — `/codefall-implement PLAN-NNN`.
+is what the report's last line names when a person ran this mode — `/codefall-implement PLAN-NNN`.
+A verb that ran this mode for its own revision beads reads the report and continues its run.
