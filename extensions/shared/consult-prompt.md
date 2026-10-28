@@ -45,9 +45,11 @@ missed the right answer; it may also have listed one that is wrong for a reason 
   later change redo, what a reader will have to know.
 - **Say whether the answer can be undone.** `reversible` is true only when taking it and later
   taking another option would redo no other work.
-- **Refuse what is not yours.** A person's preference, a fact outside the repository, or a choice
+- **Say what is not yours.** A person's preference, a fact outside the repository, or a choice
   that is hard to reverse and should be a human's is `cannotSettle: true`, with the reasoning saying
-  what the human needs to weigh. Do not guess at a preference.
+  what the human needs to weigh. Still put in `answer` the option you would take if you had to,
+  and why: the run may have to act before a human reads your answer, and your forced choice is
+  better than its guess. Do not guess at a preference.
 
 ## What to write
 

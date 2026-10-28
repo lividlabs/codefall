@@ -68,6 +68,15 @@ offered as a `deferred` child of the epic — a revision bead for one the plan c
 for one the code caused — so the next round of `codefall-implement` claims it and the chart shows
 it. The offer is the same; what changed is where a taken offer lands.
 
+**Review running implement.** Under ADR-013 through ADR-013.6 a review of an epic's work ended by
+running implement to build what the person took, so the person typed one command. It spread the
+delivery's loop across three verbs, made review's close-out implement's go gate, and ran a round as
+implement, review, implement, test, implement, so test never saw a round's work whole. Under
+ADR-013.7 review files what it finds and reports; implement runs review and test when its frontier
+is empty and owns the round boundary. The "Fix them all?" question went with it: the shared
+decisions reference has the session decide each finding with its reason, and a person present
+changes what they disagree with.
+
 **Specific commits, merged pull requests, merged branches, superseded ADRs.** All were targets in the
 first draft. Reviewing history produces findings about code that has moved on, and there is nowhere
 for a fix to land. Every target is something live.

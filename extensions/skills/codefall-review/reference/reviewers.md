@@ -17,9 +17,9 @@ The `review` list, resolved at step 1 per `../../../../.codefall/shared/running-
 entry lacks is the `default` entry's; with no `default` entry, one `current` agent — and walked at
 step 3. The first agent that answers is the reviewer. Two agents are special:
 
-- **`current`** is a subagent of this harness: one per lens group, in parallel, merged here. With
-  nothing configured it is the whole list, so a project that has not chosen still reviews the way it
-  always did.
+- **`current`** is a subagent of this harness: one per lens group, in parallel, at high effort
+  where the subagent tool takes one, merged here. With nothing configured it is the whole list, so
+  a project that has not chosen still reviews the way it always did.
 - **This session** is never in a list. It is a run-time choice, acceptable only when the work
   under review came from somewhere else, and the report says so.
 
@@ -106,7 +106,8 @@ reviewer's words; `FILES` are the files it names, or the target's changed files 
 `CONTEXT` is the target and its revision, and which lens raised it; `OPTIONS` are three — it is a
 defect, with the severity the run would give it; it is not a defect; the repository does not say.
 `PRIOR` is an earlier agent's failure, or empty. `SCHEMA` is `../../../../.codefall/shared/consult.schema.json`. Walk the
-entry's `consult` list with `../../../../.codefall/shared/run-agent.sh`.
+entry's `consult` list with `../../../../.codefall/shared/run-agent.sh`; a `current` consult runs as
+a subagent at high effort or above.
 
 **What the answer does.** A consult never becomes a finding on its own. An answer of `high`
 confidence that names a defect and cites the file and line lets this session promote the entry to a

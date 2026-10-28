@@ -11,16 +11,17 @@ How work reaches `main`. Read at step 4, when classifying the run.
 
 ## The two strategies
 
-The graph's shape and the user's wish pick one; the user can overrule it at the go gate. The
-project's `AGENTS.md` constrains the choice before either speaks, `CUSTOMIZE.md` tunes it within
-those constraints, and a conflict between the two is drift — show the difference and ask, never
-silently pick. A `CUSTOMIZE.md` that still names *parallel stacks*, a strategy this skill no longer
-has, is read as the epic branch, and the report says so.
+The waves pick one, per *The execution plan* in `SKILL.md`: the waves are built first, from the
+graph, and their shape decides the landing. The user can overrule it at the go gate. The project's
+`AGENTS.md` constrains the choice before either speaks, `CUSTOMIZE.md` tunes it within those
+constraints, and a conflict between the two is drift — show the difference and ask, never silently
+pick. A `CUSTOMIZE.md` that still names *parallel stacks*, a strategy this skill no longer has, is
+read as the epic branch, and the report says so.
 
 | Strategy | When | Shape |
 | --- | --- | --- |
-| **Serial stack** (default) | Any graph, when nothing below applies | Every bead in topological order, one branch atop the previous, one PR each; the bottom PR targets `main`; workers run one at a time |
-| **Epic branch** | Work that must not land on `main` in increments, or the user wants parallel waves | Workers branch off `epic/<id>-<slug>` in waves, PRs target it, the root merges them at each wave boundary, one aggregate PR to `main` |
+| **Serial stack** | Every wave is one bead wide, so the graph is a chain, and nothing below forces the epic branch | Every bead in topological order, one branch atop the previous, one PR each; the bottom PR targets `main`; workers run one at a time |
+| **Epic branch** | Any wave wider than one; or work that must not land on `main` in increments; or a standing preference in `CUSTOMIZE.md`; or the strategy round one used | Workers branch off `epic/<id>-<slug>` in waves, PRs target it, the root merges them at each wave boundary, one aggregate PR to `main` |
 
 - **There is no depth cap.** A deep stack costs nothing a reviewer sees: each layer's PR shows only
   its own diff.

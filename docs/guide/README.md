@@ -45,9 +45,12 @@ runs that step itself:
 - `/codefall-specify` runs `/codefall-mock-up` when a requirement needs a picture of a screen.
 - `/codefall-plan` runs `/codefall-specify` when the spec it plans from is still a draft, and
   `/codefall-mock-up` for a requirement whose mockup was skipped.
-- `/codefall-review` and `/codefall-test` run `/codefall-implement` to build the fixes you chose.
+- `/codefall-implement` runs `/codefall-review` and `/codefall-test` on the epic's work once it has
+  built everything, and all three run `/codefall-plan` to revise a plan they found wrong.
 
-Each skill still reports what it found, offers changes, and applies only the ones you take.
+Each skill reports what it found and what it decided, with a reason for each decision. A question
+only you can answer becomes a *human bead*, a question in Beads that carries the default the run
+took, and the run carries on. `.codefall/shared/decisions.md` holds the rule.
 
 ### Who merges?
 
@@ -61,8 +64,9 @@ A *delivery* is all the work on one epic, from the plan to the merge. An *epic* 
 groups every task from one plan, and a *bead* is one task in
 [Beads](https://github.com/gastownhall/beads), the task tracker Codefall keeps in your git
 repository. A delivery proceeds in *rounds*. Each round is one pass of `/codefall-implement`,
-`/codefall-review`, and `/codefall-test`, and the problems a round finds become the next round's
-work.
+`/codefall-review`, and `/codefall-test`, then a triage of what they found, and the problems worth
+fixing become the next round's work. `/codefall-implement` runs the whole delivery from one
+approval, until it is done or something only you can settle stops it.
 
 ### Can you clear the agent's context between skills?
 

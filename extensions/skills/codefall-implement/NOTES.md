@@ -62,12 +62,48 @@ A worker can run its whole verification and stop without pushing, and the harnes
 completed. So link N+1 launches only after the root has confirmed link N's branch is on the remote
 and its PR exists.
 
-## Why the go gate is the only stop
+## Why the go gate is the only question
 
-After go, waves proceed on their own and failures are the only mid-run stop. That absence is what
-makes an overnight run possible; the user can always interrupt. Background workers cannot answer
-permission prompts, which is why the gate states the permissions condition and offers single-task
-mode when it fails.
+After go, nothing asks. Under ADR-013 through ADR-013.6 a failure was the one mid-run stop, and a
+delivery still needed a person at review's and test's "Fix them all?", at every bead offer, and at
+the hand-off that told them to run plan; a large epic took nine to eleven rounds that way, each
+with a person at the keyboard. A person then ran one with a prompt that said nobody was present,
+to consult and then record a question and continue, and to run review, test, and triage without
+confirmation, and it ran two rounds unattended. ADR-013.7 writes that into the skill: the shared
+decisions reference says what a run decides, what it consults on, and what becomes a human bead,
+and the one gate is where a person says whether they are staying for one round or leaving. The
+rule sits near the top of `SKILL.md` and is repeated at each place a run would otherwise stop,
+because the tail of a skill drops after compaction and a continuous delivery compacts. Background
+workers cannot answer permission prompts, which is why the gate states the permissions condition
+and offers single-task mode when it fails.
+
+## Why a round ends at test and the loop lives here
+
+Review and test used to run implement at their close-out, so a round ran as implement, review,
+implement, test, implement, and test never saw a round's work whole. Now a round is implement,
+review, test, then the boundary, and implement runs the other two: one place to read when a
+delivery behaves badly, and review and test are plain verbs that file and report. The boundary is
+where everything under the epic is triaged at once, which is also where a cleanup that never
+belonged to the epic leaves it, and where the batch is picked, P1s and P2s plus what is judged worth
+the round, so that findings stop begetting findings.
+
+## Why a stop needs a reason, and why there is a ceiling
+
+The first draft of the rounds reference was a checklist, and a checklist is what a model applies
+mechanically: a round that closed nothing because Revise mode turned revision beads into rows
+would have stopped the delivery. The reference opens with its purpose, keeps three mechanical
+exits for what the run can do nothing about, and lists everything else as a signal weighed with the
+default to continue, with a consult before a stop on signals. The ceiling, ten per delivery, exists
+for the case where the signals are wrong; the batch rule is expected to end a delivery around round
+three, so reaching the ceiling is itself the finding.
+
+## Why the waves come before the strategy
+
+The serial stack was the default from ADR-013.6 and the epic branch was the option a person asked
+for. A continuous run has nobody to ask, and the graph already answers: every wave one bead wide is
+a chain and stacks, anything wider lands on an epic branch with one merge at the end, which is
+where the person comes back in. The gate shows the result as the execution plan rather than
+offering a choice.
 
 ## Why closed means done, not merged
 
@@ -77,14 +113,18 @@ branch is pushed. The merge is tracked separately by the gates. The epic is diff
 when the graph is empty and the code is on `main`, and the graph is not empty while a child review
 or test filed is open. Done for the delivery is read from the graph, never declared (ADR-013).
 
-## Why discovered work is a child of the epic
+## Why discovered work is a child of the epic, and why not all of it
 
 A finding that lived beside the graph, in a findings file, or in a tracker issue alone was invisible
 to the next verb's start, and the person running the chain had to remember it. As a child of the
-epic it holds the epic open, shows on the chart, and is claimed by the next round like any task.
+epic it holds the epic open, shows on the chart, and is claimed by a later round like any task.
 It is created `deferred` so the round still running does not pick it up: `bd ready` skips
-`deferred`, and the round boundary is where it opens. `plan-amended` beads are parented too, for
-a complete `bd children`, and excluded from the counts because they are records, not work.
+`deferred`, and the round boundary is where it opens. ADR-013.5 asked whose a bug is before filing
+it and left every non-bug the epic's by rule; one epic reached eighteen P4 cleanups as deferred
+children, and a deferred child had no reader but the next round. Now every item answers the
+question, and triage has six dispositions, this round, a duplicate, and not an issue beside the
+three places a bead can go. `plan-amended` beads are parented too, for a complete `bd children`,
+and excluded from the counts because they are records, not work.
 
 ## Why the epic's round is the one metadata implement writes
 

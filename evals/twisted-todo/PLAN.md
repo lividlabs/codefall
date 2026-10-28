@@ -8,8 +8,8 @@ the report tells the person to add the `auto-merge` label when they want it merg
 someone approve it, and a GitHub Action merges it on that label or on an approving review, so nobody
 is asked to merge a document and no verb merges one; plan
 asks one question about the technical decisions it set aside and, on
-"settle now", reaches beads in the same run; review and test ask "Fix them all?" and run implement
-themselves; implement's integration asks GitHub rather than rebasing; the product-manager report
+"settle now", reaches beads in the same run; implement runs review and test and the next round
+itself, and the three file what they find with a reason each; implement's integration asks GitHub rather than rebasing; the product-manager report
 ends with one sentence and one command; the chart line and the notes log sit on the epic.
 
 Everything lives under `evals/twisted-todo/`: this plan, the PM brief (`brief.md`), the project
@@ -85,9 +85,9 @@ table as code, with the "after" column as the step's `after` field.
 | envision | `/codefall-envision <the idea in Mara's words>` | give the idea as spoken, answer why now and non-goals, keep rules at rule level, confirm a Ready document | give behaviour precise enough to build; ask to merge | adds the `auto-merge` label to the `vision/` pull request as the person, waits for the Action to merge it; returns to `main` |
 | specify | `/codefall-specify VISION-001` | work from the vision; hold the spec to exactly three requirements and push back on a fourth; say no mockup exists and ask for them (main page full and empty, Forfeits full and empty); confirm recap and document; Ready | ask to merge; accept more than three requirements without saying so; choose anything technical | adds the `auto-merge` label to the `spec/` pull request as the person, waits for the Action to merge it; returns to `main` |
 | plan | `/codefall-plan SPEC-001` | accept the tier; ask for five tasks or fewer; confirm the criteria cover the five rules; decline technical choices; answer "settle them now" to the one question | decide anything technical | stops the chain if the plan is `Draft` with decisions left; otherwise adds the `auto-merge` label to the `plan/` pull request as the person, waits for the Action to merge it; returns to `main` |
-| implement | `/codefall-implement PLAN-001` | say yes to engineering work; say go at the gate; accept the serial stack | ask to merge | nothing; the code stack stays open |
-| review | `/codefall-review PLAN-001` | say yes to engineering work; review with every lens; answer "yes, fix them all"; say go at the implement go gate inside the session | fix anything itself | nothing |
-| test | `/codefall-test PLAN-001` | run now; take the problems that break a rule or something she said she would see, decline the rest with a reason; say go at the implement go gate if any were taken | ask for fixes by hand | merges the code stack at its top as the person, from outside the project directory; returns to `main` |
+| implement | `/codefall-implement PLAN-001` | say yes to engineering work; say go at the one gate and that it may run to the end; accept the execution plan | ask to merge; ask anything after the gate | nothing; the code stack or epic branch stays open, and the run goes on through review, test, and the next round |
+| review | run by implement | read the decisions; object only to a fix that breaks a rule, with a reason | fix anything itself; ask "fix them all?" | nothing |
+| test | run by implement | read the decisions; object only to a fix that breaks a rule or something she said she would see, with a reason | ask for fixes by hand | merges the code stack at its top as the person, from outside the project directory, once implement reports the delivery done; returns to `main` |
 
 **How the driver answers.** `AskUserQuestion` calls reach the driver's `canUseTool` callback with
 the questions; the simulator returns a label per question and the callback returns them as

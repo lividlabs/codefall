@@ -4,21 +4,24 @@ Shared reference. Read before anything found along the way is filed as a bead, w
 worker in `codefall-implement`, a reviewer in `codefall-review`, a run in `codefall-test`, or the
 person `codefall-report` interviewed, and before `codefall-report`'s triage mode walks the backlog.
 Every item is triaged the same way and carries the same fields, so the backlog reads as one list
-however its items reached it. The verb that found the item asks its own question and files on the
-answer; this file says what the question proposes and what the bead carries. Nothing here is filed
-unasked.
+however its items reached it. The verb that found the item answers the questions here with a reason
+each and applies the answers under `decisions.md` beside this file; its report, or the one gate of a
+delivery, shows the whole list, and a person may change any answer there. This file says what the
+answers are and what the bead carries.
 
 ## Contents
 
 - What triage takes
 - Three questions
 - Whose is it
+- Where it goes
 - How bad is it
 - Which area
 - How big is the fix
 - What a triaged bead carries
 - Duplicates
 - Followups
+- The epic's deferred children
 
 ## What triage takes
 
@@ -42,16 +45,15 @@ Every item is triaged by three questions, and the fix's size is recorded beside 
 2. **How bad is it** — the priority, from one scale.
 3. **Which area** — the part of the product it belongs to, from the project's list.
 
-The session proposes an answer to each, with a reason in a line, and the person confirms them in
-the verb's own question: "I found N problems. Fix them all?" on an epic's work, the recap in
-`codefall-report`, the bead offer in `codefall-review`, the one block in `codefall-report`'s triage
-mode. A person may change any answer there. Nothing is asked per item.
+The session answers each with a reason in a line and applies the answers, per `decisions.md`: the
+list in `codefall-review`'s and `codefall-test`'s report on an epic's work, the recap in
+`codefall-report`, the one block in `codefall-report`'s triage mode, the round boundary in
+`codefall-implement`. A person may change any answer where it is shown. Nothing is asked per item.
 
 ## Whose is it
 
-Inside a delivery, a bug belongs to the epic or sits beside it. An item that is not a bug, a missing
-test or a refactor a worker met, is the epic's, per *Discovered work* in `codefall-implement`'s beads
-reference: the work found it, and the next round builds it. For a bug, three classes, read in order:
+Inside a delivery, an item belongs to the epic or sits beside it, and every item answers the
+question, a cleanup, a missing test, or a refactor as much as a bug. Three classes, read in order:
 
 **The epic's**, when any one of these holds:
 
@@ -60,7 +62,9 @@ reference: the work found it, and the next round builds it. For a bug, three cla
 - It is in code the epic is changing: a file or a function the epic's pull requests touch.
 
 Who caused the bug does not matter. A bug that was there before the epic and stops it from shipping
-is the epic's.
+is the epic's. For an item that is not a bug the same three read: a missing test a criterion needs
+stops the epic; a cleanup of code the epic wrote is the epic's change; a refactor in a file the
+epic's pull requests touch is in code the epic is changing.
 
 **Beside the epic**, when it is in a feature or a component the epic never touched and the epic
 ships fine with it still there.
@@ -85,9 +89,25 @@ How each verb answers the question:
 | Verb | What it reads |
 | --- | --- |
 | `codefall-review` | A finding on a line the epic changed is the epic's. A finding the reviewer could only make by reading past the diff is the rest or beside. |
-| `codefall-implement` | The worker's discovered item says whether its own change caused the bug or found it there, and the root applies the classes. |
+| `codefall-implement` | The worker's discovered item says whether its own change caused the item or found it there, and the root applies the classes to every item, bug or not. |
 | `codefall-test` | A failed case one of the epic's beads names is the epic's. A `changed` suite failure or an anomaly from the sweep is checked against the default branch: rerun that one suite or spec case there when the tree allows a checkout, and for an agentic case or an anomaly ask whether the epic's commits touched the code path. Reproduces on the default branch and fails no epic criterion is the rest or beside. |
 | `codefall-report` | A bug a person reported sits beside, unless they say it belongs to a delivery in flight. |
+
+## Where it goes
+
+Whose it is, with two more questions, is it already filed and is it an issue at all, gives every
+item one of six dispositions:
+
+| Disposition | When | What is filed |
+| --- | --- | --- |
+| **The epic's** | The item is the epic's, per the classes above | A `deferred` child of the epic, taken at a round boundary |
+| **This round** | The epic's, and the round still running should build it: a mistake one worker made that another saw, a criterion a bead in this round now fails | An `open` child of the epic, so the next wave's `bd ready` takes it |
+| **Beside the epic** | Not the epic's | An `open` bead with no parent, or a child of the open followup for its area |
+| **Duplicate** | Something already filed describes it, per *Duplicates* below | Nothing; a comment with the new evidence on the bead or issue that exists |
+| **Not an issue** | The finder was wrong, or leaving it costs nobody anything a bead would repay | Nothing; the report lists it with the reason. A bead that already exists and turns out not to be an issue closes with `-r "not an issue: …"` |
+
+Outside a delivery the first two do not apply, and every item is beside, a duplicate, or not an
+issue.
 
 ## How bad is it
 
@@ -151,7 +171,7 @@ Every triaged bead is created with these, and nothing is left for a later verb t
 | ID | `<prefix>-gh-<n>` where a tracker issue exists, `<prefix>-BUG-NNN` for a bug report under `tracker: beads`, `<prefix>-<slug>` otherwise. `<prefix>` is `bd config get issue_prefix`. A taken ID is refused: add `-2` and retry, never `--force` |
 | Type | `bug` when the product is wrong; otherwise the type proposed under *What triage takes*, or the one the person set |
 | Priority | P1 to P4, from the scale above |
-| Status | `deferred` when the item is the epic's, so the running round leaves it alone; `open` otherwise |
+| Status | `deferred` when the item is the epic's and waits for a round boundary; `open` when this round builds it, or it sits beside the epic |
 | Parent | The epic when the item is the epic's; the open followup epic for its area when one exists and the item is beside; none otherwise. Set in a second call, because `--id` and `--parent` do not combine |
 | Area | `-l area:<name>` |
 | Source edge | `caused-by:<bead>` when the epic's change caused the bug; `discovered-from:<bead>` when the work found something that was already there. `<bead>` is the task whose work found it, or the epic for a suite failure that names no case. An item a person reported has no edge |
@@ -200,3 +220,14 @@ when its children have merged, like any epic.
 A followup that is open is where a new item beside an epic in that area goes, so the followup's
 next round picks it up. No container that never closes is ever created: the organization is the
 fields on the item, and an epic exists to be emptied.
+
+## The epic's deferred children
+
+A `deferred` child of an epic is not on `bd ready`, so the round still running leaves it alone, and
+it is read again at two places, with the same dispositions as any new item: `codefall-implement`'s
+round boundary, before the next batch is picked, and `codefall-report`'s triage mode given the
+epic as its argument, `bd list --parent <epic> -s open,deferred --limit 0`. Either may keep it for
+a later round, move it beside the epic or into the area's followup with `bd update <id> --parent
+<followup>` or `--no-parent` and `-s open`, close it as a duplicate, or close it as not an issue.
+The landed bead and a bead labelled `human` are never triaged this way; the first closes at the
+merge and the second when a person answers it.

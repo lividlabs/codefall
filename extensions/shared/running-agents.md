@@ -136,10 +136,11 @@ list for that run with that one agent, and writes nothing.
 
 An agent run through `run-agent.sh` is read-only, and the script starts each harness in the mode
 that enforces it.
-It proposes; this session decides. Its answer never writes a file, never settles a hard-to-reverse
-choice, and never stands in for the person the verb's own rules name: a disagreement with the user
-is a preference and not a question for another agent, and a missing precondition is an exit and
-not a question at all. One round per stuck point, which may put the question to several agents at
+It proposes; this session decides. Its answer never writes a file, and what the session does with
+it follows the decisions reference beside this file: applied and recorded when the question is the
+run's to decide, a human bead carrying the agent's forced option when it is not. A disagreement with the
+user is a preference and not a question for another agent, and a missing precondition is an exit
+and not a question at all. One round per stuck point, which may put the question to several agents at
 once; never a second round because the first was inconclusive.
 
 ## Consulting
@@ -153,11 +154,13 @@ answer with `cannotSettle` true or `confidence` low advances the walk the way a 
 the first answer that does neither ends it. One pass, one question, first answer wins.
 
 What a verb does with the answer is the verb's rule, and every verb holds to three things. The
-session decides: a consult proposes, and a `high` answer on a reversible choice is still confirmed
-with the user like anything else written. A consult never settles a hard-to-reverse choice, never
-writes an ADR, and is never asked about a preference the user has stated. The report names every
-agent consulted, what each said, and what the session did with it; where the answer reaches a
-document or a bead, the line that records the decision names the consult that informed it.
+session decides: a consult proposes, and the session applies the answer or files a human bead per
+the decisions reference beside this file. A consult never writes an ADR, and is never asked about a
+preference the user has
+stated. When the walk ends with no answer that settles the question, the last `cannotSettle`
+answer's forced option is the default the human bead carries. The report names every agent
+consulted, what each said, and what the session did with it; where the answer reaches a document
+or a bead, the line that records the decision names the consult that informed it.
 
 The list's default is one `current` agent, so a project that has configured nothing still
 consults its own harness's subagent: a fresh context reading the same files, which is worth having

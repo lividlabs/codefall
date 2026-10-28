@@ -1,6 +1,6 @@
 ---
 name: codefall-test
-description: Run what the project declares — every suite, the subset the changed files reach, a named subset — or one test case in one of its two modalities, or every case an epic's beads name on the epic's own branch before the merge. A spec case runs through the project's own runner and reports that runner's pass or fail. An agentic case is worked step by step through a driver the session already has, and each criterion is judged against what the run made observable. Every run writes a report under .codefall/tests/, with runner output, logs, and run-scoped state left git-ignored under the testing root's .artifacts/. Findings are triaged and become tracker issues and, in a delivery, children of the epic, only on the user's word; a criterion is never edited to make a run pass. Use when the user says /codefall-test, "run the tests", "run the suite for what changed", "test the epic", or "run <case> agentically".
+description: Run what the project declares — every suite, the subset the changed files reach, a named subset — or one test case in one of its two modalities, or every case an epic's beads name on the epic's own branch before the merge. A spec case runs through the project's own runner and reports that runner's pass or fail. An agentic case is worked step by step through a driver the session already has, and each criterion is judged against what the run made observable. Every run writes a report under .codefall/tests/, with runner output, logs, and run-scoped state left git-ignored under the testing root's .artifacts/. Findings are triaged and become tracker issues and, in a delivery, children of the epic for the next round; a criterion is never edited to make a run pass. Use when the user says /codefall-test, "run the tests", "run the suite for what changed", "test the epic", or "run <case> agentically".
 argument-hint: "[suites | changed | <suite> | <area>/<slug> | <epic> | PLAN-NNN] [modality=spec|agentic] [variant=<name>]"
 allowed-tools:
   - Read
@@ -47,8 +47,10 @@ Read each when its step says to; none is loaded up front.
   epic target.
 - `../codefall-implement/reference/beads.md` — the `code` and `plan` forms a finding is filed in
   under the epic. Read at step 6 for an epic target.
-- `../../../.codefall/shared/triage.md` — whose a bug is, how bad it is, which area, and every
-  field its bead carries. Read at step 6 before a real bug is filed.
+- `../../../.codefall/shared/triage.md` — whose a bug is, where it goes, how bad it is, which
+  area, and every field its bead carries. Read at step 6 before a real bug is filed.
+- `../../../.codefall/shared/decisions.md` — what this run decides, what it consults on, and the
+  record. Read at step 1.
 - `../../../.codefall/shared/delivery.sh <epic>` — the delivery's one-line chart. Run at the
   confirmation and in the report for an epic target.
 - `../../../.codefall/shared/stacks.md` — *Pointing at a stack*: how a report names the pull
@@ -105,21 +107,21 @@ with the remedy `codefall-implement`'s preflight table names; every other target
 | `test=undeclared` | settings carry no `test` block | Say `codefall upgrade` declares the testing root, and stop |
 | `test=unequipped` | no runner is declared | A case target stops and names `/codefall-equip`; a suite target carries on |
 | `test=unknown` | there is a `test` block, and preflight had no jq to read it | Read the block from `.codefall/settings.json` and act on what it says; `runners` absent or empty is `unequipped` |
-| `refresh=stale`, or `behind` above `0`, on the default branch | the checkout or the environment is behind | Say so, offer `/codefall-refresh`, and wait |
-| `behind` above `0` on another branch | the branch is missing commits the default branch has | Say so and that the rebase is the user's; carry on. Never offer `/codefall-refresh`, which leaves the branch |
-| `refresh=stale` on another branch | the environment may not match the branch | Say so, name the declared `local.update` command to run here, and wait |
+| `refresh=stale`, or `behind` above `0`, on the default branch | the checkout or the environment is behind | Say so and run `/codefall-refresh`, which ends on this branch |
+| `behind` above `0` on another branch | the branch is missing commits the default branch has | Say so and that the rebase is the user's; carry on. Never run `/codefall-refresh`, which leaves the branch |
+| `refresh=stale` on another branch | the environment may not match the branch | Say so and run the declared `local.update` here, once |
 | `refresh=undeclared` | no `local` block | Say so and name `/codefall-equip`; an agentic run stops, since it has no declared `start` |
 
 A preflight that emits no `test=` line at all is an older install: read the `test` block from
 `.codefall/settings.json` directly and read it the same way.
 
-**Never run the remedy.** `codefall init`, `/codefall-equip`, and `/codefall-refresh` are the user's
-to run.
+**Never run the other remedies.** `codefall init` and `/codefall-equip` are the user's to run.
 
 ## The confirmation
 
-Nothing runs before the user sees what will. Name the target, the commands and where they came from,
-the variants, the driver for an agentic run, and where the report will land:
+Nothing runs before the run has said what will; the confirmation is a report, per
+`../../../.codefall/shared/decisions.md`. Name the target, the commands and where they came from,
+the variants, the driver for an agentic run, and where the report will land, then run:
 
 ```
 checkout/place-order, agentic modality, 2 variants (card, saved-card).
@@ -127,12 +129,11 @@ Run command: npm run e2e -- checkout/place-order (testing/AGENTS.md, Runners).
 Driver: the Playwright MCP browser tools in this session — proving with one call to
 http://localhost:3000 before the run depends on them.
 Report: .codefall/tests/<timestamp>-checkout-place-order.md and .json.
-
-Run now?
 ```
 
 A run that will create real side effects says so here, and says what cleans them up. An epic target
-opens with the chart line and names the branch the run will check out.
+opens with the chart line and names the branch the run will check out. A person present may
+narrow the target or drop a variant in reply.
 
 ## Suite targets
 
@@ -183,8 +184,7 @@ nothing.
 <branch>`, when the tree is clean. **A dirty tree stops the run** before anything is checked out;
 say so and leave the tree as it is. Then run the preflight again on the branch: `refresh=stale`
 there means the environment matches `main` and not this branch, so run the declared `local.update`
-once — the one place this verb runs it, because the user asked for this branch — and proceed;
-`behind` on the branch is reported and carries on, as the table says.
+once and proceed; `behind` on the branch is reported and carries on, as the table says.
 
 The report names the branch left checked out. `/codefall-refresh` is the way back to the default
 branch once the run is over.
@@ -201,13 +201,9 @@ git-ignored under `<root>/.artifacts/`.
 A `.ignore` file beside `.codefall/` holds the line `.codefall/tests/`, so ripgrep-backed harnesses
 skip old run reports. `codefall init` writes it and `codefall doctor` warns when it is missing.
 
-**Check it before the run, and offer:**
-
-> `.ignore` doesn't list `.codefall/tests/`, so this run's report will show up in codebase searches.
-> Add the line?
-
-On yes, append it — never replace the file. On no, carry on and say nothing further. Say nothing at
-all when the line is already there.
+**Check it before the run.** When the line is missing, append it — never replace the file — and
+say so in a line: `.ignore` did not list `.codefall/tests/`, so the line was added to keep run
+reports out of codebase searches. Say nothing at all when the line is already there.
 
 ## Project customizations and persona
 
@@ -221,8 +217,8 @@ run, and say so.
 ### 1. Check preconditions
 
 Run [the preflight](#preflight) and act on the lines. Read `.codefall/settings.json` for the `test`
-block, the project's `AGENTS.md` (root and scoped), and `<root>/AGENTS.md`. Check the `.ignore`
-entry and offer to add it when it is missing.
+block, the project's `AGENTS.md` (root and scoped), `<root>/AGENTS.md`, and
+`../../../.codefall/shared/decisions.md`. Check the `.ignore` entry and add it when it is missing.
 
 ### 2. Resolve the target
 
@@ -235,8 +231,8 @@ epic target, list the children and their cases, find the branch, and check it ou
 
 ### 3. Confirm
 
-Present [the confirmation](#the-confirmation) and wait. For an agentic run, the driver is named here
-and proved before the run depends on it, per `reference/agentic-run.md`.
+Present [the confirmation](#the-confirmation). For an agentic run, the driver is named here and
+proved before the run depends on it, per `reference/agentic-run.md`.
 
 ### 4. Run
 
@@ -252,39 +248,42 @@ still gets a report, marked as the run it was, with every side effect it created
 ### 6. Triage
 
 Read `reference/triage.md` when anything failed, was unreachable, or turned up in the anomaly sweep.
-Classify each, write the working notes it names, and stop there: a finding becomes a tracker issue,
-and a bead, only on the user's explicit word. Every finding is listed with its Beads priority: a
-real bug's from the scale in `../../../.codefall/shared/triage.md`, the other classes' from the
-table in `reference/triage.md`. A bead filed for it is created with `-p` set to that priority. P0
-is a person's to set by hand. A real bug also shows its triage from the shared reference, whose it
-is, its area, and its size, in a line the person may change. **For an epic target the
-question is one line** — "I found N problems. Fix them all? (I recommend yes.)" — and the person
-may take all, some, or none; each one taken is filed as the triage reference says, an issue and a
-bead, a `deferred` child of the epic when the bug is the epic's and an `open` bead beside it
-otherwise.
+Classify each, write the working notes it names, and file what the class says to file, per
+`../../../.codefall/shared/decisions.md`: a real bug becomes a tracker issue and a bead, the
+existing ones searched first. Every finding is listed with its Beads priority: a real bug's from
+the scale in `../../../.codefall/shared/triage.md`, the other classes' from the table in
+`reference/triage.md`. A bead filed for it is created with `-p` set to that priority. P0 is a
+person's to set by hand. A real bug also shows its triage from the shared reference, whose it is,
+where it goes, its area, and its size, in a line a person present may change. **For an epic
+target the list is a report** — "Found N problems; filing all N" — each filed as the triage
+reference says, an issue and a bead: a `deferred` child of the epic when the bug is the epic's,
+for the next round; an `open` child when this round should still build it; an `open` bead beside
+the epic otherwise; a comment on the bead that exists for a duplicate; nothing for one that is not
+an issue, named with the reason.
 
 ### 7. Report
 
 The chart line for an epic target; the verdicts, the report's path, the driver that ran, the side
 effects and their disposition, the attempt counts worth seeing, the anomaly sweep, the triage classes,
-and the beads filed. No summary of what went well. For an epic target, one line goes on the epic's
-notes — `round N (test) [date]: the verdict and what was filed` — per *Session end* in
+and the beads filed, each with where it went; every decision and human bead per `decisions.md`.
+No summary of what went well. For an epic target, one line goes on the epic's notes —
+`round N (test) [date]: the verdict and what was filed` — per *Session end* in
 `../codefall-implement/reference/beads.md`, and anything decided here that no bead, report, or
-issue holds goes in a `bd comment` on the epic; the report then says it is safe to `/clear`.
-**End with what the user does next.** For an epic target: when children were filed, say this run
-is now running `codefall-implement <epic>` to fix them, then run that skill with the epic as its
-argument, through the `Skill` tool, in this session; its go gate reopens the children, and its
-report ends the session with its own one command. A bug filed beside the epic is named with where
-it went, and is not built here. When no child was filed, this run is the last
-test passed, and the merge is what remains: give the link to the pull request the person merges —
-the top of the stack, or the aggregate pull request on an epic branch — and say that merging it on
+issue holds goes on the epic's notes per `decisions.md`; the report then says it is safe to
+`/clear`. **End with what the user does next.** For an epic target, this run builds nothing: when
+a child was filed, the next step is `/codefall-implement <epic>`, whose round boundary triages the
+epic's children and takes the next batch, and which `codefall-implement` runs itself when it ran
+this test; a bug filed beside the epic is named with where it went. When no child was filed and
+nothing is open under the epic but the landed bead and any human bead, this run is the last test
+passed, and the merge is what remains: give the link to the pull request the person merges — the
+top of the stack, or the aggregate pull request on an epic branch — and say that merging it on
 GitHub lands the whole stack, per *Pointing at a stack* in `../../../.codefall/shared/stacks.md`;
-never a merge command, never a list of pull requests to merge in order. Otherwise per class: a real bug with an issue filed goes
-to `/codefall-fix #<issue>` when the change is contained and `/codefall-plan #<issue>` otherwise,
-or to `/codefall-report <run report path>` when the user wants a bug document first; a real bug not
-filed waits for the user's word; a wrong expectation goes to the decision that supersedes the
-criterion; a flake or agent variance is recorded and waits for the next run; when every case passed,
-nothing.
+never a merge command, never a list of pull requests to merge in order. Otherwise per class: a real
+bug with an issue filed goes to `/codefall-fix #<issue>` when the change is contained and
+`/codefall-plan #<issue>` otherwise, or to `/codefall-report <run report path>` when the user
+wants a bug document first; a wrong expectation goes to the decision that supersedes the
+criterion; a flake or agent variance is recorded and waits for the next run; when every case
+passed, nothing.
 
 ## Rules
 
@@ -309,16 +308,14 @@ nothing.
 - **Side effects are recorded the moment they exist**, and cleaned up the way `<root>/AGENTS.md`
   says.
 - **A finding becomes a tracker issue — a bead, when `tracker` is `beads` — and in a delivery a
-  `deferred` child of the epic when it is the epic's, only on the user's word**, and the existing issues are searched first. The tracker is the project's own,
-  per *Who is authoritative for what* in `../../../.codefall/shared/workflow.md`; a bug in codefall
-  itself goes to the person as issue text, never filed. In a delivery the word is the
-  answer to one question, "Fix them all?", and the children it files are built by
-  `codefall-implement`, which this session runs after the report; the person types nothing between
-  the test and the fix.
-- **Name the remedy, never apply it.** This verb does not run `codefall init`, `/codefall-equip`,
-  or `/codefall-refresh`, and runs the declared `update` only on the epic's branch it checked out
-  itself.
-- **`/codefall-refresh` is offered on the default branch only, during a run.** It ends on the
+  child of the epic when it is the epic's**, filed per `decisions.md` and the shared triage
+  reference, with the existing issues searched first. The tracker is the project's own, per *Who
+  is authoritative for what* in `../../../.codefall/shared/workflow.md`; a bug in codefall itself
+  goes to the person as issue text, never filed. In a delivery the children it files are built by
+  `codefall-implement` in the next round; this run builds nothing.
+- **Name the remedy, never apply it**, except `/codefall-refresh` on the default branch and the
+  declared `update` on a branch. This verb does not run `codefall init` or `/codefall-equip`.
+- **`/codefall-refresh` runs on the default branch only, during a run.** It ends on the
   default branch, so on any other branch it takes the user away from what is under test; once an
   epic run is over, the report names it as the way back.
 - **An argument that resolves to nothing is a stop**, not a guess at the nearest case.

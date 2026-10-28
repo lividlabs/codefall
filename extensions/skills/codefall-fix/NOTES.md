@@ -24,7 +24,8 @@ the same pull request** (`extensions/skills/AGENTS.md` holds the rule):
 | plan, *Rules* | A ticket must not change under someone holding it | Rules |
 | implement, step 1 | The Beads stop, the checkout lines, the `test=` line | Steps 1 and 3 |
 | implement, *The go gate* | The single-bead approach approval and the permissions condition | Step 4 |
-| implement, steps 5, 6, and 8 | Claim, one worker, verify, close, discovered work, the report | Steps 5 to 7 |
+| implement, steps 5, 6, and 9 | Claim, one worker, verify, close, discovered work, the report | Steps 5 to 7 |
+| implement, *A delivery runs on its own* | After the one gate nothing asks, per the shared decisions reference | Step 4 and Rules |
 | implement, *Rules* | Merges, scope, tests, the harness, verifying workers, pushing | Rules |
 | implement, `reference/mirror.md` | The pull request's `Fixes` and `Relates to` lines | Step 6 |
 

@@ -16,23 +16,28 @@ writing and changing a skill; the extension-wide rules, ADR immutability, prose,
   and on the same branch, under the confirmation it already holds: `specify` runs `mock-up` for a
   requirement that needs one, `plan` runs `specify` on a `Draft` spec and `mock-up` on a
   requirement still waiting, `specify` runs `envision` when a vision needs more than a text
-  amendment, `review` and `test` run `implement` on the epic to build the problems the person took.
-  It asks the person only for a product decision. It never tells the person to run a verb and come
-  back. `plan` with technical decisions it set aside asks once whether to settle them with
-  defaults now or leave them for an engineer, and on "now" reaches `Ready` and beads in the same
-  run. `implement`, `plan`, and `specify` run refresh when preflight reports the environment
-  stale. Running a skill needs `Skill` in `allowed-tools`.
-- A delivery — one epic from plan to merge — runs as rounds of implement, review, and test, and
-  every handoff is an artifact, so a verb never relies on the conversation that ran the one before
-  it; its report ends with one next step and says it is safe to `/clear`.
+  amendment, `implement` runs `review` and `test` on the epic's work when its frontier is empty,
+  and `implement`, `review`, and `test` run `plan`'s Revise mode for the revision beads they
+  filed. It asks the person only for a product decision, per `../shared/decisions.md`. It never
+  tells the person to run a verb and come back. `plan` with technical decisions it set aside asks
+  once whether to settle them with defaults now or leave them for an engineer, and on "now"
+  reaches `Ready` and beads in the same run. `implement`, `plan`, and `specify` run refresh when
+  preflight reports the environment stale. Running a skill needs `Skill` in `allowed-tools`.
+- A delivery — one epic from plan to merge — runs as rounds of implement, review, test, and
+  triage, which `implement` runs on its own from one gate until the delivery is done or a stop it
+  can name; every handoff is an artifact, so a verb never relies on the conversation that ran the
+  one before it, and its report ends with one next step and says it is safe to `/clear`.
 - **`codefall-fix` restates parts of `codefall-plan` and `codefall-implement`** for one bead at
   tier 0; its `NOTES.md` has the table of which parts and where. A change to any of those parts
   checks `codefall-fix` in the same pull request, and a change to `codefall-fix` checks that it
   still agrees with them. What fix links rather than restates reaches it without an edit.
-- A skill reports and offers; it applies only what the user takes. Nothing lands unrequested.
-  Recording an observable fact is the exception: a skill that owns a status transition sets it when
-  the fact occurs and reports that it did — `codefall-implement` flipping a vision to `Active` at first
-  claim is this shape. Judgment transitions — promote, archive, revise — stay offer-only.
+- A skill decides what it can give a reason for, consults on what it cannot, and records every
+  decision, per `../shared/decisions.md`; a product decision, a hard-to-reverse choice the
+  project's stance gives no default for, and a preference the person has stated are a person's,
+  and become a human bead with the best default taken when nobody is present. A document an
+  interview produces is shown before its first write. Recording an observable fact is reported,
+  not asked: `codefall-implement` flipping a vision to `Active` at first claim is this shape.
+  Promote and archive stay the person's to ask for.
 - A skill that writes to the repository lands its files per `../shared/landing.md`: the branch,
   the commit, the push, and the pull request are part of the write the user already confirmed, none
   of them is a question, and the merge is never the skill's. A document verb — `codefall-envision`,

@@ -11,10 +11,12 @@ step already calls for has been done: the code read, the library looked up, the 
 consult is for a judgment between approaches that survives that reading, never a substitute for it.
 Once per unsettled point, in the same session, before the point goes into the document.
 
-Never consult on a preference the user has stated — that is a decision, and the run follows it. Never
-consult on a hard-to-reverse choice to make it: a new dependency, a schema other components will
-build on, a rejected alternative that cost real analysis. Those are the ADR triggers, and an ADR is
-the user's to ratify; a consult may inform the analysis the user reads, and that is all.
+Never consult on a preference the user has stated — that is a decision, and the run follows it. A
+hard-to-reverse choice, a new dependency, a schema other components will build on, a rejected
+alternative that cost real analysis, is an ADR trigger, and what happens to it follows
+`../../../../.codefall/shared/decisions.md`: the project's own stance gives the default when it
+gives one, and the ADR is written from it; otherwise it is the person's, and a consult may inform
+the analysis they read, and that is all.
 
 ## The question
 
@@ -31,12 +33,12 @@ consult is a subagent of this harness reading the same files fresh.
 
 | The answer | The choice | What happens |
 | --- | --- | --- |
-| `high`, `reversible` true | Not an ADR trigger | Propose it to the user as the run's own recommendation, naming the consult; on yes it goes into the document like any decision |
-| `high` or `medium`, `reversible` false | Any | The analysis goes to the user with the concern; the user decides, and a hard-to-reverse choice still becomes an ADR by the usual path |
-| `medium`, `reversible` true | Not an ADR trigger | The same as above; a medium answer is worth reading, not worth taking unasked |
-| `low`, or `cannotSettle` | Any | The walk advanced; when no agent answered, the point goes into the document as a stated risk with the options and costs the run and the consults laid out |
+| `high`, `reversible` true | Not an ADR trigger | Taken as the run's own decision, naming the consult, per `decisions.md`; it goes into the document like any decision |
+| `high` or `medium`, `reversible` false | Any | A choice the project's stance gives a default for takes the default and becomes an ADR by the usual path; otherwise the analysis goes to the person with the concern, or into *Decisions needed* |
+| `medium`, `reversible` true | Not an ADR trigger | Taken when the run can state the reason in a sentence; otherwise the analysis goes to the person with the concern |
+| `low`, or `cannotSettle` | Any | The walk advanced; when no agent answered, the point goes into the document as a stated risk with the options and costs the run and the consults laid out, and the forced option the last consult named is the default a human bead carries |
 
-Whatever the row, nothing is written without the user confirming it, as step 7 already requires.
+When a person ran this skill, step 7 shows every decision before anything is written.
 
 ## The record
 

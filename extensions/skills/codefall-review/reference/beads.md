@@ -2,6 +2,7 @@
 
 What a finding does to the documents upstream of the work, and the bead a finding becomes when a
 fix here cannot settle it. Read at step 5, when a finding names a document or is deferred.
+Contents: *A finding that an upstream document is wrong*, *The bead filed at triage*.
 
 ## A finding that an upstream document is wrong
 
@@ -16,11 +17,11 @@ is recorded as a closed `plan-amended` bead, per *Amendments* in
 `../../codefall-implement/reference/beads.md`, with a `discovered-from` edge to the bead the branch
 names when there is one.
 
-## The bead offered at triage
+## The bead filed at triage
 
-**What that fix cannot do, and what the user defers, is offered as a bead.** A finding left in the
-findings file alone is one no verb reads again. Offer, at triage, to file each in the form under
-*Discovered work* in `../../codefall-implement/reference/beads.md`:
+**What that fix cannot do, and what is deferred, becomes a bead.** A finding left in the findings
+file alone is one no verb reads again. At triage, file each in the form under *Discovered work* in
+`../../codefall-implement/reference/beads.md`, under `../../../../.codefall/shared/decisions.md`:
 
 - the `plan` form — `--spec-id` the plan's path, the label `plan-revision` — for a finding the
   plan caused that a fix here cannot settle because it moves work, the document is frozen, or the
@@ -29,6 +30,9 @@ findings file alone is one no verb reads again. Offer, at triage, to file each i
 
 Either carries a `discovered-from` edge to the bead the branch names when there is one. A `plan`
 bead is a `deferred` child of that bead's epic, read from `bd show <bead> --json`, when there is
-one. A `code` bead that is a bug is triaged per `../../../../.codefall/shared/triage.md`, which
-sets its parent, status, priority, area, and the rest of its fields. On yes, create it, `bd dolt
-push`, and record its ID as the finding's `bead`. Never file one unasked.
+one. A `code` bead, a bug or not, is triaged per `../../../../.codefall/shared/triage.md`, which
+sets its disposition, parent, status, priority, area, and the rest of its fields; a duplicate is
+a comment on the bead that exists, and a finding that turns out not to be an issue is dismissed
+with that reason rather than filed. Create it, `bd dolt push`, and record its ID as the finding's
+`bead`. A `plan` bead is settled in the same run: `SKILL.md` runs `codefall-plan`'s Revise mode on
+the document before the report.

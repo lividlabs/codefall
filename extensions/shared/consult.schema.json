@@ -9,7 +9,7 @@
   "properties": {
     "answer": {
       "type": "string",
-      "description": "The option taken or the course proposed, in one or two sentences. Empty when cannotSettle is true."
+      "description": "The option taken or the course proposed, in one or two sentences. When cannotSettle is true, the option the agent would take if it had to, so the run has a default to act on."
     },
     "confidence": {
       "type": "string",
@@ -26,7 +26,7 @@
     },
     "reversible": {
       "type": "boolean",
-      "description": "Whether the proposed answer could be undone later without other work being redone. Absent when cannotSettle is true."
+      "description": "Whether the proposed answer, or the forced option under cannotSettle, could be undone later without other work being redone."
     }
   }
 }
