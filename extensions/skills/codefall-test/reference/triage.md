@@ -67,32 +67,32 @@ in a line, and the occurrence count where the class carries one.
 
 ## Issues
 
-**A finding becomes a tracker issue only on the user's explicit word**, and only on the project's own
-tracker, per *Who is authoritative for what* in `../../../../.codefall/shared/workflow.md`: a bug in
-codefall itself, or in any other repository, is handed to the person as issue text and never filed.
-Search for an existing issue first, and offer to comment on it rather than opening a second. Present
-the candidates as a list and wait; nothing is filed because a run found it.
+**A real bug becomes a tracker issue**, filed by this run per
+`../../../../.codefall/shared/decisions.md`, and only on the project's own tracker, per *Who is
+authoritative for what* in `../../../../.codefall/shared/workflow.md`: a bug in codefall itself,
+or in any other repository, is handed to the person as issue text and never filed. Search for an
+existing issue first, and comment on it rather than opening a second. The report lists every issue
+filed and every comment added.
 
 ```bash
 gh issue list --search "<keywords>" --state all --json number,title,state,url,labels --limit 10
 ```
 
-**On yes, file it in this session.** A new issue carries the `bug` label and a body written from the
+**File it in this session.** A new issue carries the `bug` label and a body written from the
 run: the case and variant, the criterion that failed with its verdict, the evidence as paths under
 `<root>/.artifacts/`, and the run report's path. A comment on an existing issue carries the same.
 Record the number in the run record's `issue` field and in the Markdown report's Triage section.
 
 **Every real bug is also a bead**, filed per `../../../../.codefall/shared/triage.md`: whose it
-is, how bad it is, which area, how big the fix is, and every field the bead carries. When the run's
-target was an epic's work, the question is one line — "I found N problems. Fix them all? (I
-recommend yes.)" — and the person may take all, some, or none; each bug's line shows the triage the
-reference proposes, which the person may change in the same answer. Each one taken files an issue
-and a bead beside it, in the `code` form under *Discovered work* in
-`../../codefall-implement/reference/beads.md` with the triage fields. A bug that is the epic's is a
-`deferred` child of it, and once the report is written the session runs `codefall-implement` on
-the epic, whose go gate reopens those children and builds them, and the chart shows it. A bug
-beside the epic is filed `open` with no parent, or under the open followup for its area, and the
-report names where it went:
+is, where it goes, how bad it is, which area, how big the fix is, and every field the bead carries.
+When the run's target was an epic's work, the list is a report — "Found N problems; filing all
+N" — and each bug's line shows the triage the reference proposes, which a person present may
+change. Each files an issue and a bead beside it, in the `code` form under *Discovered work* in
+`../../codefall-implement/reference/beads.md` with the triage fields. A bug that is the epic's is
+a `deferred` child of it, taken at `codefall-implement`'s next round boundary, which triages the
+epic's children and builds the batch; this run builds nothing. One the round still running should
+build is an `open` child. A bug beside the epic is filed `open` with no parent, or under the open
+followup for its area, and the report names where it went:
 
 ```bash
 bd create "<the issue's title>" --id "$(bd config get issue_prefix)-gh-<n>" --external-ref gh-<n> \
@@ -109,10 +109,11 @@ two children name the same case, every such child (one edge each) where none doe
 itself for a suite failure that names no case. Record the bead's ID in the run record's `bead`
 field beside `issue`.
 
-**A wrong expectation whose criterion a bead cites** is offered, on the user's word, as a
-`plan-revision` child in the `plan` form of the same reference, with `--spec-id` taken from that
-bead's `spec_id` and `-p 2`; `codefall-plan`'s Revise mode settles whether the criterion or the
-plan moves.
+**A wrong expectation whose criterion a bead cites** is filed as a `plan-revision` child in the
+`plan` form of the same reference, with `--spec-id` taken from that bead's `spec_id` and `-p 2`,
+and this run settles it before its report: run the `codefall-plan` skill on the document through
+the `Skill` tool, in this session, for its Revise mode, which decides whether the criterion or the
+plan moves, per `../../../../.codefall/shared/decisions.md`.
 
 **A bug document is the user's to ask for.** `/codefall-report <run report path>` writes
 `docs/bugs/BUG-NNN-slug.md` with acceptance criteria and adopts the issue this run filed rather than
