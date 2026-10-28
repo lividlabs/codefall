@@ -15,7 +15,8 @@ lists the gate names, and at step 6, before rendering the first prompt.
 
 ## Launching
 
-`Agent` with `isolation: 'worktree'`, prompted from `../worker-prompt.md`, rendered by substituting
+`Agent` with `isolation: 'worktree'` and `effort` set to the bead's effort from the gate's table,
+prompted from `../worker-prompt.md`, rendered by substituting
 `{{BEAD_ID}}`, `{{TITLE}}`, `{{BODY}}`, `{{ACCEPTANCE}}`, `{{PLAN_REF}}`, `{{BRANCH}}`,
 `{{BASE_REF}}`, `{{PR_TARGET}}`, `{{VERIFY_COMMANDS}}`, `{{RELATES_LINE}}`, `{{REPO}}`,
 `{{TESTING_ROOT}}`, `{{CASE_FILE_FORMAT}}`, and `{{RUNNER}}`, which is `subagent` here. A bead the
@@ -73,6 +74,16 @@ over, as is a harness not on PATH. Say in one line which beads you would move to
 why: a rename, a removed flag, or a doc aligned with the code suits a cheaper model; a bead that
 needs a design call suits the session's own. The person changes any bead's agent at the gate, and
 the gate's one approval covers the run.
+
+**The table also proposes an effort per bead**, by the same reasoning: low or medium for the
+mechanical bead, high for the one that needs a design call, and the bead's execution metadata as
+the hint when plan left one. The launch applies it the way the harness takes it: the `effort`
+parameter of this harness's subagent tool for `current`; the `#variant` suffix on the model string
+for OpenCode, as the `work` list already writes it; and for Codex and Claude Code through
+`run-worker.sh`, a `harnessConfig` variant whose `args` carry it, `-c model_reasoning_effort=high`
+or `--effort high`, named in the list as `codex-high` or `claude-high`. A harness with no way to
+take it runs at its default, and the table says so. Nobody is asked to set the session's effort;
+the root's own is the person's to set before the run, and the gate states it.
 
 ### Before the run
 
@@ -172,9 +183,10 @@ or `{"bead": "…", "status": "failure", "reason": "…"}`. A worker run through
 pull request. The `discovered` list is how tangent work
 reaches the root, which files it — the worker's diff stays scoped to its bead. `kind` is `code` or
 `plan` and picks the form under *Discovered work* in `beads.md`. A `code` item that is a bug says
-so with `"bug": true` and whether the worker's own change caused it with `"caused"`; the root
-triages it per `../../../../.codefall/shared/triage.md` before filing. Any other `code` item is
-filed as it stands. The `amended` list names each upstream document the worker amended in its branch; the root
+so with `"bug": true` and whether the worker's own change caused it with `"caused"`. The root
+triages every `code` item, a bug or not, per `../../../../.codefall/shared/triage.md` before
+filing: whose it is, which of the six dispositions it gets, how bad it is, which area. The
+`amended` list names each upstream document the worker amended in its branch; the root
 reads it at the wave boundary per *Amendments* in `beads.md`, and records each entry as a closed
 `plan-amended` bead there.
 
@@ -194,10 +206,16 @@ as a `plan-revision` bead whose body says the fix is text this run could not lan
 A worker returning `{"status": "failure"}` gets **one consult, then one automatic retry**. The root
 consults per *Consulting* below on the failure reason and the bead, and launches a fresh worker at
 higher effort or a stronger model with the failure reason and the consult's answer folded into its
-prompt. A second failure gets one more consult, and then stops the chain and escalates — fix it by
-hand, skip the bead (unclaim it, note why), or abort the run — with the consult's analysis in front
-of the human. Nothing retries more than once on its own, and nothing is consulted twice on the same
-failure. A worker that is alive but stalled is resumed with a message, not replaced.
+prompt. A second failure gets one more consult, and then the bead is **skipped**: the root unclaims
+it, appends the failure and the consult's analysis to its notes, and goes on with the rest of the
+wave and the run. A skipped bead holds back nothing but the beads that depend on it; the report
+lists it, and the round boundary reads it as a signal, per the rounds reference beside this file.
+When the consult's
+analysis says the task is cut wrong, or the question is one the run cannot settle, a human bead is
+filed per `../../../../.codefall/shared/decisions.md` beside the skip. The run stops only when
+every bead left is skipped or blocked. Nothing retries more than once on its own, and nothing is
+consulted twice on the same failure. A worker that is alive but stalled is resumed with a message,
+not replaced.
 
 ## Consulting
 
@@ -215,16 +233,17 @@ earlier agent in the order, or empty. `SCHEMA` is `../../../../.codefall/shared/
 
 **The order** is the entry's `consult` list, resolved and walked as `running-agents.md` says, with
 `../../../../.codefall/shared/run-agent.sh`. With nothing configured it is one `current` agent,
-and the root runs the consult as a subagent: a fresh context reading the same files, which is why
-the default run consults too. The go gate names the resolved order.
+and the root runs the consult as a subagent, at high effort or above: a fresh context reading the
+same files, which is why the default run consults too. The go gate names the resolved order.
 
 **What the answer does.** Before the retry: an answer that names a course the bead allows is folded
 into the retry prompt beside the failure reason, as a suggestion the fresh worker weighs and not an
 instruction — the worker still reads the plan and the code first. `cannotSettle`, or no agent
 answering, means the retry runs on the failure reason alone, as before. At the second failure: the
-answer, or the fact that none came, goes into the escalation so the human reads the analysis beside
-the failure. A consult never changes the graph, never edits a bead, and never overrides a plan;
-an answer that says the task is cut wrong is reported as exactly that, for `codefall-plan`.
+answer, or the fact that none came, goes on the skipped bead's notes, so whoever reads it next sees
+the analysis beside the failure. A consult never changes the graph, never edits a bead, and never
+overrides a plan; an answer that says the task is cut wrong is filed as a `plan-revision` bead for
+Revise mode at the next round boundary.
 
 **The record.** The `bd comment` that records what ran on the bead names the agent consulted and
 its answer in one line; the close-out report lists every consult, by bead, with who answered and

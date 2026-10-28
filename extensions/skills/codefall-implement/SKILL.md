@@ -1,6 +1,6 @@
 ---
 name: codefall-implement
-description: Execute the work the plan verb put into the graph — claim ready beads, build each task in its own worktree with tests as part of done, write the test case a bead's criteria name before the code, verify against the bead's acceptance criteria and the project's own checks, open pull requests, and walk the dependency graph in parallel waves until the frontier is empty. Never merges to main, and never sets a test harness up.
+description: Execute the work the plan verb put into the graph — claim ready beads, build each task in its own worktree with tests as part of done, write the test case a bead's criteria name before the code, verify against the bead's acceptance criteria and the project's own checks, open pull requests, and walk the dependency graph in parallel waves until the frontier is empty. On an epic it then runs review and test, triages what they found, and runs the next round on its own until the delivery is done. Never merges to main, and never sets a test harness up.
 argument-hint: "[a bead, an epic, a plan, or nothing to pick from ready work]"
 allowed-tools:
   - Read
@@ -11,12 +11,14 @@ allowed-tools:
   - Edit
   - Bash
   - Agent
+  - Skill
 ---
 
 # Implement
 
 Walk the graph `codefall-plan` created. Claim what is ready, build it, verify it, open a pull
-request, and let each close unblock the next task until the frontier is empty.
+request, and let each close unblock the next task until the frontier is empty; then review it, test
+it, and go again.
 
 Implementing is not merging. A run ends at open pull requests and a link to the stack's top —
 **a human performs every merge to `main`, and this skill never does**, in any mode, under any
@@ -27,32 +29,46 @@ Paths that start with `reference/` or `../` are relative to this skill's directo
 project. A path through `../../../.codefall/` is the one that leaves the skills directory: it names
 a file `codefall init` installed in the project's own `.codefall/`.
 
+## A delivery runs on its own
+
+On an epic, one gate starts the run and nothing after it asks. The person may have left. Every
+question the run would ask is answered as `../../../.codefall/shared/decisions.md` says: decided
+with its reason when it is the run's; consulted once, then recorded as a human bead with the best
+default taken, when it is not. When the frontier is empty the run runs `codefall-review` on the
+epic's work, then `codefall-test`, then the round boundary in `reference/rounds.md`, and goes
+again. Three things stop it: the delivery is done, nothing in the batch can be built, or the round
+number is at the ceiling. Everything else is a signal, weighed with the default to continue. A run
+that stops names `/codefall-implement <epic>` to resume, and that gate shows why it stopped. A
+person who wants one round at a time says so at the gate.
+
 ## Files beside this one
 
 Read each when its step says to; none is loaded up front.
 
-- `reference/landing.md` — the two landing strategies, integration, later rounds, and the branch
-  diagrams. Read at step 4 and step 7.
-- `reference/resume.md` — picking up an interrupted run, and telling a crashed round from the next
-  one. Read at step 2 when the epic already has closed children.
-- `reference/beads.md` — every `bd` command a run issues: session start, claim and close, the
-  landed bead and its gates, discovered work, session end. Read at step 5.
-- `../../../.codefall/shared/triage.md` — triaging a discovered bug. Read at step 6.
-- `../../../.codefall/shared/delivery.sh <epic>` — the chart line. Run at the go gate, each wave
+- `reference/landing.md` — the two landing strategies, integration, later rounds, the diagrams.
+  Read at steps 4 and 7.
+- `reference/rounds.md` — the round boundary: revision beads, triage under the epic, the batch,
+  the exits and signals, the ceiling, the ledger lines. Read at step 5 on a later round and at
+  step 8.
+- `reference/resume.md` — picking up an interrupted run. Read at step 2 when the epic already has
+  closed children.
+- `reference/beads.md` — every `bd` command a run issues. Read at step 5.
+- `../../../.codefall/shared/decisions.md` — what a run decides, consults on, or records as a
+  human bead. Read at step 1.
+- `../../../.codefall/shared/triage.md` — where a discovered item goes. Read at step 6.
+- `../../../.codefall/shared/delivery.sh <epic>` — the chart line. Run at the gate, each wave
   boundary, and the report.
-- `../../../.codefall/shared/stacks.md` — how GitHub stacks work, and how a report points at one.
-  Read at steps 4, 7, and 8.
-- `reference/workers.md` — launching a worker here or in another harness, chains, results,
-  failures, and consulting. Read at steps 5 and 6. Names
+- `../../../.codefall/shared/stacks.md` — GitHub stacks, and how a report points at one. Read at
+  steps 4, 7, and 9.
+- `reference/workers.md` — launching a worker here or in another harness, effort, chains,
+  results, failures, consulting. Read at steps 5 and 6. Names
   `../../../.codefall/shared/running-agents.md`, `../../../.codefall/shared/run-agent.sh`,
   `../../../.codefall/shared/run-worker.sh`, `../../../.codefall/shared/consult-prompt.md`,
   `../../../.codefall/shared/consult.schema.json`.
-- `reference/done.md` — when a bead is done: where the verification commands come from, the
-  checks, tests and the local scripts as part of done, and the test case written before the code.
-  Read at step 3 and step 6. Names `../codefall-test/reference/case-file.md` and
+- `reference/done.md` — when a bead is done, and the test case written before the code. Read at
+  steps 3 and 6. Names `../codefall-test/reference/case-file.md` and
   `../../../.codefall/shared/check-cases.sh`.
-- `reference/mirror.md` — how the spec's tracker issue walks the work's state. Read at step 6 and
-  step 8.
+- `reference/mirror.md` — the spec's tracker issue. Read at steps 6 and 9.
 - `worker-prompt.md` — the prompt rendered for each worker.
 
 ## Scope — build, not decide
@@ -73,14 +89,13 @@ survive contact with the code, say what you found and hand the graph back to `co
 smaller disagreement the task can finish under — the plan's text against the code, or the
 spec's — is amended by the worker in its own branch when the document is `Draft` or `Ready` and
 the fix is text that moves no task row and no cited criterion; the PR body names it, and the root
-re-mirrors a spec change per `reference/mirror.md`. A fix that would move work is filed as a
-`plan-revision` bead per `reference/beads.md`, for `codefall-plan`'s next run; the project's
-`.codefall/shared/workflow.md` holds the rule.
+re-mirrors a spec change. A fix that would move work is filed as a `plan-revision` bead per
+`reference/beads.md`, and this run runs `codefall-plan`'s Revise mode on the document at the next
+round boundary.
 
-- **Implement writes every test the current work needs** — named in the plan's Testing Strategy
-  or discovered mid-task. A missing test is written, not sent back to `codefall-plan`.
-  **`codefall-test` owns the run against the epic's work and everything after it**: the cases the
-  beads named, run on the epic's branch before the merge, and the regression passes after it.
+- **Implement writes every test the current work needs**, named in the plan or discovered
+  mid-task; a missing test is written, not sent back. **`codefall-test` owns the run against the
+  epic's work**: the cases the beads named, on the epic's branch before the merge.
 
 ## One bead or the graph
 
@@ -89,114 +104,94 @@ The argument fixes the scope; the skill never infers it.
 | Invocation | Scope |
 | --- | --- |
 | `/implement booking-parser-trailing-comma` | That bead, alone |
-| `/implement booking-PLAN-007` (an epic) | The epic's graph, until its ready set is empty or a gate stops the run |
+| `/implement booking-PLAN-007` (an epic) | The epic's graph, then review, test, and the rounds after, until done or a stop |
 | `/implement PLAN-007` | The plan's epic, `<prefix>-PLAN-007`, checked to exist with `bd show` |
 | `/implement` | Show ready work grouped by epic and ask |
 
 A plan whose Tasks callout still says `Staged. Not yet in Beads` has no graph to walk: refuse and
 name `/plan`.
 
-**An epic with closed children and `deferred` ones is the next round.** A run on it reopens the
-children `codefall-review` and `codefall-test` filed, claims them, and builds them on top of the
-round before. The delivery is done when every child but the landed bead is closed and the last
-test run against the epic passed.
+**An epic with closed children and `deferred` ones is the next round.** A run on it triages those
+children at the round boundary per `reference/rounds.md`, picks the batch, and builds it on top of
+the round before. The delivery is done when every child but the landed bead and any human bead is
+closed and the last test run against the epic passed.
 
 **Tier 0 is not a separate mode.**
 
 ## What gets read
 
-Per bead, in order, before any plan is formed:
+Per bead, before any plan is formed: the bead, `bd show <id> --json`, for the body, the Plan ref,
+the acceptance criteria, and `spec_id`, the plan's path; the plan's Overview and Architecture, the
+Plan ref's section, Hard Constraints, and Technical Context and Testing Strategy when present; the
+spec one hop up the plan's `Related` line, whose criteria are the externally observable contract,
+or the vision when there is no spec; the ADRs on that line plus `docs/adrs/`, never rewritten, a
+conflict with a task going to `codefall-plan`'s Revise mode as a superseding-ADR question; the
+project's `AGENTS.md`, root and scoped; and any mockup referenced, a drawing to rebuild in the
+app's stack, never markup to copy. A tier-0 bead has no document: bead, `AGENTS.md`, ADRs. A
+followup epic, `<prefix>-FOLLOWUP-<area>-NNN`, holds such beads.
 
-1. **The bead** — `bd show <id> --json`: the description, the Plan ref, the acceptance criteria,
-   and `spec_id`, the plan document's path.
-2. **The plan document** — Overview and Architecture always; the specific section the Plan ref
-   names; Hard Constraints; Technical Context and Testing Strategy when present.
-3. **The spec**, one hop up the plan's `Related` line — its acceptance criteria are the
-   externally observable contract. The vision only when there is no spec.
-4. **ADRs** — the ones on the plan's `Related` line plus the project's `docs/adrs/` baseline.
-   Never rewritten; a conflict between a task and an ADR goes back to `codefall-plan` as a
-   superseding-ADR conversation, never a quiet exception.
-5. **The project's `AGENTS.md`**, root and scoped — workflow rules, verify commands, conventions.
-6. **Mockups** under `docs/mockups/` when referenced: a drawing to rebuild in the app's stack, never
-   markup to copy.
+## The execution plan
 
-A tier-0 bead has no document; the list collapses to bead + `AGENTS.md` + ADRs. A followup epic,
-`<prefix>-FOLLOWUP-<area>-NNN`, holds such beads.
-
-## Landing strategies
-
-Two ways work reaches `main`; `reference/landing.md` has the rules, integration, later rounds, and
-the diagrams.
-
-| Strategy | When |
-| --- | --- |
-| **Serial stack** (default) | Any graph: every bead in topological order, one branch atop the previous, workers one at a time |
-| **Epic branch** | Work that must not land on `main` in increments, or the user wants parallel waves |
+Build the waves first, from the graph: `bd ready --mol <epic> --explain` and `bd dep tree`, every
+bead in the earliest wave its blockers allow. Their shape picks the landing, per
+`reference/landing.md`: every wave one bead wide is a chain and lands as a **serial stack**, one
+branch atop the previous, workers one at a time; any wave wider than one lands on an **epic
+branch**, `epic/<id>-<slug>`, waves off it, one aggregate PR. Work that must not land on `main` in
+increments, a standing preference in `CUSTOMIZE.md`, and the strategy round one used each force
+the epic branch. **There is no cap on a wave's width**; the graph sizes it.
 
 ## The go gate
 
-One approval, before any work starts. Everything the run will do, in one block:
+One gate, before any work starts; on an epic, the only question of the delivery. Everything the run
+will do, in one block:
 
-- the delivery's chart line, and on a later round the round number this run will set;
-- the landing strategy and its one-line reason ("a chain of 7 → serial stack"; "12 beads in 3
-  waves → epic branch");
-- the branch diagram;
-- on an epic branch, the waves and how many workers run concurrently in each — **there is no
-  default cap**; the wave is sized by the graph, and the user trims it here if it is too wide;
-- the harness and model proposed per bead, from the `work` list, and one session-level effort
-  recommendation as the exact command — "recommend `/effort high` before go";
-- what will be claimed in beads, and — when a vision sits behind the work — that go flips it to
-  `Active`;
-- that workers amend a plan's or spec's text where the code disagrees, in their own PR, per
-  `reference/beads.md`;
-- the consult order a failure will be put to, resolved per `reference/workers.md`;
-- the permissions condition: background workers cannot answer permission prompts, so the session
-  must allow edits and Bash without prompting, or the run offers single-task mode instead.
+- the delivery's chart line; on a later round the round number this run will set, the batch per
+  `reference/rounds.md`, and what the boundary moved out or closed;
+- the execution plan: the waves and their widths, the branch diagram, the strategy and its
+  one-line reason;
+- per bead, the harness, model, and effort proposed from the `work` list per
+  `reference/workers.md`, as a table the person may edit;
+- what will be claimed, and that go flips a vision behind the work to `Active`;
+- the consult order a question or a failure will be put to, resolved per `reference/workers.md`;
+- the ceiling on rounds, and the root session's own effort;
+- the permissions condition: nobody answers a prompt, so the session must allow edits and Bash
+  without asking, or the run offers single-task mode instead;
+- that the run continues through review, test, and the rounds after until the delivery is done,
+  and the one thing to say if it should stop after this round instead.
 
-**Single-bead scope shrinks the gate to an approach approval**: the files to touch, the approach, the
-test plan, one branch.
+Then wait for go; under the `product-manager` persona the gate is the sentence
+`../../../.codefall/shared/personas.md` gives.
 
-**After go, waves proceed on their own.** Failures are the only mid-run stop.
+**Single-bead scope shrinks the gate to an approach approval**: the files to touch, the approach,
+the test plan, one branch; the run ends at its pull request.
 
-Harness and model choice is the root's, made at the gate. A bead's own execution metadata is a
-recommendation shown in the table; **implement never writes bead metadata** but the epic's `round`
-— what ran goes in a `bd comment` beside the PR link.
+**After go, nothing asks.** A question is decided, consulted on, or recorded per `decisions.md`; a
+failure is consulted on and retried once, then the bead is skipped and the run goes on. Harness,
+model, and effort are the root's, proposed at the gate from the bead's own execution metadata,
+which is a recommendation; what ran goes in a `bd comment` beside the PR link.
 
 ## Verification and done
 
 A bead is done when three things are true: **its acceptance criteria hold, the project's checks are
 green, and its PR is open.** Done is not merged. Where the commands come from, what is checked, and
-the test case a bead's criteria name are in `reference/done.md`. Done closes the task bead; the
-delivery is done only when every child but the landed bead is closed and `codefall-test`'s last
-run against the epic passed.
+the test case a bead's criteria name are in `reference/done.md`. Done closes the task bead.
 
 ## Merges and the mirror
 
 **The root never merges to `main`.** The extension ships a `PreToolUse` hook that denies it; a
 denial from that hook is the system working as designed. What the root does merge: worker PRs into
-the **epic branch**, one at a time, at wave boundaries.
-
-At close-out the run points at the stack per *Pointing at a stack* in
-`../../../.codefall/shared/stacks.md` — the link to the top PR, never a command or a bottom-up
-list — and stops.
-
-The spec's tracker issue walks the work's state per `reference/mirror.md`. Every PR body carries
-`Relates to #<spec-issue>`.
+the **epic branch**, one at a time, at wave boundaries. At close-out the run points at the stack
+per *Pointing at a stack* in `../../../.codefall/shared/stacks.md` — the link to the top PR, never
+a command or a bottom-up list. The spec's tracker issue walks the work's state per
+`reference/mirror.md`. Every PR body carries `Relates to #<spec-issue>`.
 
 ## The vision transition
 
 `codefall-envision` reserves one transition for this skill: `Status: Active — <date>`. At the
 run's first claim, resolve the vision — the plan's `Related` line to the spec, the spec's
-`**Vision:**` row to the vision, or the plan's `vision` label when there is no spec — and flip
-its Status line. Automatically, and report it — "VISION-012 → Active."
-
-Once, idempotently. Already `Active`, or no vision in the lineage: nothing to do. Only the Status
-line is touched, ever.
-
-## Picking up an interrupted run
-
-A resumed session reconciles beads, git, and GitHub. The table, and how a crashed round is told
-from the next one, are in `reference/resume.md`.
+`**Vision:**` row to the vision, or the plan's `vision` label when there is no spec — and flip its
+Status line, once, and report it: "VISION-012 → Active." Already `Active`, or no vision, is nothing
+to do. Only the Status line is touched, ever.
 
 ## Project customizations and persona
 
@@ -215,44 +210,32 @@ Run the shared check against the user's project.
 "../../../.codefall/shared/preflight.sh" .
 ```
 
-`beads=ok` advances. Otherwise read `beads_reason`, tell the user what is missing, hand over the
-command that fixes it, say to rerun this verb after it, and stop:
+`beads=ok` advances. Otherwise read `beads_reason`, hand over the remedy, say to rerun this verb
+after it, and stop: `not_installed` is `brew install beads`, `not_initialized` is `bd init`,
+`unreadable` quotes `beads_detail`.
 
-| `beads_reason` | What is wrong | Give them |
-| --- | --- | --- |
-| `not_installed` | `bd` is not on PATH | `brew install beads` |
-| `not_initialized` | this repository has no beads database | `bd init` |
-| `unreadable` | bd found a database and could not read it | quote `beads_detail` |
-
-Then read the checkout lines. `behind` above `0` or `refresh=stale` means the environment may not
-match what the work will build on: say so and run `/codefall-refresh` before continuing.
-`refresh=undeclared` names `/codefall-equip` instead. **Never run the other remedies.** They are
-the user's.
+Then read the checkout lines. `behind` above `0` or `refresh=stale`: say so and run
+`/codefall-refresh` before continuing. `refresh=undeclared` names `/codefall-equip` instead.
+**Never run the other remedies.** They are the user's.
 
 **Then read the `test=` line**, and hold it against the beads in scope once step 3 has read them. A
-bead whose acceptance criteria name a test case needs an equipped harness:
+bead whose acceptance criteria name a test case needs an equipped harness: `equipped` proceeds;
+`unequipped` names `/codefall-equip` and does not start the bead; `undeclared` names
+`codefall upgrade` and does not start it; `unknown` reads the `test` block from
+`.codefall/settings.json`, no runner there being `unequipped`. Beads verified by unit tests alone
+proceed either way. **Never set the harness up** — that is `/codefall-equip`'s own pull request.
 
-| `test=` | What happens |
-| --- | --- |
-| `equipped` | those beads proceed |
-| `unequipped` | say so, name `/codefall-equip`, and do not start them |
-| `undeclared` | say so, name `codefall upgrade`, and do not start them |
-| `unknown` | read the `test` block from `.codefall/settings.json` and judge it the same way; no runner there is `unequipped` |
-
-Beads verified by unit tests alone proceed either way. **Never set the harness up** — that is
-`/codefall-equip`'s own pull request.
-
-Then read the project's `AGENTS.md` (root and scoped) and
-`.codefall/skills/codefall-implement/CUSTOMIZE.md` — workflow constraints, verify commands, pinned
-board IDs, a standing strategy preference.
+Then read the project's `AGENTS.md` (root and scoped), `../../../.codefall/shared/decisions.md`,
+and `.codefall/skills/codefall-implement/CUSTOMIZE.md` — constraints, verify commands, a standing
+strategy preference, a ceiling.
 
 ### 2. Fix the scope
 
 Per [One bead or the graph](#one-bead-or-the-graph). With no argument, run the session-start
 commands in `reference/beads.md` — `bd ready` unfiltered, since no epic is chosen yet — then show
-the ready set grouped by epic, with title, priority, and what each unblocks, and ask. Never infer a
-batch from an unprompted ready set. An epic that already has closed children is read per
-`reference/resume.md`: a crashed round is reconciled, `deferred` children are the next round.
+the ready set grouped by epic and ask. Never infer a batch from an unprompted ready set. An epic
+that already has closed children is read per `reference/resume.md`: a crashed round is reconciled,
+`deferred` children wait for the round boundary.
 
 ### 3. Read
 
@@ -260,109 +243,107 @@ The full list in [What gets read](#what-gets-read), for every bead in scope. Rec
 against the code as it stands on the base branch — cite file and line for anything the plan
 assumed that has moved — and default to preserving whatever the plan is silent about.
 
-### 4. Classify the landing strategy
+### 4. Build the execution plan
 
-Read `reference/landing.md`. Build the graph picture (`bd ready --mol <epic> --explain`,
-`bd dep tree`). Serial stack unless the work must not land on `main` in increments or the user
-wants waves; on a later round, the strategy round one used. Constrained by `AGENTS.md` and
-`CUSTOMIZE.md`.
+Read `reference/landing.md`. Build the waves and pick the strategy per
+[The execution plan](#the-execution-plan), constrained by `AGENTS.md` and `CUSTOMIZE.md`; on a
+later round, the strategy round one used.
 
 ### 5. The go gate
 
-Present the block per [The go gate](#the-go-gate), the chart line first, and wait. On go, per
-`reference/beads.md`: flip the vision to `Active` if one is behind the work. Epic scope, first
-round: create the epic branch if the strategy calls for one (`epic/<id>-<slug>` off `main`,
-pushed), create the landed bead, claim the epic and the first wave, `bd dolt push`. Epic scope,
-later round: the epic branch, the landed bead, and the epic's claim already exist and are left
-alone; `bd update <epic> --set-metadata round=<N+1>`, reopen each `deferred` child this run takes
-with `bd update <id> -s open`, claim the first wave, `bd dolt push`. Single-bead scope: claim the
-bead, `bd dolt push`, nothing else.
+On a later round, first run the round boundary, steps 1 to 4 of `reference/rounds.md`, so the
+gate shows the batch. Present the block per [The go gate](#the-go-gate), the chart line first, and
+wait. On go, per `reference/beads.md`: flip the vision to `Active` if one is behind the work. Epic
+scope, first round: create the epic branch if the strategy calls for one (`epic/<id>-<slug>` off
+`main`, pushed), create the landed bead, claim the epic and the first wave, `bd dolt push`. Epic
+scope, later round: the epic branch, the landed bead, and the epic's claim already exist and are
+left alone; `bd update <epic> --set-metadata round=<N+1>`, claim the first wave of the batch,
+`bd dolt push`. Single-bead scope: claim the bead, `bd dolt push`, nothing else.
 
-When the user overrules the classifier the same way twice, offer to record the preference in
-`CUSTOMIZE.md` — offer, never write unasked.
+A strategy overruled twice the same way is offered for `CUSTOMIZE.md`, never written unasked.
 
 ### 6. Execute the waves
 
-Per `reference/workers.md` throughout. Per wave: render worker prompts, launch the batch, wait for
-results. Verify each success — branch on the remote, PR exists, or it did not happen; the root
-reviews and pushes a bead built in another harness itself. A failed bead is consulted on and
-retried once; a second failure is consulted on and escalates. Check each `plan` discovery, sending
-back what the worker could have amended; file the rest in the form its `kind` names, a bug triaged
-first per `../../../.codefall/shared/triage.md`; read each `amended` list, recording every entry
-as a closed `plan-amended` bead, per `reference/beads.md`. Comment the PR link, close
-the bead with what was verified, gate the landed bead with the new PR (stacked runs), `bd dolt push`. `--suggest-next` names the next wave; print the
-chart line, claim the wave, and go again. Epic branch: merge each worker PR into the epic branch,
-serialized, at the wave boundary. Update the mirror per `reference/mirror.md`.
+Per `reference/workers.md` throughout. Per wave: render worker prompts, launch the batch at the
+effort the table set, wait for results. Verify each success — branch on the remote, PR exists, or
+it did not happen. A failed bead is consulted on and retried once; a second failure is consulted
+on, and the bead is unclaimed with a note and skipped. Check each `plan` discovery, sending back
+what the worker could have amended; give every other discovered item, a bug or not, the
+disposition `../../../.codefall/shared/triage.md` gives it, and file it in the form its `kind`
+names; record each `amended` entry as a closed `plan-amended` bead, per `reference/beads.md`.
+Comment the PR link, close the bead with what was verified, gate the landed bead with the new PR
+(stacked runs), `bd dolt push`. `--suggest-next` names the next wave; print the chart line, claim
+the wave, and go again. Epic branch: merge each worker PR into the epic branch, serialized, at the
+wave boundary. Update the mirror per `reference/mirror.md`.
 
 Single-bead scope is one iteration of the same loop, in one worktree.
 
 ### 7. Integrate
 
 When the frontier is empty: ask GitHub whether every open layer is mergeable, per *Integration* in
-`reference/landing.md`, and report it. A layer that is not is fixed on its own branch and cascaded
-with `gh stack`. Epic branch, first round: open the aggregate PR to
-`main`, titled as a release-worthy conventional commit, and gate the landed bead with it — `Closes`
-nothing; the gate owns the epic's close. A later round reuses the aggregate PR that exists.
+`reference/landing.md`. A layer that is not is fixed on its own branch and cascaded with
+`gh stack`. Epic branch, first round: open the aggregate PR to `main`, titled as a release-worthy
+conventional commit, and gate the landed bead with it — `Closes` nothing; the gate owns the epic's
+close. A later round reuses the aggregate PR that exists.
 
-### 8. Report and stop
+### 8. Review, test, and the next round
+
+Epic scope only. Run the `codefall-review` skill on the epic through the `Skill` tool, in this
+session, then `codefall-test` the same way; each files what it finds and builds nothing. Then the
+round boundary, per `reference/rounds.md`: revision beads to `codefall-plan`'s Revise mode, triage
+of everything under the epic, the batch, the exits and signals, the boundary line. On continue:
+the later-round go of step 5 without the gate, then step 6 again. On stop, or when the person
+asked for one round at the gate: step 9.
+
+### 9. Report and stop
 
 Do not merge, and do not wait for merges; the next session's `bd gate check` finishes it.
 
 - The chart line.
-- Every bead built, with PR, branch, and what its close reason verified.
-- The link to the pull request the person merges, per *Pointing at a stack*, and what is blocked
-  on the user.
-- Upstream amendments, by document and PR, each with its `plan-amended` bead, and every
-  `plan` item sent back to its worker; then discovered work filed, in three buckets: bugs with
-  where each went, code follow-ups, and what went back to plan — "PLAN-NNN has N revision
-  beads" — with the `bd comment` on the epic that names them.
-- Every consult: the bead, who answered, what it changed.
-- The tracker mirror's state, the vision transition if one fired.
-- The worktree list, with the cleanup offer.
-- The epic's notes line, `round N (implement) [date]: what was built`, per *Session end* in
-  `reference/beads.md`.
-- Anything decided in this conversation that no bead, document, report, or PR holds — a strategy
-  overrule, a skipped bead's reason — as a `bd comment` on the epic, then that it is safe to
-  `/clear`.
-- Final `bd dolt push`.
-- **Last, what the user does next**: `/codefall-review <epic>` on the stack top or the epic
-  branch, then `/codefall-test <epic>`; `/codefall-plan PLAN-NNN` where revision beads were
-  filed; and that merge, only once every child but the landed bead is closed and the last test run
-  passed — otherwise `/codefall-implement <epic>` for the next round.
+- Every bead built, with PR, branch, and what its close reason verified; every bead skipped and why.
+- Upstream amendments, by document and PR, each with its `plan-amended` bead; every revision bead
+  Revise mode settled; discovered work by the disposition each got.
+- Every decision taken and every human bead filed, per `decisions.md`, by bead; every consult.
+- The tracker mirror's state, the vision transition if one fired, the worktree list with the
+  cleanup offer.
+- The epic's notes lines per `reference/rounds.md`; that it is safe to `/clear`; a final
+  `bd dolt push`.
+- **Last, what the user does next**: when the delivery is done, the link to the pull request the
+  person merges, per *Pointing at a stack*, and the human beads to answer; otherwise why the run
+  stopped and `/codefall-implement <epic>` to resume. A single bead ends at its pull request.
 
 ## Other modes
 
-- **Resume** an interrupted run — per `reference/resume.md`. Reconcile, then continue the normal
-  loop.
+- **Resume** an interrupted run — per `reference/resume.md`, which reconciles beads, git, and
+  GitHub and tells a crashed round from the next one. Then continue the normal loop.
 - **Abandon** a run: unclaim what is claimed and unbuilt, note why on each bead, report branches
-  and PRs left standing. The user decides their fate; delete nothing.
-- **Drain assistance is reporting only.** After merges, `bd gate check` and the mirror update are
-  welcome; performing merges is not.
+  and PRs left standing; delete nothing.
+- **Drain assistance is reporting only.** After merges, `bd gate check` and the mirror update;
+  never a merge.
 
 ## Rules
 
 - **A person merges every code PR to `main`; this skill performs none, in any mode.**
+- **After the one gate, nothing asks.** A question is decided, consulted on, or recorded as a
+  human bead, per `decisions.md`, and the run goes on.
+- **A stop is one of the three exits, or a judgment written down with its reason.** When the
+  signals are mixed, the round runs.
 - **Every `bd` write is the root's, in the primary checkout.** Workers never run `bd`.
 - **Closed means done — criteria verified, checks green, PR open.** Merged is the gates' to say.
 - **Publish the claim before the work.** `bd dolt push` follows every claim and every close.
 - **The graph is the sequencer.** `bd ready` decides what runs next; never start a blocked bead.
-- **Scope is exactly the bead.** Tangents are filed by the root, never fixed in passing: a bug
-  per the triage reference, other work as a `deferred` child of the epic, taken at the next
-  round's go; a plan or spec found wrong is amended in the PR or becomes a `plan-revision` bead,
-  never a quiet workaround.
+- **Scope is exactly the bead.** Tangents are triaged by the root, never fixed in passing; a plan
+  or spec found wrong is amended or becomes a `plan-revision` bead, never a quiet workaround.
 - **Nothing is rebased or force-pushed by hand.** `gh stack` cascades; GitHub rebases on merge.
 - **Bead IDs ride every commit message.**
 - **Verify workers, never trust them.**
-- **One consult, one automatic retry, one more consult, then a human.** The root consults; a worker
-  never does.
-- **No permission prompts mid-run.** The go gate holds the condition.
+- **One consult, one automatic retry, one more consult, then skip and go on.** The root consults;
+  a worker never does.
 - **Tests are part of done.** Planned or discovered, written now, never deferred to `test`.
 - **A test case the criteria name is written first, from those criteria alone**, before the code
-  and its spec. The case counts toward done; running it is `codefall-test`'s.
+  and its spec.
 - **A test harness is never set up inside a task's pull request.** An unequipped bead is not
   started; `/codefall-equip` is named.
-- **The local scripts are part of done**, changed in the same PR per `codefall-equip`'s local track.
-- **Implement never writes bead metadata but the epic's `round`, and never re-cuts the graph.**
-- **`Active` is a fact, recorded once.**
-- **Worktrees are cleaned up by offer, never by default.**
+- **The local scripts are part of done**, changed in the same PR.
+- **Implement never re-cuts the graph**, and writes no bead metadata but the epic's `round`.
 - **Never overwrite a file that has drifted.** Show the difference and ask.

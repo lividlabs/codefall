@@ -25,9 +25,10 @@ bd ready --mol <epic>   # the claimable frontier
 A project with no Dolt remote works identically; state is this-machine-only. Say so once; `bd dolt
 pull` failing for lack of a remote is that statement's trigger, not a stop.
 
-`bd ready` leaves `deferred` beads out, so the children a review or a test run filed for the next
-round stay off the frontier until that round's go reopens them (`bd update <id> -s open`); from
-then on `bd ready --mol <epic>` pulls them in like any other child.
+`bd ready` leaves `deferred` beads out, so the children a review or a test run filed for a later
+round stay off the frontier until the round boundary takes them into the batch and reopens them
+(`bd update <id> -s open`), per the rounds reference beside this file; from then on
+`bd ready --mol <epic>` pulls them in like any other child.
 
 `bd gate check` fails safely. With `gh` missing, unauthenticated, or no GitHub remote, every gate
 stays open, the command reports per-gate errors, and it still exits 0: a report, never a falsely
@@ -90,20 +91,20 @@ where a tracker issue exists; `<prefix>-<slug>` otherwise. A taken ID is refused
 retry. Never `--force`. Workers report discoveries in their result JSON; the root files them — and
 files its own, from the reconciliation at step 3 — and pushes as after every other write.
 
-**A discovered bug is triaged before it is filed**, per `../../../../.codefall/shared/triage.md`:
-whose it is, how bad it is, which area, and every field its bead carries, the `code` form below
-included. A bug that is the epic's is a `deferred` child of the epic; one beside the epic is an
-`open` bead with no parent, or a child of the open followup for its area. The worker's item says
-whether its own change caused the bug (`"caused": true`) or found it already there, which is the
-source edge, `caused-by` or `discovered-from`, and the first of the triage classes. The `bug` flag
-is the worker's reading, not a gate: an item whose text says the product is wrong is triaged as a
-bug whether or not it carries the flag.
-
-**Every other discovered bead is a child of the epic**, created `deferred` so this round's
-`bd ready` does not pick it up, with the parent set in a second call because `--id` and `--parent`
-do not combine. The next round's go reopens it. At single-bead scope there is no epic: the edge
-alone, and status `open`. `codefall-review` and `codefall-test` file what they find in the same
-two forms.
+**Every discovered item is triaged before it is filed**, a bug or not, per
+`../../../../.codefall/shared/triage.md`: whose it is, which of the six dispositions it gets, how
+bad it is, which area, and every field its bead carries, the `code` form below included. An item
+that is the epic's is a `deferred` child of the epic, taken at a round boundary; one this round
+should build is an `open` child, on the next wave's frontier; one beside the epic is an `open`
+bead with no parent, or a child of the open followup for its area; a duplicate is a comment on the
+bead that exists; and one that is not an issue is never filed and is named in the report with the
+reason. The parent is set in a second call because `--id` and `--parent` do not combine. The
+worker's item says whether its own change caused it (`"caused": true`) or found it already there,
+which is the source edge, `caused-by` or `discovered-from`, and the first of the triage classes.
+The `bug` flag is the worker's reading, not a gate: an item whose text says the product is wrong
+is triaged as a bug whether or not it carries the flag. At single-bead scope there is no epic: the
+edge alone, and status `open`. `codefall-review` and `codefall-test` file what they find in the
+same two forms.
 
 The `-p 2` in both forms below is `codefall-implement`'s own priority for what a worker discovers
 in the code that is not a bug. A bug's priority is the triage scale's, whichever verb files it. P0
@@ -141,15 +142,16 @@ bd dolt push
 
 The body says what the document says, which document, what was found instead with file and line,
 why it was not amended, and what the task did about it. A disagreement the task could not finish
-under is a worker failure and an escalation, never a revision bead: the human decides, and the run
-stops there.
+under is a worker failure, handled per *Failure handling* in the workers reference, never a
+revision bead.
 
-**At session end, the epic carries the hand-off.** When any `plan` bead was filed, one
-`bd comment` on the epic — on the bead itself at single-bead scope — names every revision bead, so
-the epic's own record shows the drift:
+**A revision bead is settled at the next round boundary**, where this session runs
+`codefall-plan`'s Revise mode on the document, per the rounds reference beside this file; at
+single-bead scope, before the report. When any `plan` bead was filed, one `bd comment` on the epic — on the bead itself at
+single-bead scope — names every revision bead, so the epic's own record shows the drift:
 
 ```bash
-bd comment <epic> "plan-revision: booking-plan-007-stagestore, booking-plan-007-retry — run /codefall-plan PLAN-007"
+bd comment <epic> "plan-revision: booking-plan-007-stagestore, booking-plan-007-retry — Revise mode at the next round boundary"
 ```
 
 ## Amendments
@@ -206,13 +208,18 @@ bd update <epic> --append-notes "round 2 (implement) [2026-10-01]: 3 tasks built
 The round, the verb in parentheses, the date in brackets, a colon, then what happened in words:
 
 ```
-round 1 (implement) [2026-09-30]: 7 tasks built, PRs #101 #102
-round 1 (review) [2026-09-30]: 3 fixed, 2 deferred as children
-round 1 (test) [2026-09-30]: FAIL 2/7, 1 child filed
+round 1 (implement) [2026-09-30]: 7 tasks built, PRs #101 #102, 2 decisions on T3 T5
+round 1 (review) [2026-09-30]: 4 filed as children, 1 beside; 1 decision on the epic
+round 1 (test) [2026-09-30]: FAIL 2/7, 1 child filed, 1 question (booking-human-retry-policy)
 ```
 
-Always `--append-notes`; plain `--notes` replaces the whole log. The round is `metadata.round` on
-the epic, which `bd epic status --json` returns beside the child counts the chart prints.
+The line counts the decisions the verb made and names the beads they are on, and names every
+human bead it filed, so the final report finds them without a search. The decisions themselves are
+on those beads' notes, per `../../../../.codefall/shared/decisions.md`, and the round boundary's
+own lines are in the rounds reference beside this file. Always `--append-notes`; plain `--notes`
+replaces the whole log. The
+round is `metadata.round` on the epic, which `bd epic status --json` returns beside the child
+counts the chart prints.
 
 Final `bd dolt push`. Every write already landed when its command ran; the database is the handoff,
 and the next session opens with `bd ready`.
