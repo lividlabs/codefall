@@ -2124,6 +2124,52 @@ Decided at scaffold, 2026-08-16.
   guards the tool named `shell`, so a rename in a later OpenCode would let commands through
   unreported.
 
+- **A delivery runs on its own, 2026-10-28.** Recorded as `ADR-013.7`. A delivery of a large epic
+  took nine to eleven rounds with a person at every gate, and three rules caused it: every non-bug
+  discovery was the epic's by rule, so one epic ended with eighteen P4 cleanups as deferred
+  children with no exit but being built; the `plan-revision` hand-off told the person to run
+  `/codefall-plan`, the one upstream verb ADR-014's rule did not cover, and `implement` had no
+  `Skill` tool to run it anyway; and "a skill applies only what the user takes" was enforced at
+  every gate, so a recommendation the run was sure of waited for a yes while the consult, which
+  answers the run's own doubt, never fired. A prompt that said nobody was present, to consult the
+  strongest model and then record a human bead and continue, and to run review, test, and triage
+  without confirmation, ran two rounds unattended and stopped in the third on the harness's
+  permission classifier. The skills now carry that prompt. `shared/decisions.md` replaces the rule:
+  a reversible, in-scope recommendation with its reason in a sentence is applied and reported; a
+  product decision, a hard-to-reverse choice with no default in the project's stance, and a stated
+  preference are consulted on once and then recorded as a bead labelled `human` with the best
+  default taken, and the run continues; the consult prompt asks for the option the agent would
+  take even when it says the decision is a human's. A round is implement, review, test, then a
+  triage of everything under the epic at the round boundary, which `implement` owns; review and
+  test file and report and no longer run implement; the batch is every P1 and P2 plus what is
+  judged worth the round, and the rest stays deferred, moves beside the epic or into a followup,
+  or closes as a duplicate or not an issue, six dispositions in `shared/triage.md` that every item
+  answers, a cleanup as much as a bug. `report triage <epic>` re-triages an epic's deferred
+  children the same way. Decisions go on the notes of the bead they are about, naming who decided,
+  and the epic's round line counts them and names the human beads. An epic-scope `implement` run
+  shows one gate, the execution plan built from the waves, the agent, model, and effort per bead,
+  the consult order, the ceiling, and that it continues until done unless the person says one
+  round, and after go nothing asks. Three exits are mechanical, done, nothing buildable, and a
+  ceiling of ten rounds per delivery; everything else is a signal with the default to continue and
+  a consult before a stop. The waves pick the strategy: a chain stacks, anything wider lands on an
+  epic branch. Effort rides the gate's table and is applied through the subagent tool, OpenCode's
+  `#variant`, or a `harnessConfig` variant's `args`; the `/effort` recommendation is gone.
+  `implement`, `review`, and `test` run plan's Revise mode for the revision beads they file, and an
+  ADR question takes the project's default and writes the ADR as "settle now" does. `implement`
+  and `fix` gained `Skill`. Seen and not taken: a new operator verb (the loop needs one owner, not
+  a fourth verb); a per-run continuous argument (the one gate asks instead, and continuous is the
+  default); review and test continuing to run implement (the loop spread across three verbs and
+  test never saw a round whole); a stop rubric written as a checklist (a round that closed nothing
+  because Revise mode turned beads into rows would have stopped the delivery, so the reference
+  opens with its purpose and treats all but three exits as signals); a round limit estimated from
+  the work (size changes a round's width, not the number of rounds); comments for the ledger
+  (`bd show` does not print them); a lock against two deliveries at once. Left open: more than one
+  delivery in flight, which nothing forbids and which `test`'s checkout of the epic's branch in the
+  primary checkout and the wave merges would collide on, a worktree per epic being the change if it
+  is wanted; the ceiling and the signals as a starting point, with the boundary lines each round
+  writes as the evidence for changing them; `run-worker.sh` taking an effort of its own rather than
+  through a variant block.
+
 ## Open
 
 - (nothing open; the last item graduated to ADR-012 on 2026-09-27)
