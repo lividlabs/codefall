@@ -187,12 +187,13 @@ is handled this way:
 
 | The answer | What happens |
 | --- | --- |
-| Confident, on a choice that is easy to reverse | Plan proposes it as the run's recommendation and names who was consulted |
-| Anything less confident, or any hard-to-reverse choice | The analysis comes to you beside the concern, and you decide |
+| Confident, on a choice that is easy to reverse | Plan takes it as its own decision and names who was consulted |
+| A hard-to-reverse choice the project's own rules give a default for | Plan takes the default and writes the ADR from it |
+| Anything else | The analysis comes to you beside the concern, and you decide |
 | No answer | The question goes into the document as a stated risk, with the options and their costs |
 
-A consult never writes anything and never settles an ADR. Plan never consults on a preference you
-have already stated.
+A consult never writes anything. Plan never consults on a preference you have already stated.
+`.codefall/shared/decisions.md` holds the rule for what a run decides on its own.
 
 ## What do the statuses mean?
 
@@ -221,8 +222,10 @@ acted on it:
   someone may still be working on it.
 
 A revision can also be requested from downstream as a `plan-revision` bead. When
-[`/codefall-implement`](implement.md) or `/codefall-review` finds that the code disagrees with the
-plan, it amends the plan's text itself, in its own pull request. It files a `plan-revision` bead
-instead when the fix would change a task row or a criterion a bead cites, when the document is
-frozen, or when you declined the amendment. The next run of `/codefall-plan` on that document
-settles every open revision bead.
+[`/codefall-implement`](implement.md), `/codefall-review`, or `/codefall-test` finds that the code
+disagrees with the plan, it amends the plan's text itself, in its own pull request. It files a
+`plan-revision` bead instead when the fix would change a task row or a criterion a bead cites, or
+when the document is frozen. The verb that filed it then runs `/codefall-plan`'s Revise mode
+itself, in the same run or at the next round boundary, and settles each bead: the text amended, a
+task added, or the request rejected, with a reason. A question only you can answer becomes a
+*human bead*, a question for you in Beads, with the default the run took.

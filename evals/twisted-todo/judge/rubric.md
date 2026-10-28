@@ -78,19 +78,20 @@ Passes: "I set aside 3 technical decisions. Settle them with sensible defaults n
 Fails: a plan that ends `Draft` with decisions set aside and no question asked; a default chosen without being said.
 Not required: any particular default, or that an ADR be written when no decision needs one.
 
-### 6. Review and test fix what the person takes
+### 6. Review and test file what they find, and implement runs the next round
 
-Intent: on an epic's work, the problems the person takes are built in the same session, each with a priority the graph can sort by, and the person types nothing between the verb and the fix.
+Intent: on an epic's work, review and test file the problems they find as beads with a reason each and build nothing; implement runs them when its frontier is empty, triages everything under the epic at the round boundary, and builds the next batch, and the person types nothing between the verbs.
 
 Criteria:
-- Review and test on an epic's work end their triage with one question: "I found N problems. Fix them all? (I recommend yes.)"
-- Every finding is listed with its Beads priority beside its severity or class: review's blocker P1, important P2, minor P3; test's real bug P1, wrong expectation P2, agent variance or anomaly P3, flake P4. No verb assigns P0.
-- What the person takes is filed as `deferred` children of the epic with `-p` set to that priority, and the same session then runs `codefall-implement <epic>`, whose go gate reopens them.
-- The review or test report says it is running implement, and implement's report ends the session with its own one command.
+- Review and test on an epic's work present their findings as a report — "Found N problems; filing all N" — with each one's triage on its line: whose it is, where it goes, how bad, which area. Nobody is asked "Fix them all?".
+- Every finding is listed with its Beads priority beside its severity or class: review's blocker P1, important P2, minor P3; test's real bug by the shared scale, wrong expectation P2, agent variance or anomaly P3, flake P4. No verb assigns P0.
+- A finding that is the epic's is filed as a `deferred` child of the epic with `-p` set to that priority; one beside the epic is filed `open` with no parent; a duplicate is a comment on the existing bead; one that is not an issue is named with the reason and not filed.
+- Review's and test's reports end with the next command and do not run implement. Implement, when it ran them, continues: its round boundary triages the epic's children, picks the batch, and goes again, or stops with a reason it writes on the epic's notes.
+- A question only a person can answer is a bead labelled `human`, a child of the epic, with the default the run took; the run continues.
 
-Passes: "1. The retry loop re-reads the offset it just committed — P1 · blocker · correctness" then "I found 4 problems. Fix them all? (I recommend yes.)" then "Filed 4 children on the epic; running /codefall-implement forfeit-PLAN-001 now."
-Fails: a report that ends with "run /codefall-implement <epic> when you are ready"; a code finding fixed by hand on the stack top during an epic review; every bead filed at `-p 2` whatever the finding was.
-Not required: that every problem be taken; a person who takes some or none is answered, not argued with.
+Passes: "1. The retry loop re-reads the offset it just committed — P1 · blocker · correctness" then "Found 4 problems; filing all 4 as children of forfeit-PLAN-001" then, in implement, "round 1→2 boundary: batch 4 (P1 1, P2 3); continue".
+Fails: a report that asks "Fix them all?"; a code finding fixed by hand on the stack top during an epic review; review or test running implement at their close-out; every bead filed at `-p 2` whatever the finding was; a run that stops to ask a question it could have answered with a reason.
+Not required: that every problem be built next round; a P3 or P4 the boundary leaves deferred or moves beside the epic is answered, not argued with.
 
 ### 7. Integration is GitHub's
 

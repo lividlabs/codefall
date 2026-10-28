@@ -21,7 +21,7 @@ The argument decides what one run covers:
 | An epic, such as `trips-PLAN-007`, or a plan, such as `PLAN-007` | Every test case the epic's beads name, plus the `changed` suites, on the epic's branch |
 
 Before anything runs, the skill shows you what it will run, which commands it will use and where it
-found them, and where the report will go, and it waits for you to confirm.
+found them, and where the report will go, and runs.
 
 The commands for a suite come from the same three places, in the same order, that
 [`/codefall-implement`](implement.md) uses for its checks:
@@ -109,15 +109,16 @@ finding into one of four classes:
 | Flake | The test raced the product |
 | Agent variance | A product that plans its own actions took a different route, recorded with how often it happened, such as "2 of 6 runs" |
 
-A finding becomes an issue on your project's tracker, or a bead in a project that keeps no issue
-tracker, only when you say so. Every bug is filed with the same fields whoever found it: its area,
-its priority on one scale, how big the fix is, and what found it. When the run tested an epic, it
-asks one question, "I found N problems. Fix them all?", and shows for each bug whether it belongs
-to the epic. A bug that stops the epic from shipping, that the epic's changes caused, or that is
-near the work and worth fixing with it becomes a bead under the epic, and the same session then
-runs `/codefall-implement` on the epic to fix those. A bug in a part of the product the epic never
-touched is filed on its own instead, where [`/codefall-fix`](fix.md) or a followup picks it up, so
-the delivery stays the size of the feature. You can change the call for any bug in the same answer.
+A real bug becomes an issue on your project's tracker, or a bead in a project that keeps no issue
+tracker, filed by the run with its reason; the skill searches for an existing issue first and
+comments on it rather than opening a second. Every bug is filed with the same fields whoever found
+it: its area, its priority on one scale, how big the fix is, and what found it. When the run tested
+an epic, it files each problem and builds nothing. A bug that stops the epic from shipping, that
+the epic's changes caused, or that is near the work and worth fixing with it becomes a bead under
+the epic for the next round, which [`/codefall-implement`](implement.md) builds. A bug in a part of
+the product the epic never touched is filed on its own instead, where [`/codefall-fix`](fix.md) or
+a followup picks it up, so the delivery stays the size of the feature. The skill shows its call for
+each bug, and you can change it.
 
 The skill does not fix what is missing around a test. Setting up the runner belongs to
 `/codefall-equip`, and writing a case belongs to `/codefall-implement`. When either is missing, the

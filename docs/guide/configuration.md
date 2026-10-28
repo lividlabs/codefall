@@ -57,7 +57,9 @@ entry in `agents` applies to one active agent:
 
 - `activeAgent` is a harness name, or `default` for every harness without an entry of its own.
 - `review` is the list of agents that review, tried in order.
-- `consult` is the list of agents that answer questions, tried in order.
+- `consult` is the list of agents that answer questions, tried in order. Put the strongest model
+  first: the first answer wins, and a run with nobody present takes the answer as its default.
+  `current` after it is the fallback when that harness is missing or cannot settle the question.
 - `work` is the list of agents that may write code for a run. `/codefall-implement` proposes one
   per task when it asks you to approve the run, and you can change any of them there.
   `/codefall-review` offers them when you choose which findings to fix on a branch or pull request.
@@ -104,6 +106,12 @@ A key that is a harness name, such as `codex`, configures that harness. Any othe
 *variant*: a second way to call a harness, whose `harness` field names the binary. With a variant
 named `codex-direct`, for example, a project can call Codex through a provider for reviews and
 directly for consults. A harness with no block runs with no extra settings.
+
+`/codefall-implement` proposes an effort for each task beside its agent and model, and applies it
+the way the harness takes it: for a subagent of your own coding agent, the subagent tool's own
+effort setting; for OpenCode, the `#variant` suffix on the model, as in `glm-5.3#max`; for Codex
+and Claude Code run as workers, a variant block whose `args` carry it, such as `claude-high` with
+`--effort high` or `codex-high` with `-c model_reasoning_effort=high`, named in the `work` list.
 
 The model string is whatever the harness accepts for its provider, which is easy to get wrong by
 hand. The reliable way to set it is to run `/codefall-equip agents` in any harness. The skill finds

@@ -1,8 +1,9 @@
 # /codefall-review
 
-`/codefall-review` has a second agent read your work and list what is wrong with it. You then
-decide which problems to fix, and the session you are in fixes them. Use it before you merge a
-branch or a pull request, or whenever you want a second reading of code or a document.
+`/codefall-review` has a second agent read your work and list what is wrong with it. The session
+you are in then decides which problems to fix, with a reason for each, and fixes them; you can
+change any decision. Use it before you merge a branch or a pull request, or whenever you want a
+second reading of code or a document.
 
 ```
 /codefall-review
@@ -35,7 +36,7 @@ An *epic* is the bead that groups every task from one plan, and a *bead* is one 
 repository.
 
 Before anything runs, the skill tells you what it resolved your request to and which questions it
-will ask. You can drop any of the questions at that point.
+will ask, and starts. You can drop any of the questions in reply.
 
 ## What does it refuse to review?
 
@@ -99,27 +100,30 @@ appears. Each finding gets a severity: *blocker*, *important*, or *minor*. If yo
 
 ## What happens to the findings?
 
-You see them as one numbered list, most severe first, and you mark each one:
+You see them as one numbered list, most severe first, each with the decision the session made and
+why:
 
 | Status | Meaning |
 | --- | --- |
-| `fixed` | You took it, and the session applies the fix in this run. |
-| `dismissed` | You rejected it, with a reason. |
-| `deferred` | It is real, but not now. |
+| `fixed` | The claim held on the lines it cites, and the session applies the fix in this run. |
+| `dismissed` | The lines did not bear it out, with the reason. |
+| `deferred` | It is real, but not now; a bead carries it. |
 
 Fixes land where the reviewed work lives, wherever you started the review from. If you review pull
 request #51 from another branch, the fixes go on #51's branch. A fix to your uncommitted work stays
 in your working tree.
 
-When you review an epic's work, the skill asks one question: "I found N problems. Fix them all?"
-Each code problem you take on a line the epic changed becomes a new task in the epic, and the same
-session then runs `/codefall-implement` to build them. You type one command. A bug the reviewer
-found in code the epic did not change is filed on its own, with its area, priority, and size, unless
-it is near the work and worth fixing with it; the skill shows its call for each bug, and you can
-change it in the same answer.
+When you review an epic's work, the skill files every code problem as a bead and fixes nothing on
+the stack. A problem on a line the epic changed becomes a task under the epic for the next round,
+which [`/codefall-implement`](implement.md) builds. A bug the reviewer found in code the epic did
+not change is filed on its own, with its area, priority, and size, unless it is near the work and
+worth fixing with it; the skill shows its call for each bug, and you can change it. A problem
+already filed becomes a comment on the existing bead, and one that turns out not to be a problem
+is dismissed with the reason.
 
-The skill can also file a bead for a finding you deferred, or for a problem in the plan that a fix
-here cannot settle. It offers each one and never files a bead without asking.
+A finding the session defers, or a problem in the plan that a fix here cannot settle, becomes a
+bead too, and a plan problem is settled in the same run by `/codefall-plan`'s Revise mode.
+`.codefall/shared/decisions.md` holds the rule for what the session decides on its own.
 
 When the reviewer could not settle a question, the skill puts it to the project's *consult* agents
 once. A consult is a second opinion from the agents your settings list for that purpose. A consult
@@ -134,8 +138,8 @@ review of uncommitted work, they are left unstaged for you to commit with the wo
 
 The findings stay in the repository so you can see patterns across reviews. A line in `.ignore`
 keeps them out of searches that use ripgrep, which most coding agents do. `codefall init` writes
-that line, `codefall doctor` warns when it is missing, and the review skill offers to add it back
-before it writes findings.
+that line, `codefall doctor` warns when it is missing, and the review skill adds it back and says
+so before it writes findings.
 
 ## Can it post the findings to a pull request?
 

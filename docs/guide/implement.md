@@ -29,54 +29,67 @@ it can start, and a bead is *ready* when all of those have finished. Closing one
 next ones ready. The run builds the ready tasks in *waves*, where a wave is the set of tasks that
 are ready at the same time. Each task is built by a background *worker*, a separate agent working in
 its own *worktree*, which is a separate working copy of the repository. The run continues until no
-task is left to start.
+task is left to start, and then, on an epic, through review, test, and the next rounds until the
+delivery is done, as described below.
 
 A plan whose task table still says `Staged. Not yet in Beads` has no graph to build, and the run
 refuses it and points at `/codefall-plan`.
 
 ## What you approve before it starts
 
-One approval starts the run. Before anything is built, the run shows you a single summary, called
-the go gate, that lists everything it will do:
+One approval starts the run, and on an epic it is the only question the whole delivery asks.
+Before anything is built, the run shows you a single summary, called the go gate, that lists
+everything it will do:
 
-- the landing strategy, described below, with the reason it was chosen;
-- a diagram of the branches it will create;
-- the waves, and the model proposed for each task;
+- the execution plan: the waves, how many tasks run in each, a diagram of the branches it will
+  create, and the landing strategy that shape picks, described below, with the reason;
+- for each task, the coding agent, the model, and the effort it proposes, which you can change;
 - what it will claim in Beads;
-- the consult order a failure will be put to, described below;
+- the consult order a failure or a question will be put to, described below;
+- the ceiling on rounds, described below;
+- that nobody will be there to answer a permission prompt, so the session must allow edits and
+  shell commands without asking;
+- that the run continues through review, test, and the rounds after until the delivery is done,
+  and what to say if you want it to stop after this round instead;
 - when a vision sits behind the work, that approving will set the vision's status to `Active`.
 
-After you approve, only a failure stops the run. Because the run asks nothing in the middle, it can
-build a large plan overnight.
+After you approve, nothing asks. A question the run can answer with a reason, it answers and
+records. One it cannot, because it is a product decision, a hard-to-reverse choice the project's
+rules give no default for, or a preference you have stated, it puts to the consult agents once and
+then records as a *human bead*, a question for you in Beads that carries the default the run took,
+and it carries on. Only three things stop the run: the delivery is done, nothing in the batch can
+be built, or the round count reached the ceiling. `.codefall/shared/decisions.md` holds the rule.
 
 ## What happens when a task fails?
 
-A failed task gets one second opinion and one retry before it reaches you. The *root*, which is the
-session coordinating the run, sends the failure, the bead, and the options it sees to the project's
-*consult* agents. Those are the second-opinion readers listed under `consult` in
-`.codefall/settings.json`; with nothing configured, the consult is a fresh subagent of your current
-coding agent. The root then starts a new worker at a higher effort or with a stronger model, with
-the failure reason and the consult's answer added to its instructions.
+A failed task gets one second opinion and one retry. The *root*, which is the session coordinating
+the run, sends the failure, the bead, and the options it sees to the project's *consult* agents.
+Those are the second-opinion readers listed under `consult` in `.codefall/settings.json`; with
+nothing configured, the consult is a fresh subagent of your current coding agent. The root then
+starts a new worker at a higher effort or with a stronger model, with the failure reason and the
+consult's answer added to its instructions.
 
-When the task fails a second time, the root consults once more and then stops and brings the
-failure to you, with the analysis in front of you. You can fix it by hand, skip the bead, or abort
-the run. The consult keeps a run from stopping on a problem that a second reading would have
-solved.
+When the task fails a second time, the root consults once more and then skips the bead: it
+unclaims it, writes the failure and the analysis on it, and goes on with the rest. The run stops
+only when every task it has left is skipped or waiting on a question for you. The consult keeps a
+run from stopping on a problem that a second reading would have solved.
 
 ## How work lands
 
-Work reaches `main` in one of two ways, and the go gate tells you which the run chose.
+The run builds the waves from the task graph first, and their shape decides how the work reaches
+`main`. The go gate shows both.
 
-**A serial stack is the default.** The run builds every bead in dependency order, one at a time. Each
-task gets its own branch, created on top of the previous task's branch, and its own pull request.
-The run links the pull requests into a GitHub stack as they open. A *stack* is a chain of pull
-requests in which each one targets the branch of the one below it. For PLAN-007, T1's pull request
-targets `main`, and T2's targets T1's branch.
+**A chain lands as a serial stack.** When every wave holds one task, the run builds the beads one
+at a time in dependency order. Each task gets its own branch, created on top of the previous task's
+branch, and its own pull request. The run links the pull requests into a GitHub stack as they open.
+A *stack* is a chain of pull requests in which each one targets the branch of the one below it. For
+PLAN-007, T1's pull request targets `main`, and T2's targets T1's branch.
 
-**An epic branch is the alternative.** The run uses it for work that must not reach `main` in pieces,
-or when you want workers to run in parallel. The run creates one branch for the epic, workers branch
-off it in waves, and the root merges each worker's pull request into the epic branch at the end of
-each wave. One combined pull request then carries the whole epic to `main`.
+**Anything wider lands on an epic branch.** When any wave holds more than one task, the run creates
+one branch for the epic, workers branch off it in waves and run in parallel, and the root merges
+each worker's pull request into the epic branch at the end of each wave. One combined pull request
+then carries the whole epic to `main`. Work that must not reach `main` in pieces uses the epic
+branch whatever the graph's shape, and so does a standing preference in `CUSTOMIZE.md`.
 
 A stack has no depth limit. Each layer's pull request shows only its own changes, and merging the
 top of the stack on GitHub lands every layer below it. When you merge one layer alone, GitHub rebases
@@ -110,16 +123,27 @@ belong to [`/codefall-test`](test.md).
 
 ## When is the whole delivery done?
 
-A *delivery* is all the work on one epic, from the plan to the merge. It proceeds in *rounds*. Each
-round is a run of `implement`, then [`/codefall-review`](review.md), then
-[`/codefall-test`](test.md), all against the epic's work before you merge.
+A *delivery* is all the work on one epic, from the plan to the merge. It proceeds in *rounds*, and
+the run drives every round itself from the one approval. A round is a pass of `implement` until no
+task is left, then [`/codefall-review`](review.md) on the epic's work, then
+[`/codefall-test`](test.md) on it, then a triage of everything the round found.
 
-Review and test each end with one question: "I found N problems. Fix them all?" Each problem you
-take that belongs to the epic becomes a new bead under it, and the same session then runs
-`/codefall-implement` on the epic to build them. You type one command, and the next round starts.
-A bug in a part of the product the epic never touched is filed beside the epic instead, with its
-area, priority, and size, so the delivery stays the size of the feature; [`/codefall-fix`](fix.md)
-or a followup from [`/codefall-report triage`](report.md#triaging-the-backlog) picks it up later.
+Review and test file what they find as beads and build nothing. At the *round boundary*, before
+the next round starts, the run looks at everything open or deferred under the epic and gives each
+item one outcome: it stays the epic's for a later round, it is built this round, it moves beside
+the epic or into the followup for its area, it is a duplicate of something already filed, or it is
+not an issue and closes. Then it picks the next round's batch: every P1 and P2, plus anything it
+judges worth the round with a reason, and builds that. A bug in a part of the product the epic
+never touched is filed beside the epic, with its area, priority, and size, so the delivery stays
+the size of the feature; [`/codefall-fix`](fix.md) or a followup from
+[`/codefall-report triage`](report.md#triaging-the-backlog) picks it up later.
+
+The run stops for three reasons: the delivery is done; nothing in the batch can be built, because
+every task waits on a question for you or has already failed twice; or the round count reached the
+ceiling, ten by default, which you can change at the gate or in `CUSTOMIZE.md`. Anything else, such
+as a round that closed nothing or a batch that is not shrinking, is a signal the run weighs, with a
+second opinion from the consult agents before it stops on one; the default is to continue. A run
+that stops says why, and `/codefall-implement <epic>` resumes it from the same gate.
 
 Every skill in the delivery prints the same progress line when it starts and when it finishes. The
 line shows the epic, the round, and how many of the epic's beads are closed:
@@ -130,17 +154,24 @@ trips-PLAN-007 · round 1 · 2/3 ███████████░░░░�
 
 Here both tasks are closed, and the third bead is the landed bead, which closes when you merge. Each
 skill also adds one line to the epic's notes when it finishes, so `bd show trips-PLAN-007` reads as
-the history of the delivery:
+the history of the delivery, including how many decisions it made and which beads carry them, and
+every question it left for you:
 
 ```
-round 1 (implement) [2026-10-08]: 2 tasks built, PRs #101 #102
-round 1 (review) [2026-10-08]: 3 fixed, 2 deferred as children
-round 1 (test) [2026-10-08]: FAIL 2/7, 1 child filed
+round 1 (implement) [2026-10-08]: 2 tasks built, PRs #101 #102, 1 decision on T2
+round 1 (review) [2026-10-08]: 3 fixed, 2 filed as children
+round 1 (test) [2026-10-08]: FAIL 2/7, 1 child filed, 1 question (trips-human-export-format)
+round 1→2 boundary [2026-10-08]: batch 3 (P2 3); closed 1 not an issue; continue
 ```
 
-The delivery is done when nothing under the epic is open except the landed bead and the last test
-run passed. At that point, only the merge remains.
-[ADR-013.6](../adrs/ADR-013.6-deliveries.md) records the rule.
+Each decision is written on the notes of the bead it was about, naming who decided, so you review
+them in one batch at the end, next to the pull requests. A question the run could not settle is a
+bead labelled `human`, a child of the epic, with the default the run took; it closes when you
+answer it.
+
+The delivery is done when nothing under the epic is open except the landed bead and your unanswered
+questions, and the last test run passed. At that point the run gives you the merge link and the
+questions. [ADR-013.7](../adrs/ADR-013.7-deliveries.md) records the rule.
 
 ## Who merges?
 
@@ -158,10 +189,13 @@ working around it. Three cases are possible:
   branch and names the amendment in its pull request. When the spec changed, the root regenerates
   the spec's GitHub issue.
 - **The worker cannot amend the document.** This is the case when the fix would move work, such as
-  a task row or a criterion a bead cites; when the document is frozen; or when you declined the
-  amendment. The disagreement is filed as a `plan-revision` bead. The final report lists these
-  beads separately from code follow-ups and tells you to run `/codefall-plan` on that document.
-- **The task cannot be finished under the disagreement.** The run stops.
+  a task row or a criterion a bead cites, or when the document is frozen. The disagreement is filed
+  as a `plan-revision` bead, and at the next round boundary the run settles it itself by running
+  `/codefall-plan`'s Revise mode: the plan's text is amended, a task row is added, or the request
+  is rejected, each with a reason. A question only you can answer becomes a human bead with the
+  default the run took.
+- **The task cannot be finished under the disagreement.** The worker fails, the bead is retried
+  once and then skipped, and the question reaches you as a human bead.
 
 [ADR-008](../adrs/ADR-008-upstream-amendments.md) records the rule, which applies to any document
 further up the chain, not only the plan.

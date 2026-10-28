@@ -25,9 +25,11 @@ This directory is the extension. Everything above it is packaging.
 `disable-model-invocation: true`, since each changes the install or the settings. Every other verb
 an agent may run too, and a verb runs the verb upstream of it when the work needs it, so a person is
 never told to run a command and come back: `specify` runs `mock-up`, `plan` runs `specify` and
-`mock-up`, and `review` and `test` run `implement` on the epic for the problems the person took. A
-delivery runs as rounds of implement, review, and test, each handoff a bead, a document, a report,
-or a pull request, with a `/clear` between verbs. A document verb pushes and opens its pull request
+`mock-up`, `implement` runs `review` and `test` on the epic's work and the next round itself, and
+all three run `plan`'s Revise mode for the revision beads they file. A delivery runs as rounds of
+implement, review, test, and triage from one gate, each handoff a bead, a document, a report, or a
+pull request; what a verb decides on its own, and what it records as a question for a person, is
+in [`shared/decisions.md`](shared/decisions.md). A document verb pushes and opens its pull request
 without asking and tells the person to add the `auto-merge` label when they want it merged or to
 have someone approve it; the GitHub Action `codefall-equip landing` installs merges a labelled or
 approved pull request, and no verb adds the label or approves. A person merges every code pull request. The extension also ships hooks per harness, defined

@@ -92,20 +92,28 @@ carries the fix closes the issue when you merge it.
 ```
 /codefall-report triage
 /codefall-report triage checkout
+/codefall-report triage trips-PLAN-007
 ```
 
 With `triage`, the skill writes no report. It walks every open item in Beads, or one area's, bugs
 and anything else that was filed, and fills in what is missing: a type that says what the item is,
 an area, a priority, a size. An item is never skipped for not being a bug; if its type is wrong, the
 skill proposes the right one, and a type you set yourself stays. It names items that look like
-duplicates and closes the later one when you agree, and it names a priority that no longer fits the
-description. It proposes the whole list once, and nothing changes unless you say so.
+duplicates and closes the later one, and it names a priority that no longer fits the description.
+It proposes the whole list once, with a reason for each change, and applies it; you can change any
+line.
 
-When an area holds more than a few open items, the skill offers to create a *followup*: an ordinary
-epic made of the items you pick, which [`/codefall-implement`](implement.md) builds as a delivery
-and which closes when its children have merged. A followup is how an area gets burned down. Until
-one exists, an item waits in the backlog with its fields set, and `/codefall-fix` with no argument
-lists the backlog and asks which one to fix.
+Given an epic, it walks that epic's deferred children instead, the items a delivery found and set
+aside for a later round, and gives each one an outcome: it stays for a later round, it moves out
+beside the epic or into its area's followup, or it closes as a duplicate or as not an issue. That
+is how a delivery sheds the items that do not belong to it.
+
+When an area holds more than a few open items, the skill creates a *followup*: an ordinary epic
+made of the items worth a batch, which you can change, and which
+[`/codefall-implement`](implement.md) builds as a delivery and which closes when its children have
+merged. A followup is how an area gets burned down. Until one exists, an item waits in the backlog
+with its fields set, and `/codefall-fix` with no argument lists the backlog and asks which one to
+fix.
 
 ## Statuses
 

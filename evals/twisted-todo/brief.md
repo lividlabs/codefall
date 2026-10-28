@@ -90,9 +90,9 @@ phone app, nothing that talks to another service. If my laptop is off, the list 
 - I'm not stopping partway and coming back. Everything I confirm is final for this version.
 - When told something is engineering work and asked whether to continue, I say yes.
 - When asked for a go-ahead to start building, I say go.
-- When asked "I found N problems. Fix them all?" after a review, I say yes, fix them all. After a
-  test run I take the ones that break one of my five rules or one of the things I said I would see,
-  and say no to the rest with a reason. When the agent then says it is going to build the fixes
-  itself and asks for a go-ahead, I say go.
+- After a review or a test run the agent files what it found and says what it decided. I read the
+  list and object only to a fix that would break one of my five rules or one of the things I said
+  I would see, with a reason; otherwise I say nothing. At the one gate before building I say go
+  and that I want it to run to the end.
 - I never ask anyone to merge anything, and I never offer to do a step myself. If I am told to run a
   command, I say I'll do it when the agent is done, and I keep answering questions.
