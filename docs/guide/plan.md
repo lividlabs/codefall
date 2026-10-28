@@ -131,6 +131,34 @@ the section each came from. It never gets a status column. A row changes only th
 which edits the row and its bead together so the two always match. When a row is removed, its
 identifier goes on a `Retired:` line under the table and is never used again.
 
+## When a spec is more than one delivery
+
+A plan is one delivery: one epic that [`/codefall-implement`](implement.md) runs through rounds of
+building, reviewing, and testing until it is merged. A delivery goes best when it finishes in a few
+hours of agent time with a round or two, and a spec can easily hold more work than that.
+
+So when plan decides the tier, it also judges the size of the delivery. It looks at how many tasks
+the work comes to, how many parts of the system they touch, how many are verified through the
+running product, and how deep the dependency chain is, and it compares that with the deliveries
+this project has already run, which Beads records. None of those is a threshold. Plan says what it
+sees once, with a specific cut, for example "fourteen tasks across three components, which is more
+than any delivery here has run in one epic; I would ship requirements one to three first and four
+and five after," and then does what you say. It checks the judgment again once the task table is
+staged, because the count can change it either way.
+
+A cut is made of whole requirements in the order they would ship, and each increment has to leave
+the product whole and usable on its own. When no such order exists, because nothing in the spec
+works until all of it does, there is no split, and plan says how long the one delivery looks
+instead. You can also decline a cut that would work, and the plan records that you did.
+
+When you take a cut, the run writes one plan per increment, numbered in ship order, in the same
+pull request. Each plan's header names the requirements it covers and the plan it follows, for
+example `spec: SPEC-004 (REQ-04, REQ-05) · after: PLAN-007`. The first plan holds the architecture
+that spans the feature, and the later ones hold only what is theirs. Each plan gets its own epic,
+and a later increment's work waits on the earlier epic closing, so `/codefall-implement` on the
+second epic has nothing to build until the first is merged. The run ends by naming implement on
+the first plan.
+
 ## How tasks get test cases
 
 Plan decides which tasks need a *test case*: a Markdown file describing how to check a behavior
@@ -220,6 +248,11 @@ acted on it:
   holding it.
 - **A task that leaves the plan** is reported to you and never closed automatically, because
   someone may still be working on it.
+
+A plan that turns out to be too big can also be split. Ask for it on the plan, and the run moves
+the rows you choose into a new plan with its own epic, numbered next, that follows this one. Only
+rows nobody has started can move; a task someone has claimed, commented on, or closed stays where
+it is, and the run cuts around it or tells you the split cannot be made.
 
 A revision can also be requested from downstream as a `plan-revision` bead. When
 [`/codefall-implement`](implement.md), `/codefall-review`, or `/codefall-test` finds that the code

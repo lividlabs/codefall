@@ -194,8 +194,10 @@ In a project that uses GitHub Issues, each requirement also becomes an issue. Th
 its own pull request for you to merge.
 
 **2. Decide how to build it.** Type `/codefall-plan`. The skill reads the spec and the code, then
-writes a plan, a short software design document, to `docs/plans/PLAN-007-itinerary-export.md`. The
-plan ends with a table of tasks and the order they depend on:
+writes a plan, a short software design document, to `docs/plans/PLAN-007-itinerary-export.md`. When
+the feature looks like more than one delivery's worth of work, it says so and offers to write one
+plan per shippable increment instead, each built and merged on its own. The plan ends with a table
+of tasks and the order they depend on:
 
 ```
 | ID | Task                                 | Depends on |

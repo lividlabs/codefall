@@ -8,6 +8,9 @@
   the tasks, edges, and plan refs; it never grows a status column.
 - A plan bead's title, edges, and plan ref change only through `/plan` (Revise), which edits
   the row and the bead together — never with `bd` directly.
+- A spec may have several plans, one per shippable increment. Each names the requirements it
+  covers and the plan it follows on its `Related` line, and a later increment's work waits on the
+  earlier epic closing. `/plan` cuts a spec into increments and splits a plan; never a hand edit.
 - A bead labelled `plan-revision` whose `spec_id` is a plan's path is a request to revise that
   plan. `/plan` lists them at its start and closes each one it settles.
 - ADRs live in `docs/adrs/` and are never rewritten. A revision is a new, superseding ADR.

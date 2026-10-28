@@ -25,9 +25,9 @@ Implementing is not merging. A run ends at open pull requests and a link to the 
 instruction short of the user editing this file. Merges into an epic branch are the one exception;
 the human gate sits at its aggregate PR.
 
-Paths that start with `reference/` or `../` are relative to this skill's directory, not the user's
-project. A path through `../../../.codefall/` is the one that leaves the skills directory: it names
-a file `codefall init` installed in the project's own `.codefall/`.
+Paths starting `reference/` or `../` are relative to this skill's directory, not the user's
+project; one through `../../../.codefall/` names a file `codefall init` installed in the project's
+own `.codefall/`.
 
 ## A delivery runs on its own
 
@@ -43,15 +43,15 @@ person who wants one round at a time says so at the gate.
 
 ## Files beside this one
 
-Read each when its step says to; none is loaded up front.
+Read each when its step says to.
 
 - `reference/landing.md` — the two landing strategies, integration, later rounds, the diagrams.
   Read at steps 4 and 7.
 - `reference/rounds.md` — the round boundary: revision beads, triage under the epic, the batch,
   the exits and signals, the ceiling, the ledger lines. Read at step 5 on a later round and at
   step 8.
-- `reference/resume.md` — picking up an interrupted run. Read at step 2 when the epic already has
-  closed children.
+- `reference/resume.md` — picking up an interrupted run. Read at step 2 for an epic with closed
+  children.
 - `reference/beads.md` — every `bd` command a run issues. Read at step 5.
 - `../../../.codefall/shared/decisions.md` — what a run decides, consults on, or records as a
   human bead. Read at step 1.
@@ -109,7 +109,7 @@ The argument fixes the scope; the skill never infers it.
 | `/implement` | Show ready work grouped by epic and ask |
 
 A plan whose Tasks callout still says `Staged. Not yet in Beads` has no graph to walk: refuse and
-name `/plan`.
+name `/plan`. An epic plain `bd ready` omits waits on another epic: say which and stop.
 
 **An epic with closed children and `deferred` ones is the next round.** A run on it triages those
 children at the round boundary per `reference/rounds.md`, picks the batch, and builds it on top of
