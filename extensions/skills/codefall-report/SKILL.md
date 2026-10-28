@@ -1,7 +1,7 @@
 ---
 name: codefall-report
-description: Turn a bug someone ran into into a report another session can fix — interview the person who saw it for the steps, the expected and actual result, screenshots, and the environment, push back on vague answers, try to reproduce it on the spot, then write a bug report with acceptance criteria into the repository, mirrored to the issue tracker, and file its bead triaged by type, area, priority, and size. Also triages the backlog — `triage`, with an area to narrow it, every open item whatever its type — and creates a followup epic from the items the person picks.
-argument-hint: "[what went wrong, or a test run's report | triage [area]]"
+description: Turn a bug someone ran into into a report another session can fix — interview the person who saw it for the steps, the expected and actual result, screenshots, and the environment, push back on vague answers, try to reproduce it on the spot, then write a bug report with acceptance criteria into the repository, mirrored to the issue tracker, and file its bead triaged by type, area, priority, and size. Also triages the backlog — `triage`, with an area to narrow it or an epic to triage that epic's deferred children, every open item whatever its type — and creates a followup epic from the items worth a batch.
+argument-hint: "[what went wrong, or a test run's report | triage [area | epic]]"
 allowed-tools:
   - Read
   - Glob
@@ -41,9 +41,11 @@ Read each when its step says to; none is loaded up front.
   at step 3 for the duplicate search and at step 9.
 - `../../../.codefall/shared/landing.md` — the branch, the commit, the push, and the pull request.
   Read at step 8.
-- `../../../.codefall/shared/triage.md` — what triage takes, whose an item is, how bad it is, which
-  area, how big the fix is, every field its bead carries, and followups. Read at step 6, and for the
-  triage mode.
+- `../../../.codefall/shared/triage.md` — what triage takes, whose an item is, where it goes, how
+  bad it is, which area, how big the fix is, every field its bead carries, followups, and the
+  epic's deferred children. Read at step 6, and for the triage mode.
+- `../../../.codefall/shared/decisions.md` — what a run decides, consults on, or records as a
+  human bead. Read at step 1.
 
 ## Scope — what is wrong, not why
 
@@ -276,35 +278,42 @@ Each lands per `../../../.codefall/shared/landing.md`.
 
 ## Triage mode
 
-`/codefall-report triage`, with an area after it to narrow the list, walks the backlog in Beads and
-writes no document. Read `../../../.codefall/shared/triage.md` first; it holds every rule this mode
-applies, and *What triage takes* is the first of them: every open item is triaged, whatever its
-type and whatever its title calls it. Nothing is asked per item; the whole list is proposed once
-and what the person takes is applied.
+`/codefall-report triage`, with an area after it to narrow the list, or an epic to triage that
+epic's deferred children, walks the backlog in Beads and writes no document. Read
+`../../../.codefall/shared/triage.md` first; it holds every rule this mode applies, and *What
+triage takes* is the first of them: every open item is triaged, whatever its type and whatever its
+title calls it. Nothing is asked per item; the whole list is proposed once, with the reason each,
+and applied per `../../../.codefall/shared/decisions.md`; a person present may change any line.
 
 1. `bd dolt pull`. List the backlog: `bd list -s open,deferred --no-parent --exclude-type epic
-   --sort priority --limit 0`, and with an area, `-l area:<name>`. Say how many items there are and
-   how many lack a triage field: no `area:` label, no `size` in metadata, or a type that does not
-   fit the description, `task` on a title that says something is wrong, `bug` on a request for
-   something that never existed.
+   --sort priority --limit 0`, and with an area, `-l area:<name>`; with an epic,
+   `bd list --parent <epic> -s open,deferred --limit 0`, the landed bead and `human` beads aside.
+   Say how many items there are and how many lack a triage field: no `area:` label, no `size` in
+   metadata, or a type that does not fit the description, `task` on a title that says something is
+   wrong, `bug` on a request for something that never existed.
 2. **Fill in what is missing.** For each item lacking a field, propose the field with its reason in
-   a line, type included, the whole list in one block, and apply what the person takes with `bd
-   update`. A type the person set themselves stays. Two spellings of one area are named and merged
-   on yes with `bd label add` and `bd label remove`.
+   a line, type included, the whole list in one block, and apply it with `bd update`. A type the
+   person set themselves stays. Two spellings of one area are named and merged with `bd label add`
+   and `bd label remove`.
 3. **Find duplicates.** Items whose titles or descriptions describe one thing are listed in pairs;
-   on yes the later one is closed with `-r "duplicate of <id>"` and its evidence commented on the
-   one kept.
+   the later one is closed with `-r "duplicate of <id>"` and its evidence commented on the one
+   kept.
 4. **Re-triage priority.** An item whose priority does not fit its description under the shared
-   scale is named with the priority proposed. Nothing changes unasked.
-5. **Offer a followup.** When an area holds more than a few open items, offer to create a followup
-   epic from the ones the person picks, per *Followups* in the shared reference:
-   `bd create "<area> followup" --id <prefix>-FOLLOWUP-<area>-NNN -t epic`, NNN the next number
-   free under that area, then `bd update <bead> --parent <followup>` for each item taken, and
-   `bd dolt push`. Say what was not taken and why it stays.
-6. **Report.** The counts before and after, every field changed, every duplicate closed, the
-   followup with its children, and `bd dolt push`. **End with one command**:
-   `/codefall-implement <followup>` when one was created, else `/codefall-fix <bead>` naming the
-   highest-priority `size=fix` item.
+   scale is named with the priority proposed, and set.
+5. **Give an epic's children a disposition.** With an epic, each deferred child gets one of the
+   dispositions under *The epic's deferred children* in the shared reference: kept for a later
+   round, moved beside the epic or into its area's followup, closed as a duplicate, or closed as
+   not an issue, each with its reason. Which kept children the next round builds is
+   `codefall-implement`'s to pick at its round boundary.
+6. **Create a followup.** When an area holds more than a few open items beside every epic, create
+   a followup epic from the ones worth a batch, the P1 to P3 items of that area, per *Followups*
+   in the shared reference: `bd create "<area> followup" --id <prefix>-FOLLOWUP-<area>-NNN -t
+   epic`, NNN the next number free under that area, then `bd update <bead> --parent <followup>` for
+   each item taken, and `bd dolt push`. Say what was not taken and why it stays.
+7. **Report.** The counts before and after, every field changed, every duplicate closed, every
+   disposition, the followup with its children, and `bd dolt push`. **End with one command**:
+   `/codefall-implement <followup>` when one was created, `/codefall-implement <epic>` when an
+   epic was triaged, else `/codefall-fix <bead>` naming the highest-priority `size=fix` item.
 
 ## Rules
 
@@ -323,6 +332,6 @@ and what the person takes is applied.
 - **Unresolved is recorded** as open questions, never dropped.
 - **Never overwrite a file that has drifted.** Show the difference and ask.
 - **Every report files one bead**, triaged per the shared reference, and the triage mode changes a
-  bead only on the person's word.
-- **The triage mode writes no document**, skips no item for its type, and creates a followup only
-  from the items the person picked.
+  bead per `decisions.md`, with the reason each.
+- **The triage mode writes no document**, skips no item for its type, and creates a followup from
+  the items worth a batch, which a person present may change.

@@ -11,6 +11,7 @@ allowed-tools:
   - Edit
   - Bash
   - Agent
+  - Skill
 ---
 
 # Fix
@@ -46,7 +47,9 @@ Read each when its step says to; none is loaded up front.
   `../../../.codefall/shared/run-worker.sh`, `../../../.codefall/shared/consult-prompt.md`,
   `../../../.codefall/shared/consult.schema.json`.
 - `../../../.codefall/shared/triage.md` — the fields a triaged bead carries, and the size that says
-  an item is this verb's. Read at step 2 with no argument, and at step 6 for a discovered bug.
+  an item is this verb's. Read at step 2 with no argument, and at step 6 for a discovered item.
+- `../../../.codefall/shared/decisions.md` — what a run decides, consults on, or records as a
+  human bead. Read at step 1.
 
 ## Scope — one bead, tier 0
 
@@ -83,7 +86,8 @@ this verb after it, and stop: `not_installed` is `brew install beads`, `not_init
 `behind` above `0` or `refresh=stale`: say so and run `/codefall-refresh` before continuing.
 `refresh=undeclared` names `/codefall-equip`. Keep the `test=` line for step 3.
 
-Read the project's `AGENTS.md`, root and scoped. **Never run the other remedies.**
+Read the project's `AGENTS.md`, root and scoped, and `../../../.codefall/shared/decisions.md`.
+**Never run the other remedies.**
 
 ### 2. Establish the bead
 
@@ -123,7 +127,9 @@ up.
 
 ### 4. The one confirmation
 
-Show everything the run will do, in one block, and wait. Nothing is written before a yes.
+Show everything the run will do, in one block, and wait. Nothing is written before a yes, and
+after it nothing asks: a question is decided, consulted on, or recorded as a human bead per
+`../../../.codefall/shared/decisions.md`.
 
 - **The bead**: its ID, title, and body — the reproduction, the cause with its file and line, the
   acceptance criteria, and the test case when there is one. For an existing bead, what changes in it,
@@ -156,21 +162,25 @@ request, per *Workers in another harness* in `workers.md`.
 
 **Verify the worker, never trust it**: the branch is on the remote, the pull request exists, and the
 bead is done per `../codefall-implement/reference/done.md`. A failure is consulted on and retried
-once, per `workers.md`; a second one goes to the user.
+once, per `workers.md`; a second one is consulted on, and the run stops at the report with the
+analysis, the bead unclaimed and its notes carrying the failure.
 
 Comment the pull request link on the bead, close it with what was verified, check any `plan`
 discovery and record any amendment per `../codefall-implement/reference/workers.md`, file the
-discovered work as `discovered-from` beads, a bug among it triaged per
-`../../../.codefall/shared/triage.md`, and `bd dolt push`.
+discovered work as `discovered-from` beads, each triaged per
+`../../../.codefall/shared/triage.md`, settle a `plan-revision` bead by running the
+`codefall-plan` skill on the document through the `Skill` tool for its Revise mode, and
+`bd dolt push`.
 
 ### 7. Report and stop
 
 Do not merge, and do not wait for the merge.
 
 Report the bead and how it was established, the cause for a bug, the pull request and its branch,
-what the close verified, discovered work filed, every consult, and the worktree with the cleanup
-offer. Anything decided here that no bead, PR, or document holds goes in a `bd comment` on the
-bead, and the report says it is safe to `/clear`. **End with what the user does next**: review and
+what the close verified, discovered work filed, every consult, every decision and human bead per
+`decisions.md`, and the worktree with the cleanup offer. Anything decided here that no bead, PR,
+or document holds goes on the bead's notes per `decisions.md`, and the report says it is safe to
+`/clear`. **End with what the user does next**: review and
 merge the pull request, then `/codefall-test <area>/<slug>` when the bead named a case.
 
 ## Rules
@@ -179,8 +189,10 @@ merge the pull request, then `/codefall-test <area>/<slug>` when the bead named 
 - **One confirmation, and nothing written before it.**
 - **A person merges every code PR to `main`; fix performs none.**
 - **A ticket must not change under someone holding it.**
-- **Scope is exactly the bead.** A tangent becomes a `discovered-from` bead, a bug among them
-  triaged per the shared reference, never a change in passing.
+- **Scope is exactly the bead.** A tangent becomes a `discovered-from` bead, each triaged per the
+  shared reference, never a change in passing.
+- **After the one confirmation, nothing asks.** A question is decided, consulted on, or recorded
+  as a human bead, per `decisions.md`.
 - **Tests are part of done.** A test case the criteria name is written first, from the criteria alone.
 - **A test harness is never set up here.** An unequipped bead is not started.
 - **Verify the worker, never trust it.**
