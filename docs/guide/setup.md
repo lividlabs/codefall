@@ -42,7 +42,7 @@ records one hard-to-reverse decision and the reasons for it.
 `codefall create` makes the directory for a new project, then sets it up:
 
 ```sh
-codefall create trip-planner --remote git@github.com:acme/trip-planner.git
+codefall create todo --remote git@github.com:acme/todo.git
 ```
 
 It creates the directory and its git repository, commits a `README.md` and a `.gitignore`, runs

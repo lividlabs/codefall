@@ -5,7 +5,7 @@ asking the reporter anything again. Use it when something that should work does 
 place for a bug that a [spec](specify.md) holds for a feature.
 
 ```
-/codefall-report Exporting a trip with no departure date shows a blank page.
+/codefall-report Checking off the last task still shows one task left.
 ```
 
 ## What it asks
@@ -54,7 +54,7 @@ issue, so the issue links to the files by their path in the repository.
 
 The report ends with acceptance criteria: testable statements of the expected behavior, written in
 [EARS](specify.md#how-acceptance-criteria-are-written), such as
-`WHEN a traveler exports a trip with no departure date, the system SHALL name the missing field`.
+`WHEN the user checks off the last open task, the system SHALL show that no tasks are left`.
 A criterion a spec already states cites it, as `(SPEC-003-REQ-01-AC-02)`, instead of restating it.
 These criteria become the fix's criteria and its regression test.
 
@@ -92,7 +92,7 @@ carries the fix closes the issue when you merge it.
 ```
 /codefall-report triage
 /codefall-report triage checkout
-/codefall-report triage trips-PLAN-007
+/codefall-report triage todo-PLAN-007
 ```
 
 With `triage`, the skill writes no report. It walks every open item in Beads, or one area's, bugs

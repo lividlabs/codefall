@@ -8,9 +8,9 @@ opens a pull request. Run it once a plan's beads exist.
 /codefall-implement PLAN-007
 ```
 
-The examples on this page continue the trip planner from the [README](../../README.md#how-it-works).
-PLAN-007 created an *epic*, `trips-PLAN-007`, which is the bead that groups the plan's tasks, and two
-task beads, `trips-PLAN-007-T1` and `trips-PLAN-007-T2`. A *bead* is one task in Beads, the tracker
+The examples on this page continue the to-do list from the [README](../../README.md#how-it-works).
+PLAN-007 created an *epic*, `todo-PLAN-007`, which is the bead that groups the plan's tasks, and two
+task beads, `todo-PLAN-007-T1` and `todo-PLAN-007-T2`. A *bead* is one task in Beads, the tracker
 that stores its data in your git repository.
 
 ## What can you point it at?
@@ -19,8 +19,8 @@ The argument decides how much work the run takes on:
 
 | Argument | What the run builds |
 | --- | --- |
-| A bead, such as `trips-PLAN-007-T1` | That bead alone |
-| An epic, such as `trips-PLAN-007` | Every task under the epic, until none is left to build |
+| A bead, such as `todo-PLAN-007-T1` | That bead alone |
+| An epic, such as `todo-PLAN-007` | Every task under the epic, until none is left to build |
 | A plan, such as `PLAN-007` | The plan's epic, the same as naming the epic |
 | Nothing | Nothing yet: the run shows the work that is ready, grouped by epic, and asks |
 
@@ -112,7 +112,7 @@ This is how Beads itself defines a closed bead, and it lets the next task in a s
 as the previous task's branch is pushed.
 
 Merging is tracked separately, by *gates*. The run creates one extra bead under the epic, the
-*landed bead*, named `trips-PLAN-007-MERGED`. Every pull request the run opens adds a gate to it,
+*landed bead*, named `todo-PLAN-007-MERGED`. Every pull request the run opens adds a gate to it,
 and the landed bead cannot close until every gated pull request has merged. Because the epic cannot
 close while the landed bead is open, the epic stays open until you have merged everything. At the
 start of the next session, `bd gate check` turns your merges into bead state.
@@ -149,18 +149,18 @@ Every skill in the delivery prints the same progress line when it starts and whe
 line shows the epic, the round, and how many of the epic's beads are closed:
 
 ```
-trips-PLAN-007 · round 1 · 2/3 ███████████░░░░░░
+todo-PLAN-007 · round 1 · 2/3 ███████████░░░░░░
 ```
 
 Here both tasks are closed, and the third bead is the landed bead, which closes when you merge. Each
-skill also adds one line to the epic's notes when it finishes, so `bd show trips-PLAN-007` reads as
+skill also adds one line to the epic's notes when it finishes, so `bd show todo-PLAN-007` reads as
 the history of the delivery, including how many decisions it made and which beads carry them, and
 every question it left for you:
 
 ```
 round 1 (implement) [2026-10-08]: 2 tasks built, PRs #101 #102, 1 decision on T2
 round 1 (review) [2026-10-08]: 3 fixed, 2 filed as children
-round 1 (test) [2026-10-08]: FAIL 2/7, 1 child filed, 1 question (trips-human-export-format)
+round 1 (test) [2026-10-08]: FAIL 2/7, 1 child filed, 1 question (todo-human-export-format)
 round 1→2 boundary [2026-10-08]: batch 3 (P2 3); closed 1 not an issue; continue
 ```
 

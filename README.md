@@ -3,10 +3,6 @@
 </p>
 
 <p align="center">
-  A workflow for building software with coding agents, from an idea to a merged pull request.
-</p>
-
-<p align="center">
   <a href="https://github.com/lividlabs/codefall/releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/lividlabs/codefall"></a>
   <a href="https://github.com/lividlabs/codefall/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/lividlabs/codefall/actions/workflows/ci.yml/badge.svg"></a>
   <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/github/license/lividlabs/codefall"></a>
@@ -18,24 +14,48 @@
 
 ## What is Codefall?
 
-A coding agent such as Claude Code or Codex can build a feature in an afternoon. Left to itself,
-though, it forgets what it decided when the session ends, starts building before anyone has agreed
-on what to build, and reviews its own work. Codefall gives the agent a process that addresses all
-three.
+Codefall is an open source toolkit/meta-harness/software factory that gives coding agents a
+software development process. It provides the process as skills the agent runs, a template for
+each document the process produces, and an architecture to start a new project on, recorded as
+architecture decision records (ADRs).
+Each skill leaves its result in your repository as a document, a task, or a pull request, where the
+next skill, and the next session, reads it.
 
-Codefall has two parts. The `codefall` command-line tool installs a set of *skills* into your
-project: instructions the coding agent follows when you type a slash command such as
-`/codefall-specify`. The skills do the work, and each one leaves its result in your repository,
-where the next one reads it.
+The `codefall` command installs the skills into your project for the coding agents it uses: Claude
+Code, Codex, OpenCode, Antigravity, or Muse. A *skill* is a set of instructions the agent follows
+when you type its slash command, such as `/codefall-specify`. The skills take a feature from an idea
+to a pull request you merge, and other skills start a new project, write up a bug, draw a mockup,
+and keep the install current. [How it works](#how-it-works) walks one feature through them;
+[Skills](#skills) lists them all.
 
-With Codefall, you get:
+### Why spec-driven development?
 
-- Requirements and plans written as Markdown files in your repository, reviewed and merged like code.
-- Tasks tracked in a dependency graph stored in git, so any session can pick up where the last one
-  stopped.
-- One branch and one pull request per task.
-- Reviews by a different agent from the one that wrote the code.
-- Tests written from the requirements, not from the code they test.
+Codefall is a kit for *spec-driven development*: you and the agent agree in writing on what to build
+before the agent builds it, and the written record drives every step after. Working this way:
+
+- **The record prevents context decay.** A coding agent forgets what it decided when its context
+  ends. Codefall writes each decision to a document, a task in a dependency graph stored in git, or
+  a pull request, so the next session starts from the record rather than from memory.
+- **A lifecycle replaces vibe coding.** A feature goes through requirements, a design, tasks, code,
+  review, and test, in that order. You approve the requirements, the design, and the start of the
+  build, and the rest runs on its own.
+- **Decision records catch architectural drift.** Scaffold records a new project's architecture as
+  ADRs and a linter that enforces its boundaries. Plan reads the ADRs before it designs a change and
+  records each new hard-to-reverse choice as another, and review reads the code against them.
+- **Every round catches and records bugs.** A second agent reviews each change, tests are written
+  from the acceptance criteria rather than from the code, and what either finds is filed as a task,
+  triaged, and fixed in the next round.
+- **The skills guide the agent without constraining it.** A skill says what to produce and in what
+  order, and leaves how to the agent's judgment. A project adds its own procedure to any skill, and
+  the agent runs a skill on its own when the work calls for it.
+
+Codefall is one of several spec-driven kits. GitHub's [Spec Kit](https://github.com/github/spec-kit)
+takes a feature from a project constitution through a spec, a plan, and tasks to code, in the agent
+you already use. [Kiro](https://kiro.dev/), from AWS, builds specs into its own IDE and command line
+as requirements, design, and tasks files. [Cascadia](https://github.com/docraticmethod/cascadia)
+compiles requirements into a strategy, an architecture, and instructions for the agent to build
+from. Codefall keeps the whole lifecycle in the repository: the architecture and its ADRs, the task
+graph, the reviews, the test results, and the bug reports, beside the specs and plans.
 
 ## Installation
 
@@ -111,7 +131,7 @@ you can take or decline; `/codefall-upgrade adopt` offers the ones you declined 
 A new project takes three steps. First, create the repository:
 
 ```sh
-codefall create trips
+codefall create todo
 ```
 
 `create` makes the directory and a git repository with a first commit, then runs `init` there.
@@ -119,11 +139,12 @@ codefall create trips
 Next, open your coding agent in the new directory and describe what you are building:
 
 ```
-/codefall-envision A trip planner where travelers build an itinerary and share it.
+/codefall-envision Todo, a to-do list where you add tasks and check them off.
 ```
 
-The skill asks about the problem, who has it, and what is still undecided, then writes a *vision*,
-a short document about what the project is for, to `docs/visions/VISION-001-trip-planner.md`.
+The skill asks what is wrong, who it affects, and what is still undecided, then writes a *vision*,
+a short document that says what the project is for and what nobody has decided yet, to
+`docs/visions/VISION-001-todo.md`.
 
 Last, set up the architecture:
 
@@ -162,47 +183,53 @@ skills up to date. [Setting up a project](docs/guide/setup.md) lists everything 
 
 ## How it works
 
-Codefall's skills take a feature through a fixed sequence. Each skill writes something that the
-next one reads:
+Codefall's skills take a feature through three steps, and you merge the result. Each skill writes
+something that the next one reads:
 
 ```
-specify → plan → implement → review and test → you merge
+specify → plan → implement → you merge
 ```
 
-Here is one feature going through it. Suppose your product is a trip planner, and you want
-travelers to be able to export their itinerary.
+Here is one feature going through it. Suppose your product is Todo, a to-do list, and you want
+users to be able to export their list as a file.
 
 **1. Say what to build.** In your coding agent, type:
 
 ```
-/codefall-specify Travelers can export a trip itinerary as a file.
+/codefall-specify Users can export their to-do list as a file.
 ```
 
 The skill interviews you about the feature: who uses it, what should happen, and what should happen
 when something goes wrong. It then writes a *spec*, a document that lists the feature's
-requirements, to `docs/specs/SPEC-003-itinerary-export.md`. Each requirement carries *acceptance
+requirements, to `docs/specs/SPEC-003-list-export.md`. Each requirement carries *acceptance
 criteria*: testable statements of what the finished feature must do. They are written in
 [EARS](https://alistairmavin.com/ears/) (Easy Approach to Requirements Syntax), which limits each
 criterion to a few fixed sentence patterns:
 
 ```
-SPEC-003-REQ-01-AC-01  WHEN a traveler selects export, the system SHALL produce a file containing the itinerary.
-SPEC-003-REQ-01-AC-02  IF the trip is missing a departure date, THEN the system SHALL name the missing field.
+SPEC-003-REQ-01-AC-01  WHEN the user selects export, the system SHALL produce a file listing every task and whether it is done.
+SPEC-003-REQ-01-AC-02  IF the list is empty, THEN the system SHALL say so instead of producing an empty file.
 ```
 
-In a project that uses GitHub Issues, each requirement also becomes an issue. The spec arrives as
-its own pull request for you to merge.
+In a project that uses GitHub Issues, each requirement also becomes an issue. When a requirement
+needs a screen, the skill runs `/codefall-mock-up` itself and puts the mockup beside the spec. The
+spec arrives as its own pull request for you to merge.
 
-**2. Decide how to build it.** Type `/codefall-plan`. The skill reads the spec and the code, then
-writes a plan, a short software design document, to `docs/plans/PLAN-007-itinerary-export.md`. When
-the feature looks like more than one delivery's worth of work, it says so and offers to write one
-plan per shippable increment instead, each built and merged on its own. The plan ends with a table
-of tasks and the order they depend on:
+**2. Decide how to build it.** Type:
+
+```
+/codefall-plan SPEC-003
+```
+
+The skill reads the spec and the code, then writes a *plan*, a short software design document, to
+`docs/plans/PLAN-007-list-export.md`. When the feature looks like more than one delivery's worth of
+work, it says so and offers to write one plan per shippable increment instead, each built and
+merged on its own. The plan ends with a table of tasks and the order they depend on:
 
 ```
 | ID | Task                                 | Depends on |
 |----|--------------------------------------|------------|
-| T1 | Add the itinerary export format      | —          |
+| T1 | Add the list export format           | —          |
 | T2 | Add the export button and download   | T1         |
 ```
 
@@ -211,30 +238,77 @@ which task waits on which, so the agent always knows what is ready to start. A s
 plan document and gets beads alone. Beads holds the tasks in every project; the issue tracker only
 holds copies of specs and bug reports, and a project can choose to keep none.
 
-**3. Build it.** Type `/codefall-implement`. The skill shows you how it will build the plan, and
-after you approve, it works through the tasks without stopping. Each task gets its own branch, its
-own tests, a check against its acceptance criteria, and a pull request. The skill reports progress
-in one line:
+**3. Build it.** Type:
 
 ```
-trips-PLAN-007 · round 1 · 2/3 ███████████░░░░░░
+/codefall-implement PLAN-007
 ```
 
-**4. Check it.** `/codefall-review` has a second agent read the changes and list the problems it
-finds. `/codefall-test` runs the project's tests, including test cases the agent works through step
-by step in a browser or a terminal. Both end by asking which problems to fix, and the fixes you pick
-go back through `implement`.
+The skill reads the task graph and sorts the tasks into *waves*: every task whose dependencies are
+met goes into the same wave, and the tasks in a wave are built at the same time. It shows you the
+waves, and after you approve, it runs to the end without asking again. Each task is built in its
+own worktree with its own tests, checked against its acceptance criteria, and opened as a pull
+request. A bug or a loose end a task turns up is filed as a bead when the task reports it, never
+fixed in passing. The skill reports progress in one line:
 
-**5. Merge it.** The skills stop at open pull requests. You review and merge them on GitHub.
+```
+todo-PLAN-007 · round 1 · 2/3 ███████████░░░░░░
+```
 
-Some skills work outside this sequence. `/codefall-envision` writes down a rough idea before it is
-ready to specify: the problem, who has it, and the questions nobody has answered yet.
-`/codefall-report` writes a bug report, tries to reproduce the bug, and copies it to GitHub Issues
-when the project uses them; with `triage` it sorts the backlog by area and priority and cuts an epic
-from the items you pick.
-`/codefall-fix` handles a small change in one run by planning a single task and building it.
-`/codefall-mock-up` adds a mockup of a screen to the repository, drawn to match the app's existing
-design.
+When the last wave is built, the skill runs a *round* of checks on the whole delivery. It calls
+`/codefall-review`, which has a second agent, in another coding harness when the project has one
+configured, read the changes and file each problem it finds as a bead. It then calls
+`/codefall-test`, which runs the project's test suites and the test cases written from the
+acceptance criteria, and files what fails the same way. Then it triages everything filed under the
+delivery, picks the blockers and the important findings, and any minor one it judges worth the
+round, as the next batch, and loops: it builds the batch in waves, reviews, tests, and triages
+again. The loop ends when a round leaves nothing worth another, with every finding fixed or set
+aside with a reason and the last test run passed, or when the skill judges that another round
+would not bring the delivery closer to done, and says why. A delivery takes at least three rounds,
+and ten is the ceiling, which you can raise when you approve the build.
+
+**4. Merge it.** The skills stop at open pull requests. You review and merge them on GitHub.
+
+### Fixing a bug
+
+A bug takes a shorter path with the same shape: a document, a task, and a pull request.
+
+```
+report → fix → you merge
+```
+
+**1. Write it up.** Type:
+
+```
+/codefall-report Checking off the last task still shows one task left.
+```
+
+The skill interviews you for the steps, what you expected, what happened instead, and any
+screenshots or output you have, then offers to reproduce the bug in the running app. It writes a
+*bug report*, with the evidence beside it, to `docs/bugs/BUG-012-last-task-count.md`, including
+acceptance criteria for the fix, and files one bead for it, triaged by area, priority, and size. In
+a project that uses GitHub Issues, the report becomes an issue too. The report arrives as its own
+pull request for you to merge.
+
+**2. Fix it.** Type:
+
+```
+/codefall-fix BUG-012
+```
+
+The skill finds the cause, confirms the one task with you, and builds it in the same run: a
+worktree, a test that covers the bug, the fix, and a pull request. When the change turns out to
+need a design document, an ADR, or more than one task, it stops and names `/codefall-plan`
+instead. You review and merge the pull request.
+
+Some skills work outside both paths. `/codefall-envision` captures an idea before anyone specifies
+or builds it. From a sentence, a pitch document, or a folder of mockups, it writes a vision: what is
+wrong, who it affects, the rough shape of an answer, and what nobody has decided yet, kept as open
+questions rather than invented. `/codefall-mock-up` adds a mockup of a screen to the repository,
+drawn to match the app's existing design. `/codefall-report triage` sorts the backlog by area and
+priority and cuts an epic from the items you pick. `/codefall-review` and `/codefall-test` also run
+on their own, on a pull request, a document, or the whole project, and end by asking which problems
+to fix.
 
 Two rules hold throughout. First, every step's result is a file, a bead, or a pull request, so you
 can clear the agent's context between steps and lose nothing. Second, no skill merges code, and in
@@ -244,16 +318,24 @@ merge or push to `main`.
 
 ## Skills
 
+The workflow is opinionated about what each step leaves behind and flexible about where you start.
+Every skill runs on its own, at any point. A change too small for a spec goes through plan and
+implement, or through fix in one run, and a small plan is a task table with no document. To have a
+pull request, a branch, or a set of files looked at, call review. A project adds its own procedure
+to any skill, such as a question it always asks or a step that runs after writing, in
+`.codefall/skills/<skill>/CUSTOMIZE.md`. [`customizations.md`](extensions/shared/customizations.md)
+says what a customization may change.
+
 | Skill | What it does | Writes to |
 | --- | --- | --- |
 | **Ideas and requirements** | | |
-| [`/codefall-envision`](docs/guide/envision.md) | Writes down an idea: the problem, who has it, and the open questions. | `docs/visions/` |
+| [`/codefall-envision`](docs/guide/envision.md) | Turns an idea into a vision before anyone specifies or builds it: what is wrong, who it affects, the rough shape of an answer, and what nobody has decided yet. Takes a sentence, a pitch document, or a folder of mockups. | `docs/visions/` |
 | [`/codefall-specify`](docs/guide/specify.md) | Turns a feature into requirements with acceptance criteria, copied to GitHub Issues when the project uses them. | `docs/specs/` |
 | [`/codefall-report`](docs/guide/report.md) | Writes a bug report, tries to reproduce the bug, and copies it to GitHub Issues when the project uses them. With `triage`, sorts the backlog and cuts an epic from the items you pick. | `docs/bugs/`, Beads |
 | [`/codefall-mock-up`](docs/guide/mock-up.md) | Imports or draws a mockup of a screen that matches the app's design. | `docs/mockups/` |
 | **Building** | | |
 | [`/codefall-plan`](docs/guide/plan.md) | Writes a software design document for the change, breaks the work into tasks with dependencies, and records hard-to-reverse decisions as ADRs. | `docs/plans/`, Beads |
-| [`/codefall-implement`](docs/guide/implement.md) | Builds each ready task with its tests and opens a pull request for it. | pull requests |
+| [`/codefall-implement`](docs/guide/implement.md) | Builds the tasks in waves, each with its tests and a pull request, then reviews, tests, and triages the result in rounds until the delivery is done. | pull requests |
 | [`/codefall-fix`](docs/guide/fix.md) | Plans and builds one small change in a single run. | a pull request |
 | **Checking** | | |
 | [`/codefall-review`](docs/guide/review.md) | Has a second agent review code or a document, then applies the fixes you accept. | `.codefall/reviews/` |
@@ -351,8 +433,10 @@ project to its profiles.
 - **Profile:** the templates and decisions scaffold applies to one kind of code, such as Go.
 - **Skill:** a set of instructions a coding agent follows when you type its slash command.
 - **Spec:** a document that lists a feature's requirements and their acceptance criteria.
-- **Vision:** a short document about what a project or feature is for: the problem, who has it,
-  and what is still undecided.
+- **Spec-driven development:** agreeing in writing on what to build before an agent builds it, with
+  the written record driving each step after.
+- **Vision:** a short document about what a project or feature is for: what is wrong, who it
+  affects, the rough shape of an answer, and what is still undecided.
 
 ## Contributing
 

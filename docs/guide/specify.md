@@ -5,7 +5,7 @@ feature must do, precisely enough that another session can build it without aski
 before planning any feature larger than a small fix.
 
 ```
-/codefall-specify Travelers can export a trip itinerary as a file.
+/codefall-specify Users can export their to-do list as a file.
 ```
 
 The skill interviews you, drawing the mockup while the questions are still open, checks whether the
@@ -20,7 +20,7 @@ A spec holds one cohesive feature, divided into *requirements*. Each requirement
 someone can use, written as a user story with its own acceptance criteria:
 
 ```
-As a traveler, I want to export my itinerary, so that I can share it with people who don't use the app.
+As a user, I want to export my to-do list, so that I can keep a copy outside the app.
 ```
 
 A requirement is the unit somebody picks up and builds, so each one becomes its own GitHub issue
@@ -37,9 +37,9 @@ Rolls-Royce in 2009 and used here unchanged. EARS limits each criterion to six s
 with the clauses always in the same order:
 
 ```
-The system SHALL order exported segments by departure time
-WHEN a traveler selects export, the system SHALL produce a file containing the itinerary
-IF the trip is missing a departure date, THEN the system SHALL name the missing field
+The system SHALL order exported tasks by the date they were added
+WHEN the user selects export, the system SHALL produce a file listing every task and whether it is done
+IF the list is empty, THEN the system SHALL say so instead of producing an empty file
 WHILE an export is in progress, the system SHALL show progress and allow cancellation
 ```
 
@@ -133,7 +133,7 @@ sent to them, and never arrive with a suggested answer either: the skill asks wh
 writes down what you say.
 
 **Your project's own questions.** A project can give the skill questions it should always ask, such
-as which travel policy a feature falls under, in `.codefall/skills/codefall-specify/CUSTOMIZE.md`.
+as which of the project's roles can see it, in `.codefall/skills/codefall-specify/CUSTOMIZE.md`.
 They are asked in the interview beside the skill's own.
 
 ## Statuses

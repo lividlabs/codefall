@@ -33,6 +33,38 @@ document codefall installs:
 - **Exact steps where the operation is fragile; the goal and its reasons where several readings are
   valid.** A mechanical test is applied mechanically, so write one only where no judgment is wanted.
 
+## How prose is written
+
+Every file a person reads here is written in the classic style Steven Pinker describes in *The
+Sense of Style* (2014): the writer has seen something and shows it to the reader. Two documents
+show the result, and are read before writing a page of either kind:
+[mise's getting-started page](https://mise.jdx.dev/getting-started.html) for a guide, and the
+opening of
+[Better Code and Gardens](https://xddmohl7mf56oiaps45dm6vtoouoxhxkkpocwzuskmwg6mhzggea.ocap.site/)
+for a reference. These hold for the README, the guide, the ADRs, the decision log, the text of a
+skill, and pull request bodies. The banned words in [`extensions/AGENTS.md`](extensions/AGENTS.md)
+apply to all of them.
+
+- **State the fact; do not announce it, hedge it, or comment on it.** No "note that", "it is
+  important to", "in order to", "essentially", "arguably", "simply". A sentence that says what the
+  next sentence will do is deleted, and the next sentence is kept.
+- **Write for a reader who is intelligent and does not know what you know.** A term is defined the
+  first time it appears, in the same sentence and set in italics, and an abbreviation is spelled out
+  there. One thing has one name throughout a document, because a synonym introduced for variety
+  reads as a second thing. Where a rule is abstract, an example follows it.
+- **A sentence names who does what.** Concrete nouns and active verbs: "the skill writes a spec",
+  not "a spec is produced"; "plan decides", not "plan makes a decision". A noun made from a verb,
+  "the review process", "the implementation of", goes back to its verb.
+- **One idea per sentence, old before new, light before heavy.** The subject stays near its verb,
+  what the reader already knows comes first, and the long or new element comes last. Two ideas
+  joined by a semicolon are two sentences.
+- **A paragraph has a topic and a point.** It opens with what it is about, keeps that in subject
+  position from sentence to sentence, and ends when its point is made. A list holds parallel items,
+  each in the same grammatical shape.
+- **A guide opens with what the reader will have done by the end**, then gives the steps in order,
+  each with its command and what it prints. Background and reasons go after the steps or into a
+  linked document. A reference opens with its scope and says where its sources are thin.
+
 ## How codefall works
 
 `codefall init` installs the verbs into each harness a project uses, and `.codefall/` beside them
