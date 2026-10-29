@@ -72,7 +72,7 @@ rules about never editing or interpreting what the user brought. Then go to
 docs/mockups/<slug>/
 ```
 
-`<slug>` names the **surface** — `booking-history`, `trip-share` — never the spec or the vision that
+`<slug>` names the **surface** — `task-list`, `settings` — never the spec or the vision that
 prompted it. One screen gets touched by several specs over its life and outlives all of them, so
 filing it under whichever spec arrived first makes the second one either duplicate it or reach into
 another spec's directory. `codefall-specify`'s SKILL.md carries the same rule for the same reason.
@@ -259,9 +259,9 @@ three answers:
 **For a spec.** If they named one, take it. Otherwise read `docs/specs/` and list what is there —
 identifier, title, and status — and let them pick:
 
-> SPEC-002 — Trip export (Ready)
-> SPEC-004 — Booking history (Ready, two requirements with `Mockup: pending`)
-> SPEC-005 — Share links (Draft)
+> SPEC-002 — List export (Ready)
+> SPEC-004 — Task reminders (Ready, two requirements with `Mockup: pending`)
+> SPEC-005 — Shared lists (Draft)
 
 Then read it. A spec answers most of what an interview would: the surface, who the consumer is, and
 what they observe when it works. Requirements whose Design notes say `Mockup: pending` are the ones

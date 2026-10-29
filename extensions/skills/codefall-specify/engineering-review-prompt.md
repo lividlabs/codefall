@@ -74,9 +74,9 @@ Your final message is exactly one JSON object, no prose around it:
 {"findings": [
   {"kind": "contradiction",
    "criteria": ["SPEC-004-REQ-02-AC-03", "SPEC-004-REQ-03-AC-01"],
-   "evidence": "src/accounts/decline.ts:41 deletes the account row; trips reference owner_id",
-   "reason": "a pending account can own trips and then be removed, which orphans them",
-   "question": "What happens to the trips and bookings of a pending account that is declined?"}
+   "evidence": "src/accounts/decline.ts:41 deletes the account row; lists reference owner_id",
+   "reason": "a pending account can own lists and then be removed, which orphans them",
+   "question": "What happens to the lists and tasks of a pending account that is declined?"}
 ]}
 ```
 

@@ -41,7 +41,7 @@ building developer tooling, evasive otherwise.
 
 **Some obligations have no story.** Audit logging, data retention, and authorization rules are
 written as a requirement with a system consumer, or as criteria under the requirement they
-constrain. Do not invent a traveler who wants their security events logged.
+constrain. Do not invent a user who wants their security events logged.
 
 ## Acceptance criteria are written in EARS
 
@@ -67,25 +67,25 @@ Worked:
 
 ```
 SPEC-003-REQ-01-AC-01
-  WHEN a traveler selects export on a trip that has a destination and both dates,
-  the system SHALL produce a file containing the destination, departure date,
-  return date, and traveler count
+  WHEN the user selects export on a list that has at least one task,
+  the system SHALL produce a file containing each task's title, whether it is
+  done, and the date it was added
 
 SPEC-003-REQ-01-AC-02
-  IF the trip is missing a departure or return date, THEN the system SHALL make
-  export unavailable and SHALL name the missing field
+  IF the list is empty, THEN the system SHALL say so and SHALL produce
+  no file
 
 SPEC-003-REQ-01-AC-03
   WHILE an export is in progress, the system SHALL show progress and SHALL allow
-  the traveler to cancel it
+  the user to cancel it
 
 SPEC-003-REQ-01-AC-04
-  The system SHALL order exported segments by departure time
+  The system SHALL order exported tasks by the date they were added
 ```
 
-- **Pick the pattern that fits, not the one that is familiar.** `WHEN a traveler views a trip THEN
+- **Pick the pattern that fits, not the one that is familiar.** `WHEN the user views a task THEN
   the system SHALL display its tags` is a ubiquitous requirement wearing an event. Write `The system
-  SHALL display a trip's tags`.
+  SHALL display a task's tags`.
 - **Failure behavior uses `IF … THEN`, not `WHEN`.** It keeps the failure paths visible as a group.
 - **Say "the system" or name the actual system**, consistently within a spec. Never drop the
   subject: a criterion without one is an observation, not an obligation.
@@ -106,7 +106,7 @@ Never quietly inflate the requirement, and never write a criterion nobody can ch
 
 ## Implementation vocabulary is prohibited
 
-`WHEN I POST to /api/trips` passes a syntax check and defeats the purpose. So does naming a table, a
+`WHEN I POST to /api/tasks` passes a syntax check and defeats the purpose. So does naming a table, a
 component, a queue, or a library. The test: could this criterion still be true after a complete
 rewrite of the implementation? If not, it is describing the solution.
 
@@ -146,7 +146,7 @@ An edge case with a decided answer is an `IF … THEN` criterion and belongs abo
 has an answer for is an **Open question**. What stays here is the third kind: something the user
 considered, decided not to specify behavior for, and wants on the record.
 
-> - A trip edited while its export is running — the exported file may be stale; not addressed in
+> - A list edited while its export is running — the exported file may be stale; not addressed in
 >   this spec
 
 Do not use this section as a worksheet. Edge cases raised during the interview get resolved into
@@ -157,12 +157,12 @@ criteria, open questions, or an out-of-scope line, and only what survives that g
 Optional, per spec. The domain nouns the specification uses, and what each one means.
 
 ```
-- **Trip** — a planned journey a traveler has saved
-- **Itinerary** — the traveler-readable rendering of a trip
+- **Task** — one thing the user means to do
+- **List** — the tasks a user keeps together under one name
 ```
 
-**Names and meanings only.** No fields, no types, no relations, no identifiers, no storage. `Trip
-has a departureDate: Date and belongs to a User` is a data model, and that is `codefall-plan`'s
+**Names and meanings only.** No fields, no types, no relations, no identifiers, no storage. `Task
+has a dueDate: Date and belongs to a List` is a data model, and that is `codefall-plan`'s
 output.
 
 Include the section when the feature involves data and the vocabulary needs settling. Omit it when
@@ -181,5 +181,5 @@ Optional, per spec. Calls made without asking, written down so the user can over
 Assumptions are for the defensible defaults underneath a question nobody would think to ask.
 Anything the interview should have surfaced belongs in the interview.
 
-> - Recipients read the itinerary outside the app; no recipient account is required
+> - Recipients read the exported file outside the app; no recipient account is required
 > - The existing share sheet is reused rather than replaced

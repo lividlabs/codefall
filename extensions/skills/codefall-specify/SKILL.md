@@ -105,8 +105,8 @@ drifted**: show the difference and ask; replace only on a yes, and on a no say n
 
 ## Mockups are keyed by surface, not by spec
 
-Mockups live at `docs/mockups/<slug>/`, the slug naming the surface — `booking-history`,
-`trip-share` — **never** a spec or a vision. Specs reference them by path under **Design notes**.
+Mockups live at `docs/mockups/<slug>/`, the slug naming the surface — `task-list`,
+`settings` — **never** a spec or a vision. Specs reference them by path under **Design notes**.
 Do not move a mockup into a spec directory, and do not create one.
 
 ## Cohesion and splitting
