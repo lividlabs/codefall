@@ -55,13 +55,18 @@ Work happens in git; commits carry the bead ID — `feat: add StageContext type
 (booking-PLAN-007-T1)`.
 
 ```bash
+bd update <bead> --set-metadata agent=opus effort=high
 bd comment <bead> "PR #101 · feat/booking-PLAN-007-T1-stage-context · built with opus/high"
 bd close <bead> -r "done: criteria R1,R2 verified, checks green, PR #101 open" --suggest-next
 bd dolt push
 ```
 
-A bead built in another harness names its agent as the `work` list writes it, `built with
-opencode:digitalocean/glm-5.3#max`, so the record says which harness and model wrote the code.
+The metadata holds the Agent and Effort cells of the gate's table as they ran, so
+`bd list --metadata-field agent=<agent>` finds every bead an agent built. The comment is the
+readable trail, and a retry at higher effort adds a second one. A bead built in another harness
+names its agent as the `work` list writes it, `agent=opencode:digitalocean/glm-5.3` and
+`built with opencode:digitalocean/glm-5.3#max`, so the record says which harness and model wrote
+the code.
 
 **The close is the engine.** Closing a bead removes it as a blocker, so `--suggest-next` prints the
 next wave straight from the graph. **Closed means done, not merged**; the merge is tracked by the
