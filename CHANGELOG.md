@@ -6,6 +6,13 @@ below were written by hand, before that was wired up.
 Tags are bare version numbers (`0.1.2`), not `v`-prefixed, so they match the `ref` the marketplace
 pins. A `v0.1.1` tag also exists from before that convention was settled.
 
+## [0.39.0](https://github.com/lividlabs/codefall/compare/v0.38.0...v0.39.0) (2026-10-29)
+
+
+### Features
+
+* **implement:** decide which model at what effort builds each bead ([#244](https://github.com/lividlabs/codefall/issues/244)) ([6572831](https://github.com/lividlabs/codefall/commit/65728315ffb1d6f110b3a0c855acf3fff52e451f))
+
 ## [0.38.0](https://github.com/lividlabs/codefall/compare/v0.37.1...v0.38.0) (2026-10-29)
 
 
