@@ -159,7 +159,7 @@ Your final message is exactly one JSON object, no prose around it:
                  "bug": true, "caused": false},
                 {"kind": "plan", "title": "…", "context": "…", "from": "{{BEAD_ID}}",
                  "blocks": "Tasks row T4"}],
- "amended": [{"document": "docs/specs/SPEC-003-trip-export.md", "section": "REQ-01",
+ "amended": [{"document": "docs/specs/SPEC-003-list-export.md", "section": "REQ-01",
               "summary": "appended AC-05: the declined-card path"}]}
 ```
 

@@ -17,8 +17,8 @@ The argument decides what one run covers:
 | `suites`, or nothing | Every test suite the project declares |
 | `changed` | The suites that the files changed since the default branch reach |
 | A suite name | That suite alone |
-| A case, such as `trips/export-itinerary` | That one test case |
-| An epic, such as `trips-PLAN-007`, or a plan, such as `PLAN-007` | Every test case the epic's beads name, plus the `changed` suites, on the epic's branch |
+| A case, such as `lists/export` | That one test case |
+| An epic, such as `todo-PLAN-007`, or a plan, such as `PLAN-007` | Every test case the epic's beads name, plus the `changed` suites, on the epic's branch |
 
 Before anything runs, the skill shows you what it will run, which commands it will use and where it
 found them, and where the report will go, and runs.
@@ -36,10 +36,10 @@ The confirmation says which of the three supplied the commands.
 
 A *test case* is one Markdown file that describes how to check a behavior through the running
 product. It lives at `<root>/test-cases/<area>/<slug>.md`, where `<root>` is the *testing root*:
-the directory `codefall init` asked you for, such as `testing/`. A case for itinerary export might
-be `testing/test-cases/trips/export-itinerary.md`.
+the directory `codefall init` asked you for, such as `testing/`. A case for list export might be
+`testing/test-cases/lists/export.md`.
 
-The file's path is its identifier, `trips/export-itinerary`, so no separate list of cases has to be
+The file's path is its identifier, `lists/export`, so no separate list of cases has to be
 kept in step with the directory. The file has two parts:
 
 - **The frontmatter** lists the *variants*, such as paying by card or by saved card, and the case

@@ -19,7 +19,7 @@ Two files per invocation, sharing one stem. Read at step 4, before the first wri
 ```
 
 `<target-key>` carries a slug wherever there is one to take: `pr-51-init-below-root` from a PR
-title, `SPEC-004-trip-sharing` from a document, `feat-booking-PLAN-007-T1-stage-context` from a branch,
+title, `SPEC-004-shared-lists` from a document, `feat-todo-PLAN-007-T1-export-format` from a branch,
 `src-fulfillment` from a path, `range-a1b2c3d-e4f5a6b` from a range's two short SHAs, the resolved
 common root for a prose target or `adhoc` when the files share none, and `uncommitted` when there
 is no subject at all. In full:

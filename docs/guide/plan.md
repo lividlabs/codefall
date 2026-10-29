@@ -15,7 +15,7 @@ building. With no argument, the skill asks what you want to plan.
 
 A run produces up to two things:
 
-- **A plan document** at `docs/plans/PLAN-007-itinerary-export.md`, when the change is big enough to
+- **A plan document** at `docs/plans/PLAN-007-list-export.md`, when the change is big enough to
   need one. It is a software design document: the approach, the architecture, the decisions and
   why they were made, and a table of tasks at the end. `/codefall-implement` and `/codefall-review`
   check the code against it, and it stays as the description of that part of the system until the
@@ -25,8 +25,8 @@ A run produces up to two things:
   start; those records are *dependency edges*. The beads and their edges together form the *task
   graph* that `/codefall-implement` works through.
 
-The examples on this page continue the trip planner from the [README](../../README.md#how-it-works):
-a spec, SPEC-003, asks for travelers to be able to export their itinerary.
+The examples on this page continue the to-do list from the [README](../../README.md#how-it-works):
+a spec, SPEC-003, asks for users to be able to export their list as a file.
 
 ## What it reads first
 
@@ -98,7 +98,7 @@ The task table is written before any bead exists. Each row has a local identifie
 
 | ID | Task                               | Depends on | Plan ref     |
 |----|------------------------------------|------------|--------------|
-| T1 | Add the itinerary export format    | —          | Data Models  |
+| T1 | Add the list export format         | —          | Data Models  |
 | T2 | Add the export button and download | T1         | Architecture |
 ```
 
@@ -116,13 +116,13 @@ updates the code using it, or merges the coupled tasks into one, and the plan sa
 When you approve the plan, each row becomes a bead, and the note above the table is rewritten:
 
 ```
-> Created in Beads 2026-10-08 as `trips-PLAN-007`, one bead per row as `trips-PLAN-007-Tn`.
+> Created in Beads 2026-10-08 as `todo-PLAN-007`, one bead per row as `todo-PLAN-007-Tn`.
 > This is the plan as last approved. Beads is authoritative, and a difference between the two is
 > reconciled by revising the plan.
 ```
 
-`trips-PLAN-007` is the *epic*: a bead that groups all of the plan's tasks. `trips` is the project's
-Beads prefix, so T1 becomes `trips-PLAN-007-T1`. A person can read these identifiers aloud and find
+`todo-PLAN-007` is the *epic*: a bead that groups all of the plan's tasks. `todo` is the project's
+Beads prefix, so T1 becomes `todo-PLAN-007-T1`. A person can read these identifiers aloud and find
 the row each one came from. Tier 0 has no epic.
 
 The table stays in the document after the beads exist, and from then on Beads is authoritative for
@@ -167,11 +167,11 @@ verified through the wired product, meaning the real interface running against t
 Plan writes the case into the bead's acceptance criteria:
 
 ```
-Case: trips/export-itinerary · modalities: spec
-1. Selecting export produces a file containing the itinerary.
+Case: lists/export · modalities: spec
+1. Selecting export produces a file listing every task and whether it is done.
    (SPEC-003-REQ-01-AC-01)
-2. Exporting a trip with no segments produces a file that says the trip is empty.
-   (derived from SPEC-003-REQ-01 — the empty case; the spec names only a trip with segments.)
+2. The exported file names the list and the date of the export.
+   (derived from SPEC-003-REQ-01 — the file header; the spec names only the tasks.)
 ```
 
 The criteria name three things:

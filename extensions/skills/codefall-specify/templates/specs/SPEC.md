@@ -1,7 +1,7 @@
 # SPEC-NNN: {Title}
 
 **Status:** Ready — {date}
-**Vision:** VISION-002-trip-sharing
+**Vision:** VISION-002-shared-lists
 **Issue:** #142
 
 [The Vision row is omitted when no vision framed this work. The Issue row is filled in once

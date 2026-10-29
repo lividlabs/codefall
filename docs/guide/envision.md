@@ -4,7 +4,7 @@
 what problem you want to solve but have not settled exactly what the product should do about it.
 
 ```
-/codefall-envision Travelers keep losing track of their bookings across airlines and hotels.
+/codefall-envision I keep to-do lists in three apps and a notebook, and I lose track of all of them.
 ```
 
 The result is a *vision*: a short, informal document that says what is wrong, who it affects, the

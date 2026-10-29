@@ -6,14 +6,14 @@ who plan and build a feature are not guessing what it looks like. Use it before 
 are settled.
 
 ```
-/codefall-mock-up the itinerary export dialog
+/codefall-mock-up the list export dialog
 ```
 
 ## What it writes
 
 Mockups go in `docs/mockups/<slug>/`, one directory per screen, with a `README.md` that says what
-each file shows. The slug names the screen, or *surface*, such as `booking-history` or
-`trip-share`, and never the spec that prompted it. One screen gets changed by several specs over its
+each file shows. The slug names the screen, or *surface*, such as `task-list` or
+`settings`, and never the spec that prompted it. One screen gets changed by several specs over its
 life and outlives all of them. If its mockup were filed under whichever spec came first, the second
 spec would have to duplicate it or reach into another spec's directory. Specs link to mockups by
 path under their **Design notes**.

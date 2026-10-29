@@ -17,7 +17,7 @@ review finds what the criteria get wrong about it.
 
 The ones the user named, and the ones the step 3 search found. The second set matters most: the
 user names the surface they are thinking about, and the search finds the ones they are not. A feature
-that controls who can reach some outcome — create an account, see a trip, place an order — is
+that controls who can reach some outcome — create an account, see a list, place an order — is
 audited by outcome: every path in the code that reaches it is a surface, whether or not the user
 mentioned it.
 
@@ -30,12 +30,12 @@ controls. Read the artifact's contents, not its name.
 
 Intersect what is there with what the user described, and ask about the difference:
 
-> "The profile screen has three tabs today: Account Info, Travel Preferences, and Saved Passengers.
-> You mentioned the first two. Is Saved Passengers preserved as-is, folded into something new, or
+> "The settings screen has three tabs today: Account, Notifications, and Shared Lists. You
+> mentioned the first two. Is Shared Lists preserved as-is, folded into something new, or
 > intentionally going away?"
 
 > "There are two ways to create an account today: the sign-up page, and the landing page a shared
-> trip opens for someone without an account. You described the gate on the first. Does it apply to
+> list opens for someone without an account. You described the gate on the first. Does it apply to
 > the second?"
 
 | The user says | Record it as |

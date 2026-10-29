@@ -74,8 +74,8 @@ git commit -m "<type>(<scope>): <what>"
 ```
 
 - **By path, never `git add -A` or `git commit -a`.** Anything else in the tree is the user's.
-- **A Conventional Commit line naming the document** — `docs(specs): add SPEC-003 trip export`,
-  `docs(plans): add PLAN-002 booking history`. Where the project has its own commit convention,
+- **A Conventional Commit line naming the document** — `docs(specs): add SPEC-003 list export`,
+  `docs(plans): add PLAN-002 task reminders`. Where the project has its own commit convention,
   that wins.
 - **A run that wrote beads includes `.beads/interactions.jsonl`** when it changed: the Beads section
   says the log lands in the next commit after a bead write, and this is that commit.

@@ -34,7 +34,7 @@ If they cannot, record the URL and move on — do not press twice.
 docs/mockups/<slug>/
 ```
 
-`<slug>` is a short kebab-case identifier for the feature — `booking-history`, `trip-share`. Reuse the
+`<slug>` is a short kebab-case identifier for the feature — `task-list`, `settings`. Reuse the
 feature's existing slug when one is already in play.
 
 Alongside the assets, write a `README.md`:

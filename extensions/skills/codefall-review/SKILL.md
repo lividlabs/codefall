@@ -98,8 +98,8 @@ report, per `../../../.codefall/shared/decisions.md`. Name what was resolved and
 run:
 
 ```
-Resolved SPEC-004 to docs/specs/SPEC-004-trip-sharing.md,
-checked against VISION-002-trip-sharing.md.
+Resolved SPEC-004 to docs/specs/SPEC-004-shared-lists.md,
+checked against VISION-002-shared-lists.md.
 
 Lenses: structure, status, trace, criteria, precision, stories. Reviewing now.
 ```
