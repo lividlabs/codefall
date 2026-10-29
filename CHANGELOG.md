@@ -6,6 +6,14 @@ below were written by hand, before that was wired up.
 Tags are bare version numbers (`0.1.2`), not `v`-prefixed, so they match the `ref` the marketplace
 pins. A `v0.1.1` tag also exists from before that convention was settled.
 
+## [0.37.0](https://github.com/lividlabs/codefall/compare/v0.36.0...v0.37.0) (2026-10-29)
+
+
+### Features
+
+* **implement:** run a delivery on its own from one gate ([#236](https://github.com/lividlabs/codefall/issues/236)) ([e258e8a](https://github.com/lividlabs/codefall/commit/e258e8adcf846183bdc64919178e8c6e87f21e0b))
+* **plan:** cut a spec into several plans, one per shippable increment ([#238](https://github.com/lividlabs/codefall/issues/238)) ([68d9384](https://github.com/lividlabs/codefall/commit/68d9384070877d30311c71241bc2b0ec83190b44))
+
 ## [0.36.0](https://github.com/lividlabs/codefall/compare/v0.35.0...v0.36.0) (2026-10-27)
 
 
