@@ -61,29 +61,38 @@ and the repository's common git directory, which holds its config and hooks. A C
 OpenCode worker's shell can write anywhere the user can. The script checks the git config and the
 hooks directories outside the worktree, which the diff never shows; nothing checks the rest.
 
-### The `work` list at the gate
+### The gate's table
 
 Resolve the entry's `work` list exactly as *Resolving the list* in
 `../../../../.codefall/shared/running-agents.md` resolves a `consult` list. With nothing configured
-it is one `current` agent, and every worker is a subagent as before; the gate shows nothing new.
+it is one `current` agent, and every worker is a subagent.
 
-Otherwise the gate's per-bead table proposes one agent per bead from that list, written as the list
-writes it, `opencode:digitalocean/glm-5.3#max` or `current` with the model the root would use. The
-first agent the machine can start is the default; muse and agy have no write mode and are passed
-over, as is a harness not on PATH. Say in one line which beads you would move to another agent and
-why: a rename, a removed flag, or a doc aligned with the code suits a cheaper model; a bead that
-needs a design call suits the session's own. The person changes any bead's agent at the gate, and
-the gate's one approval covers the run.
+The gate shows one table, one row per bead, with these columns and no others:
 
-**The table also proposes an effort per bead**, by the same reasoning: low or medium for the
-mechanical bead, high for the one that needs a design call, and the bead's execution metadata as
-the hint when plan left one. The launch applies it the way the harness takes it: the `effort`
-parameter of this harness's subagent tool for `current`; the `#variant` suffix on the model string
-for OpenCode, as the `work` list already writes it; and for Codex and Claude Code through
-`run-worker.sh`, a `harnessConfig` variant whose `args` carry it, `-c model_reasoning_effort=high`
-or `--effort high`, named in the list as `codex-high` or `claude-high`. A harness with no way to
-take it runs at its default, and the table says so. Nobody is asked to set the session's effort;
-the root's own is the person's to set before the run, and the gate states it.
+| Column | Holds |
+| --- | --- |
+| Wave | The wave the execution plan put the bead in |
+| Bead | The bead's ID |
+| Task | The bead's title as `bd` holds it, not a description of the work |
+| Depends on | The IDs of the beads that block it, or `—` |
+| Agent | An agent from the `work` list, written as the list writes it with no `#variant` suffix, `opencode:digitalocean/glm-5.3`; for `current`, the model the root runs on |
+| Effort | `low`, `medium`, `high`, `xhigh`, or `max` |
+| Why | One phrase giving the reason for that agent at that effort |
+
+The first agent the machine can start is the default; muse and agy have no write mode and are
+passed over, as is a harness not on PATH. A rename, a removed flag, or a doc aligned with the code
+suits a cheaper agent at low or medium effort; a bead that needs a design call suits the session's
+own at high or above. The person changes any cell at the gate, and the gate's one approval covers
+the run.
+
+The launch applies the effort the way the harness takes it: the `effort` parameter of this
+harness's subagent tool for `current`; the Effort cell appended to the model string as its
+`#variant` suffix for OpenCode, `opencode:digitalocean/glm-5.3#max`; and for Codex and Claude Code
+through `run-worker.sh`, a `harnessConfig` variant whose `args` carry it, `-c
+model_reasoning_effort=high` or `--effort high`, named in the list as `codex-high` or
+`claude-high`. A harness with no way to take it runs at its default, and the Effort cell says so.
+Nobody is asked to set the session's effort; the root's own is the person's to set before the run,
+and the gate states it.
 
 ### Before the run
 
@@ -150,7 +159,8 @@ root's work starts, not where it ends:
    named: the guard hook denies a push with no refspec while the primary checkout is on the default
    branch. Then `gh pr create --base <PR_TARGET> --head <BRANCH>` with the `body` the worker's
    result carries and the `RELATES_LINE`. From here the bead is verified, commented, and closed like any other, with
-   `built with <harness>:<model>` in the comment per *Claim, work, close* in `beads.md`.
+   `built with <harness>:<model>#<effort>` in the comment and the `agent` and `effort` metadata per
+   *Claim, work, close* in `beads.md`.
 
 A criterion that does not hold, a change outside the bead, or a test that covers nothing is the
 root's to fix in the worktree when the fix is small, and otherwise a failure result for the retry

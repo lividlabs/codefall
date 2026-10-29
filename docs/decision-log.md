@@ -2194,6 +2194,20 @@ Decided at scaffold, 2026-08-16.
   epic's dates and round metadata; `implement`'s round boundary asking `plan` to split a delivery
   that drags.
 
+- **The gate's table has fixed columns, and a bead records what built it, 2026-10-29.** Recorded
+  as `ADR-013.8`. ADR-013.7 had the gate propose effort "with the bead's execution metadata as the
+  hint", and no verb writes that metadata, so the proposal started from nothing and the run laid
+  the table out differently each time. The gate's table now has seven columns and no others: Wave,
+  Bead, Task, Depends on, Agent, Effort, Why, with the reason for each row in its Why cell. Agent
+  and effort are both read from the bead and the `work` list at the gate, and `plan` stays out of
+  both. At close the run sets `agent` and `effort` metadata on the bead beside the `built with`
+  comment, so `bd list --metadata-field` answers which beads an agent built. Seen and not taken:
+  `plan` writing an effort hint onto each bead (plan does not pick the agent, so it does not pick
+  the effort; the judgment is the gate's, with the bead in front of it); `plan` writing the agent
+  (depends on the machine's harnesses and on a list that changes); a `Variant` column (OpenCode's
+  word for effort, and already two other things in this repo: a test case's variants and a
+  `harnessConfig` key).
+
 ## Open
 
 - (nothing open; the last item graduated to ADR-012 on 2026-09-27)

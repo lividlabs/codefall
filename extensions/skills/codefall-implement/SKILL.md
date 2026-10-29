@@ -149,8 +149,8 @@ will do, in one block:
   `reference/rounds.md`, and what the boundary moved out or closed;
 - the execution plan: the waves and their widths, the branch diagram, the strategy and its
   one-line reason;
-- per bead, the harness, model, and effort proposed from the `work` list per
-  `reference/workers.md`, as a table the person may edit;
+- per bead, the agent and effort proposed from the `work` list, in the table
+  `reference/workers.md` lays out, which the person may edit;
 - what will be claimed, and that go flips a vision behind the work to `Active`;
 - the consult order a question or a failure will be put to, resolved per `reference/workers.md`;
 - the ceiling on rounds, and the root session's own effort;
@@ -166,9 +166,9 @@ Then wait for go; under the `product-manager` persona the gate is the sentence
 the test plan, one branch; the run ends at its pull request.
 
 **After go, nothing asks.** A question is decided, consulted on, or recorded per `decisions.md`; a
-failure is consulted on and retried once, then the bead is skipped and the run goes on. Harness,
-model, and effort are the root's, proposed at the gate from the bead's own execution metadata,
-which is a recommendation; what ran goes in a `bd comment` beside the PR link.
+failure is consulted on and retried once, then the bead is skipped and the run goes on. Agent and
+effort are the root's, proposed at the gate; what ran goes in a `bd comment` beside the PR link and
+in the bead's `agent` and `effort` metadata.
 
 ## Verification and done
 
