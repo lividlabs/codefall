@@ -6,6 +6,13 @@ below were written by hand, before that was wired up.
 Tags are bare version numbers (`0.1.2`), not `v`-prefixed, so they match the `ref` the marketplace
 pins. A `v0.1.1` tag also exists from before that convention was settled.
 
+## [0.38.0](https://github.com/lividlabs/codefall/compare/v0.37.1...v0.38.0) (2026-10-29)
+
+
+### Features
+
+* **implement:** give the go gate's table fixed columns and record agent and effort on the bead ([#242](https://github.com/lividlabs/codefall/issues/242)) ([8f04b97](https://github.com/lividlabs/codefall/commit/8f04b97cd67d9bde3d74a5038f811cea4fe8e8fb))
+
 ## [0.37.1](https://github.com/lividlabs/codefall/compare/v0.37.0...v0.37.1) (2026-10-29)
 
 
