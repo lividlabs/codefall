@@ -71,7 +71,7 @@ settings, because it is the skill's own reader and not a configurable second opi
 implement's workers are the skill's own and not on those lists.
 
 The check for a mechanism dressed as an outcome is gated to a person as consumer under the
-`product-manager` persona, because sometimes the workflow is the feature — a travel policy is a
+`product-manager` persona, because sometimes the workflow is the feature — an expense policy is a
 sequence of approvals — and a refactor or new infrastructure specified by an engineer has the
 mechanism as its deliverable. It is a flag and never a ban; a mechanism the person keeps is recorded
 so plan builds it as written. The step 10 read of the criteria against the code, which landed a week

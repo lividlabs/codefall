@@ -66,7 +66,7 @@ read, not two. The fifth row runs only when the gate allows.
 
 ## The gate on the mechanism check
 
-A workflow is sometimes the feature. A corporate travel policy is a sequence of approvals, and the
+A workflow is sometimes the feature. An expense policy is a sequence of approvals, and the
 sequence is what the person wants. A refactor, an architectural change, or new infrastructure
 written by an engineer or a technical product manager has a system as its consumer, and the
 mechanism is the deliverable. Flagging those as "a mechanism, not an outcome" is noise.
@@ -87,9 +87,9 @@ The subagent's final message is one JSON object:
 {"findings": [
   {"kind": "contradiction",
    "criteria": ["SPEC-004-REQ-02-AC-03", "SPEC-004-REQ-03-AC-01"],
-   "evidence": "src/accounts/decline.ts:41 deletes the account row; trips reference owner_id",
-   "reason": "a pending account can own trips and then be removed, which orphans them",
-   "question": "What happens to the trips and bookings of a pending account that is declined?"}
+   "evidence": "src/accounts/decline.ts:41 deletes the account row; lists reference owner_id",
+   "reason": "a pending account can own lists and then be removed, which orphans them",
+   "question": "What happens to the lists and tasks of a pending account that is declined?"}
 ]}
 ```
 
@@ -148,7 +148,7 @@ sign-ups, and the answer is a criterion either way.
 
 **A removal that orphans something.** One criterion lets a pending account sign in while the gate is
 off. Another says that declining a pending account removes it. Read as a pair, they mean a pending
-account can own trips and bookings and then be removed. The code shows that trips and bookings
+account can own lists and tasks and then be removed. The code shows that lists and tasks
 reference their owner, so the consequence is a real table and not a worry. The review returns it as
 the `contradiction` in the JSON above; the question to the person is what happens to that activity,
 and the answer is a criterion under the decline requirement.

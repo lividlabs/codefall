@@ -99,11 +99,11 @@ function, a database column — breaks every piece of code that uses it the mome
 that code belongs to other tasks, there is no point at which the first task builds and passes its
 tests on its own, so it cannot be merged by itself, whatever the staging table says.
 
-The example this rule comes from: a trip had states that included `SENT` and `ACCEPTED`, and a
-feature replaced them with a `TEMPLATE` state. The work was cut into three tickets — change the list
-of states, the sharing work, the templates work. The moment the first ticket removed the two states,
-the sharing and templates code that still used them stopped compiling. The three tickets had to land
-as one pull request, after each one had absorbed part of the others.
+The example this rule comes from: a shared list had states that included `SENT` and `ACCEPTED`,
+and a feature replaced them with a `TEMPLATE` state. The work was cut into three tickets — change
+the list of states, the sharing work, the templates work. The moment the first ticket removed the
+two states, the sharing and templates code that still used them stopped compiling. The three
+tickets had to land as one pull request, after each one had absorbed part of the others.
 
 **Before writing the staging table**, look at each task that deletes or renames something. List the
 code that uses it. If any of that code is another task's, do one of two things and say which in the

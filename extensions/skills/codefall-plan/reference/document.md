@@ -46,7 +46,7 @@ plan with none of these has no `Related` row until it produces an ADR.
 One increment of several carries both of its labels:
 
 ```markdown
-# PLAN-008: Share an itinerary
+# PLAN-008: Share a list
 
 **Status:** Ready — 2026-10-28
 **Related:** spec: SPEC-004 (REQ-04, REQ-05) · after: PLAN-007

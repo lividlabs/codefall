@@ -44,7 +44,7 @@
         },
         "key": {
           "type": "string",
-          "description": "The suffix of the filename stem, slugged: pr-51-init-below-root, SPEC-004-trip-sharing, feat-bd-unz-stage-context, range-a1b2c3d-e4f5a6b, src-fulfillment, adhoc, uncommitted."
+          "description": "The suffix of the filename stem, slugged: pr-51-init-below-root, SPEC-004-shared-lists, feat-bd-unz-stage-context, range-a1b2c3d-e4f5a6b, src-fulfillment, adhoc, uncommitted."
         },
         "ref": {
           "type": "string",
