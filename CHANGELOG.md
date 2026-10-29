@@ -6,6 +6,13 @@ below were written by hand, before that was wired up.
 Tags are bare version numbers (`0.1.2`), not `v`-prefixed, so they match the `ref` the marketplace
 pins. A `v0.1.1` tag also exists from before that convention was settled.
 
+## [0.37.1](https://github.com/lividlabs/codefall/compare/v0.37.0...v0.37.1) (2026-10-29)
+
+
+### Documentation
+
+* rewrite the README intro, add a prose style guide, and replace the old example ([#240](https://github.com/lividlabs/codefall/issues/240)) ([3004ce8](https://github.com/lividlabs/codefall/commit/3004ce837f79ea2e08f6b01c76e6f112e5f05bbe))
+
 ## [0.37.0](https://github.com/lividlabs/codefall/compare/v0.36.0...v0.37.0) (2026-10-29)
 
 
