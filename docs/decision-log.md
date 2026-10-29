@@ -2170,6 +2170,30 @@ Decided at scaffold, 2026-08-16.
   writes as the evidence for changing them; `run-worker.sh` taking an effort of its own rather than
   through a variant block.
 
+- **One spec, several plans, 2026-10-28.** Recorded as `ADR-016`. A spec became one plan, one
+  epic, and one delivery, and nothing before the delivery asked how long it would run; `specify`'s
+  split is by cohesion and its scope rule names sizing as not its business, and `plan`'s tiers
+  scale the document, not the delivery. `plan` now judges the delivery's size with the tier, from
+  the task count, the components touched, the tasks verified through the product, and the waves,
+  against the project's closed epics in Beads, and says it once with a specific cut into shippable
+  increments, whole requirements in ship order, each leaving the product usable; the person
+  decides, and on a yes the run writes one plan per increment in the same pull request, each with
+  its own epic, the later epic depending on the one before it so it stays out of `bd ready` until
+  the earlier closes. A Split mode moves untouched rows out of an existing plan the same way. The
+  budget, four to six hours of agent time, and every count are reference points for a judgment,
+  never thresholds, per the root `AGENTS.md`. Found on the way: `bd ready --mol <epic>` does not
+  see a blocker outside the epic, so `plan` verifies a later increment with it and `implement`
+  checks plain `bd ready` before claiming an epic. Seen and not taken: splitting the spec at
+  `specify` by size (the size is not visible until the code is read, and its siblings are for
+  different purposes); tuning the ceiling or the batch (bounds the cost, does not change the size);
+  one plan with several epics (the identifier scheme is one epic per plan, and a plan per increment
+  costs nothing new); creating the later increments' graphs only when the earlier delivery lands
+  (loses the whole feature in the graph, and needs a trigger nothing has). Left open: an early
+  signal at `specify`'s recap and an optional ship-order section in the spec; `implement`
+  recording a delivery's elapsed agent time on the epic, which the judgment now reads from the
+  epic's dates and round metadata; `implement`'s round boundary asking `plan` to split a delivery
+  that drags.
+
 ## Open
 
 - (nothing open; the last item graduated to ADR-012 on 2026-09-27)

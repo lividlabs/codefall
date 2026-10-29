@@ -26,9 +26,8 @@ table — when the work earns one. **The tasks in Beads**, with their dependency
 
 Planning is not implementing. Once the document is written and the graph exists, stop.
 
-Paths that start with `../` are relative to this skill's directory, not the user's project. A path
-through `../../../.codefall/` is the one that leaves the skills directory: it names a file `codefall
-init` installed in the project's own `.codefall/`.
+Paths starting `../` are relative to this skill's directory, not the user's project; one through
+`../../../.codefall/` names a file `codefall init` installed in the project's own `.codefall/`.
 
 ## Files beside this one
 
@@ -46,6 +45,9 @@ Read each when its step says to; none is loaded up front.
   step 2 for a bug.
 - `reference/revising.md` — reconciling the graph when a plan changes after its beads exist, and
   settling the revision beads filed against it. Read for the Revise mode.
+- `reference/increments.md` — one spec as several deliveries: the size judgment, the cut, one plan
+  per increment, the edge between epics, and the Split mode. Read at steps 4 and 6, and for the
+  Split mode.
 - `reference/consulting.md` — putting an unsettled technical point to the configured agents, and
   what their answer may do. Read at step 5 when one stays unsettled. Names
   `../../../.codefall/shared/running-agents.md`, `../../../.codefall/shared/run-agent.sh`,
@@ -66,17 +68,15 @@ Read each when its step says to; none is loaded up front.
 | Which tasks need a test case, and its criteria | Writing the case file, and running it | `codefall-implement`, `codefall-test` |
 | Hard-to-reverse choices, recorded as ADRs | Estimates and assignment | the team |
 
-**The project's stance is already decided** — layering, component boundaries, and how they are
-enforced — in `docs/adrs/` and the scoped `AGENTS.md` files. Plan within it. A plan that needs
-the stance changed says so once, then either follows the ADR or writes a superseding one.
+**The project's stance is already decided** in `docs/adrs/` and the scoped `AGENTS.md` files. Plan
+within it; a plan that needs it changed says so once, then follows the ADR or supersedes it.
 
 ## Upstream documents
 
-A spec or vision this run finds wrong or incomplete is amended here, on this run's branch, when it
-is `Draft` or `Ready`, the amendment is text that moves no work, and the user takes it at step 7. A
-spec is amended by appending, and its requirement issue is regenerated per
-`../codefall-specify/trackers/<name>/PROFILE.md`. An `Active` vision is frozen: say so and name
-`codefall-envision`.
+A spec or vision this run finds wrong is amended here, on this run's branch, when it is `Draft` or
+`Ready`, the amendment is text that moves no work, and the user takes it at step 7; a spec by
+appending, its requirement issue regenerated per `../codefall-specify/trackers/<name>/PROFILE.md`.
+An `Active` vision is frozen: say so and name `codefall-envision`.
 
 ## Scale the artifact to the work
 
@@ -94,31 +94,27 @@ Three tiers. The work picks the tier; the user can overrule it.
 - **Tier 1 and 2 are not decided separately**: write the required three, then walk the triggers.
 - **An ADR is not gated on the tier.** **Say the tier out loud before writing**, at step 4.
 
+## One delivery or several
+
+A plan is one delivery: one epic, run to the merge. Work that looks like more than one is said at
+step 4 with the tier, as a specific cut into shippable increments, whole requirements in ship
+order; on a yes this run writes one plan per increment, each later epic waiting on the one before
+it. The size is a judgment against the project's own deliveries, never a threshold, and the cut is
+the person's. `reference/increments.md` has both.
+
 ## The document
 
 `docs/plans/PLAN-NNN-slug.md`, git-tracked. Three digits, zero-padded, the highest existing
 number plus one. **A plan is never renumbered and its identifier is never reused**; archiving moves
 the file, not the identifier.
 
-Three required sections — **Overview**, **Architecture**, **Tasks** — and seven conditional ones,
-each with a trigger. The header, the section tables, the Technical Context and Hard Constraints
-blocks, and the Tasks callout are in `reference/document.md`.
+Three required sections — **Overview**, **Architecture**, **Tasks** — and eight conditional ones,
+each with a trigger, in `reference/document.md`.
 
 ## ADRs
 
 A separate artifact, `docs/adrs/ADR-NNN-title.md`, for a choice that is hard to reverse or that
-other components will build on; most plans need none, and a ratified ADR is never rewritten. The
-trigger, the numbering, and the template are in `reference/adrs.md`.
-
-## Status and lifecycle
-
-`Draft`, `Ready`, or `Archived`, one word plus a date, describing the document and never the work.
-The table and the rules are in `reference/lifecycle.md`.
-
-## The plans directory
-
-`docs/plans/AGENTS.md` is written from `templates/plans/AGENTS.md` when the directory is created,
-and added on a later run if it is missing.
+other components will build on; most plans need none, and a ratified ADR is never rewritten.
 
 ## Beads
 
@@ -135,7 +131,7 @@ preflight report; when it is not `engineer`, follow that persona's section in
 
 ### 1. Check preconditions
 
-Run the shared check against the user's project.
+Run the shared check.
 
 ```bash
 "../../../.codefall/shared/preflight.sh" .
@@ -181,7 +177,8 @@ framed the work. A vision's **Environment & constraints** section is written for
 - **The project's stance** — `docs/adrs/`, every `AGENTS.md` in the tree, and
   `docs/decision-log.md`. Plan within them.
 - **The existing plans** — `docs/plans/`, not `archive/`. If one already covers this, say so
-  and link it; the user may want to revise that one.
+  and link it; the user may want to revise that one. Several plans may share a spec, each naming
+  the requirements it covers.
 - **The code** — the components this touches, their facades, and what already exists that this can
   use.
 - **The graph** — `bd dolt pull`, then `bd list` and `bd search` for existing work. A task
@@ -193,15 +190,15 @@ framed the work. A vision's **Environment & constraints** section is written for
 Report what you found before planning — open revision requests first. If the work already exists,
 say so and stop.
 
-### 4. Decide the tier, and whether there is an ADR
+### 4. Decide the tier, the ADR, and how many deliveries
 
-Both judgements, stated together, before any writing:
+Three judgements, stated together, before any writing:
 
 > Four tasks across the context store and the scaffold command: a plan document. The signed
-> payload versus session lookup choice is hard to reverse: an ADR as well.
+> payload versus session lookup choice is hard to reverse: an ADR as well. One delivery.
 
-Walk the [tier table](#scale-the-artifact-to-the-work) and the [ADR trigger](#adrs) explicitly. They
-are independent.
+Walk the [tier table](#scale-the-artifact-to-the-work), the [ADR trigger](#adrs), and the
+[delivery size](#one-delivery-or-several) explicitly. They are independent.
 
 **At tier 0, skip to step 7.**
 
@@ -253,20 +250,20 @@ means one criterion says the declared `start` and `update` scripts were changed 
 
 **A task verified through the wired product carries a test case.** Its criteria name the case
 (`<area>/<slug>`), its modalities, and every criterion the case will hold, each cited in full or
-marked `derived`, per `reference/beads.md`. `agentic` only where verifying an outcome needs
-judgement; `spec` otherwise; neither where unit tests verify the task. A gap the criteria expose in
+marked `derived`, per `reference/beads.md`. A gap the criteria expose in
 the spec is an appended criterion, offered at step 7 per [Upstream documents](#upstream-documents);
 `derived` is what it stays when the user declines. The case-file format is
 `../codefall-test/reference/case-file.md`.
 
-Write the staging table.
+Write the staging table, then read the step 4 delivery judgment against it per
+`reference/increments.md`, said again only when the count changes it.
 
 ### 7. Draft and confirm
 
-Compose the full document and **show it before anything is written**. Nothing lands unapproved.
+Compose the full document, every plan of a split, and **show it before anything is written**.
+Nothing lands unapproved.
 
-Say which conditional sections you left out and why, so the user can catch an omission that was a
-gap.
+Say which conditional sections you left out and why.
 
 **Show the acceptance criteria of every task that carries a test case**, derived criteria included,
 and every spec or vision amendment. Approving the plan is the sign-off those need; nothing later
@@ -295,7 +292,7 @@ bodies, and their edges. The user approves the graph, not a document.
 Branch first, per `../../../.codefall/shared/landing.md` — `plan/PLAN-NNN-slug`, from the
 default branch — unless this is a tier 0 run with no ADR, which writes no file.
 
-Write `docs/plans/PLAN-NNN-slug.md` with the Tasks table **staged**, the ADR if there is one,
+Write each plan, `docs/plans/PLAN-NNN-slug.md`, with its Tasks table **staged**, the ADR if there is one,
 `docs/plans/AGENTS.md` if it was missing, and the amendments the user took: a spec's mirrored, a
 vision's committed beside the plan.
 
@@ -304,15 +301,12 @@ Write the document before the beads, so a failed creation is resumable.
 ### 9. Create the graph
 
 Read `reference/beads.md`. Build the graph file from the table, dry-run it, create it, rename to the
-IDs, set `--spec-id` and `--acceptance`, verify with `bd ready` and `bd dep cycles`, and push.
-
-If the ready set does not match the table's roots, fix the edges now, before the callout is
-rewritten.
+IDs, set `--spec-id` and `--acceptance`, verify with `bd ready` and `bd dep cycles`, and push. A
+later increment's epic takes the edge to the one before it, per `reference/increments.md`.
 
 ### 10. Mark the Tasks table created
 
-Rewrite the callout above the table per `reference/document.md`: the date, the epic's full ID, the
-per-row form, and that Beads is authoritative. **The table stays.**
+Rewrite the callout above the table per `reference/document.md`. **The table stays.**
 
 At tier 0 there is no document to mark.
 
@@ -325,28 +319,27 @@ identifier and change nothing else in the file.
 There is no back-link to write into the spec: the plan's `spec` label carries the connection.
 
 Then land it per `../../../.codefall/shared/landing.md`, with `.beads/interactions.jsonl` when it
-changed: push, and open the pull request, a draft only when the status is `Draft`. Never add the
-`auto-merge` label: a person adds it when they want the plan merged.
+changed: push, and open the pull request, a draft only when the status is `Draft`.
 
 Report:
 
-- the plan's path, identifier, and status, or that this was tier 0 and why;
+- each plan's path, identifier, and status, with what it covers and follows in a split, or that
+  this was tier 0 and why;
 - any ADR written, and what it decided;
 - every bead created, with its local ID, its title, and any test case its criteria name;
 - every upstream amendment written, and any the user declined;
 - every consult: the point, who answered, what it changed;
 - the ready set — which tasks `codefall-implement` can start on today;
-- anything left unresolved, the decisions set aside and how many, whether the person had them
-  settled now or left for an engineer, and any concern the user overruled;
-- the branch and the pull request, worded as the landing procedure says: it is open at its URL;
-  add the `auto-merge` label when you want it merged, or have someone approve it; either one merges
-  it; a `Draft` plan has a draft pull request;
-- **last, one command**: `/codefall-implement PLAN-NNN`, or `/codefall-implement <bead>` at
-  tier 0; with decisions left for an engineer, `/codefall-plan PLAN-NNN`.
+- anything left unresolved, the decisions set aside, whether they were settled now or left for an
+  engineer, and any concern the user overruled;
+- the branch and the pull request, worded as the landing procedure's *What to report* says;
+- **last, one command**: `/codefall-implement PLAN-NNN`, the first plan of a split, or
+  `/codefall-implement <bead>` at tier 0; with decisions left for an engineer,
+  `/codefall-plan PLAN-NNN`.
 
 ## Other modes
 
-Invoking this skill on an existing plan does one of four things. Ask which if it is not obvious.
+Invoking this skill on an existing plan does one of five things. Ask which if it is not obvious.
 
 - **Promote** `Draft` to `Ready`, or **reopen** `Ready` to `Draft` when no beads exist yet.
   Settling every item under **Decisions needed** empties the section first; steps 9 and 10 then
@@ -358,8 +351,10 @@ Invoking this skill on an existing plan does one of four things. Ask which if it
   closing them.
 - **Add tasks** to an existing plan — new rows appended to the table, each with its bead, and
   the callout dated. Retired local IDs stay retired.
+- **Split** a plan whose delivery is bigger than one: untouched rows move to a new plan and epic
+  that follows this one, per `reference/increments.md`.
 
-Promote, Archive, and Add tasks are the person's to ask for; never transition a plan unasked.
+Promote, Archive, Add tasks, and Split are the person's to ask for; never transition a plan unasked.
 Revise, run by `codefall-implement`, `codefall-review`, or `codefall-test` for the
 revision beads they filed, settles each per `../../../.codefall/shared/decisions.md`, with its
 reason; an ADR question takes the default the project's stance gives and writes the ADR, as
@@ -391,6 +386,6 @@ reason; an ADR question takes the default the project's stance gives and writes 
 - **An upstream document found wrong is amended here**, within [Upstream documents](#upstream-documents).
 - **A ticket must not change under someone holding it.** An untouched bead is edited; a held one is
   replaced when the work done would no longer count.
-- **Push back once, then defer** — on the tier, on the approach, on the cut. A consult informs,
-  never decides.
+- **Push back once, then defer** — on the tier, on the approach, on the cut, on the number of
+  deliveries. A consult informs, never decides.
 - **Never overwrite a file that has drifted.** Show the difference and ask.

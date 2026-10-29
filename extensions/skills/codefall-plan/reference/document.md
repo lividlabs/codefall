@@ -32,15 +32,25 @@ labeled list, not a set of rows.
 
 | Label | Holds |
 | --- | --- |
-| `spec` | The specification this plan implements |
+| `spec` | The specification this plan implements; when the spec was cut into increments, the requirements this plan covers follow it in parentheses |
 | `bug` | The bug report this plan fixes |
 | `vision` | The vision that framed it — **only when there is no spec** |
 | `adr` | The ADR or ADRs this plan produced |
+| `after` | The plan this one follows, when it is one increment of several (`increments.md`) |
 
 **Never record a hop you can derive.** A spec names its vision in its own `**Vision:**` row, so a
 plan records the spec alone. A plan written from a vision with no spec records the vision. A
 plan for a bug records the report, and a spec only when the report's Spec row does not name it. A
 plan with none of these has no `Related` row until it produces an ADR.
+
+One increment of several carries both of its labels:
+
+```markdown
+# PLAN-008: Share an itinerary
+
+**Status:** Ready — 2026-10-28
+**Related:** spec: SPEC-004 (REQ-04, REQ-05) · after: PLAN-007
+```
 
 ## Required sections
 

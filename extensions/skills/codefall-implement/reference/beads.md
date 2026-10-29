@@ -30,6 +30,12 @@ round stay off the frontier until the round boundary takes them into the batch a
 (`bd update <id> -s open`), per the rounds reference beside this file; from then on
 `bd ready --mol <epic>` pulls them in like any other child.
 
+An epic that is a later increment of a split plan depends on the epic before it, and
+`bd ready --mol` does not see a blocker outside the epic. So before the first claim, plain
+`bd ready --json` must list the epic. When it does not, `bd show <epic>` names the epic that holds
+it under *Depends on*: say which, and stop with that as the reason, naming
+`/codefall-implement <epic>` for once the earlier one has merged.
+
 `bd gate check` fails safely. With `gh` missing, unauthenticated, or no GitHub remote, every gate
 stays open, the command reports per-gate errors, and it still exits 0: a report, never a falsely
 resolved gate. An `ESCALATE` line is different — the gate was checked and its PR is missing — and

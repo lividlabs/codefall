@@ -70,7 +70,8 @@ record of what the task used to be survives. **The local ID does not change** �
 `T2`; only the bead behind it moves, and the plain ID names the new one.
 
 **A row that has become two separate tasks is a removal plus two additions**, not a replacement, and
-the removal goes through the report-don't-close rule above.
+the removal goes through the report-don't-close rule above. A row that moves to another plan is
+neither: that is the Split mode, in the increments reference beside this file.
 
 **Then date the callout and push.** Add today to the callout — `Created in Beads <date>, revised
 <today>, as …` — and `bd dolt push` once, after every edit, replacement, and edge change, so the

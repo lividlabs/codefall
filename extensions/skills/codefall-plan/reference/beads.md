@@ -205,7 +205,9 @@ bd dep cycles     # must find none
 
 **The ready set must be exactly the rows whose Depends on column is `—`**, plus the epic. If a task
 with prerequisites is ready, or a root task is not, the edges went in backwards — fix them before
-the callout is rewritten, while the table still says it is staged.
+the callout is rewritten, while the table still says it is staged. A later increment of a split is
+checked with `bd ready --mol <its epic>` instead, because plain `bd ready` hides all of it while the
+epic before it is open; the increments reference beside this file has the edge and the reason.
 
 ## Publish the graph
 
