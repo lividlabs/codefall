@@ -61,7 +61,7 @@ bd close <bead> -r "done: criteria R1,R2 verified, checks green, PR #101 open" -
 bd dolt push
 ```
 
-The metadata holds the Agent and Effort cells of the gate's table as they ran, so
+The metadata holds the Model and Effort cells of the gate's table as they ran, so
 `bd list --metadata-field agent=<agent>` finds every bead an agent built. The comment is the
 readable trail, and a retry at higher effort adds a second one. A bead built in another harness
 names its agent as the `work` list writes it, `agent=opencode:digitalocean/glm-5.3` and

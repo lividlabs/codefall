@@ -60,8 +60,8 @@ Read each when its step says to.
   boundary, and the report.
 - `../../../.codefall/shared/stacks.md` — GitHub stacks, and how a report points at one. Read at
   steps 4, 7, and 9.
-- `reference/workers.md` — launching a worker here or in another harness, effort, chains,
-  results, failures, consulting. Read at steps 5 and 6. Names
+- `reference/workers.md` — who builds each bead, launching a worker here or in another harness,
+  chains, results, failures, consulting. Read at steps 5 and 6. Names
   `../../../.codefall/shared/running-agents.md`, `../../../.codefall/shared/run-agent.sh`,
   `../../../.codefall/shared/run-worker.sh`, `../../../.codefall/shared/consult-prompt.md`,
   `../../../.codefall/shared/consult.schema.json`.
@@ -149,8 +149,8 @@ will do, in one block:
   `reference/rounds.md`, and what the boundary moved out or closed;
 - the execution plan: the waves and their widths, the branch diagram, the strategy and its
   one-line reason;
-- per bead, the agent and effort proposed from the `work` list, in the table
-  `reference/workers.md` lays out, which the person may edit;
+- per bead, which model at what effort builds it and why, per *Who builds each bead* in
+  `reference/workers.md`, as a table the person may edit;
 - what will be claimed, and that go flips a vision behind the work to `Active`;
 - the consult order a question or a failure will be put to, resolved per `reference/workers.md`;
 - the ceiling on rounds, and the root session's own effort;
@@ -166,9 +166,9 @@ Then wait for go; under the `product-manager` persona the gate is the sentence
 the test plan, one branch; the run ends at its pull request.
 
 **After go, nothing asks.** A question is decided, consulted on, or recorded per `decisions.md`; a
-failure is consulted on and retried once, then the bead is skipped and the run goes on. Agent and
-effort are the root's, proposed at the gate; what ran goes in a `bd comment` beside the PR link and
-in the bead's `agent` and `effort` metadata.
+failure is consulted on and retried once, then the bead is skipped and the run goes on. The model
+and effort are the root's, decided per bead at the gate; what ran goes in a `bd comment` beside the
+PR link and in the bead's `agent` and `effort` metadata.
 
 ## Verification and done
 
