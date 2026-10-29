@@ -2194,18 +2194,28 @@ Decided at scaffold, 2026-08-16.
   epic's dates and round metadata; `implement`'s round boundary asking `plan` to split a delivery
   that drags.
 
-- **The gate's table has fixed columns, and a bead records what built it, 2026-10-29.** Recorded
-  as `ADR-013.8`. ADR-013.7 had the gate propose effort "with the bead's execution metadata as the
-  hint", and no verb writes that metadata, so the proposal started from nothing and the run laid
-  the table out differently each time. The gate's table now has seven columns and no others: Wave,
-  Bead, Task, Depends on, Agent, Effort, Why, with the reason for each row in its Why cell. Agent
-  and effort are both read from the bead and the `work` list at the gate, and `plan` stays out of
-  both. At close the run sets `agent` and `effort` metadata on the bead beside the `built with`
-  comment, so `bd list --metadata-field` answers which beads an agent built. Seen and not taken:
-  `plan` writing an effort hint onto each bead (plan does not pick the agent, so it does not pick
-  the effort; the judgment is the gate's, with the bead in front of it); `plan` writing the agent
-  (depends on the machine's harnesses and on a list that changes); a `Variant` column (OpenCode's
-  word for effort, and already two other things in this repo: a test case's variants and a
+- **Who builds each bead is a decision, made per bead at the gate, 2026-10-29.** Recorded as
+  `ADR-013.8`, amended in place the day it merged and before any run had read it, as `ADR-BASE-02`
+  was on 2026-08-19. A run on one model proposed that model for all thirteen beads of an epic and varied
+  only the effort. The text had let it: the `work` list resolved to `current` with nothing
+  configured, and the gate wrote `current` into every row as if a harness were a model, while the
+  effort rule said to propose "with the bead's execution metadata as the hint", metadata no verb
+  writes. The workers reference now opens its section on this with the decision: the model and
+  effort for each bead are chosen from the bead's body, criteria, plan section, and code, weighing
+  how much is already decided, how large and far-reaching the change is, how well the code is
+  understood, how precise the criteria are and whether the checks would catch a mistake, what
+  builds on it, and anything else visible, toward the cheapest model and effort the run would
+  trust with it, with the reason in a phrase. `current` is a harness and not a model; a subagent
+  runs on the model the launch names in the subagent tool's `model` parameter. The gate's table
+  has seven columns and no others: Wave, Bead, Task, Depends on, Model, Effort, Why this tier. The
+  launch passes `model` and `effort`. At close the run sets `agent` and `effort` metadata on the
+  bead beside the `built with` comment, so `bd list --metadata-field` answers which beads a model
+  built. `plan` stays out of all of it. Seen and not taken: `plan` writing an effort hint onto
+  each bead (plan does not pick the model, so it does not pick the effort; the judgment is the
+  gate's, with the bead in front of it); a rubric from title shape to tier, "a rename takes the
+  cheapest model at low effort" (applied mechanically, it sends a hard rename to the weakest
+  model; the rule gives what to weigh, not what to conclude); a `Variant` column (OpenCode's word
+  for effort, and already two other things in this repo: a test case's variants and a
   `harnessConfig` key).
 
 ## Open

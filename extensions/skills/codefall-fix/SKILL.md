@@ -135,8 +135,8 @@ after it nothing asks: a question is decided, consulted on, or recorded as a hum
   acceptance criteria, and the test case when there is one. For an existing bead, what changes in it,
   or that nothing does.
 - **The approach**: the files to touch, the approach, the test plan, the branch
-  (`feat/<bead>-<slug>`), and the agent and effort the worker runs on, from the `work` list per
-  `../codefall-implement/reference/workers.md`.
+  (`feat/<bead>-<slug>`), and the model and effort the worker runs on, per *Who builds each bead*
+  in `../codefall-implement/reference/workers.md`.
 - **The verification commands** and where they came from, per
   `../codefall-implement/reference/done.md`.
 - **The permissions condition**: the worker runs in the background and cannot answer a permission
