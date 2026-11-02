@@ -11,6 +11,8 @@ allowed-tools:
   - Write
   - Edit
   - Bash
+  - WebSearch
+  - WebFetch
 ---
 
 # Upgrade
@@ -143,9 +145,9 @@ all three — they differ only in how much step 3 must reconstruct:
 - **Never scaffolded** — no codefall docs at all. This is **first-time adoption**: every applicable
   template is simply missing, and the same report-then-take flow installs the stance. Detect the
   surfaces from the repo (`package.json`, `go.mod`, or `pubspec.yaml` suggests a profile) and
-  confirm rather than assume — the profile catalog and its refusal rule are `codefall-scaffold`'s.
-  If a surface has no supported profile, refuse the same way `codefall-scaffold` does: say plainly that the
-  stack isn't supported yet, name what is, offer to record the request, and stop. Do not improvise.
+  confirm rather than assume — the profile catalog is `codefall-scaffold`'s. A surface with no
+  profile follows `../codefall-scaffold/reference/unsupported.md`, which names
+  `../../../.codefall/shared/workflow.md`; its ADRs join step 5's missing templates.
 
 Adoption installs documents describing a stance the code does not yet follow and does not check
 the code against them; say so in the report. Aligning the code is `migrate`'s job, and the
@@ -175,8 +177,9 @@ is unverifiable, and unverifiable is edited.
 
 First fix the **applicable set** — which templates this project should have at all. Profiles and
 decisions come from `scaffold.json` when present, from which profile's ADRs are on disk otherwise,
-and from step 2's detection for adoption. Apply `codefall-scaffold`'s gates, not your own: a surface that
-can never be split skips ADR-BASE-03, a backend-only project has no use for ADR-TS-02. If a gate
+and from step 2's detection for adoption. A surface under `ownStack` takes only the
+stack-agnostic templates. Apply `codefall-scaffold`'s gates, not your own: a surface that can never
+be split skips ADR-BASE-03, a backend-only project has no use for ADR-TS-02. If a gate
 genuinely can't be answered from the project, ask — once, batched with anything else step 5 needs.
 
 Then classify every difference:

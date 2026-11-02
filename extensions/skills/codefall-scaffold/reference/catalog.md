@@ -89,7 +89,8 @@ is either one web surface or a web surface plus a native one.
 
 A profile is **supported** only when `../templates/surfaces/<name>/PROFILE.md` is complete. Nothing
 else counts — not a language this skill mentions, not one you know well, not one that is "basically
-the same as" a supported profile.
+the same as" a supported profile. A surface whose stack has no supported profile follows
+`unsupported.md`, where the person describes their own stack.
 
 A Tauri desktop app, a React Native mobile app, or a Flutter app is scaffoldable today when its
 native side is a thin shell; none is when that side carries domain logic. That is a question for

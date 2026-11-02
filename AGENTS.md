@@ -21,9 +21,9 @@ document codefall installs:
 - **A word names the common case, not an entry condition.** A rule written for a bug applies to a
   cleanup, a missing test, or a request that reaches it: what kind of thing the item is becomes a
   field on it, and the item is never turned away for being the wrong kind of thing.
-- **An exit is for what a verb cannot do**: a missing tool, an unsupported tracker, a missing surface
-  profile. Disagreement about kind, size, or fit is said once, then the run does what the person
-  asked. [`extensions/skills/AGENTS.md`](extensions/skills/AGENTS.md) states this for skills.
+- **An exit is for what a verb cannot do**: a missing tool, an unsupported tracker. A stack with no
+  surface profile is not one, because the person can describe their own. Disagreement about kind,
+  size, or fit is said once, then the run does what the person asked. [`extensions/skills/AGENTS.md`](extensions/skills/AGENTS.md) states this for skills.
 - **A list lives in the project's data, not in the rule**, where the project has one: the labels in
   use, the types `bd` accepts, the directories under a root. The rule reads from there and takes the
   person's word for a new entry. A fixed list in a rule is for what a tool can do.

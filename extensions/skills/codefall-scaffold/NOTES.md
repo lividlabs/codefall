@@ -39,6 +39,15 @@ extra steps. Offering a planned profile and then refusing spends the user's choi
 discovering it after choosing something that looked available. And an improvised profile is worse
 than none, because it produces ADRs marked Accepted that nobody actually decided.
 
+Stopping at that exit turned away people who would have used the stance on a stack codefall has no
+profile for. Since ADR-017 the exit leads to the project's own stack: the person describes the
+architecture and practices for their stack, a search of the stack's own documentation is offered,
+and the decisions become project ADRs, `ADR-001` upward, that say they are the project's and not
+codefall's. Those ADRs are decided by a person, so the objection above does not reach them. What is
+still never done is writing a stack's decisions from what the model knows about the language. The
+same exit searches codefall's tracker for an existing request, and offers a reaction and a comment
+on one it finds, so demand for a profile is counted on one issue instead of spread over duplicates.
+
 ## Recommend only what an ADR supports
 
 A "(Recommended)" label with no ADR behind it invents an opinion this project does not hold, and the

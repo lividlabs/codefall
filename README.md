@@ -397,7 +397,11 @@ decisions for that language:
 | `dart-flutter` | Flutter apps on mobile, desktop, and the web | supported |
 | `rust-native`, `kotlin-native`, `swift-native`, `python`, `java` | | planned |
 
-When a project needs a profile that is not supported yet, scaffold stops instead of guessing.
+When a project needs a profile that is not supported yet, scaffold does not guess. It looks for a
+request for that profile on codefall's issue tracker and offers to add your vote and a comment to
+one it finds. Then it offers to scaffold on your own stack: you describe the architecture and the
+practices your stack follows, it can search for how Clean Architecture fits that stack, and your
+decisions become the project's own ADRs.
 [The architecture guide](docs/guide/architecture.md) explains the rules and how scaffold matches a
 project to its profiles.
 

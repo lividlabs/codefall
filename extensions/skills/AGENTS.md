@@ -51,10 +51,13 @@ writing and changing a skill; the extension-wide rules, ADR immutability, prose,
   guard hook holds it.
 - **A verb files on the project's own tracker and nowhere else.** A bug it finds in codefall, or in
   any other repository, is handed to the person as issue text, never filed and never offered. The
-  rule is stated once, under *Who is authoritative for what* in [`docs/workflow.md`](../../docs/workflow.md);
+  one exception is a request for a surface profile, which `codefall-scaffold` and
+  `codefall-upgrade` may react to and comment on when it already exists (ADR-017). The rule is
+  stated once, under *Who is authoritative for what* in [`docs/workflow.md`](../../docs/workflow.md);
   a skill that touches the tracker points at the installed copy and never restates it.
-- **Refuse only what you cannot do.** A missing surface profile, a missing tool, an unsupported
-  tracker — those are exits. Disagreeing about size, altitude, or fit is not: say what you think and
+- **Refuse only what you cannot do.** A missing tool and an unsupported tracker are exits. A
+  missing surface profile is a path: the person describes their own stack, per
+  `codefall-scaffold`'s `reference/unsupported.md`. Disagreeing about size, altitude, or fit is not: say what you think and
   why, then do what the user asks. `codefall-envision`'s floor and `codefall-specify`'s cohesion check are both
   this shape.
 - **A report ends with what the user does next** — merge the pull request, run the next verb,
@@ -62,8 +65,9 @@ writing and changing a skill; the extension-wide rules, ADR immutability, prose,
   after it. A user should never have to work out the next step from what was produced. One step,
   never a sequence: for `codefall-equip`, `codefall-scaffold`, and `codefall-upgrade` that step is
   the merge, and what follows it is stated as what happens once the pull request is merged.
-- Never present an option that would be refused — unsupported stacks and planned profiles are
-  exits, not menu choices. See the stack question in `codefall-scaffold`'s SKILL.md.
+- Never present an option that would be refused. Planned profiles are not menu choices; a stack
+  without a profile is reached through "None of these". See the stack question in
+  `codefall-scaffold`'s SKILL.md.
 - Every verb except `codefall-scaffold` and `codefall-upgrade` reads
   `.codefall/skills/<verb>/CUSTOMIZE.md` from the user's project when it exists — project procedure
   the extension cannot know. The procedure lives in

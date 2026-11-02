@@ -177,10 +177,24 @@ surfaces. It then matches each surface to a profile:
   scaffold asks you to pick from the supported profiles or "none of these". It never offers a planned
   profile.
 
-If any surface has no supported profile, scaffold stops. It does not substitute the nearest
-supported profile, write ADRs for an unsupported language by hand, or scaffold only the part that
-fits. It names which surfaces fit and which do not, says what is supported, and offers to record the
-request.
+When a surface has no supported profile, scaffold says so and names what is supported. It does not
+substitute the nearest supported profile or write a stack's decisions from what it knows about the
+language. It does two things instead:
+
+1. It searches [codefall's issues](https://github.com/lividlabs/codefall/issues) for a request for
+   your stack. When one is open, it offers to add a 👍 and a comment to it on your account, and
+   shows the comment first. When none exists, it gives you the issue text to file yourself. The
+   comment names the stack, the kind of surface, and your codefall version, and nothing about your
+   product.
+2. It offers to scaffold that surface on your own stack. You describe the architecture and the
+   practices your stack follows: the layout, dependency injection, how boundaries are enforced,
+   errors, tests, and client state. Scaffold can search the stack's documentation for how Clean
+   Architecture fits it, and you decide each point. Your decisions become the project's own ADRs,
+   numbered from `ADR-001`. That surface stays docs only, and wiring its boundary enforcement is
+   the first task you owe the project.
+
+If you decline both, scaffold stops, and it can still emit the stack-agnostic core when you ask
+for it.
 
 When a surface's stack is open and the directory already holds files, scaffold first consults the
 project's agents once, the same agents [Configuration](configuration.md) describes for questions of

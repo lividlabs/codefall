@@ -191,6 +191,10 @@ dependency, a migration, or generated code changes `start` or `update` in the sa
   the person as a finished issue — a title and a body, ready to paste — and named in the verb's
   report. No verb files it, and no verb offers to: a yes given inside a run reaches this project and
   nothing beyond it, and filing on another repository is the person's own act, on their own account.
+  One exception reaches codefall's tracker. When a surface's stack has no supported profile,
+  `scaffold` and `upgrade` search `lividlabs/codefall` for a request for that stack, and offer a 👍
+  reaction and a comment on an open one, posted on the person's account only on a yes. A new
+  request is never filed there; it is handed over like a bug (ADR-017).
 - **Beads** is authoritative for task state from the moment a plan's staged task table is approved
   and becomes beads. A plan keeps its task table — the tasks, edges, and plan refs it decided,
   under the epic's ID — and never a copy of work state.

@@ -10,6 +10,8 @@ allowed-tools:
   - Write
   - Edit
   - Bash
+  - WebSearch
+  - WebFetch
 ---
 
 # Scaffold
@@ -33,6 +35,8 @@ Read each when its step says to; none is loaded up front.
   catalog with each profile's status, and consulting before the stack question. Read at step 1,
   before the stack question. Names `../../../.codefall/shared/running-agents.md`, `../../../.codefall/shared/run-agent.sh`,
   `../../../.codefall/shared/consult-prompt.md`, `../../../.codefall/shared/consult.schema.json`.
+- `reference/unsupported.md` — a surface with no supported profile. Read at step 1 when one does
+  not match. Names `../../../.codefall/shared/workflow.md`.
 - `reference/provenance.md` — the shape and fields of `.codefall/scaffold.json`. Read at step 4.
 - `reference/depth.md` — what each depth answer emits, and the boundary-enforcement obligation.
   Read at step 5.
@@ -177,21 +181,16 @@ surface catalog, each with its one-line cover, and **None of these**.
 holds files that could answer it, consult once first, per `reference/catalog.md`, and fold the
 answer in as the proposed option; the user still picks.
 
-**"None of these" is the deliberate exit.** When the user picks it, say plainly:
-
-> Sorry — we don't support your stack yet.
-
-Then name what *is* supported, offer to record the request, and stop. Do not steer toward a
-supported profile they did not pick.
+**"None of these" is the deliberate exit.** That surface, or one whose stack has no supported
+profile, follows `reference/unsupported.md` from here to step 7.
 
 With more than one surface, ask once per surface, each with the same options.
 
-**If every surface matches a supported profile**, name the profiles you matched and continue.
+**If every surface matches a profile or takes its own stack**, name each match and continue.
 
-**If any surface does not, stop** — the project is not scaffoldable, even if the other surfaces are.
-Do not substitute the nearest supported profile, hand-author a profile's ADRs for an unsupported
-language, or emit a partial scaffold and note the gap in passing. Name which surfaces fit and which
-do not, say what is supported, and offer to record the request.
+**If any surface has neither, stop.** The project is not scaffoldable, even if the other surfaces
+are. Do not substitute the nearest supported profile or emit a partial scaffold and note the gap in
+passing. Name which surfaces fit and which do not.
 
 If the user, having been told, explicitly asks for what *is* covered — the stack-agnostic core, or
 the supported surfaces alone — emit it, and state plainly which surfaces were left undecided and that
@@ -335,8 +334,8 @@ that every ADR cross-link and every `AGENTS.md` link resolves.
 - **Nothing is designed here.** No entities, no schema, no feature behavior. Product detail goes to
   the decision log's Parking lot.
 - **Shape decides the architecture; names decide folder names.**
-- **Never show or improvise a profile that is not supported.** Planned profiles are exits, and
-  ADRs for an unsupported language are never hand-authored.
+- **Never show or improvise a profile that is not supported.** A stack without one gets ADRs the
+  person decides, never ones the run writes from what it knows.
 - **A consult proposes a profile; the user picks it.** Only when the description left it open.
 - **Recommend only what an ADR supports.** Where Codefall has no stance, present the options flat.
 - **The inherited ADRs ship Accepted.** Amend only when the interview requires it, and report every
