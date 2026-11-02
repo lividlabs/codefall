@@ -2218,6 +2218,26 @@ Decided at scaffold, 2026-08-16.
   for effort, and already two other things in this repo: a test case's variants and a
   `harnessConfig` key).
 
+- **A stack with no profile is the project's own, 2026-10-29.** Recorded as `ADR-017`. Scaffold
+  stopped on a surface whose stack had no supported profile and offered to "record the request",
+  which named no place. Now it searches `lividlabs/codefall` for an issue requesting that stack's
+  profile, offers a 👍 and a comment on an open one, shown first and posted only on a yes, and
+  hands over issue text when there is none. Then it offers the project's own stack: the person
+  describes the architecture and practices for the stack against what every profile settles, a
+  search of the stack's documentation for how Clean Architecture fits is offered in the same
+  question, and the decisions become project ADRs from `ADR-001`, with the surface docs only and
+  recorded under `ownStack` in `scaffold.json`. `upgrade`'s adoption path offers the same, and the
+  tracker rule in `docs/workflow.md` gains its one exception. Seen and not taken: the run picking
+  the stack's tooling (the improvised profile the stop existed to prevent); filing a new request on
+  codefall's tracker (a public act on another repository is the person's to write); offering the
+  core alone (it was already available to anyone who asked, and leaves the surface with no
+  decisions). The search queries the `profile request` label, created on `lividlabs/codefall` for
+  this, and the title, since maintainers label a request at triage and a new one may not carry it
+  yet. A surface on its own stack stays docs only whatever depth the others take: the code tiers
+  come from a profile's depth notes, and scaffold has no tested way to prove the boundary lint fails
+  on a violation without one. Left open: moving a project's own-stack ADRs onto a profile that
+  ships later for its stack.
+
 ## Open
 
 - (nothing open; the last item graduated to ADR-012 on 2026-09-27)
