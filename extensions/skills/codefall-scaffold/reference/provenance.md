@@ -8,6 +8,9 @@ it lies about history rather than changing a setting. Read at step 4.
   "pluginVersion": "0.4.0",
   "scaffoldedAt": "2026-08-18",
   "profiles": ["typescript-react"],
+  "ownStack": {
+    "api": { "stack": "Python 3.13, FastAPI", "adrs": ["ADR-001", "ADR-002", "ADR-003"] }
+  },
   "decisions": {
     "shape": "several-capabilities",
     "architecture": "package-by-component",
@@ -25,6 +28,10 @@ it lies about history rather than changing a setting. Read at step 4.
 
 - `pluginVersion` — read from release-please's PR title if there is one, else write `unknown`. Do not
   guess it.
+- `profiles` — the supported profiles matched, one per surface that matched one.
+- `ownStack` — one entry per surface on the project's own stack, keyed by the surface's name, with
+  the stack as the person named it and the project ADRs that record it, per `unsupported.md`.
+  Omitted when every surface matched a profile.
 - `shape` — `one-cohesive-domain`, `several-capabilities`, or `unclear`.
 - `architecture` — `package-by-component` or `ports-and-adapters`.
 - `topology` — one entry per React surface; omitted where a profile has no topologies.
