@@ -1,7 +1,9 @@
 # The plan document
 
-The shape of `docs/plans/PLAN-NNN-slug.md`. Read before planning (step 5) and again when
-drafting (step 7).
+What goes into `docs/plans/PLAN-NNN-slug.md`. The layout — the header, the sections in order, and
+the blocks inside them — is `../templates/plans/PLAN.md`, and a plan is composed from it. This
+file says what each part holds and when a conditional section is written. Read before planning
+(step 5) and again when drafting (step 7).
 
 ## Contents
 
@@ -17,18 +19,9 @@ drafting (step 7).
 
 ## The header
 
-A title heading and two rows, the same shape `VISION` and `SPEC` documents use. The body starts at
-`## Overview`.
-
-```markdown
-# PLAN-007: Stage context handoff
-
-**Status:** Ready — 2026-08-31
-**Related:** spec: SPEC-004 · adr: ADR-003
-```
-
-`Status` is always present. `Related` appears only when there is something to relate, and is a
-labeled list, not a set of rows.
+A title heading and two rows, the same shape `VISION` and `SPEC` documents use. `Status` is always
+present. `Related` appears only when there is something to relate, and is a labeled list, not a set
+of rows.
 
 | Label | Holds |
 | --- | --- |
@@ -46,9 +39,6 @@ plan with none of these has no `Related` row until it produces an ADR.
 One increment of several carries both of its labels:
 
 ```markdown
-# PLAN-008: Share a list
-
-**Status:** Ready — 2026-10-28
 **Related:** spec: SPEC-004 (REQ-04, REQ-05) · after: PLAN-007
 ```
 
@@ -65,7 +55,8 @@ There is **no sibling `research.md`**, and no `data-model.md`, `quickstart.md`, 
 
 ## Conditional sections
 
-Include a section only when its trigger fires. Nothing is written to fill a heading.
+Include a section only when its trigger fires. Nothing is written to fill a heading. A section that
+is written keeps the place the template gives it.
 
 | Section | Include when |
 | --- | --- |
@@ -85,11 +76,10 @@ the `product-manager` persona, every such choice; under any persona, one the per
 cannot decide. The run never settles it in their place, and never reads silence as a choice. It
 researches first, so what is parked is a judgment call and not a gap in reading.
 
-One entry per decision:
+An entry names the choice, the requirements it affects, each option with what it costs, whether
+the outcome needs an ADR, and what a consult said when there was one:
 
 ```markdown
-## Decisions needed
-
 ### 1. Signed payload or session lookup for the stage context
 - **Affects:** SPEC-004-REQ-02, REQ-03
 - **Options:** a signed payload — no store, every consumer verifies; a session lookup — one store,
@@ -108,11 +98,10 @@ section is deleted when it is empty, like every conditional section.
 
 ## Technical Context
 
-A fill-in-the-blank block. Drop a line whose answer is "unchanged" rather than writing the word.
+A fill-in-the-blank block. Each line is answered concretely, with a version, a name, or a number,
+and a line whose answer is "unchanged" is dropped rather than written:
 
 ```markdown
-## Technical Context
-
 - **Language / version** — Go 1.23
 - **Primary dependencies** — `samber/do`, `pgx/v5`
 - **Storage** — Postgres 16, existing `bookings` schema
@@ -130,23 +119,16 @@ boundaries. Only the ones worth testing directly. This is not `codefall-specify`
 criterion is what a consumer observes; a hard constraint is an invariant of the implementation.
 
 ```markdown
-## Hard Constraints
-
 - THE SYSTEM SHALL hold no more than one open write transaction per booking at a time.
 - THE SYSTEM SHALL reject a context payload whose signature does not verify, before parsing it.
 ```
 
 ## Tasks
 
-One table under a callout. The table keeps its shape for the life of the plan; the callout is
-**rewritten in place** when the beads are created.
+One table under a callout. The table keeps its shape for the life of the plan; the callout starts
+as the staged one in the template and is **rewritten in place** when the beads are created.
 
 ```markdown
-## Tasks
-> Staged. Not yet in Beads.
-
-| ID | Task | Depends on | Plan ref |
-|----|------|-----------|------------|
 | T1 | Add `StageContext` type + serde | — | Components |
 | T2 | Wire context load into `/scaffold` | T1 | Architecture |
 | T3 | Emit context on `/envision` exit | T1 | Data Models |
@@ -170,13 +152,6 @@ The callout is rewritten; the table stays.
 > Created in Beads 2026-08-29 as `booking-PLAN-007`, one bead per row as `booking-PLAN-007-Tn`.
 > This is the plan as last approved. Beads is authoritative, and a difference between the two is
 > reconciled by revising the plan.
-
-| ID | Task | Depends on | Plan ref |
-|----|------|-----------|------------|
-| T1 | Add `StageContext` type + serde | — | Components |
-| T2 | Wire context load into `/scaffold` | T1 | Architecture |
-| T3 | Emit context on `/envision` exit | T1 | Data Models |
-| T4 | Integration test: vision → scaffold | T2, T3 | Testing Strategy |
 ```
 
 Bead identifiers are the document's own numbering behind the project's prefix —
