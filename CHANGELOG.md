@@ -6,6 +6,14 @@ below were written by hand, before that was wired up.
 Tags are bare version numbers (`0.1.2`), not `v`-prefixed, so they match the `ref` the marketplace
 pins. A `v0.1.1` tag also exists from before that convention was settled.
 
+## [0.40.0](https://github.com/lividlabs/codefall/compare/v0.39.0...v0.40.0) (2026-11-02)
+
+
+### Features
+
+* **plan:** compose the plan document from a PLAN.md template ([#248](https://github.com/lividlabs/codefall/issues/248)) ([dc18c79](https://github.com/lividlabs/codefall/commit/dc18c79724240cc76285b585a0b0a80ce21199c7)), closes [#235](https://github.com/lividlabs/codefall/issues/235)
+* **scaffold:** scaffold a stack with no profile on the project's own decisions, and vote on its request ([#246](https://github.com/lividlabs/codefall/issues/246)) ([cd72629](https://github.com/lividlabs/codefall/commit/cd72629728e50918ec3988319f523ef4fded7849))
+
 ## [0.39.0](https://github.com/lividlabs/codefall/compare/v0.38.0...v0.39.0) (2026-10-29)
 
 
