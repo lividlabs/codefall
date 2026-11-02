@@ -35,8 +35,8 @@ Read each when its step says to; none is loaded up front.
 
 - `reference/lifecycle.md` — the three statuses, where each lives, and what each allows. Read at
   step 7 and for the other modes.
-- `reference/document.md` — the plan document's shape: header, sections and their triggers, the
-  Technical Context and Hard Constraints blocks, the Tasks table and its callout. Read before step 5.
+- `reference/document.md` — what each section holds and when it is written. Read before step 5.
+- `templates/plans/PLAN.md` — the document template. Read at step 7.
 - `reference/adrs.md` — when a plan writes an ADR, how it is numbered, and the template. Read at
   step 4 and step 7.
 - `reference/beads.md` — what gets created in Beads, the test case a bead's criteria name, the graph
@@ -260,8 +260,8 @@ Write the staging table, then read the step 4 delivery judgment against it per
 
 ### 7. Draft and confirm
 
-Compose the full document, every plan of a split, and **show it before anything is written**.
-Nothing lands unapproved.
+Compose the full document from `templates/plans/PLAN.md`, every plan of a split, and **show it
+before anything is written**. Nothing lands unapproved.
 
 Say which conditional sections you left out and why.
 
