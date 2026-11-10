@@ -50,6 +50,115 @@ func TestBeadsStepSkipsARepositoryThatAlreadyHasBeads(t *testing.T) {
 	if slices.Contains(got, beadsAuditOff) {
 		t.Errorf("asked %q, want the interaction log's default left alone", got)
 	}
+
+	// Its remote is its own business too: the first push belongs to the run that made the database.
+	if slices.Contains(got, beadsRemotes) || slices.Contains(got, beadsPush) {
+		t.Errorf("asked %q, want the Dolt remote left alone", got)
+	}
+}
+
+// originWired is what bd lists once bd init has wired the git origin as the database's Dolt remote.
+const originWired = `[
+  {
+    "name": "origin",
+    "url": "git+ssh://git@github.com/lividlabs/example",
+    "sql_url": "git+ssh://git@github.com/lividlabs/example",
+    "status": "ok"
+  }
+]
+`
+
+// bd init wires the git origin as the Dolt remote and pushes nothing to it, and a remote with no
+// branch fails every pull. So the step makes the first push itself, after bd init and only when bd
+// lists a remote, and says what came of it.
+func TestBeadsStepMakesTheFirstPushToAWiredRemote(t *testing.T) {
+	for _, tc := range []struct {
+		name    string
+		remotes CommandResult
+		push    CommandResult
+		pushed  bool
+		want    string
+	}{
+		{
+			name:    "a wired remote is pushed to",
+			remotes: CommandResult{Stdout: originWired},
+			push:    CommandResult{Stdout: "Pushing to Dolt remote...\nPush complete.\n"},
+			pushed:  true,
+			want:    "initialized Beads, with the interaction log off in its config.yaml, and pushed to its Dolt remote",
+		},
+		{
+			name:    "no remote leaves nothing to push",
+			remotes: CommandResult{Stdout: "[]\n"},
+			want:    "initialized Beads, with the interaction log off in its config.yaml",
+		},
+		{
+			name:    "a push bd refuses is a clause with its remedy, not a failed step",
+			remotes: CommandResult{Stdout: originWired},
+			push:    CommandResult{ExitCode: 1, Stderr: "Error: permission denied (publickey)\nmore\n"},
+			pushed:  true,
+			want: "initialized Beads, with the interaction log off in its config.yaml; bd dolt push exited 1 " +
+				"(Error: permission denied (publickey)), so its Dolt remote is wired and empty: run " +
+				"`bd dolt push` before the first /codefall-refresh",
+		},
+		{
+			name:    "remotes bd cannot list are not pushed to blind",
+			remotes: CommandResult{ExitCode: 1, Stderr: "Error: unknown flag: --json\n"},
+			want: "initialized Beads, with the interaction log off in its config.yaml; bd dolt remote list " +
+				"--json could not be read, so run `bd dolt push` before the first /codefall-refresh if the " +
+				"database has a Dolt remote",
+		},
+		{
+			name:    "an answer that is not the array bd documents is not pushed to blind",
+			remotes: CommandResult{Stdout: "origin  git+ssh://git@github.com/lividlabs/example\n"},
+			want: "initialized Beads, with the interaction log off in its config.yaml; bd dolt remote list " +
+				"--json could not be read, so run `bd dolt push` before the first /codefall-refresh if the " +
+				"database has a Dolt remote",
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			runner := uninitialized()
+			runner.runs[beadsInit] = CommandResult{Stdout: "bd initialized successfully!\n"}
+			runner.runs[beadsRemotes] = tc.remotes
+			runner.runs[beadsPush] = tc.push
+
+			report, err := NewInitialize(settled("{}"), runner, newFakeExtensionSource(), noChanges()).Run(t.Context(), beadsRequest(), nil)
+			if err != nil {
+				t.Fatalf("Run: %v", err)
+			}
+
+			result := beadsResult(t, report)
+			if result.Outcome != domain.OutcomeDone {
+				t.Errorf("outcome = %v, want DONE", result.Outcome)
+			}
+
+			if result.Detail != tc.want {
+				t.Errorf("detail = %q, want %q", result.Detail, tc.want)
+			}
+
+			got := commandsAsked(runner)
+			if slices.Contains(got, beadsPush) != tc.pushed {
+				t.Errorf("asked %q, want %q among them: %v", got, beadsPush, tc.pushed)
+			}
+
+			// The remote is bd init's to wire, so it is asked about only once bd init has run.
+			if slices.Index(got, beadsRemotes) < slices.Index(got, beadsInit) {
+				t.Errorf("asked %q, want %q after %q", got, beadsRemotes, beadsInit)
+			}
+		})
+	}
+}
+
+// A bd that cannot be started for the push is the same failure as one that cannot be started for
+// bd init, and stops the run the same way.
+func TestBeadsStepStopsTheRunWhenThePushCannotBeStarted(t *testing.T) {
+	runner := uninitialized()
+	runner.runs[beadsRemotes] = CommandResult{Stdout: originWired}
+	runner.errs[beadsPush] = errors.New("broken pipe")
+
+	_, err := NewInitialize(settled("{}"), runner, newFakeExtensionSource(), noChanges()).Run(t.Context(), beadsRequest(), nil)
+	if err == nil || !strings.Contains(err.Error(), "run bd dolt push") {
+		t.Errorf("Run error = %v, want it to say the command could not be run", err)
+	}
 }
 
 // bd declining to write the default is a clause of the sentence, not a failed step: the log is off
