@@ -2252,9 +2252,11 @@ Decided at scaffold, 2026-08-16.
   remote" out of what `bd init` printed (the JSON listing is what bd offers a program); `--yes` on
   the push (it consents to adopting a remote, and nothing is adopted after one is listed); failing
   init when the push fails (a missing SSH key would leave the project half set up); a `doctor`
-  check for a wired, empty remote (refresh reaches the same project first). Left as it is: the
-  Beads section of `AGENTS.md`, whose `bd dolt pull` bullet names the no-remote case and not this
-  one.
+  check for a wired, empty remote (refresh reaches the same project first). The Beads section
+  of `AGENTS.md` gains one bullet for the same message, in a second pull request the same day: a
+  verb that runs `bd dolt pull` before any bead write, on a project set up before init pushed,
+  meets the error outside refresh, and the section's no-remote bullet did not match it (chars/4:
+  653 → 685 tokens).
 
 ## Open
 
