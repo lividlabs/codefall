@@ -2,6 +2,7 @@ package application
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"slices"
 	"strings"
@@ -28,6 +29,22 @@ var beadsInitArgs = []string{"init", "--non-interactive", "--skip-agents"}
 // It runs only on a database this step just made: a project that already has Beads may have
 // turned the log on, and that is its decision to keep.
 var beadsAuditOffArgs = []string{"config", "set", "audit.enabled", "false"}
+
+// beadsRemotesArgs asks bd which Dolt remotes the database has, and beadsFirstPushArgs publishes the
+// database to the default one. bd init wires a remote named origin at the git origin whenever the
+// repository has one (bd 1.3), and pushes nothing to it. A remote that is wired and empty fails
+// every pull: `bd sync` and `bd dolt pull` exit 1 with "no branches found in remote", so the
+// project's first /codefall-refresh stops at its beads step. The first push is what gives the remote
+// a branch, so the step makes it. Like the interaction-log default, it runs only on a database this
+// step just made.
+//
+// The remotes are asked for rather than read out of what bd init printed, because the JSON is what
+// bd offers a program. The push carries no --yes: that flag consents to adopting a remote where
+// none is wired, and a push that follows a listed remote adopts nothing.
+var (
+	beadsRemotesArgs   = []string{"dolt", "remote", "list", "--json"}
+	beadsFirstPushArgs = []string{"dolt", "push"}
+)
 
 // skipHooksArg is what an install below the repository root adds. bd init points the clone's
 // core.hooksPath at its own .beads/hooks, and that setting is one value for the whole repository:
@@ -82,13 +99,8 @@ func (i *Initialize) beads(ctx context.Context, request Request) (domain.StepRes
 	}
 
 	if result.ExitCode != 0 {
-		detail := text.FirstLine(result.Stderr)
-		if detail == "" {
-			detail = text.FirstLine(result.Stdout)
-		}
-
 		return domain.StepResult{}, fmt.Errorf("%s exited %d: %s",
-			commandLine(beadsCommand, args), result.ExitCode, detail)
+			commandLine(beadsCommand, args), result.ExitCode, firstLineOf(result))
 	}
 
 	// bd warns on stderr about things a fresh database has not got yet — no Dolt remote, for one —
@@ -103,7 +115,12 @@ func (i *Initialize) beads(ctx context.Context, request Request) (domain.StepRes
 		return domain.StepResult{}, err
 	}
 
-	return domain.BeadsStep.Done(done + note), nil
+	pushed, err := i.beadsFirstPush(ctx, request.Dir)
+	if err != nil {
+		return domain.StepResult{}, err
+	}
+
+	return domain.BeadsStep.Done(done + note + pushed), nil
 }
 
 // beadsAuditOff writes the interaction-log default into the database bd init just made, and says so
@@ -117,16 +134,77 @@ func (i *Initialize) beadsAuditOff(ctx context.Context, dir string) (string, err
 	}
 
 	if result.ExitCode != 0 {
-		detail := text.FirstLine(result.Stderr)
-		if detail == "" {
-			detail = text.FirstLine(result.Stdout)
-		}
-
 		return fmt.Sprintf("; %s exited %d (%s), so the interaction log is at bd's default",
-			commandLine(beadsCommand, beadsAuditOffArgs), result.ExitCode, detail), nil
+			commandLine(beadsCommand, beadsAuditOffArgs), result.ExitCode, firstLineOf(result)), nil
 	}
 
 	return ", with the interaction log off in its config.yaml", nil
+}
+
+// beadsFirstPush publishes the database bd init just made to the Dolt remote bd init wired, and says
+// so as a clause of the step's sentence. A database with no remote has nothing to publish and adds
+// nothing to the sentence: the project works on this machine alone, which is what bd init already
+// said on stderr. A push bd refuses is reported in the same clause rather than failing the step,
+// with the command that mends it: the database works without it, and what the project is left with
+// is a remote that every pull fails against until that command has run. A second clone, which
+// bd init fills from the remote, pushes nothing and exits 0.
+func (i *Initialize) beadsFirstPush(ctx context.Context, dir string) (string, error) {
+	wired, note, err := i.beadsRemoteWired(ctx, dir)
+	if err != nil {
+		return "", err
+	}
+
+	if !wired {
+		return note, nil
+	}
+
+	result, err := i.probe(ctx, dir, beadsCommand, beadsFirstPushArgs...)
+	if err != nil {
+		return "", err
+	}
+
+	if result.ExitCode != 0 {
+		return fmt.Sprintf("; %s exited %d (%s), so its Dolt remote is wired and empty: run `%s` before "+
+			"the first /codefall-refresh", commandLine(beadsCommand, beadsFirstPushArgs), result.ExitCode,
+			firstLineOf(result), commandLine(beadsCommand, beadsFirstPushArgs)), nil
+	}
+
+	return ", and pushed to its Dolt remote", nil
+}
+
+// beadsRemoteWired reports whether the database has a Dolt remote. bd answers with a JSON array, one
+// object per remote, and an empty array when there are none. An answer that cannot be read is not a
+// reason to push blind, so it is reported as a clause and the push is left to the person.
+func (i *Initialize) beadsRemoteWired(ctx context.Context, dir string) (bool, string, error) {
+	result, err := i.probe(ctx, dir, beadsCommand, beadsRemotesArgs...)
+	if err != nil {
+		return false, "", err
+	}
+
+	unread := fmt.Sprintf("; %s could not be read, so run `%s` before the first /codefall-refresh if "+
+		"the database has a Dolt remote", commandLine(beadsCommand, beadsRemotesArgs),
+		commandLine(beadsCommand, beadsFirstPushArgs))
+
+	if result.ExitCode != 0 {
+		return false, unread, nil
+	}
+
+	var remotes []json.RawMessage
+	if err := json.Unmarshal([]byte(result.Stdout), &remotes); err != nil {
+		return false, unread, nil //nolint:nilerr // an unreadable answer is a clause of the report, not a failed step
+	}
+
+	return len(remotes) > 0, "", nil
+}
+
+// firstLineOf is the one line of a failed command worth repeating: what it said on stderr, or on
+// stdout when stderr was empty.
+func firstLineOf(result CommandResult) string {
+	if detail := text.FirstLine(result.Stderr); detail != "" {
+		return detail
+	}
+
+	return text.FirstLine(result.Stdout)
 }
 
 // beadsInitialized asks bd whether this directory already has a database. `bd info` is the question

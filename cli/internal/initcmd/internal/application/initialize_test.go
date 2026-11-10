@@ -34,6 +34,8 @@ const (
 	pluginInstall = "claude extension install codefall@codefall --scope project -y"
 	beadsInit     = "bd init --non-interactive --skip-agents"
 	beadsAuditOff = "bd config set audit.enabled false"
+	beadsRemotes  = "bd dolt remote list --json"
+	beadsPush     = "bd dolt push"
 	beadsInfo     = "bd info"
 	gitWorkTree   = "git rev-parse --is-inside-work-tree"
 	gitStaged     = "git diff --cached --quiet"
@@ -175,10 +177,12 @@ func toolsInstalled() *fakeCommandRunner {
 }
 
 // uninitialized is toolsInstalled in a repository Beads has never been run in, which is what makes
-// the beads step do its work.
+// the beads step do its work. The repository has no git origin, so the database bd init makes has no
+// Dolt remote, and bd says so with an empty array; a test that wants one wired lists it.
 func uninitialized() *fakeCommandRunner {
 	runner := toolsInstalled()
 	runner.runs[beadsInfo] = CommandResult{ExitCode: 1, Stderr: "Error: no beads database found\n"}
+	runner.runs[beadsRemotes] = CommandResult{Stdout: "[]\n"}
 
 	return runner
 }
