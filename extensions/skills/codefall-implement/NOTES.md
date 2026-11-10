@@ -62,6 +62,31 @@ A worker can run its whole verification and stop without pushing, and the harnes
 completed. So link N+1 launches only after the root has confirmed link N's branch is on the remote
 and its PR exists.
 
+## Why a serial stack shares one worktree
+
+Every worker had a worktree of its own, seeded by the harness. On a serial stack that bought
+nothing: workers run one at a time, and link N+1 starts only after link N is verified. It cost a
+copy of the project's dependencies per bead, kept until the stack merged. One follow-up epic, a
+serial stack of 45 unmerged pull requests over nine rounds, held 13 GB of worker worktrees; a
+worktree with dependencies installed was 1.6 GB, 1.3 GB of it `node_modules` (#234). Now the root
+makes one worktree for the stack and each worker builds in it in turn. The waves of an epic branch
+run at once and keep a worktree each, and a single bead keeps the harness's own.
+
+Claude Code has no way to start a subagent in a worktree that already exists, which is why the
+worker is launched without isolation and told to open every command with `cd`. Three things were
+tried on 2026-11-10 and are not worth trying again until the harness changes: a `cd` does not carry
+from one of a subagent's shell commands to the next; `EnterWorktree` with a `path` is refused from
+a subagent started in the primary checkout, "switching is only available to sessions whose working
+directory is inside a worktree"; and from a subagent started with isolation it is refused because
+that agent's writes are limited to its own worktree. A subagent started in the primary checkout
+does read, write, edit, and commit in the stack's worktree by path. What the prompt cannot enforce
+the root checks: the primary checkout's branch and status are read after every worker.
+
+The root puts the worktree on each link's branch and installs the dependencies, as it already did
+for a worker in another harness, so the worker's first step is a check and not a setup. The diff
+between what is checked out and the next base says when a lockfile moved, which is the one time the
+installed copy is stale between links.
+
 ## Why the go gate is the only question
 
 After go, nothing asks. Under ADR-013 through ADR-013.6 a failure was the one mid-run stop, and a
