@@ -96,3 +96,14 @@ the work that was needed.
 starts from the default branch, so that is the checkout whose migrations and lockfile the
 environment has to match, and the stamp records its commit. The half a pull leaves undone is the
 whole reason the verb exists.
+
+**The first push to an empty Dolt remote is refresh's to make.** `bd init` wires the git origin as
+the Dolt remote and pushes nothing (bd 1.3), and `bd sync` then exits 1 with `no branches found in
+remote`, which the table read as the environment's fault and handed back. Reproduced in a scratch
+repository on 2026-11-09: one `bd dolt push` gives the remote its branch, and the next `bd sync`
+exits 0. Refresh makes that push itself, because the remote is already the project's, every verb
+pushes to it after its first bead write anyway, and a stop here would send a teammate away for a
+command the run can give. Wiring a remote where none exists stays the user's: that one is a
+decision about where the beads travel, and this one is not. `codefall init` makes the same push
+when it creates the database, so this row is reached by a project set up before it did, or by one
+whose push failed at init.

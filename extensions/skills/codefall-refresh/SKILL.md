@@ -39,7 +39,7 @@ a file `codefall init` installed in the project's own `.codefall/`.
 | --- | --- | --- |
 | Switching the primary checkout to the default branch, and fast-forwarding it | Rebasing, merging, or resetting any branch | the user |
 | Leaving the worktree the run started in, and removing it and deleting a local branch once its work is merged | Any other worktree, and any remote branch | `codefall-implement`'s cleanup offer, the user |
-| Syncing the beads with their Dolt remote | Wiring the remote, or resolving a conflict the sync halts on | the user |
+| Syncing the beads with their Dolt remote, and the first push to a remote that has none | Wiring the remote, or resolving a conflict the sync halts on | the user |
 | Running the declared `start` and `update` | Drafting, editing, or declaring them | `codefall-equip` |
 | Recording the stamp after a clean `update` | Any other file in the project | — |
 | Saying what failed and what to do | Fixing the script that failed | `codefall-equip` |
@@ -179,7 +179,17 @@ Nothing in git moves. A worktree shares the primary checkout's database. Read th
 | `2` | A conflict bd could not settle; nothing pushed | Which issues, from bd's output, and that `bd conflicts` resolves it by hand |
 | `3` | Another writer won the push race; nothing pushed | Transient: run `/codefall-refresh` again |
 | `4` | Uncommitted changes are stuck in the working set; nothing pushed | Quote the line; the user clears it, and nothing here retries |
+| `1`, output says `no branches found in remote` | The Dolt remote is wired and nothing has been pushed to it | Make the first push, below; then that the remote had none and now has one |
 | `1` | Transport, authentication, or storage | Quote the line; the fix is the environment's |
+
+A remote with no first push fails every pull: `bd init` wires the git origin as the remote and
+pushes nothing. Make the push, then sync again and read that exit from the table:
+
+```bash
+cd <primary> && bd dolt push && bd sync
+```
+
+A push that fails is the `1` row: quote its line.
 
 Never run `bd dolt push --force`, `bd dolt pull --strategy`, or `bd conflicts resolve` from here.
 
@@ -234,7 +244,8 @@ One block, short:
   from a branch, from `<short>`, or was not pulled and why.
 - The branches and worktrees: each one from steps 3, 5, and 9, removed with its old tip or kept
   and why, and a merged branch still on the remote.
-- The beads: synced, no remote, skipped because beads is blocked, or halted and why.
+- The beads: synced, synced after the remote's first push, no remote, skipped because beads is
+  blocked, or halted and why.
 - The environment: `start` ran; `update` ran or was skipped as current.
 - The stamp: written at `<short>`, or not, and why.
 - **Last, what the user does next**: nothing, or the commit or stash a stop asked for, the
@@ -255,7 +266,8 @@ One block, short:
   left, and never with `--force`. `discard_changes` goes to `ExitWorktree` only after the merged
   test and the user's yes. Never deletes a remote branch.
 - **Syncs the beads with `bd sync` and never settles what it halts on.** No force push, no
-  strategy flag, no remote wired from here.
+  strategy flag, no remote wired from here. The one push it makes by name is the first, to a
+  remote that is wired and has no branch.
 - **Never drafts, edits, or declares a script.** A project with nothing declared is sent to
   `codefall-equip`; a script that fails is reported to it.
 - **`start` always, `update` when the stamp says so** or the user asks.
