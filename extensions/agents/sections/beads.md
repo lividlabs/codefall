@@ -22,6 +22,8 @@ git-authority note or close protocol, decides Dolt sync here.
   `bd config get issue_prefix` prints. A taken ID is refused: add `-2` and retry. Never `--force`.
 - No Dolt remote (`bd dolt pull` says `no remote`): say so once and carry on. `bd dolt push --yes`
   adopts the git origin; running it is the user's decision.
+- A Dolt remote nothing was pushed to (`bd dolt pull` says `no branches found in remote`):
+  `bd dolt push`, then pull again.
 - `.beads/interactions.jsonl` is bd's append-only log and lands in the next commit after a bead
   write; that is expected, not a stray change. Never edit it, resolve a conflict in it by hand, or
   review it.
