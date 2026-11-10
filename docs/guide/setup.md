@@ -149,6 +149,13 @@ repository; Codefall keeps its task graph there, and each task is a *bead*. `ini
 Beads database and writes `audit.enabled: false` into `.beads/config.yaml`. Beads' interaction log
 then stays off until the project turns it on.
 
+When the repository has a git origin, Beads uses it as the *Dolt remote*, the place the team's copy
+of the task graph lives, under `refs/dolt/data`. `init` pushes the new database there once, with
+`bd dolt push`, because a remote nothing has been pushed to fails every later pull. A push that
+fails does not stop `init`: its report names the failure and tells you to run `bd dolt push`
+before the first `/codefall-refresh`. A repository with no git origin has no Dolt remote, and its
+beads stay on your machine.
+
 ## Hooks
 
 A *hook* is a check a coding agent runs at a fixed point, such as before each command. `init`

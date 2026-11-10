@@ -2238,6 +2238,24 @@ Decided at scaffold, 2026-08-16.
   on a violation without one. Left open: moving a project's own-stack ADRs onto a profile that
   ships later for its stack.
 
+- **The first push to the Dolt remote is codefall's, 2026-11-09.** `bd init` wires the git origin
+  as the Dolt remote whenever the repository has one (bd 1.3) and pushes nothing to it. A remote
+  with no branch fails every pull, so a project `codefall init` had just finished failed its first
+  `/codefall-refresh` at `bd sync`, exit 1, `no branches found in remote`, and refresh's table read
+  that as the environment's fault (#216). Now init's Beads step asks `bd dolt remote list --json`
+  after `bd init` and runs `bd dolt push` when a remote is listed, on a database it just made and
+  on no other. A push bd refuses is a clause of the step's sentence with the command to run, not a
+  failed step, because the database works without it. Refresh's table gains a row for the message,
+  and refresh makes the push and syncs again, for a project set up before init did. Wiring a
+  remote where none exists stays the person's, as before: that decides where the beads travel, and
+  a push to a remote bd already wired does not. Seen and not taken: reading "Configured Dolt
+  remote" out of what `bd init` printed (the JSON listing is what bd offers a program); `--yes` on
+  the push (it consents to adopting a remote, and nothing is adopted after one is listed); failing
+  init when the push fails (a missing SSH key would leave the project half set up); a `doctor`
+  check for a wired, empty remote (refresh reaches the same project first). Left as it is: the
+  Beads section of `AGENTS.md`, whose `bd dolt pull` bullet names the no-remote case and not this
+  one.
+
 ## Open
 
 - (nothing open; the last item graduated to ADR-012 on 2026-09-27)
