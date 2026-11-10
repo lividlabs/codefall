@@ -6,6 +6,21 @@ below were written by hand, before that was wired up.
 Tags are bare version numbers (`0.1.2`), not `v`-prefixed, so they match the `ref` the marketplace
 pins. A `v0.1.1` tag also exists from before that convention was settled.
 
+## [0.40.0](https://github.com/lividlabs/codefall/compare/v0.39.0...v0.40.0) (2026-11-10)
+
+
+### Features
+
+* **implement:** build a serial stack in one worktree, used by each worker in turn ([#254](https://github.com/lividlabs/codefall/issues/254)) ([a4b3c81](https://github.com/lividlabs/codefall/commit/a4b3c81a154518fa72c2cd645c036f56c684b532))
+* **plan:** compose the plan document from a PLAN.md template ([#248](https://github.com/lividlabs/codefall/issues/248)) ([dc18c79](https://github.com/lividlabs/codefall/commit/dc18c79724240cc76285b585a0b0a80ce21199c7)), closes [#235](https://github.com/lividlabs/codefall/issues/235)
+* **scaffold:** scaffold a stack with no profile on the project's own decisions, and vote on its request ([#246](https://github.com/lividlabs/codefall/issues/246)) ([cd72629](https://github.com/lividlabs/codefall/commit/cd72629728e50918ec3988319f523ef4fded7849))
+
+
+### Bug Fixes
+
+* **beads:** name the empty Dolt remote in the Beads section of AGENTS.md ([#253](https://github.com/lividlabs/codefall/issues/253)) ([f617dd2](https://github.com/lividlabs/codefall/commit/f617dd21980c049619bf4efc4cf6104e7411ecfa))
+* **init:** push the new Beads database to the Dolt remote bd init wires ([#252](https://github.com/lividlabs/codefall/issues/252)) ([d5b7c3b](https://github.com/lividlabs/codefall/commit/d5b7c3b2cd6d69e95da8218f62e55fa488c80220))
+
 ## [0.39.0](https://github.com/lividlabs/codefall/compare/v0.38.0...v0.39.0) (2026-10-29)
 
 
