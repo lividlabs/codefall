@@ -246,8 +246,8 @@ holds copies of specs and bug reports, and a project can choose to keep none.
 
 The skill reads the task graph and sorts the tasks into *waves*: every task whose dependencies are
 met goes into the same wave, and the tasks in a wave are built at the same time. It shows you the
-waves, and after you approve, it runs to the end without asking again. Each task is built in its
-own worktree with its own tests, checked against its acceptance criteria, and opened as a pull
+waves, and after you approve, it runs to the end without asking again. Each task is built in a
+worktree with its own tests, checked against its acceptance criteria, and opened as a pull
 request. A bug or a loose end a task turns up is filed as a bead when the task reports it, never
 fixed in passing. The skill reports progress in one line:
 

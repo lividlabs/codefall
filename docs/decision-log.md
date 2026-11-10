@@ -2258,6 +2258,30 @@ Decided at scaffold, 2026-08-16.
   meets the error outside refresh, and the section's no-remote bullet did not match it (chars/4:
   653 → 685 tokens).
 
+- **A serial stack is built in one worktree, 2026-11-10.** `implement` gave every worker a
+  worktree of its own, and on a serial stack each one installed the project's dependencies again
+  and kept them until the stack merged: 45 worktrees and 13 GB on one follow-up epic, 1.3 GB of
+  every installed worktree being `node_modules` (#234). Workers on a stack run one at a time, so
+  the separate worktrees bought nothing. Now the root makes one worktree for the stack, named for
+  the epic, puts it on each link's branch, installs the dependencies once and again only when the
+  next base moved a lockfile or a manifest, and checks that the worktree is clean before each
+  link. The worker prompt gains `{{WORKTREE}}`, `own` or a path, and a worker given a path opens
+  every command with `cd` and leaves the tree committed. A later round and a resumed run reuse the
+  worktree, and close-out offers it for cleanup once, when every pull request in the stack has
+  merged. A single bead and the waves of an epic branch keep a worktree per worker. In Claude
+  Code the worker is a subagent launched without isolation, because nothing moves a subagent into
+  an existing worktree: `cd` does not carry between its commands, and `EnterWorktree` with a path
+  is refused both from the primary checkout and from an isolated agent, each tried that day. The
+  root reads the primary checkout's branch and status after every worker, since a command without
+  its `cd` lands there. Seen and not taken: launching with isolation and switching (refused, and
+  an isolated agent's writes are limited to its own worktree); the root's session entering the
+  worktree so that workers inherit it (every `bd` write is the root's in the primary checkout);
+  an offer to delete only the installed dependencies of a worktree whose pull request is open
+  (which directories those are is the project's to say, and with one worktree per stack and
+  worker pull requests merged into the epic branch at each wave boundary, few such worktrees are
+  left). Left open: a harness that accepts an existing worktree for a subagent, which would
+  replace the `cd` rule.
+
 ## Open
 
 - (nothing open; the last item graduated to ADR-012 on 2026-09-27)

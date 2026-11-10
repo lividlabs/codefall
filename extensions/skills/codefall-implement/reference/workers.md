@@ -1,7 +1,9 @@
 # Workers
 
-One background agent per bead, each in its own worktree. Read at step 5 for the `work` and `consult`
-lists the gate names, and at step 6, before rendering the first prompt.
+One background agent per bead. A single bead and each worker of an epic branch's wave get a
+worktree of their own. A serial stack has one worktree, which its workers use in turn. Read at
+step 5 for the `work` and `consult` lists the gate names, and at step 6, before rendering the first
+prompt.
 
 ## Contents
 
@@ -9,6 +11,7 @@ lists the gate names, and at step 6, before rendering the first prompt.
 - Who builds each bead
 - Workers in another harness
 - Chains
+- The stack's worktree
 - Results
 - Failure handling
 - Consulting
@@ -20,8 +23,10 @@ lists the gate names, and at step 6, before rendering the first prompt.
 `effort` set to its Effort cell, prompted from `../worker-prompt.md`, rendered by substituting
 `{{BEAD_ID}}`, `{{TITLE}}`, `{{BODY}}`, `{{ACCEPTANCE}}`, `{{PLAN_REF}}`, `{{BRANCH}}`,
 `{{BASE_REF}}`, `{{PR_TARGET}}`, `{{VERIFY_COMMANDS}}`, `{{RELATES_LINE}}`, `{{REPO}}`,
-`{{TESTING_ROOT}}`, `{{CASE_FILE_FORMAT}}`, and `{{RUNNER}}`, which is `subagent` here. A bead the
-gate gave to another harness is launched per [Workers in another harness](#workers-in-another-harness)
+`{{TESTING_ROOT}}`, `{{CASE_FILE_FORMAT}}`, `{{RUNNER}}`, which is `subagent` here, and
+`{{WORKTREE}}`, which is `own` here. A link of a serial stack is launched without `isolation`,
+into the worktree the root made, per [The stack's worktree](#the-stacks-worktree). A bead the gate
+gave to another harness is launched per [Workers in another harness](#workers-in-another-harness)
 instead.
 
 **The two testing placeholders are resolved by the root, not the worker.**
@@ -41,10 +46,10 @@ name no case simply never reads them.
   stacked link's `BASE_REF` can name its predecessor's branch before that worker exists. A later
   round's `BASE_REF` is the stack's open top or the epic branch, per *Later rounds* in the landing
   reference beside this file.
-- **Worktree isolation seeds from the repo's default HEAD**, not from `BASE_REF`. The worker's
-  first act is its own `git fetch` followed by `git checkout -b {{BRANCH}} origin/{{BASE_REF}}` —
-  off the remote-tracking ref, because git's one-branch-one-worktree rule makes a plain checkout
-  fail when another worktree holds that branch.
+- **Worktree isolation seeds from the repo's default HEAD**, not from `BASE_REF`. An isolated
+  worker's first act is its own `git fetch` followed by
+  `git checkout -b {{BRANCH}} origin/{{BASE_REF}}` — off the remote-tracking ref, because git's
+  one-branch-one-worktree rule makes a plain checkout fail when another worktree holds that branch.
 - **Workers never run `bd`.** Everything a worker needs from the tracker travels in its prompt, and
   every tracker write is the root's.
 
@@ -112,14 +117,15 @@ hooks directories outside the worktree, which the diff never shows; nothing chec
 
 1. **The worktree.** `git fetch origin`, then
    `git worktree add -b <BRANCH> <path> origin/<BASE_REF>`, at the path this harness uses for its
-   own worktrees (`.claude/worktrees/<bead>` under Claude Code). In a chain, link N+1's base is
-   link N's branch once the root has pushed it.
+   own worktrees (`.claude/worktrees/<bead>` under Claude Code). On a serial stack the worktree is
+   the stack's, put on `<BRANCH>` with its dependencies current per
+   [The stack's worktree](#the-stacks-worktree), which covers this step and the next.
 2. **The dependencies.** Install them in the worktree with the command the project's `AGENTS.md`
    gives, or its declared `update` script. A worker may have no network, so it cannot fetch them.
-3. **The prompt.** Render `../worker-prompt.md` with `{{RUNNER}}` as `run-worker.sh` and
-   `{{CASE_FILE_FORMAT}}` as the copy of `case-file.md` inside the worktree, since a worker may not
-   read outside it. Write the prompt and the out-file outside the worktree, so the worker cannot
-   commit them.
+3. **The prompt.** Render `../worker-prompt.md` with `{{RUNNER}}` as `run-worker.sh`,
+   `{{WORKTREE}}` as the worktree's absolute path, and `{{CASE_FILE_FORMAT}}` as the copy of
+   `case-file.md` inside the worktree, since a worker may not read outside it. Write the prompt and
+   the out-file outside the worktree, so the worker cannot commit them.
 4. **The run.** From the primary checkout, in the background, since a run can take most of an hour:
 
    ```
@@ -186,6 +192,44 @@ per *Failure handling*; the worker is not resumed.
 launches only after the root has verified two facts about link N: the branch is on the remote, and
 the PR exists. The root checks, never trusts. A link built in another harness meets both only once
 the root has pushed it and opened its pull request.
+
+## The stack's worktree
+
+A serial stack is built in one worktree. Its workers run one at a time, each on a branch cut from
+the branch before, so a worktree per worker would add a copy of the project's installed
+dependencies for every bead and keep it until the stack merged. The root makes the worktree, puts
+it on each link's branch, and hands it to the worker.
+
+1. **Make it once**, before the first launch. `git fetch origin`, then
+   `git worktree add --detach <path> origin/<BASE_REF>` with the first link's base, at the path this
+   harness uses for its own worktrees, named for the epic (`.claude/worktrees/<epic>` under Claude
+   Code). Install the dependencies in it with the project's declared `update` script, or the command
+   its `AGENTS.md` gives. A later round and a resumed run use the worktree `git worktree list`
+   shows at that path, and make it again when it is gone.
+2. **Check it before each link.** `git -C <path> status --porcelain` prints nothing when the last
+   worker committed everything. Ignored build output and caches do not show, and stay. Anything it
+   prints is work that worker left: commit and push what belongs to its bead, set the rest aside
+   with `git -C <path> stash push -u -m <bead>`, and name the stash in the report.
+3. **Put it on the link's branch.** `git fetch origin`, then
+   `git -C <path> diff --name-only HEAD origin/<BASE_REF>`, then
+   `git -C <path> checkout -b <BRANCH> origin/<BASE_REF>`. The base is usually the branch the last
+   worker left checked out, and the diff lists nothing. A lockfile or a dependency manifest in the
+   list means the installed copy is behind the base: install again after the checkout. A worker
+   whose own bead changes the dependencies installs them itself.
+4. **Launch the worker without `isolation`**, with `{{WORKTREE}}` rendered as the worktree's
+   absolute path. A subagent starts in the primary checkout, and its shell returns there after
+   every command, so the prompt has it open every command with `cd <path> &&` and name every file
+   by its absolute path. A worker in another harness is started inside the worktree by
+   `run-worker.sh`.
+5. **Read the primary checkout after the worker**, beside the two facts under *Chains*:
+   `git branch --show-current` and `git status --porcelain` there answer as they did before the
+   launch. A difference is a command the worker ran without its `cd`: move the work to the
+   worktree or undo it before the next link, and say so in the report.
+
+A retry uses the same worktree: the failed worker's uncommitted work is stashed as in step 2 and
+its branch renamed `<BRANCH>-failed`, so the fresh worker starts from the base on a branch of the
+same name. A layer the root fixes at integration is fixed here too, on the branch that owns the
+change.
 
 ## Results
 
@@ -276,5 +320,6 @@ who was skipped or failed.
 ## Worktrees survive the run
 
 Cleanup is an offer at close-out — never automatic, and never for a worktree whose PR is still open.
-`codefall-refresh` is the one exception: run from inside a worktree whose work has merged, it
-removes that worktree and nothing else.
+A stack's worktree is one offer for the whole stack, made once every pull request in the stack has
+merged. `codefall-refresh` is the one exception: run from inside a worktree whose work has merged,
+it removes that worktree and nothing else.

@@ -28,7 +28,7 @@ An epic means working through the whole task graph. Each bead records which bead
 it can start, and a bead is *ready* when all of those have finished. Closing one task makes the
 next ones ready. The run builds the ready tasks in *waves*, where a wave is the set of tasks that
 are ready at the same time. Each task is built by a background *worker*, a separate agent working in
-its own *worktree*, which is a separate working copy of the repository. The run continues until no
+a *worktree*, which is a separate working copy of the repository. The run continues until no
 task is left to start, and then, on an epic, through review, test, and the next rounds until the
 delivery is done, as described below.
 
@@ -83,13 +83,16 @@ The run builds the waves from the task graph first, and their shape decides how 
 at a time in dependency order. Each task gets its own branch, created on top of the previous task's
 branch, and its own pull request. The run links the pull requests into a GitHub stack as they open.
 A *stack* is a chain of pull requests in which each one targets the branch of the one below it. For
-PLAN-007, T1's pull request targets `main`, and T2's targets T1's branch.
+PLAN-007, T1's pull request targets `main`, and T2's targets T1's branch. The workers share one
+worktree and build in it one after another, so the project's dependencies are installed once for
+the stack and not once for each task.
 
 **Anything wider lands on an epic branch.** When any wave holds more than one task, the run creates
-one branch for the epic, workers branch off it in waves and run in parallel, and the root merges
-each worker's pull request into the epic branch at the end of each wave. One combined pull request
-then carries the whole epic to `main`. Work that must not reach `main` in pieces uses the epic
-branch whatever the graph's shape, and so does a standing preference in `CUSTOMIZE.md`.
+one branch for the epic, workers branch off it in waves and run in parallel, each in a worktree of
+its own, and the root merges each worker's pull request into the epic branch at the end of each
+wave. One combined pull request then carries the whole epic to `main`. Work that must not reach
+`main` in pieces uses the epic branch whatever the graph's shape, and so does a standing preference
+in `CUSTOMIZE.md`.
 
 A stack has no depth limit. Each layer's pull request shows only its own changes, and merging the
 top of the stack on GitHub lands every layer below it. When you merge one layer alone, GitHub rebases

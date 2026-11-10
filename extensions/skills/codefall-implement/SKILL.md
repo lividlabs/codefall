@@ -1,6 +1,6 @@
 ---
 name: codefall-implement
-description: Execute the work the plan verb put into the graph — claim ready beads, build each task in its own worktree with tests as part of done, write the test case a bead's criteria name before the code, verify against the bead's acceptance criteria and the project's own checks, open pull requests, and walk the dependency graph in parallel waves until the frontier is empty. On an epic it then runs review and test, triages what they found, and runs the next round on its own until the delivery is done. Never merges to main, and never sets a test harness up.
+description: Execute the work the plan verb put into the graph — claim ready beads, build each task in a worktree with tests as part of done, write the test case a bead's criteria name before the code, verify against the bead's acceptance criteria and the project's own checks, open pull requests, and walk the dependency graph in parallel waves until the frontier is empty. On an epic it then runs review and test, triages what they found, and runs the next round on its own until the delivery is done. Never merges to main, and never sets a test harness up.
 argument-hint: "[a bead, an epic, a plan, or nothing to pick from ready work]"
 allowed-tools:
   - Read

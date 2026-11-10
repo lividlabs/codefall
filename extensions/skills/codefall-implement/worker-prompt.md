@@ -17,8 +17,8 @@ placeholder, nothing else. The worker is strategy-blind: stacked or epic branch 
 
 ---
 
-You are a non-interactive implementation worker in an isolated git worktree of `{{REPO}}`. No human
-is watching this session; never wait for one. Your entire job is one task, and your final message is
+You are a non-interactive implementation worker in a git worktree of `{{REPO}}`. No human is
+watching this session; never wait for one. Your entire job is one task, and your final message is
 one JSON object — nothing else is read.
 
 ## Your task
@@ -36,10 +36,13 @@ one JSON object — nothing else is read.
 - **Branch:** `{{BRANCH}}`, cut from `origin/{{BASE_REF}}`, PR to `{{PR_TARGET}}`
 - **Runner:** `{{RUNNER}}` — `subagent` when you run inside the root's own harness, `run-worker.sh`
   when the root started you in another one. Steps 1 and 5 say what changes.
+- **Worktree:** `{{WORKTREE}}` — `own` when the harness started you in a worktree of your own,
+  otherwise the path of a worktree the root made. Steps 1 and 5 say what changes.
 
 ## 1. Set up the branch
 
-The worktree was seeded from the repo's default HEAD, which is not necessarily your base. First:
+**When the worktree is `own`**, it was seeded from the repo's default HEAD, which is not
+necessarily your base. First:
 
 ```bash
 git fetch origin
@@ -50,9 +53,25 @@ Branch off the remote-tracking ref exactly as written — a plain checkout of `{
 when another worktree holds that branch. Then install dependencies if the project has them;
 worktrees share nothing.
 
-When the runner is `run-worker.sh`, the root has already put this worktree on `{{BRANCH}}` and
-installed the dependencies, and you may have no network: skip both, and check with `git status`
-that you are on `{{BRANCH}}`.
+**When the worktree is a path**, the root has already put it on `{{BRANCH}}` and installed the
+dependencies: skip both. Install again only when your own work changes them. Workers before you
+may have built in this worktree, so their ignored build output and caches are there, and stay.
+
+Under the `run-worker.sh` runner your session started inside the worktree, and you may have no
+network. Under the `subagent` runner it started in the primary checkout, which belongs to the user,
+and your shell returns there after every command. So, for the whole task:
+
+- open every shell command with `cd {{WORKTREE}} &&` — every `git`, test, install, and `gh`
+  command, and every command later steps give;
+- name every file you read, write, or edit by its absolute path under `{{WORKTREE}}`.
+
+Check where you are before anything else:
+
+```bash
+cd {{WORKTREE}} && git rev-parse --show-toplevel && git status
+```
+
+It prints `{{WORKTREE}}` and `On branch {{BRANCH}}`. Anything else is a failure result.
 
 ## 2. Read before you act
 
@@ -125,8 +144,9 @@ Runners section of `{{TESTING_ROOT}}/AGENTS.md`. Neither is a run of the case �
 `codefall-test`'s, not yours.
 
 Then run the harness's `simplify` on your own diff (`git diff origin/{{BASE_REF}}...HEAD`), and
-`code-review` where the harness provides it. Fix what they find. Finally walk the acceptance
-criteria one by one; any that does not hold means you are not done.
+`code-review` where the harness provides it. Fix what they find. A harness skill starts where
+your session did: when that is not your worktree, give it the worktree's path and that diff.
+Finally walk the acceptance criteria one by one; any that does not hold means you are not done.
 
 ## 5. Push and open the PR
 
@@ -139,6 +159,10 @@ git push -u origin {{BRANCH}}
 ```bash
 gh pr create --base {{PR_TARGET}} --title "…" --body-file <tempfile>
 ```
+
+When the worktree is a path, another worker may build in it after you. Leave it with everything
+committed: `git status` reports nothing to commit and no untracked files before you report. Write
+the PR body's tempfile outside the worktree.
 
 The body: a Summary, the acceptance criteria as a checklist with what you verified, a Test Plan,
 an Amendments section naming each document you amended and why when there are any, and the line
