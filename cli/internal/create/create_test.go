@@ -20,14 +20,14 @@ func TestRegisterProvidesEverythingCommandNeeds(t *testing.T) {
 	create.Register(injector)
 	initcmd.Register(injector)
 
-	initCommand := initcmd.Command(injector)
+	initCommand := initcmd.Command(injector, initcmd.Checked)
 	for _, name := range []string{"location"} {
 		if initCommand.Flags().Lookup(name) == nil {
 			t.Errorf("init has no --%s, so create's list of flags to leave out is stale", name)
 		}
 	}
 
-	cmd := create.Command(injector, initCommand)
+	cmd := create.Command(injector, initCommand, initcmd.Checked)
 	if got := cmd.Name(); got != "create" {
 		t.Errorf("Command().Name() = %q, want %q", got, "create")
 	}

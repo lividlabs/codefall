@@ -14,8 +14,9 @@ import (
 	"github.com/lividlabs/codefall/cli/internal/create/internal/domain"
 )
 
-// gitCommand is how git is invoked. It is the only tool create needs itself; the tools init needs are
-// init's to check.
+// gitCommand is how git is invoked. It is the only tool create needs itself. The command checks it,
+// and the tools init and the verbs need, with doctor's prerequisite check before this use case
+// runs. The check in preflight stays, so the use case does not depend on its caller for it.
 const gitCommand = "git"
 
 // FileSystem is create's view of the disk (one gateway role): whether the project's directory is

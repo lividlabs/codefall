@@ -61,12 +61,17 @@ func run(args []string, stdout, stderr io.Writer) error {
 	root.SetArgs(args)
 	root.SetOut(stdout)
 	root.SetErr(stderr)
+	// init and create run doctor's checks on git, bd, and gh before their first step, and refuse to start
+	// when one fails. The check is doctor's and crosses to them here.
+	prerequisites := doctor.Prerequisites(injector)
+
 	root.AddCommand(doctor.Command(injector))
-	root.AddCommand(initcmd.Commands(injector)...)
+	root.AddCommand(initcmd.Commands(injector, prerequisites)...)
 	root.AddCommand(config.Command(injector))
 	root.AddCommand(update.Command(injector))
-	// create runs init in the directory it makes, so it gets an init command of its own.
-	root.AddCommand(create.Command(injector, initcmd.Command(injector)))
+	// create runs init in the directory it makes, so it gets an init command of its own. create has
+	// run the check before it made the directory, so that init does not run it again.
+	root.AddCommand(create.Command(injector, initcmd.Command(injector, initcmd.Checked), prerequisites))
 
 	return fang.Execute(
 		context.Background(),

@@ -293,10 +293,11 @@ func healthy() (*fakeFileSystem, *fakeCommandRunner) {
 
 	runner := &fakeCommandRunner{
 		paths: map[string]string{
-			"bd": "/opt/homebrew/bin/bd", "gh": "/opt/homebrew/bin/gh",
+			"git": "/usr/bin/git", "bd": "/opt/homebrew/bin/bd", "gh": "/opt/homebrew/bin/gh",
 			"make": "/usr/bin/make", "docker": "/usr/local/bin/docker",
 		},
 		runs: map[string]CommandResult{
+			"git --version":               {Stdout: "git version 2.50.1 (Apple Git-155)\n"},
 			"bd version":                  {Stdout: "bd version 1.2.2 (Homebrew)\n"},
 			"bd info":                     {Stdout: "beads: 12 issues open\n"},
 			"gh --version":                {Stdout: "gh version 2.97.0 (2026-07-31)\nhttps://github.com/cli/cli\n"},
@@ -341,6 +342,7 @@ var allPass = []outcome{
 	{domain.TestDeclared.ID, domain.StatusPass},
 	{domain.TestEquipped.ID, domain.StatusPass},
 	{domain.TestDirExists.ID, domain.StatusPass},
+	{domain.GitInstalled.ID, domain.StatusPass},
 	{domain.BeadsInstalled.ID, domain.StatusPass},
 	{domain.BeadsInitialized.ID, domain.StatusPass},
 	{domain.GHInstalled.ID, domain.StatusPass},
@@ -1438,6 +1440,7 @@ func TestDiagnoseRunsToolsInTheWorkingDirectory(t *testing.T) {
 	}
 
 	want := []runCall{
+		{workingDir, "git --version"},
 		{workingDir, "bd version"},
 		{workingDir, "bd info"},
 		{workingDir, "gh --version"},
@@ -1459,4 +1462,173 @@ func TestDiagnoseReturnsAnErrorForACancelledContext(t *testing.T) {
 	if !errors.Is(err, context.Canceled) {
 		t.Fatalf("Run error = %v, want context.Canceled", err)
 	}
+}
+
+// --- the prerequisite checks -----------------------------------------------------------------------
+
+// The checks init and create run before their first step are the five about the machine. The check
+// that Beads is initialised here is not one of them: a directory with no Beads database is what init
+// is run to fix, and create runs before there is a directory at all.
+func TestPrerequisites(t *testing.T) {
+	for _, tc := range []struct {
+		name   string
+		mutate func(*fakeFileSystem, *fakeCommandRunner)
+		want   []outcome
+	}{
+		{
+			name:   "a machine with everything",
+			mutate: func(*fakeFileSystem, *fakeCommandRunner) {},
+			want: []outcome{
+				{domain.GitInstalled.ID, domain.StatusPass},
+				{domain.BeadsInstalled.ID, domain.StatusPass},
+				{domain.GHInstalled.ID, domain.StatusPass},
+				{domain.GHAuthenticated.ID, domain.StatusPass},
+				{domain.GHScopes.ID, domain.StatusPass},
+			},
+		},
+		{
+			name: "no git, no bd, and no gh are all reported",
+			mutate: func(_ *fakeFileSystem, r *fakeCommandRunner) {
+				delete(r.paths, "git")
+				delete(r.paths, "bd")
+				delete(r.paths, "gh")
+			},
+			want: []outcome{
+				{domain.GitInstalled.ID, domain.StatusFail},
+				{domain.BeadsInstalled.ID, domain.StatusFail},
+				{domain.GHInstalled.ID, domain.StatusFail},
+			},
+		},
+		{
+			name: "gh not logged in",
+			mutate: func(_ *fakeFileSystem, r *fakeCommandRunner) {
+				r.runs["gh auth status --json hosts"] = CommandResult{Stdout: `{"hosts":{}}`}
+			},
+			want: []outcome{
+				{domain.GitInstalled.ID, domain.StatusPass},
+				{domain.BeadsInstalled.ID, domain.StatusPass},
+				{domain.GHInstalled.ID, domain.StatusPass},
+				{domain.GHAuthenticated.ID, domain.StatusFail},
+			},
+		},
+		{
+			name:   "a token without repo",
+			mutate: withScopes("gist, read:org"),
+			want: []outcome{
+				{domain.GitInstalled.ID, domain.StatusPass},
+				{domain.BeadsInstalled.ID, domain.StatusPass},
+				{domain.GHInstalled.ID, domain.StatusPass},
+				{domain.GHAuthenticated.ID, domain.StatusPass},
+				{domain.GHScopes.ID, domain.StatusFail},
+			},
+		},
+		{
+			name:   "a token without the project scopes warns",
+			mutate: withScopes("repo"),
+			want: []outcome{
+				{domain.GitInstalled.ID, domain.StatusPass},
+				{domain.BeadsInstalled.ID, domain.StatusPass},
+				{domain.GHInstalled.ID, domain.StatusPass},
+				{domain.GHAuthenticated.ID, domain.StatusPass},
+				{domain.GHScopes.ID, domain.StatusWarn},
+			},
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			files, runner := healthy()
+			tc.mutate(files, runner)
+
+			report, err := NewDiagnose(files, runner).Prerequisites(t.Context(), workingDir)
+			if err != nil {
+				t.Fatalf("Prerequisites: %v", err)
+			}
+
+			assertOutcomes(t, report, tc.want)
+		})
+	}
+}
+
+// The remedies are doctor's own, because the refusal prints them.
+func TestPrerequisitesCarryDoctorsRemedies(t *testing.T) {
+	files, runner := healthy()
+	delete(runner.paths, "git")
+	delete(runner.paths, "bd")
+	delete(runner.paths, "gh")
+
+	report, err := NewDiagnose(files, runner).Prerequisites(t.Context(), workingDir)
+	if err != nil {
+		t.Fatalf("Prerequisites: %v", err)
+	}
+
+	assertResult(t, report, domain.GitInstalled.ID, "git is not on PATH", mo.Some("brew install git"))
+	assertResult(t, report, domain.BeadsInstalled.ID, "bd is not on PATH", mo.Some("brew install beads"))
+	assertResult(t, report, domain.GHInstalled.ID, "gh is not on PATH", mo.Some("brew install gh"))
+}
+
+// Nothing about the directory is asked or read: no `bd info`, and no file. A directory with nothing
+// in it, which is where init starts, answers the same as a finished install.
+func TestPrerequisitesAskNothingAboutTheDirectory(t *testing.T) {
+	_, runner := healthy()
+	files := &fakeFileSystem{errs: map[string]error{}}
+
+	report, err := NewDiagnose(files, runner).Prerequisites(t.Context(), workingDir)
+	if err != nil {
+		t.Fatalf("Prerequisites: %v", err)
+	}
+
+	if failed := report.Failed(); failed != 0 {
+		t.Errorf("Failed() = %d, want 0 on a directory nothing has set up", failed)
+	}
+
+	want := []runCall{
+		{workingDir, "git --version"},
+		{workingDir, "bd version"},
+		{workingDir, "gh --version"},
+		{workingDir, "gh auth status --json hosts"},
+	}
+
+	if !slices.Equal(runner.calls, want) {
+		t.Errorf("calls =\n  %v\nwant\n  %v", runner.calls, want)
+	}
+}
+
+func TestPrerequisitesReturnAnErrorForACancelledContext(t *testing.T) {
+	files, runner := healthy()
+
+	ctx, cancel := context.WithCancel(t.Context())
+	cancel()
+
+	_, err := NewDiagnose(files, runner).Prerequisites(ctx, workingDir)
+	if !errors.Is(err, context.Canceled) {
+		t.Fatalf("Prerequisites error = %v, want context.Canceled", err)
+	}
+}
+
+// --- git ---------------------------------------------------------------------------------------------
+
+// A machine without git fails its own category, and the checks on Beads and gh still run: the three
+// tools are installed separately, and a person wants every one that is missing in one report.
+func TestDiagnoseFailsAMachineWithoutGit(t *testing.T) {
+	files, runner := healthy()
+	delete(runner.paths, "git")
+
+	report, err := NewDiagnose(files, runner).Run(t.Context(), workingDir)
+	if err != nil {
+		t.Fatalf("Run: %v", err)
+	}
+
+	assertOutcomes(t, report, outcomes(map[string]domain.Status{domain.GitInstalled.ID: domain.StatusFail}))
+	assertResult(t, report, domain.GitInstalled.ID, "git is not on PATH", mo.Some("brew install git"))
+}
+
+// A git that is installed says which one it is in the category's header.
+func TestDiagnoseReportsGitsVersion(t *testing.T) {
+	files, runner := healthy()
+
+	report, err := NewDiagnose(files, runner).Run(t.Context(), workingDir)
+	if err != nil {
+		t.Fatalf("Run: %v", err)
+	}
+
+	assertResult(t, report, domain.GitInstalled.ID, "git version 2.50.1 (Apple Git-155)", mo.None[string]())
 }

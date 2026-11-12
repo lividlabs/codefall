@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"slices"
@@ -30,6 +31,13 @@ type CreateUseCase interface {
 	Push(ctx context.Context, dir string) (domain.StepResult, error)
 }
 
+// Prerequisites is the check create runs before it asks or makes anything: whether the tools init
+// and every verb after it reach for are on this machine and ready. It is doctor's, built by the
+// composition root and passed in. It writes the failing checks and their remedies to w itself and
+// returns an error counting them, nil when there are none, and context.Canceled for a run that was
+// stopped.
+type Prerequisites func(ctx context.Context, w io.Writer) error
+
 // errCancelled is what every place a run can be interrupted reports, returned as it is so Fang
 // renders that sentence and not a prefix in front of it.
 var errCancelled = errors.New("create cancelled")
@@ -41,7 +49,12 @@ var skippedInitFlags = []string{"location"}
 // NewCreateCommand builds `codefall create`. initCommand is init's own command, built by the
 // composition root; create runs it in the new directory and takes its flags as its own, so a
 // scripted run answers init's questions on the same command line.
-func NewCreateCommand(create CreateUseCase, initCommand *cobra.Command) *cobra.Command {
+//
+// prerequisites runs before the first question and before the directory exists, so a run it refuses
+// leaves nothing behind. initCommand is built without a check of its own for that reason.
+func NewCreateCommand(
+	create CreateUseCase, initCommand *cobra.Command, prerequisites Prerequisites,
+) *cobra.Command {
 	flags := &createFlags{}
 
 	cmd := &cobra.Command{
@@ -50,10 +63,12 @@ func NewCreateCommand(create CreateUseCase, initCommand *cobra.Command) *cobra.C
 		Long: "Creates the directory, initializes a git repository, adds the remote when there is one, " +
 			"and commits a README.md and a stack-agnostic .gitignore. Then it runs codefall init in the " +
 			"new directory, and offers to push to the remote. Every question is also a flag, including " +
-			"init's, so a scripted run passes them and is never prompted.",
+			"init's, so a scripted run passes them and is never prompted. Before it asks or makes " +
+			"anything, create runs doctor's checks on git, bd, and gh and refuses to start when one " +
+			"fails, listing each with its fix.",
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return runCreate(cmd, create, initCommand, flags, args[0])
+			return runCreate(cmd, create, initCommand, prerequisites, flags, args[0])
 		},
 	}
 
@@ -92,21 +107,30 @@ func adoptFlags(cmd, initCommand *cobra.Command) {
 	})
 }
 
-// runCreate is the command's body: collect the answers, scaffold, run init, offer the push.
+// runCreate is the command's body: check the prerequisites, collect the answers, scaffold, run init,
+// offer the push.
 func runCreate(
-	cmd *cobra.Command, create CreateUseCase, initCommand *cobra.Command, flags *createFlags, target string,
+	cmd *cobra.Command, create CreateUseCase, initCommand *cobra.Command, prerequisites Prerequisites,
+	flags *createFlags, target string,
 ) error {
 	dir, err := filepath.Abs(target)
 	if err != nil {
 		return fmt.Errorf("create: %w", err)
 	}
 
+	out := ui.NewWriter(cmd.OutOrStdout())
+
+	// Create needs git, init needs bd, and the verbs after it need a gh that is logged in. A machine
+	// missing any of them is told here, with every fix at once, before a question is asked or the
+	// directory is made.
+	if err := checkPrerequisites(cmd.Context(), prerequisites, out); err != nil {
+		return err
+	}
+
 	request, err := buildRequest(cmd, flags, dir)
 	if err != nil {
 		return err
 	}
-
-	out := ui.NewWriter(cmd.OutOrStdout())
 
 	if _, err := ui.RunWithSpinner(cmd.Context(), out, "Creating…", errCancelled,
 		func(ctx context.Context, progress ui.Progress) (domain.Report, error) {
@@ -128,6 +152,22 @@ func runCreate(
 	}
 
 	return ui.WriteLine(out, ui.Style(ui.ToneFaint).Render("Project created in "+target))
+}
+
+// checkPrerequisites runs the prerequisite check and says a refusal in create's terms. The check has
+// already written each failing check and its remedy, so the error is the count with the command's
+// name in front of it.
+func checkPrerequisites(ctx context.Context, prerequisites Prerequisites, out io.Writer) error {
+	err := prerequisites(ctx, out)
+
+	switch {
+	case err == nil:
+		return nil
+	case errors.Is(err, context.Canceled):
+		return errCancelled
+	default:
+		return fmt.Errorf("create: %w", err)
+	}
 }
 
 // buildRequest turns the flags into the use case's contract, asking for whatever they left out when

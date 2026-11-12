@@ -31,15 +31,16 @@ func (s Status) String() string {
 }
 
 // Category is the part of a project's setup a check belongs to. The report groups by category, so a
-// healthy project is seven lines rather than twenty-six.
+// healthy project is eight lines rather than twenty-seven.
 type Category struct {
 	ID    string
 	Title string
 }
 
-// The seven categories, in the order doctor reports them. Testing sits between Local environment and
-// Beads for the same reason Local environment sits where it does: the first five are about the
-// project, and the last two are about tools on the machine.
+// The eight categories, in the order doctor reports them. Testing sits between Local environment and
+// Git for the same reason Local environment sits where it does: the first five are about the
+// project, and the last three are about tools on the machine. Git is the first of those because
+// Beads keeps its data in a git repository and gh works on one.
 //
 // Agents is its own category rather than part of Harnesses. A passing check's detail goes into its
 // section's header, and the installed harnesses and the configured agents in one header read as one
@@ -50,6 +51,7 @@ var (
 	CategoryAgents    = Category{ID: "agents", Title: "Agents"}
 	CategoryLocal     = Category{ID: "local", Title: "Local environment"}
 	CategoryTesting   = Category{ID: "testing", Title: "Testing"}
+	CategoryGit       = Category{ID: "git", Title: "Git"}
 	CategoryBeads     = Category{ID: "beads", Title: "Beads"}
 	CategoryGitHub    = Category{ID: "github", Title: "GitHub CLI"}
 )
@@ -91,7 +93,7 @@ func (c Check) Fail(detail string, remedy mo.Option[string]) Result {
 	return Result{Check: c, Status: StatusFail, Detail: mo.Some(detail), Remedy: remedy}
 }
 
-// The twenty-six checks doctor runs, in the order it runs them.
+// The twenty-seven checks doctor runs, in the order it runs them.
 var (
 	CodefallDir      = Check{ID: "codefall-dir", Title: ".codefall/ exists", Category: CategorySettings}
 	SettingsFile     = Check{ID: "settings-file", Title: ".codefall/settings.json exists", Category: CategorySettings}
@@ -153,6 +155,9 @@ var (
 	// TestDirExists is whether the directory the project declared is there for a verb to find.
 	TestDirExists = Check{ID: "test-dir-exists",
 		Title: "the declared testing directory exists", Category: CategoryTesting}
+	// GitInstalled is whether git is there at all. Init, create, and every verb run it, and nothing
+	// about a project can be set up without it.
+	GitInstalled     = Check{ID: "git-installed", Title: "git is on PATH", Category: CategoryGit}
 	BeadsInstalled   = Check{ID: "bd-installed", Title: "bd is on PATH", Category: CategoryBeads}
 	BeadsInitialized = Check{ID: "beads-initialized", Title: "Beads is initialized here", Category: CategoryBeads}
 	GHInstalled      = Check{ID: "gh-installed", Title: "gh is on PATH", Category: CategoryGitHub}

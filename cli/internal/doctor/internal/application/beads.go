@@ -10,18 +10,16 @@ import (
 	"github.com/lividlabs/codefall/cli/internal/shared/text"
 )
 
-// beads runs checks 22 and 23. A missing bd is a failure; a directory bd does not yet know about is
+// beads runs checks 23 and 24. A missing bd is a failure; a directory bd does not yet know about is
 // only a warning, because `codefall init` will own initialising it.
 //
 // There is deliberately no test for a literal .beads/ directory: BEADS_DIR relocates it, so `bd
 // info` run in the working directory is the only reliable question to ask.
 func (d *Diagnose) beads(ctx context.Context, dir string, results []domain.Result) []domain.Result {
-	path, installed := d.runner.LookPath("bd").Get()
+	results, installed := d.beadsInstalled(ctx, dir, results)
 	if !installed {
-		return append(results, domain.BeadsInstalled.Fail("bd is not on PATH", mo.Some("brew install beads")))
+		return results
 	}
-
-	results = append(results, domain.BeadsInstalled.PassWithDetail(d.toolVersion(ctx, dir, path, "bd", "version")))
 
 	initRemedy := mo.Some("bd init")
 
@@ -38,6 +36,23 @@ func (d *Diagnose) beads(ctx context.Context, dir string, results []domain.Resul
 	}
 
 	return append(results, domain.BeadsInitialized.Pass())
+}
+
+// beadsInstalled runs check 23 alone, and reports whether bd is there to be asked anything further.
+// It is the half of the Beads checks that is about the machine: Prerequisites runs it without check
+// 24, because a directory with no Beads database is what `codefall init` is run to fix.
+func (d *Diagnose) beadsInstalled(
+	ctx context.Context, dir string, results []domain.Result,
+) ([]domain.Result, bool) {
+	path, installed := d.runner.LookPath("bd").Get()
+	if !installed {
+		return append(results,
+			domain.BeadsInstalled.Fail("bd is not on PATH", mo.Some("brew install beads"))), false
+	}
+
+	version := d.toolVersion(ctx, dir, path, "bd", "version")
+
+	return append(results, domain.BeadsInstalled.PassWithDetail(version)), true
 }
 
 // toolVersion is the PASS detail for an installed tool: what it says about itself, or where it lives

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"strconv"
 	"strings"
@@ -29,7 +30,10 @@ const (
 
 // NewInitCommand builds `codefall init`, the run that happens once: it makes a directory ready for
 // codefall, and a project that already has .codefall/manifest.json is `codefall upgrade`'s.
-func NewInitCommand(initialize InitializeUseCase) *cobra.Command {
+//
+// prerequisites is the check the run makes before its survey. `codefall create` has made it already
+// by the time it runs init, so the composition root gives that instance one that passes.
+func NewInitCommand(initialize InitializeUseCase, prerequisites Prerequisites) *cobra.Command {
 	flags := &initFlags{}
 
 	cmd := &cobra.Command{
@@ -41,13 +45,15 @@ func NewInitCommand(initialize InitializeUseCase) *cobra.Command {
 			"at project scope into .claude/settings.json, and a harness that reads the .agents/skills " +
 			"convention gets the extension's tree under .agents/. It also asks where the project's " +
 			"test cases live and creates that tree. " +
+			"Before the survey, init runs doctor's checks on git, bd, and gh and refuses to start when " +
+			"one fails, listing each with its fix. " +
 			"Init runs once: a project that already has .codefall/manifest.json is brought current by " +
 			"codefall upgrade, which init names and refuses to repeat. " +
 			"Run below the root of a git repository, init asks whether to install there or at the " +
 			"root; --location answers without asking.",
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			return runInit(cmd, initialize, flags)
+			return runInit(cmd, initialize, prerequisites, flags)
 		},
 	}
 
@@ -90,7 +96,9 @@ func (f *initFlags) register(cmd *cobra.Command) {
 }
 
 // runInit is the command's body: collect the answers, run the steps, say what happened.
-func runInit(cmd *cobra.Command, initialize InitializeUseCase, flags *initFlags) error {
+func runInit(
+	cmd *cobra.Command, initialize InitializeUseCase, prerequisites Prerequisites, flags *initFlags,
+) error {
 	// The working directory is the one piece of environment the command reads; the use case
 	// receives it as a value.
 	dir, err := os.Getwd()
@@ -98,15 +106,17 @@ func runInit(cmd *cobra.Command, initialize InitializeUseCase, flags *initFlags)
 		return initKind.wrap(err)
 	}
 
+	// One colour-profile writer for the whole run.
+	out := ui.NewWriter(cmd.OutOrStdout())
+
 	// A bad flag, an unanswerable question, or a project that is already set up is the user's own
 	// message; it is returned as it is so Fang renders that sentence and not a prefix in front of it.
-	request, fresh, err := buildRequest(cmd, initialize, flags, dir)
+	request, fresh, err := buildRequest(cmd, initialize, flags, dir, func(ctx context.Context) error {
+		return checkPrerequisites(ctx, prerequisites, out)
+	})
 	if err != nil {
 		return err
 	}
-
-	// One colour-profile writer for the whole run.
-	out := ui.NewWriter(cmd.OutOrStdout())
 
 	if _, err := runInitialize(cmd.Context(), initKind, initialize, request, out); err != nil {
 		return initKind.wrap(err)
@@ -128,11 +138,32 @@ func runInit(cmd *cobra.Command, initialize InitializeUseCase, flags *initFlags)
 // to the agents list.
 const equipAgentsHint = "To add another harness as a reviewer, run /codefall-equip agents."
 
+// checkPrerequisites runs the prerequisite check and says a refusal in init's terms. The check has
+// already written each failing check and its remedy, so the error is the count with the command's
+// name in front of it.
+func checkPrerequisites(ctx context.Context, prerequisites Prerequisites, out io.Writer) error {
+	err := prerequisites(ctx, out)
+
+	switch {
+	case err == nil:
+		return nil
+	case errors.Is(err, context.Canceled):
+		return initKind.cancelled
+	default:
+		return initKind.wrap(err)
+	}
+}
+
 // buildRequest turns the flags into the use case's contract, asking for whatever they left out. The
 // second result reports whether the run writes new settings, as opposed to finishing a project whose
 // settings were already on record.
+//
+// ready is the prerequisite check. It runs once the flags have parsed and the project is known to be
+// init's, and before the survey, so a machine that is missing a tool is told before anyone answers
+// a question.
 func buildRequest(
 	cmd *cobra.Command, initialize InitializeUseCase, flags *initFlags, dir string,
+	ready func(context.Context) error,
 ) (application.Request, bool, error) {
 	chosen, err := parseHarnesses(flags.harnesses)
 	if err != nil {
@@ -202,6 +233,13 @@ func buildRequest(
 	if recorded {
 		return application.Request{}, false, errors.New(
 			"codefall is already set up here; run codefall upgrade to bring the install current")
+	}
+
+	// Every run from here on initialises Beads and leaves a project whose verbs open issues and pull
+	// requests, so this is where a missing git or bd, or a gh that is not logged in, refuses the run:
+	// after the refusals that cost nothing to check, and before the survey.
+	if err := ready(cmd.Context()); err != nil {
+		return application.Request{}, false, err
 	}
 
 	// Settings with no manifest behind them are a project set up before the manifest existed, and

@@ -11,6 +11,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"strings"
 
@@ -62,6 +63,13 @@ type InitializeUseCase interface {
 	// before it changes anything (ADR-010).
 	BreakingChanges(dir, binary string) (mo.Option[[]application.BreakingRelease], error)
 }
+
+// Prerequisites is the check init runs before its survey and before it writes anything: whether the
+// tools every verb reaches for are on this machine and ready. It is doctor's, built by the
+// composition root and passed in, so init and doctor cannot disagree about what ready means. It
+// writes the failing checks and their remedies to w itself and returns an error counting them, nil
+// when there are none, and context.Canceled for a run that was stopped.
+type Prerequisites func(ctx context.Context, w io.Writer) error
 
 // commandKind is what a shared helper needs to know about the command running it: the word its
 // errors open with, the sentence a cancelled run reports, and what the spinner says before the

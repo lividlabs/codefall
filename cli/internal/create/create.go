@@ -7,6 +7,9 @@
 package create
 
 import (
+	"context"
+	"io"
+
 	"github.com/samber/do/v2"
 	"github.com/spf13/cobra"
 
@@ -41,6 +44,13 @@ func Register(injector do.Injector) {
 // built by the composition root for create alone — create runs it and takes its flags, so it must not
 // be the instance mounted on the root. Both are delivery types, not domain entities, so ADR-001 does
 // not apply to them.
-func Command(injector do.Injector, initCommand *cobra.Command) *cobra.Command {
-	return presentation.NewCreateCommand(do.MustInvoke[presentation.CreateUseCase](injector), initCommand)
+//
+// prerequisites is the check create runs before it asks or makes anything, which the composition
+// root takes from doctor's facade. create runs it before the directory exists, so initCommand is
+// built with a check that passes rather than one that asks git, bd, and gh a second time.
+func Command(
+	injector do.Injector, initCommand *cobra.Command, prerequisites func(context.Context, io.Writer) error,
+) *cobra.Command {
+	return presentation.NewCreateCommand(
+		do.MustInvoke[presentation.CreateUseCase](injector), initCommand, prerequisites)
 }

@@ -1,4 +1,4 @@
-// Package application holds doctor's one use case. It owns the gateway interfaces its checks need
+// Package application holds doctor's use case. It owns the gateway interfaces its checks need
 // and depends on nothing but the standard library, mo, doctor's own domain, and the pure shared
 // modules (ADR-003).
 package application
@@ -79,6 +79,7 @@ func (d *Diagnose) Run(ctx context.Context, dir string) (domain.Report, error) {
 		d.agents,
 		d.local,
 		d.testing,
+		d.git,
 		d.beads,
 		d.github,
 	}
@@ -89,6 +90,43 @@ func (d *Diagnose) Run(ctx context.Context, dir string) (domain.Report, error) {
 		}
 
 		results = group(ctx, dir, results)
+	}
+
+	return domain.NewReport(results...), nil
+}
+
+// Prerequisites runs the checks about the machine and none about the directory: that git and bd are
+// on PATH, and that gh is on PATH, logged in to github.com, and holding a token with the scopes
+// codefall needs. They are the checks `codefall init` and `codefall create` run before their first
+// step. The other checks describe an install, and fail on a directory init has not set up yet.
+//
+// dir is where the tools are run, and nothing is read from it. The error return is for a cancelled
+// context only, as it is for Run.
+func (d *Diagnose) Prerequisites(ctx context.Context, dir string) (domain.Report, error) {
+	var results []domain.Result
+
+	groups := []func(context.Context, string, []domain.Result) []domain.Result{
+		d.git,
+		func(ctx context.Context, dir string, results []domain.Result) []domain.Result {
+			results, _ = d.beadsInstalled(ctx, dir, results)
+
+			return results
+		},
+		d.github,
+	}
+
+	for _, group := range groups {
+		if err := ctx.Err(); err != nil {
+			return domain.Report{}, fmt.Errorf("prerequisites: %w", err)
+		}
+
+		results = group(ctx, dir, results)
+	}
+
+	// A run cancelled while gh was answering has a failed check that says nothing about the machine,
+	// and the caller refuses to start on a failed check.
+	if err := ctx.Err(); err != nil {
+		return domain.Report{}, fmt.Errorf("prerequisites: %w", err)
 	}
 
 	return domain.NewReport(results...), nil

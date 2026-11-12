@@ -29,6 +29,14 @@ func (f *fakeDiagnose) Run(_ context.Context, dir string) (domain.Report, error)
 	return f.report, f.err
 }
 
+// Prerequisites answers with the same report and error: a test seeds what the checks it is about
+// would have found.
+func (f *fakeDiagnose) Prerequisites(_ context.Context, dir string) (domain.Report, error) {
+	f.gotDir = dir
+
+	return f.report, f.err
+}
+
 // run executes the command against a fake use case and returns everything it wrote.
 //
 // CLICOLOR_FORCE and TTY_FORCE are cleared so a developer's forced-colour environment cannot leak
