@@ -9,8 +9,10 @@ import (
 	"github.com/lividlabs/codefall/cli/internal/shared/settings"
 )
 
-// ghCommand is how the GitHub CLI is invoked. It is not a required tool: a run that cannot ask it
-// anything falls back to the remote, and a run that cannot ask either is one flag away from working.
+// ghCommand is how the GitHub CLI is invoked. `codefall init` refuses to start without a gh that is
+// logged in, through the prerequisite check its command runs, but the question asked here can still
+// come back empty, for a directory with no repository on GitHub. A run that cannot ask gh anything
+// falls back to the remote, and a run that cannot ask either is one flag away from working.
 const ghCommand = "gh"
 
 // gitHubHost is the only host a remote may name for its path to be a GitHub repository. A remote

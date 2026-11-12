@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"io"
 	"os"
 	"reflect"
 	"slices"
@@ -124,10 +125,24 @@ func newFakeInitialize() *fakeInitialize {
 //
 // CLICOLOR_FORCE and TTY_FORCE are cleared so a developer's forced-colour environment cannot leak
 // ANSI into the buffer: colorprofile honours both regardless of whether the writer is a terminal.
+//
+// The machine has every prerequisite; runChecking is for a test about one that does not.
 func run(t *testing.T, initialize InitializeUseCase, args ...string) (string, error) {
 	t.Helper()
 
-	return runCommand(t, NewInitCommand(initialize), args...)
+	return runChecking(t, initialize, ready, args...)
+}
+
+// ready is the prerequisite check on a machine that has everything.
+func ready(context.Context, io.Writer) error { return nil }
+
+// runChecking is run with the prerequisite check a test chooses.
+func runChecking(
+	t *testing.T, initialize InitializeUseCase, prerequisites Prerequisites, args ...string,
+) (string, error) {
+	t.Helper()
+
+	return runCommand(t, NewInitCommand(initialize, prerequisites), args...)
 }
 
 // runUpgradeCommand is run for `codefall upgrade`.
@@ -772,5 +787,107 @@ func TestAtLeastOneHarness(t *testing.T) {
 
 	if err := atLeastOneHarness([]string{harness.Claude}); err != nil {
 		t.Errorf("atLeastOneHarness of one harness = %v, want nil", err)
+	}
+}
+
+// missingBeads is a prerequisite check that found one failure: it writes what doctor would and
+// returns the count. called records whether the command reached it.
+func missingBeads(called *bool) Prerequisites {
+	return func(_ context.Context, w io.Writer) error {
+		*called = true
+
+		_, _ = io.WriteString(w, "[✗] Beads\n╰─ ✗ bd is not on PATH\n   ╰─ fix: brew install beads\n")
+
+		return errors.New("1 prerequisite check failed")
+	}
+}
+
+// A machine missing a prerequisite is refused before anything is asked or written: gh is not asked
+// for a repository, the use case does not run, and what the check wrote about each failure reaches
+// the reader above the error.
+func TestInitCommandRefusesToStartWhenAPrerequisiteFails(t *testing.T) {
+	initialize := newFakeInitialize()
+
+	var called bool
+
+	out, err := runChecking(t, initialize, missingBeads(&called), "--harness", "claude", "--tracker", "github")
+	if err == nil {
+		t.Fatalf("Execute: want an error, got nil\n%s", out)
+	}
+
+	if got, want := err.Error(), "init: 1 prerequisite check failed"; got != want {
+		t.Errorf("error = %q, want %q", got, want)
+	}
+
+	if !strings.Contains(out, "fix: brew install beads") {
+		t.Errorf("output does not carry the check's own lines:\n%s", out)
+	}
+
+	if initialize.ran || initialize.suggested {
+		t.Errorf("ran = %v, asked gh = %v, want neither", initialize.ran, initialize.suggested)
+	}
+}
+
+// A project whose settings are already on record still initialises Beads, so it is checked too.
+func TestInitCommandChecksPrerequisitesWhenSettingsAlreadyExist(t *testing.T) {
+	initialize := newFakeInitialize()
+	initialize.exists = true
+	initialize.harnesses = mo.Some([]string{harness.Claude})
+
+	var called bool
+
+	if _, err := runChecking(t, initialize, missingBeads(&called)); err == nil {
+		t.Fatal("Execute: want an error, got nil")
+	}
+
+	if !called || initialize.ran {
+		t.Errorf("checked = %v, ran = %v, want the check made and the run refused", called, initialize.ran)
+	}
+}
+
+// The refusals that cost nothing come first: a project that is upgrade's is told so on a machine
+// with no gh, because upgrade does not need one, and a mistyped flag is not answered with a list of
+// tools.
+func TestInitCommandChecksPrerequisitesAfterTheRefusalsThatNeedNoTool(t *testing.T) {
+	for _, tc := range []struct {
+		name     string
+		manifest bool
+		args     []string
+		want     string
+	}{
+		{name: "already set up", manifest: true, args: []string{"--harness", "claude"}, want: "codefall upgrade"},
+		{name: "unknown tracker", args: []string{"--tracker", "nope"}, want: "unknown tracker"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			initialize := newFakeInitialize()
+			initialize.manifest = tc.manifest
+
+			var called bool
+
+			_, err := runChecking(t, initialize, missingBeads(&called), tc.args...)
+			if err == nil || !strings.Contains(err.Error(), tc.want) {
+				t.Fatalf("error = %v, want one containing %q", err, tc.want)
+			}
+
+			if called {
+				t.Error("the prerequisite check ran, want the cheaper refusal first")
+			}
+		})
+	}
+}
+
+// A check stopped with Ctrl-C is the same event as any other cancelled init.
+func TestInitCommandReportsACancelledPrerequisiteCheckAsCancelled(t *testing.T) {
+	initialize := newFakeInitialize()
+
+	_, err := runChecking(t, initialize,
+		func(context.Context, io.Writer) error { return context.Canceled },
+		"--harness", "claude", "--tracker", "beads")
+	if !errors.Is(err, initKind.cancelled) {
+		t.Fatalf("error = %v, want %v", err, initKind.cancelled)
+	}
+
+	if initialize.ran {
+		t.Error("the use case ran, want nothing done")
 	}
 }

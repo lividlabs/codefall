@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -85,9 +86,22 @@ func newFakeInit() *fakeInit {
 	return f
 }
 
+// ready is the prerequisite check on a machine that has everything.
+func ready(context.Context, io.Writer) error { return nil }
+
 // run executes the command in a fresh working directory and returns everything it wrote, with stdin
-// answering "not a terminal" — the path a script takes, and the only one a test can.
+// answering "not a terminal" — the path a script takes, and the only one a test can. The machine has
+// every prerequisite.
 func run(t *testing.T, create CreateUseCase, init *fakeInit, args ...string) (string, error) {
+	t.Helper()
+
+	return runChecking(t, create, init, ready, args...)
+}
+
+// runChecking is run with the prerequisite check a test chooses.
+func runChecking(
+	t *testing.T, create CreateUseCase, init *fakeInit, prerequisites Prerequisites, args ...string,
+) (string, error) {
 	t.Helper()
 	t.Setenv("CLICOLOR_FORCE", "0")
 	t.Setenv("TTY_FORCE", "0")
@@ -100,7 +114,7 @@ func run(t *testing.T, create CreateUseCase, init *fakeInit, args ...string) (st
 
 	var out bytes.Buffer
 
-	cmd := NewCreateCommand(create, init.command)
+	cmd := NewCreateCommand(create, init.command, prerequisites)
 	cmd.SetArgs(args)
 	cmd.SetOut(&out)
 	cmd.SetErr(&out)
@@ -169,7 +183,7 @@ func TestCreatePassesTheFlagsAndRunsInitInTheNewDirectory(t *testing.T) {
 }
 
 func TestCreateLeavesOutInitFlagsThatMeanNothingInANewDirectory(t *testing.T) {
-	cmd := NewCreateCommand(&fakeCreate{}, newFakeInit().command)
+	cmd := NewCreateCommand(&fakeCreate{}, newFakeInit().command, ready)
 
 	if cmd.Flags().Lookup("tracker") == nil {
 		t.Error("create has no --tracker, want init's flag adopted")
@@ -252,5 +266,56 @@ func TestCreateSaysHowToFinishWhenInitFails(t *testing.T) {
 
 	if create.pushed != "" {
 		t.Error("pushed after init failed, want no push")
+	}
+}
+
+// A machine missing a prerequisite is refused before the directory exists: nothing is scaffolded,
+// init is not run, and what the check wrote about each failure reaches the reader above the error.
+func TestCreateRefusesBeforeTheDirectoryExistsWhenAPrerequisiteFails(t *testing.T) {
+	create, init := &fakeCreate{}, newFakeInit()
+
+	dir := filepath.Join(t.TempDir(), "app")
+
+	out, err := runChecking(t, create, init,
+		func(_ context.Context, w io.Writer) error {
+			_, _ = io.WriteString(w, "[✗] Beads\n╰─ ✗ bd is not on PATH\n   ╰─ fix: brew install beads\n")
+
+			return errors.New("1 prerequisite check failed")
+		},
+		dir, "--push")
+	if err == nil {
+		t.Fatalf("Execute: want an error, got nil\n%s", out)
+	}
+
+	// The refusal comes before the flags are held against each other, so it is the one reported.
+	if got, want := err.Error(), "create: 1 prerequisite check failed"; got != want {
+		t.Errorf("error = %q, want %q", got, want)
+	}
+
+	if !strings.Contains(out, "fix: brew install beads") {
+		t.Errorf("output does not carry the check's own lines:\n%s", out)
+	}
+
+	if create.scaffold || init.ran {
+		t.Errorf("scaffolded = %v, init ran = %v, want neither", create.scaffold, init.ran)
+	}
+
+	if _, statErr := os.Stat(dir); !errors.Is(statErr, os.ErrNotExist) {
+		t.Errorf("stat %s = %v, want the directory never made", dir, statErr)
+	}
+}
+
+// A check stopped with Ctrl-C is the same event as any other cancelled create.
+func TestCreateReportsACancelledPrerequisiteCheckAsCancelled(t *testing.T) {
+	create, init := &fakeCreate{}, newFakeInit()
+
+	_, err := runChecking(t, create, init,
+		func(context.Context, io.Writer) error { return context.Canceled }, "app")
+	if !errors.Is(err, errCancelled) {
+		t.Fatalf("error = %v, want %v", err, errCancelled)
+	}
+
+	if create.scaffold {
+		t.Error("scaffolded, want nothing done")
 	}
 }

@@ -26,3 +26,16 @@ func TestRegisterProvidesEverythingCommandNeeds(t *testing.T) {
 		t.Errorf("Command().Name() = %q, want %q", got, "doctor")
 	}
 }
+
+// The prerequisite check is built from the same graph, for the composition root to hand to init and
+// create.
+func TestRegisterProvidesEverythingPrerequisitesNeeds(t *testing.T) {
+	injector := do.New()
+	t.Cleanup(func() { _ = injector.Shutdown() })
+
+	doctor.Register(injector)
+
+	if doctor.Prerequisites(injector) == nil {
+		t.Fatal("Prerequisites returned nil")
+	}
+}

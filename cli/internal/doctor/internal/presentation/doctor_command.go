@@ -27,9 +27,12 @@ const heading = "DOCTOR SUMMARY"
 // Fang renders that sentence and not a prefix in front of it.
 var errCancelled = errors.New("doctor cancelled")
 
-// DiagnoseUseCase is what the command needs from the application layer, declared by its consumer.
+// DiagnoseUseCase is what the command and the prerequisite check need from the application layer,
+// declared by their consumer.
 type DiagnoseUseCase interface {
 	Run(ctx context.Context, dir string) (domain.Report, error)
+	// Prerequisites runs the checks about the machine alone: git, bd, and gh with its login and scopes.
+	Prerequisites(ctx context.Context, dir string) (domain.Report, error)
 }
 
 // NewDoctorCommand builds `codefall doctor`.
@@ -39,7 +42,7 @@ func NewDoctorCommand(diagnose DiagnoseUseCase) *cobra.Command {
 		Short: "Check that this directory and your tools are ready for codefall",
 		Long: "Reports on .codefall/settings.json and .codefall/user.json, whether codefall is installed for each harness it " +
 			"records and still installed for any it no longer names, whether the local start and " +
-			"update commands are declared and can be run, Beads, and gh. It never changes anything.",
+			"update commands are declared and can be run, git, Beads, and gh. It never changes anything.",
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			// The working directory is the one piece of environment the command reads; the use case
@@ -79,8 +82,8 @@ func NewDoctorCommand(diagnose DiagnoseUseCase) *cobra.Command {
 	}
 }
 
-// spinnerLabel is what the spinner says while the checks run. The checks shell out to bd and gh, so
-// a run is slow enough to be worth acknowledging.
+// spinnerLabel is what the spinner says while the checks run. The checks shell out to git, bd, and
+// gh, so a run is slow enough to be worth acknowledging.
 const spinnerLabel = "Running checks…"
 
 // runDiagnose runs the use case under the shared spinner. Doctor has nothing to say while it works —

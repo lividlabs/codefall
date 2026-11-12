@@ -2282,6 +2282,37 @@ Decided at scaffold, 2026-08-16.
   left). Left open: a harness that accepts an existing worktree for a subagent, which would
   replace the `cd` rule.
 
+- **Init and create run doctor's checks on git, bd, and gh first, 2026-11-12.** `codefall create`
+  checked git and the directory, made the directory, the repository, and the first commit, and
+  only then ran init, whose preflight was the first place a missing `bd` was noticed. `codefall
+  init` checked `bd` and git and treated `gh` as optional, so it finished cleanly on a machine
+  where `report`, `specify`, and `implement` would fail on their first issue or pull request
+  (#256). Now both commands run the five doctor checks that are about the machine,
+  `git-installed`, `bd-installed`, `gh-installed`, `gh-auth`, and `gh-scopes`, and refuse to
+  start when one fails. The refusal prints each failing category as doctor prints it, the remedy
+  under the problem, and the error counts the failures. Create runs the checks before its first
+  question and before the directory exists. Init runs them after the refusals that need no tool,
+  a bad flag and a project that is upgrade's, and before the survey. A missing or logged-out
+  `gh` refuses a run whatever the tracker, because `implement` opens pull requests with it on a
+  project whose tracker is Beads. A warning, a token without the project scopes, refuses nothing
+  and is not printed. `git-installed` is new, in a Git category of its own ahead of Beads: doctor
+  had no check for git, and without one a machine missing git and `bd` was told about them in two
+  runs. Doctor now has twenty-seven checks in eight categories. The checks stay in doctor: its
+  facade exports `Prerequisites`, a function over a context and a writer, and `main` passes it to
+  `initcmd.Commands` and `create.Command`, as it passes init's command to create. The init
+  command `main` builds for create is given `initcmd.Checked`, so one run asks `gh` once. The
+  change is released as breaking: a machine that ran `codefall init` without `gh`, or with a
+  `gh` that was not logged in, has to install it and log in before the command starts. Seen
+  and not taken: a shared module holding the checks (it runs commands, so it is not pure and no
+  `application/` could import it, and doctor's check, result, and scope rules would move out of
+  its `domain/` or be written twice); the checks in `codefall upgrade` (it repairs an install, a
+  machine without `gh` can do that today, and refusing it would be a breaking change); a refusal
+  for `gh` only when the tracker is GitHub (the survey chooses the tracker, and create runs
+  before there is a directory to hold one); a doctor check that the directory is a git work tree
+  (init asks that where it is about to write, and create runs before the directory exists). Left
+  open: the checks that remain in init's and create's own preflights, `bd` and git on PATH,
+  which upgrade still needs from init's.
+
 ## Open
 
 - (nothing open; the last item graduated to ADR-012 on 2026-09-27)

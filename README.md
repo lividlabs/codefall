@@ -72,6 +72,9 @@ Codefall needs these tools on your `PATH`:
 - At least one supported coding agent: Claude Code, Codex, OpenCode (version 2 or later), Antigravity,
   or Muse.
 
+`codefall init` and `codefall create` check for `git`, `bd`, and `gh` before they change anything.
+When a check fails, the command stops and prints the fix for each one, such as `gh auth login`.
+
 ### Install script
 
 ```sh

@@ -23,7 +23,7 @@ func TestRegisterProvidesEverythingCommandNeeds(t *testing.T) {
 
 	initcmd.Register(injector)
 
-	cmd := initcmd.Command(injector)
+	cmd := initcmd.Command(injector, initcmd.Checked)
 	if cmd == nil {
 		t.Fatal("Command returned nil")
 	}
@@ -35,7 +35,7 @@ func TestRegisterProvidesEverythingCommandNeeds(t *testing.T) {
 
 	// Both commands share the use case, and the root mounts both.
 	var names []string
-	for _, cmd := range initcmd.Commands(injector) {
+	for _, cmd := range initcmd.Commands(injector, initcmd.Checked) {
 		names = append(names, cmd.Name())
 	}
 

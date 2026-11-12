@@ -30,6 +30,22 @@ codefall init
 
 `init` records the answers in `.codefall/settings.json`, which the skills read back.
 
+Before it asks these questions, `init` checks the tools the skills need: that `git` and `bd` are
+installed, and that `gh` is installed, logged in to github.com, and holding a token with the `repo`
+scope. These are the checks `codefall doctor` makes on the same tools. When one fails, `init`
+changes nothing and prints each failure with the command that fixes it:
+
+```
+[✗] Beads
+╰─ ✗ bd is not on PATH
+   ╰─ fix: brew install beads
+[✗] GitHub CLI
+╰─ ✗ gh is not on PATH
+   ╰─ fix: brew install gh
+```
+
+Run the fixes, then run `init` again.
+
 `init` runs once per project. When the project already has `.codefall/manifest.json`, the record of
 a finished install, `init` says so and stops; from then on, `codefall upgrade` maintains the install.
 A project set up before the manifest existed runs `init` one more time, which writes the manifest,
@@ -46,8 +62,9 @@ codefall create todo --remote git@github.com:acme/todo.git
 ```
 
 It creates the directory and its git repository, commits a `README.md` and a `.gitignore`, runs
-`init` there, and offers to push. `create` takes these flags of its own, along with every `init` flag
-except `--location`:
+`init` there, and offers to push. `create` makes the same checks on `git`, `bd`, and `gh` that
+`init` makes, before it creates the directory, so a run it refuses leaves nothing behind. `create`
+takes these flags of its own, along with every `init` flag except `--location`:
 
 | Flag | Does |
 | --- | --- |
@@ -199,7 +216,7 @@ guard has no such switch and runs in every run, headless or not.
 
 `codefall doctor` checks what Codefall needs and names a fix for each problem. It never runs the fix
 itself. Its checks are grouped into categories: Settings, Harnesses, Agents, Local environment,
-Testing, Beads, and GitHub CLI.
+Testing, Git, Beads, and GitHub CLI.
 
 The Testing category, for example, looks at what the project declared about tests:
 

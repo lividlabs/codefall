@@ -7,9 +7,10 @@ relative to `cli/` unless it says otherwise.
 A Go command-line tool. One surface, one app, one module.
 
 **State: five components and nine shared modules.** `internal/doctor/` (`codefall doctor`) is the
-first component and the reference for the rules below; `internal/initcmd/` (`codefall init` and
-`codefall upgrade`, one use case behind two commands, exported through `Commands`) is the second, and
-follows it; `internal/create/` (`codefall create`) is the third, and runs init's command in the
+first component and the reference for the rules below, and exports its checks on git, bd, and gh as
+the prerequisite check init and create run before their first step; `internal/initcmd/`
+(`codefall init` and `codefall upgrade`, one use case behind two commands, exported through
+`Commands`) is the second, and follows it; `internal/create/` (`codefall create`) is the third, and runs init's command in the
 directory it makes; `internal/config/` (`codefall config`, an interactive editor in a terminal and
 subcommands for scripts, over one use case) is the fourth, and reads and writes the agents list, one
 entry per active agent with its review, consult, and work lists, how each harness is called, whether review
@@ -113,8 +114,13 @@ The why lives in the ADRs. This file is the operative rules only — never resta
 - A component's facade exports `Register(do.Injector)` and `Command(do.Injector) *cobra.Command`;
   `main` calls the first and mounts the second. A component with several top-level commands adds
   `Commands(do.Injector) []*cobra.Command` when that happens. A command that runs another
-  component's command takes it as a parameter — `create.Command(injector, initcmd.Command(injector))`
-  — built by `main` for it alone, never the instance mounted on the root.
+  component's command takes it as a parameter —
+  `create.Command(injector, initcmd.Command(injector, initcmd.Checked), prerequisites)` — built by
+  `main` for it alone, never the instance mounted on the root.
+- A command that needs another component's check takes it the same way: `doctor.Prerequisites`
+  returns a function over standard types, and `main` passes it to `initcmd.Commands` and
+  `create.Command`. The consumer declares the function type in its own `presentation/` and imports
+  no other component.
 - Styling is Lip Gloss v2 (`charm.land/lipgloss/v2`), used where it helps. Plain text is the
   default; parsed output (anything piped or `--json`-style) is never styled; human output goes
   through the colour-profile writer `internal/shared/ui` builds (`ui.NewWriter`), never a rendered
