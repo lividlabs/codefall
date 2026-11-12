@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <a href="#installation">Install</a> · <a href="#how-it-works">How it works</a> · <a href="docs/guide/">Guide</a>
+  <a href="#installation">Install</a> · <a href="#how-it-works">How it works</a> · <a href="#using-codefall">Usage</a> · <a href="docs/guide/">Guide</a>
 </p>
 
 ## What is Codefall?
@@ -25,8 +25,12 @@ The `codefall` command installs the skills into your project for the coding agen
 Code, Codex, OpenCode, Antigravity, or Muse. A *skill* is a set of instructions the agent follows
 when you type its slash command, such as `/codefall-specify`. The skills take a feature from an idea
 to a pull request you merge, and other skills start a new project, write up a bug, draw a mockup,
-and keep the install current. [How it works](#how-it-works) walks one feature through them;
+and keep the install current. [Using Codefall](#using-codefall) walks one feature through them;
 [Skills](#skills) lists them all.
+
+Codefall is meant for production-quality code, the code you ship and maintain. Its process spends
+effort on requirements, a design, review by a second agent, and tests written from the acceptance
+criteria. Codefall has no lighter path for prototypes yet.
 
 ### Why spec-driven development?
 
@@ -56,6 +60,55 @@ as requirements, design, and tasks files. [Cascadia](https://github.com/docratic
 compiles requirements into a strategy, an architecture, and instructions for the agent to build
 from. Codefall keeps the whole lifecycle in the repository: the architecture and its ADRs, the task
 graph, the reviews, the test results, and the bug reports, beside the specs and plans.
+
+### How it works
+
+Codefall's skills take a feature through three steps, and you merge the result. Each skill writes
+something that the next one reads:
+
+```
+specify → plan → implement → you merge
+```
+
+- **Specify** interviews you about the feature and writes a *spec*, a document that lists the
+  feature's requirements. Each requirement carries *acceptance criteria*: testable statements of
+  what the finished feature must do.
+- **Plan** reads the spec and the code and writes a *plan*, a short software design document that
+  ends in a table of tasks. Each task becomes a *bead*, a task in
+  [Beads](https://github.com/gastownhall/beads), a tracker that stores its data in your git
+  repository. The beads record which task waits on which, so the agent always knows what is ready
+  to start.
+- **Implement** builds the tasks, each in a worktree with its own tests, and opens a pull request
+  for each. It then checks the whole delivery in *rounds*: a second agent reviews the changes, the
+  tests run, and the skill fixes what either finds, until a round leaves nothing worth another.
+
+A bug takes a shorter path with the same shape:
+
+```
+report → fix → you merge
+```
+
+- **Report** interviews you about the bug, offers to reproduce it in the running app, and writes a
+  *bug report*, a document that holds the steps, the evidence, and acceptance criteria for the
+  fix. It files one bead for the bug.
+- **Fix** finds the cause, confirms the one task with you, and builds it in the same run: a
+  worktree, a test that covers the bug, the change, and a pull request.
+
+On both paths, the skills stop at open pull requests. You review and merge them on GitHub.
+
+Two rules hold throughout. First, every step's result is a file, a bead, or a pull request, so you
+can clear the agent's context between steps and lose nothing. Second, no skill merges code, and in
+coding agents that support hooks, a hook (a check the agent runs before each command) refuses any
+merge or push to `main`.
+[`docs/workflow.md`](docs/workflow.md) shows what each skill reads and writes.
+[Using Codefall](#using-codefall) walks one feature and one bug through the steps, command by
+command.
+
+An optional skill, [envision](docs/guide/envision.md), comes before either path. It writes a
+*vision*, a short document that describes the problem, the people who have it, the rough shape of
+an answer, and the questions still open. Specify draws on the vision when one covers the feature.
+A vision also groups the specs written under it: a feature too large for one spec becomes several,
+and the vision lists each one.
 
 ## Installation
 
@@ -167,7 +220,7 @@ writes:
 | Runnable skeleton | Also a folder for each component and an app that starts with no features in it |
 
 Scaffold stops once the project is set up and empty. The first feature starts with
-`/codefall-specify`, as [How it works](#how-it-works) shows. [Design
+`/codefall-specify`, as [Using Codefall](#using-codefall) shows. [Design
 principles](#architecture-for-new-projects) describes the architecture scaffold sets up.
 
 ### Check and update a project
@@ -184,16 +237,16 @@ It never changes anything itself.
 After you install a newer version of `codefall`, run `codefall upgrade` in each project to bring its
 skills up to date. [Setting up a project](docs/guide/setup.md) lists everything `init` writes.
 
-## How it works
+## Using Codefall
 
-Codefall's skills take a feature through three steps, and you merge the result. Each skill writes
-something that the next one reads:
+You run a skill by typing its slash command in your coding agent. A feature takes three commands,
+and then you merge the result:
 
 ```
 specify → plan → implement → you merge
 ```
 
-Here is one feature going through it. Suppose your product is Todo, a to-do list, and you want
+Here is one feature going through them. Suppose your product is Todo, a to-do list, and you want
 users to be able to export their list as a file.
 
 **1. Say what to build.** In your coding agent, type:
@@ -312,12 +365,6 @@ drawn to match the app's existing design. `/codefall-report triage` sorts the ba
 priority and cuts an epic from the items you pick. `/codefall-review` and `/codefall-test` also run
 on their own, on a pull request, a document, or the whole project, and end by asking which problems
 to fix.
-
-Two rules hold throughout. First, every step's result is a file, a bead, or a pull request, so you
-can clear the agent's context between steps and lose nothing. Second, no skill merges code, and in
-coding agents that support hooks, a hook (a check the agent runs before each command) refuses any
-merge or push to `main`.
-[`docs/workflow.md`](docs/workflow.md) shows what each skill reads and writes.
 
 ## Skills
 
