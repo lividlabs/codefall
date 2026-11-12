@@ -25,7 +25,7 @@ A run produces up to two things:
   start; those records are *dependency edges*. The beads and their edges together form the *task
   graph* that `/codefall-implement` works through.
 
-The examples on this page continue the to-do list from the [README](../../README.md#how-it-works):
+The examples on this page continue the to-do list from the [README](../../README.md#using-codefall):
 a spec, SPEC-003, asks for users to be able to export their list as a file.
 
 ## What it reads first

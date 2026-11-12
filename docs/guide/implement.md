@@ -8,7 +8,7 @@ opens a pull request. Run it once a plan's beads exist.
 /codefall-implement PLAN-007
 ```
 
-The examples on this page continue the to-do list from the [README](../../README.md#how-it-works).
+The examples on this page continue the to-do list from the [README](../../README.md#using-codefall).
 PLAN-007 created an *epic*, `todo-PLAN-007`, which is the bead that groups the plan's tasks, and two
 task beads, `todo-PLAN-007-T1` and `todo-PLAN-007-T2`. A *bead* is one task in Beads, the tracker
 that stores its data in your git repository.
