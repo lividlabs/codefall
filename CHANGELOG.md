@@ -6,6 +6,22 @@ below were written by hand, before that was wired up.
 Tags are bare version numbers (`0.1.2`), not `v`-prefixed, so they match the `ref` the marketplace
 pins. A `v0.1.1` tag also exists from before that convention was settled.
 
+## [0.41.0](https://github.com/lividlabs/codefall/compare/v0.40.0...v0.41.0) (2026-11-12)
+
+
+### ⚠ BREAKING CHANGES
+
+* **cli:** codefall init and codefall create refuse to start unless git, bd, and gh are on PATH and gh is logged in to github.com with a token that has the repo scope. Install the missing tools and run `gh auth login` before running either command. Check with `codefall doctor`.
+
+### Bug Fixes
+
+* **cli:** init and create run doctor's checks on git, bd, and gh before they start ([#257](https://github.com/lividlabs/codefall/issues/257)) ([8b10e0f](https://github.com/lividlabs/codefall/commit/8b10e0f46b047c259bda567c6249482ae1aece64))
+
+
+### Documentation
+
+* explain how Codefall works in the README intro and retitle the walkthrough ([#259](https://github.com/lividlabs/codefall/issues/259)) ([e42ed0d](https://github.com/lividlabs/codefall/commit/e42ed0d0b5100c068415c473eb813d2885153c90))
+
 ## [0.40.0](https://github.com/lividlabs/codefall/compare/v0.39.0...v0.40.0) (2026-11-10)
 
 
