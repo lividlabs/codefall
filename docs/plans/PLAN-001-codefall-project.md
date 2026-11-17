@@ -23,8 +23,7 @@ commands do what they do today, under new names.
   a root command covers something outside one.
 - **A project's settings and the IDE's settings are two files** — the IDE's settings do not depend
   on a project, and the two change for different reasons, which is why `.codefall/user.json` is
-  already a file of its own. `.codefall/settings.json` stays the project's file, with the shape it
-  has. The plan that builds the IDE names its file and says where it lives.
+  already a file of its own. What each file is called is not settled (Decisions needed, 1).
 
 Three things are left for later plans: `codefall project remove`, which deletes what a project's
 install wrote; installing a skill set that does not ship in the binary; and the IDE.
@@ -95,8 +94,22 @@ T2 changes 68 of those references, and the test keeps the next rename from leavi
 | One settings file, with a section for the project and a section for the IDE | The IDE's settings do not depend on a project; a file of their own leaves the project's file as it is, and no project has to migrate |
 | `config` and `doctor` move under `project` | Both are run day to day, and `doctor` also checks the machine; they stay at the root and take the prefix as a second spelling |
 
+## Decisions needed
+
+### 1. What the project's settings file and the IDE's settings file are called
+- **Affects:** T1, and a task this decision may add
+- **Options:** the project's file becomes `.codefall/project.json`, and the IDE's file is named
+  when the IDE is planned — each file is named for what owns it, `codefall project upgrade` renames
+  the file, and every skill and shared script that reads it changes one path; the project's file
+  becomes `.codefall/project.json` and the IDE takes `.codefall/settings.json` — the same rename,
+  and a name that meant the project's settings comes to mean the IDE's; the project's file stays
+  `.codefall/settings.json` and the IDE's file takes a new name — nothing moves, and the project's
+  file is the one not named for the project
+- **Needs an ADR:** yes — ADR-018 records the two files
+
 ## Tasks
-> Staged. Not yet in Beads.
+> Staged. Not in Beads: this repository does not run its own verbs yet, so each task is a GitHub
+> issue, T1 as #260, T2 as #261, and T3 as #262.
 
 | ID | Task | Depends on | Plan ref |
 |----|------|-----------|------------|
