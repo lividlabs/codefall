@@ -1,6 +1,7 @@
 # PLAN-001: The project commands move under `codefall project`
 
 **Status:** Ready — 2026-11-18
+**Related:** adr: ADR-018
 
 ## Overview
 
