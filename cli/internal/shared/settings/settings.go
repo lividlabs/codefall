@@ -1,4 +1,4 @@
-// Package settings is the one definition of the .codefall/settings.json format: the constants the
+// Package settings is the one definition of the .codefall/project.json format: the constants the
 // file carries, the tables of what each tracker's block may hold, and the rules that decide whether
 // a document or a single field is acceptable. Both components need it — initcmd writes that file and
 // doctor reads it — so it lives here rather than in either one's domain (ADR-003).
@@ -30,13 +30,13 @@ import (
 type Document map[string]any
 
 // The published constants of the settings format. The schema test in this package holds
-// schemas/settings.schema.json equal to these, so the two definitions cannot drift apart silently.
+// schemas/project.schema.json equal to these, so the two definitions cannot drift apart silently.
 const (
 	Version       = 1
 	TrackerBeads  = "beads"
 	TrackerGitHub = "github"
 	RepoPattern   = `^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$`
-	SchemaID      = "https://raw.githubusercontent.com/lividlabs/codefall/main/cli/schemas/settings.schema.json"
+	SchemaID      = "https://raw.githubusercontent.com/lividlabs/codefall/main/cli/schemas/project.schema.json"
 	// FieldSchema is the key a settings file names its schema under. It is optional: the schema is
 	// for an editor, and validation does not read it.
 	FieldSchema = "$schema"
@@ -82,10 +82,12 @@ const (
 
 // FormerSchemaIDs are the schema URLs earlier releases wrote into settings files, none of which
 // resolves now: until 0.26.0 the URL named the repository by its old name and a schemas/ directory
-// the files left when the CLI tree moved under cli/. An upgrade replaces any of them with SchemaID. A
-// URL that is not on this list is the project's own choice and stays.
+// the files left when the CLI tree moved under cli/, and until this release it named the settings
+// file by the name it had before it was named for the project. An upgrade replaces any of them with
+// SchemaID. A URL that is not on this list is the project's own choice and stays.
 var FormerSchemaIDs = []string{
 	"https://raw.githubusercontent.com/lividlabs/codefall-cli/main/schemas/settings.schema.json",
+	"https://raw.githubusercontent.com/lividlabs/codefall/main/cli/schemas/settings.schema.json",
 }
 
 // The .ignore file, which is not settings but is the other file init writes and doctor checks — so

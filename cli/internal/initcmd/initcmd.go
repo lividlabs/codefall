@@ -1,6 +1,6 @@
 // Package initcmd is the facade for `codefall project init` and `codefall project upgrade`: the
 // command that makes a directory ready for codefall, once, and the command that brings that install
-// level with the binary on every run after it. Both run one use case — write the .codefall/settings.json
+// level with the binary on every run after it. Both run one use case — write the .codefall/project.json
 // that doctor checks, install the codefall extension for the harnesses, initialise the tracker,
 // register the hooks, write the marked sections, make the testing tree, record the run in the
 // manifest — and differ only in how the request is built: init from a survey or flags, upgrade from

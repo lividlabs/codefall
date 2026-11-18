@@ -85,7 +85,7 @@ func TestFileSystemExists(t *testing.T) {
 
 func TestFileSystemReadFile(t *testing.T) {
 	root := t.TempDir()
-	path := filepath.Join(root, "settings.json")
+	path := filepath.Join(root, "project.json")
 
 	if err := os.WriteFile(path, []byte(`{"version":1}`), 0o600); err != nil {
 		t.Fatalf("write: %v", err)
@@ -142,7 +142,7 @@ func TestFileSystemMkdirAllCreatesATraversableDirectory(t *testing.T) {
 }
 
 func TestFileSystemWriteFileCreatesAndReplaces(t *testing.T) {
-	path := filepath.Join(t.TempDir(), "settings.json")
+	path := filepath.Join(t.TempDir(), "project.json")
 
 	files := NewFileSystem()
 
@@ -177,7 +177,7 @@ func TestFileSystemWriteFileCreatesAndReplaces(t *testing.T) {
 func TestFileSystemWriteFileReportsAMissingDirectory(t *testing.T) {
 	files := NewFileSystem()
 
-	if err := files.WriteFile(filepath.Join(t.TempDir(), "nope", "settings.json"), nil); err == nil {
+	if err := files.WriteFile(filepath.Join(t.TempDir(), "nope", "project.json"), nil); err == nil {
 		t.Error("WriteFile into a missing directory = nil, want an error")
 	}
 }

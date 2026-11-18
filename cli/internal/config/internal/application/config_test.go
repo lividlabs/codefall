@@ -18,15 +18,17 @@ import (
 const workingDir = "/work"
 
 var (
-	settingsFull  = filepath.Join(workingDir, ".codefall", "settings.json")
-	userFull      = filepath.Join(workingDir, ".codefall", "user.json")
-	gitIgnoreFull = filepath.Join(workingDir, ".gitignore")
+	settingsFull = filepath.Join(workingDir, ".codefall", "project.json")
+	// formerSettingsFull is the settings file under the name an earlier release wrote it.
+	formerSettingsFull = filepath.Join(workingDir, ".codefall", "settings.json")
+	userFull           = filepath.Join(workingDir, ".codefall", "user.json")
+	gitIgnoreFull      = filepath.Join(workingDir, ".gitignore")
 )
 
 // initSettings is the file init writes for a Beads project, with one key init does not write, so a
 // test can see it survive.
 const initSettings = `{
-  "$schema": "https://raw.githubusercontent.com/lividlabs/codefall/main/cli/schemas/settings.schema.json",
+  "$schema": "` + settings.SchemaID + `",
   "version": 1,
   "tracker": "beads",
   "harnesses": [
@@ -121,7 +123,7 @@ func TestSetListReplacesOneListAndLeavesTheRestOfTheFileAlone(t *testing.T) {
 		t.Fatalf("SetList: %v", err)
 	}
 
-	if want := domain.Changed("set default review in .codefall/settings.json: codex, current"); write != want {
+	if want := domain.Changed("set default review in .codefall/project.json: codex, current"); write != want {
 		t.Errorf("write = %+v, want %+v", write, want)
 	}
 
@@ -138,7 +140,7 @@ func TestSetListReplacesOneListAndLeavesTheRestOfTheFileAlone(t *testing.T) {
         }
       ],`, 1)
 	if got := string(files.files[settingsFull]); got != want {
-		t.Errorf("settings.json =\n%s\nwant\n%s", got, want)
+		t.Errorf("project.json =\n%s\nwant\n%s", got, want)
 	}
 }
 
@@ -152,7 +154,7 @@ func TestSetListAddsAnEntryForANewActiveAgent(t *testing.T) {
 		t.Fatalf("SetList: %v", err)
 	}
 
-	if want := domain.Changed("set muse review in .codefall/settings.json: claude, codex:gpt-5-codex"); write != want {
+	if want := domain.Changed("set muse review in .codefall/project.json: claude, codex:gpt-5-codex"); write != want {
 		t.Errorf("write = %+v, want %+v", write, want)
 	}
 
@@ -178,7 +180,7 @@ func TestSetListAddsAnEntryForANewActiveAgent(t *testing.T) {
     }
   ],`, 1)
 	if got := string(files.files[settingsFull]); got != want {
-		t.Errorf("settings.json =\n%s\nwant\n%s", got, want)
+		t.Errorf("project.json =\n%s\nwant\n%s", got, want)
 	}
 }
 
@@ -218,7 +220,7 @@ func TestSetListAddsTheOtherListToAnEntry(t *testing.T) {
 }
 `
 	if got := string(files.files[settingsFull]); got != want {
-		t.Errorf("settings.json =\n%s\nwant\n%s", got, want)
+		t.Errorf("project.json =\n%s\nwant\n%s", got, want)
 	}
 }
 
@@ -233,14 +235,14 @@ func TestSetListAddsAWorkListToAnEntry(t *testing.T) {
 		t.Fatalf("SetList: %v", err)
 	}
 
-	if want := domain.Changed("set muse work in .codefall/settings.json: opencode:digitalocean/glm-5.3#max, current"); write != want {
+	if want := domain.Changed("set muse work in .codefall/project.json: opencode:digitalocean/glm-5.3#max, current"); write != want {
 		t.Errorf("write = %+v, want %+v", write, want)
 	}
 
 	want := strings.Replace(twoEntries, `"consult": [{"harness": "codex"}]}`,
 		`"consult": [{"harness": "codex"}], "work": [{"harness":"opencode","model":"digitalocean/glm-5.3#max"},{"harness":"current"}]}`, 1)
 	if got := string(files.files[settingsFull]); got != want {
-		t.Errorf("settings.json =\n%s\nwant\n%s", got, want)
+		t.Errorf("project.json =\n%s\nwant\n%s", got, want)
 	}
 }
 
@@ -257,7 +259,7 @@ func TestSetListAddsAnEntryForAWorkList(t *testing.T) {
 
 	want := `, {"activeAgent":"claude","work":[{"harness":"codex"},{"harness":"current"}]}]}`
 	if got := string(files.files[settingsFull]); !strings.Contains(got, want) {
-		t.Errorf("settings.json =\n%s\nwant it to hold\n%s", got, want)
+		t.Errorf("project.json =\n%s\nwant it to hold\n%s", got, want)
 	}
 }
 
@@ -297,7 +299,7 @@ func TestSetListOnSettingsThatWriteNoneAddsTheList(t *testing.T) {
 }
 `
 	if got := string(files.files[settingsFull]); got != want {
-		t.Errorf("settings.json =\n%s\nwant\n%s", got, want)
+		t.Errorf("project.json =\n%s\nwant\n%s", got, want)
 	}
 }
 
@@ -313,7 +315,7 @@ func TestSetListKeepsAOneLineLayout(t *testing.T) {
 
 	want := `"agents": [{"activeAgent": "default", "review": [{"harness":"codex"},{"harness":"current"}]}]}`
 	if got := string(files.files[settingsFull]); !strings.Contains(got, want) {
-		t.Errorf("settings.json =\n%s\nwant it to hold\n%s", got, want)
+		t.Errorf("project.json =\n%s\nwant it to hold\n%s", got, want)
 	}
 
 	if _, err := NewConfig(files).SetList(workingDir, "muse", "consult", []settings.Agent{agent("claude")}); err != nil {
@@ -322,7 +324,7 @@ func TestSetListKeepsAOneLineLayout(t *testing.T) {
 
 	want = `, {"activeAgent":"muse","consult":[{"harness":"claude"}]}]}`
 	if got := string(files.files[settingsFull]); !strings.Contains(got, want) {
-		t.Errorf("settings.json =\n%s\nwant it to hold\n%s", got, want)
+		t.Errorf("project.json =\n%s\nwant it to hold\n%s", got, want)
 	}
 }
 
@@ -334,7 +336,7 @@ func TestSetListThatIsAlreadySetWritesNothing(t *testing.T) {
 		t.Fatalf("SetList: %v", err)
 	}
 
-	if want := domain.Unchanged(".codefall/settings.json already sets default consult to current"); write != want {
+	if want := domain.Unchanged(".codefall/project.json already sets default consult to current"); write != want {
 		t.Errorf("write = %+v, want %+v", write, want)
 	}
 
@@ -386,7 +388,7 @@ func TestSetListRefuses(t *testing.T) {
 			settings: `{"version": 1, "harnesses": ["claude"]}`,
 			active:   "default", feature: "review",
 			agents: []settings.Agent{agent("current")},
-			want:   ".codefall/settings.json is not valid, so nothing was changed: tracker: missing",
+			want:   ".codefall/project.json is not valid, so nothing was changed: tracker: missing",
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
@@ -427,13 +429,13 @@ func TestClearListRemovesTheKey(t *testing.T) {
 		t.Fatalf("ClearList: %v", err)
 	}
 
-	if want := domain.Changed("removed muse consult from .codefall/settings.json"); write != want {
+	if want := domain.Changed("removed muse consult from .codefall/project.json"); write != want {
 		t.Errorf("write = %+v, want %+v", write, want)
 	}
 
 	want := strings.Replace(twoEntries, `, "consult": [{"harness": "codex"}]}`, `}`, 1)
 	if got := string(files.files[settingsFull]); got != want {
-		t.Errorf("settings.json =\n%s\nwant\n%s", got, want)
+		t.Errorf("project.json =\n%s\nwant\n%s", got, want)
 	}
 }
 
@@ -451,14 +453,14 @@ func TestClearListRemovesAnEntryLeftEmpty(t *testing.T) {
 		t.Fatalf("ClearList review: %v", err)
 	}
 
-	if want := domain.Changed("removed muse review from .codefall/settings.json, and the muse entry with it, since it named nothing else"); write != want {
+	if want := domain.Changed("removed muse review from .codefall/project.json, and the muse entry with it, since it named nothing else"); write != want {
 		t.Errorf("write = %+v, want %+v", write, want)
 	}
 
 	want := strings.Replace(twoEntries, `,
     {"activeAgent": "muse", "review": [{"harness": "claude"}], "consult": [{"harness": "codex"}]}`, "", 1)
 	if got := string(files.files[settingsFull]); got != want {
-		t.Errorf("settings.json =\n%s\nwant\n%s", got, want)
+		t.Errorf("project.json =\n%s\nwant\n%s", got, want)
 	}
 }
 
@@ -476,13 +478,13 @@ func TestClearListCountsTheWorkList(t *testing.T) {
 			t.Fatalf("ClearList %s: %v", feature, err)
 		}
 
-		if want := domain.Changed("removed muse " + feature + " from .codefall/settings.json"); write != want {
+		if want := domain.Changed("removed muse " + feature + " from .codefall/project.json"); write != want {
 			t.Errorf("write = %+v, want %+v", write, want)
 		}
 	}
 
 	if got, want := string(files.files[settingsFull]), `{"activeAgent": "muse", "work": [{"harness": "codex"}]}`; !strings.Contains(got, want) {
-		t.Errorf("settings.json =\n%s\nwant it to hold\n%s", got, want)
+		t.Errorf("project.json =\n%s\nwant it to hold\n%s", got, want)
 	}
 
 	write, err := config.ClearList(workingDir, "muse", "work")
@@ -490,12 +492,12 @@ func TestClearListCountsTheWorkList(t *testing.T) {
 		t.Fatalf("ClearList work: %v", err)
 	}
 
-	if want := domain.Changed("removed muse work from .codefall/settings.json, and the muse entry with it, since it named nothing else"); write != want {
+	if want := domain.Changed("removed muse work from .codefall/project.json, and the muse entry with it, since it named nothing else"); write != want {
 		t.Errorf("write = %+v, want %+v", write, want)
 	}
 
 	if got := string(files.files[settingsFull]); strings.Contains(got, `"muse"`) {
-		t.Errorf("settings.json =\n%s\nwant the muse entry gone", got)
+		t.Errorf("project.json =\n%s\nwant the muse entry gone", got)
 	}
 }
 
@@ -507,7 +509,7 @@ func TestClearListThatIsNotSetWritesNothing(t *testing.T) {
 		t.Fatalf("ClearList: %v", err)
 	}
 
-	if want := domain.Unchanged(".codefall/settings.json has no codex review to clear"); write != want {
+	if want := domain.Unchanged(".codefall/project.json has no codex review to clear"); write != want {
 		t.Errorf("write = %+v, want %+v", write, want)
 	}
 
@@ -527,12 +529,12 @@ func TestSetPostingChangesTheFieldOrCreatesTheBlock(t *testing.T) {
 		t.Fatalf("SetPosting: %v", err)
 	}
 
-	if want := domain.Changed("set posting on in .codefall/settings.json"); write != want {
+	if want := domain.Changed("set posting on in .codefall/project.json"); write != want {
 		t.Errorf("write = %+v, want %+v", write, want)
 	}
 
 	if got, want := string(files.files[settingsFull]), strings.Replace(twoEntries, `"postToPullRequest": false`, `"postToPullRequest": true`, 1); got != want {
-		t.Errorf("settings.json =\n%s\nwant\n%s", got, want)
+		t.Errorf("project.json =\n%s\nwant\n%s", got, want)
 	}
 
 	write, err = config.SetPosting(workingDir, true)
@@ -540,7 +542,7 @@ func TestSetPostingChangesTheFieldOrCreatesTheBlock(t *testing.T) {
 		t.Fatalf("SetPosting again: %v", err)
 	}
 
-	if want := domain.Unchanged(".codefall/settings.json already has posting on"); write != want {
+	if want := domain.Unchanged(".codefall/project.json already has posting on"); write != want {
 		t.Errorf("write = %+v, want %+v", write, want)
 	}
 
@@ -567,7 +569,7 @@ func TestSetPostingChangesTheFieldOrCreatesTheBlock(t *testing.T) {
 }
 `
 	if got := string(noBlock.files[settingsFull]); got != want {
-		t.Errorf("settings.json =\n%s\nwant\n%s", got, want)
+		t.Errorf("project.json =\n%s\nwant\n%s", got, want)
 	}
 }
 
@@ -583,6 +585,26 @@ func TestWritesRefuseADirectoryWithNoSettings(t *testing.T) {
 	for _, err := range []error{setErr, clearErr, postErr, personaErr} {
 		if !errors.Is(err, errNotSetUp) || !strings.Contains(err.Error(), "run codefall project init") {
 			t.Errorf("error = %v, want it to name codefall project init", err)
+		}
+	}
+}
+
+// Every read and write refuses a directory whose settings are still under the name an earlier
+// release wrote them, and names the run that moves the file: the old file is never read as if it
+// were the new one, and the person is not told to create a file the project already has.
+func TestRefusesSettingsUnderTheFormerName(t *testing.T) {
+	config := NewConfig(newFakeFileSystem(map[string]string{formerSettingsFull: initSettings}))
+
+	_, setErr := config.SetList(workingDir, "default", "review", []settings.Agent{agent("current")})
+	_, showErr := config.Show(workingDir)
+
+	for _, err := range []error{setErr, showErr} {
+		if !errors.Is(err, errFormerName) {
+			t.Errorf("error = %v, want errFormerName", err)
+		}
+
+		if err != nil && !strings.Contains(err.Error(), "run codefall project upgrade") {
+			t.Errorf("error = %v, want it to name codefall project upgrade", err)
 		}
 	}
 }

@@ -55,14 +55,14 @@ func TestRunRewritesAFormerHarnessNameInTheSettingsAndTheManifest(t *testing.T) 
 		t.Errorf("settings outcome = %v, want DONE", result.Outcome)
 	}
 
-	want := "renamed harness claude-code to claude in .codefall/settings.json and .codefall/manifest.json"
+	want := "renamed harness claude-code to claude in .codefall/project.json and .codefall/manifest.json"
 	if result.Detail != want {
 		t.Errorf("settings detail = %q, want %q", result.Detail, want)
 	}
 
 	wantSettings := strings.Replace(formerSettings, `[ "claude-code",`, `[ "claude",`, 1)
 	if got := string(files.files[settingsFull]); got != wantSettings {
-		t.Errorf("settings.json =\n%s\nwant\n%s", got, wantSettings)
+		t.Errorf("project.json =\n%s\nwant\n%s", got, wantSettings)
 	}
 
 	recorded := recordedManifestIn(t, files)
@@ -86,7 +86,7 @@ func TestRunLeavesCurrentHarnessNamesAlone(t *testing.T) {
 	}
 
 	if got := string(files.files[settingsFull]); got != current {
-		t.Errorf("settings.json =\n%s\nwant it unchanged", got)
+		t.Errorf("project.json =\n%s\nwant it unchanged", got)
 	}
 }
 
@@ -125,14 +125,14 @@ func TestRunRemovesAFormerHarnessNameTheFilesAlreadyListUnderItsCurrentName(t *t
 		t.Errorf("settings outcome = %v, want DONE", result.Outcome)
 	}
 
-	want := "removed harness claude-code from .codefall/settings.json and .codefall/manifest.json, already listed as claude"
+	want := "removed harness claude-code from .codefall/project.json and .codefall/manifest.json, already listed as claude"
 	if result.Detail != want {
 		t.Errorf("settings detail = %q, want %q", result.Detail, want)
 	}
 
 	wantSettings := strings.Replace(formerBesideCurrent, "\"claude\",\n    \"claude-code\"", `"claude"`, 1)
 	if got := string(files.files[settingsFull]); got != wantSettings {
-		t.Errorf("settings.json =\n%s\nwant\n%s", got, wantSettings)
+		t.Errorf("project.json =\n%s\nwant\n%s", got, wantSettings)
 	}
 
 	recorded := recordedManifestIn(t, files)
@@ -154,7 +154,7 @@ func TestRunDescribesARemovalAndARenameInDifferentFilesSeparately(t *testing.T) 
 
 	report := runFor(t, files, newFakeExtensionSource(), request)
 
-	want := "removed harness claude-code from .codefall/settings.json, already listed as claude; " +
+	want := "removed harness claude-code from .codefall/project.json, already listed as claude; " +
 		"renamed harness claude-code to claude in .codefall/manifest.json"
 	if got := report.Results()[0].Detail; got != want {
 		t.Errorf("settings detail = %q, want %q", got, want)
@@ -258,7 +258,7 @@ func TestRespelledSettingsChangesOnlyTheNamesInTheHarnessesList(t *testing.T) {
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			got, edits, err := respelledSettings([]byte(tc.body))
+			got, edits, err := respelledSettings([]byte(tc.body), settingsName)
 			if err != nil {
 				t.Fatalf("respelledSettings: %v", err)
 			}

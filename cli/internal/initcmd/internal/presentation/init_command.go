@@ -40,7 +40,7 @@ func NewInitCommand(initialize InitializeUseCase, prerequisites Prerequisites) *
 	cmd := &cobra.Command{
 		Use:   "init",
 		Short: "Set this directory up for codefall",
-		Long: "Creates .codefall/settings.json from your answers, including which coding harnesses the " +
+		Long: "Creates .codefall/project.json from your answers, including which coding harnesses the " +
 			"project uses. Every question is also a flag, so a scripted run passes them and is never " +
 			"prompted. The codefall extension is installed for each harness chosen: Claude Code gets it " +
 			"at project scope into .claude/settings.json, and a harness that reads the .agents/skills " +
@@ -234,6 +234,21 @@ func buildRequest(
 	if recorded {
 		return application.Request{}, false, errors.New(
 			"codefall is already set up here; run codefall project upgrade to bring the install current")
+	}
+
+	// The settings file under its old name marks a project an earlier release set up: init writes
+	// the settings once and never under that name, and the run that moves the file is upgrade's.
+	// A project that has both files is the same project — its remedy is the same command, which
+	// keeps project.json and says the old file is the person's to remove.
+	former, err := initialize.FormerSettingsExist(dir)
+	if err != nil {
+		return application.Request{}, false, initKind.wrap(err)
+	}
+
+	if former {
+		return application.Request{}, false, errors.New(
+			"the settings file is still .codefall/settings.json, the name an earlier release wrote; " +
+				"run codefall project upgrade, which moves it")
 	}
 
 	// Every run from here on initialises Beads and leaves a project whose verbs open issues and pull

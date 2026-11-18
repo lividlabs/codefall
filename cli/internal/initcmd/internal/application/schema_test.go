@@ -82,12 +82,12 @@ func TestRunPointsAFormerSchemaAtTheCurrentOne(t *testing.T) {
 		t.Errorf("settings outcome = %v, want DONE", result.Outcome)
 	}
 
-	if want := "pointed $schema in .codefall/settings.json at the current schema"; result.Detail != want {
+	if want := "pointed $schema in .codefall/project.json at the current schema"; result.Detail != want {
 		t.Errorf("settings detail = %q, want %q", result.Detail, want)
 	}
 
 	want := "{\n  \"$schema\": \"" + settings.SchemaID + "\",\n  \"version\": 1,\n  \"harnesses\": [\n    \"claude\"\n  ],\n  \"tracker\": \"beads\",\n  \"test\": { \"dir\": \"testing\" }\n}\n"
 	if got := string(files.files[settingsFull]); got != want {
-		t.Errorf("settings.json =\n%s\nwant\n%s", got, want)
+		t.Errorf("project.json =\n%s\nwant\n%s", got, want)
 	}
 }

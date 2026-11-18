@@ -128,7 +128,7 @@ func quits(e editor, msg tea.Msg) bool {
 }
 
 func TestEditorRefusesADirectoryItCannotRead(t *testing.T) {
-	failure := errors.New(".codefall/settings.json not found; run codefall project init first")
+	failure := errors.New(".codefall/project.json not found; run codefall project init first")
 
 	if _, err := newEditor(&fakeConfig{err: failure}, "/project"); !errors.Is(err, failure) {
 		t.Fatalf("newEditor error = %v, want %v", err, failure)
@@ -261,7 +261,7 @@ func TestEditorQuitsFromTheMenuWithoutWriting(t *testing.T) {
 }
 
 func TestEditorReordersAListAndSavesOnEnter(t *testing.T) {
-	config := &fakeConfig{shown: twoEntries(), write: domain.Changed("set muse review in .codefall/settings.json: codex:gpt-5-codex, claude")}
+	config := &fakeConfig{shown: twoEntries(), write: domain.Changed("set muse review in .codefall/project.json: codex:gpt-5-codex, claude")}
 	e := newTestEditor(t, config)
 
 	e = send(t, e, enter, down, down, down, down, enter, enter, press(tea.KeyDown, "", tea.ModShift))
@@ -285,7 +285,7 @@ func TestEditorReordersAListAndSavesOnEnter(t *testing.T) {
 }
 
 func TestEditorRemovesAnAgentAndSavesAnEmptyListAsAClear(t *testing.T) {
-	config := &fakeConfig{shown: twoEntries(), write: domain.Changed("removed muse review from .codefall/settings.json")}
+	config := &fakeConfig{shown: twoEntries(), write: domain.Changed("removed muse review from .codefall/project.json")}
 	e := newTestEditor(t, config)
 
 	e = send(t, e, enter, down, down, down, down, enter, enter, press('d', "d", 0), press('d', "d", 0))
@@ -301,7 +301,7 @@ func TestEditorRemovesAnAgentAndSavesAnEmptyListAsAClear(t *testing.T) {
 }
 
 func TestEditorClearsAListWithC(t *testing.T) {
-	config := &fakeConfig{shown: twoEntries(), write: domain.Changed("removed muse review from .codefall/settings.json")}
+	config := &fakeConfig{shown: twoEntries(), write: domain.Changed("removed muse review from .codefall/project.json")}
 	e := newTestEditor(t, config)
 
 	e = send(t, e, enter, down, down, down, down, enter, enter, press('c', "c", 0))
@@ -320,7 +320,7 @@ func TestEditorShowsARefusalInlineAndStays(t *testing.T) {
 	e := send(t, newTestEditor(t, config), enter, enter, enter)
 
 	// The fake answers every call with one error, so it is set once the editor is on the list.
-	config.err = errors.New("that change would leave .codefall/settings.json invalid, so nothing was changed")
+	config.err = errors.New("that change would leave .codefall/project.json invalid, so nothing was changed")
 
 	e = send(t, e, enter)
 
@@ -335,7 +335,7 @@ func TestEditorShowsARefusalInlineAndStays(t *testing.T) {
 
 // An added agent joins the list on screen and is written with the rest on enter, not on its own.
 func TestEditorAddsAnAgentThroughTheForm(t *testing.T) {
-	config := &fakeConfig{shown: twoEntries(), write: domain.Changed("set default review in .codefall/settings.json: current, codex")}
+	config := &fakeConfig{shown: twoEntries(), write: domain.Changed("set default review in .codefall/project.json: current, codex")}
 	e := newTestEditor(t, config)
 
 	// default, review, add.
@@ -378,7 +378,7 @@ func TestEditorAddFormNamesTheEquipSkillAndTheVariants(t *testing.T) {
 	shown := twoEntries()
 	shown.HarnessConfigs = harnessBlocks
 
-	config := &fakeConfig{shown: shown, write: domain.Changed("set default review in .codefall/settings.json: current, codex-direct")}
+	config := &fakeConfig{shown: shown, write: domain.Changed("set default review in .codefall/project.json: current, codex-direct")}
 	e := newTestEditor(t, config)
 
 	// default, review, add; the model field is the second, so its description is drawn once the
@@ -407,7 +407,7 @@ func TestEditorAddFormNamesTheEquipSkillAndTheVariants(t *testing.T) {
 }
 
 func TestEditorSetsPosting(t *testing.T) {
-	config := &fakeConfig{shown: twoEntries(), write: domain.Changed("set posting on in .codefall/settings.json")}
+	config := &fakeConfig{shown: twoEntries(), write: domain.Changed("set posting on in .codefall/project.json")}
 	e := newTestEditor(t, config)
 
 	// Reviews, then the select opens on off; down is on.

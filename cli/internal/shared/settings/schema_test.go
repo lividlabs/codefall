@@ -12,7 +12,7 @@ import (
 	"github.com/lividlabs/codefall/cli/internal/shared/harness"
 )
 
-// schemas/settings.schema.json is the published definition of .codefall/settings.json; this package
+// schemas/project.schema.json is the published definition of .codefall/project.json; this package
 // validates the same shape by hand, so no schema library ships in the binary. This test holds the
 // two equal — without it they would drift apart the first time a field is added on one side. It is
 // one test rather than one per component: initcmd writes the file and doctor reads it, and a file
@@ -23,7 +23,7 @@ import (
 // package directory, so a copy of the schema under domain/ would have been exactly the drift this
 // test exists to catch. `go test` runs with the package directory as its working directory, so the
 // relative path is stable.
-const schemaPath = "../../../schemas/settings.schema.json"
+const schemaPath = "../../../schemas/project.schema.json"
 
 func loadSchema(t *testing.T) map[string]any {
 	t.Helper()

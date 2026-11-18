@@ -30,7 +30,7 @@ func TestReportPreservesOrder(t *testing.T) {
 func TestReportSectionsGroupByCategoryInOrderOfFirstAppearance(t *testing.T) {
 	report := NewReport(
 		CodefallDir.Pass(),
-		SettingsFile.Fail(".codefall/settings.json not found", mo.None[string]()),
+		SettingsFile.Fail(".codefall/project.json not found", mo.None[string]()),
 		BeadsInstalled.PassWithDetail("bd version 1.2.2"),
 		BeadsInitialized.Warn("no database", mo.Some("bd init")),
 		GHInstalled.PassWithDetail("gh version 2.97.0"),

@@ -20,7 +20,7 @@ import (
 	"github.com/lividlabs/codefall/cli/internal/shared/harness"
 )
 
-// Name is where the record lives, in .codefall/ beside settings.json. It is written once every step
+// Name is where the record lives, in .codefall/ beside project.json. It is written once every step
 // of a run has succeeded, so what it says is an install that finished.
 const Name = ".codefall/manifest.json"
 

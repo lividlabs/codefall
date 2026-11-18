@@ -23,13 +23,21 @@ import (
 // Every detail is a whole sentence, because the report prints it under a category header without the
 // check's title in front of it.
 //
+// The settings file an earlier release wrote under the name .codefall/project.json is never read
+// as if it were the new one: the check fails and names the run that moves it, so the project is not
+// told to create a file it already has.
+//
 // Decoding happens here rather than in infrastructure, which returns bytes, or in the domain, which
 // must not name an encoding. It decodes into the generic document so the shared field tables stay
 // the single definition of the settings shape and every problem is reported at once.
 func (d *Diagnose) settings(_ context.Context, dir string, results []domain.Result) []domain.Result {
 	codefallDir := filepath.Join(dir, ".codefall")
-	settingsPath := filepath.Join(codefallDir, "settings.json")
-	createRemedy := mo.Some("create .codefall/settings.json; schema: " + settings.SchemaID)
+	settingsPath := filepath.Join(codefallDir, "project.json")
+	formerSettingsPath := filepath.Join(codefallDir, "settings.json")
+	createRemedy := mo.Some("create .codefall/project.json; schema: " + settings.SchemaID)
+	// The move is upgrade's whatever the manifest says — a project with only the old file was set
+	// up by an earlier release, and init refuses it rather than writing the settings again.
+	moveRemedy := mo.Some("run codefall project upgrade, which moves it to .codefall/project.json")
 
 	exists, err := d.files.DirExists(codefallDir)
 
@@ -47,10 +55,22 @@ func (d *Diagnose) settings(_ context.Context, dir string, results []domain.Resu
 
 	switch {
 	case errors.Is(err, fs.ErrNotExist):
-		return append(results, domain.SettingsFile.Fail(".codefall/settings.json not found", createRemedy))
+		former, err := d.files.Exists(formerSettingsPath)
+		if err != nil {
+			return append(results, domain.SettingsFile.Fail(
+				fmt.Sprintf("Cannot stat .codefall/settings.json: %v", err), mo.None[string]()))
+		}
+
+		if former {
+			return append(results, domain.SettingsFile.Fail(
+				"the settings file is still .codefall/settings.json, the name an earlier release wrote",
+				moveRemedy))
+		}
+
+		return append(results, domain.SettingsFile.Fail(".codefall/project.json not found", createRemedy))
 	case err != nil:
 		return append(results, domain.SettingsFile.Fail(
-			fmt.Sprintf("Cannot read .codefall/settings.json: %v", err), mo.None[string]()))
+			fmt.Sprintf("Cannot read .codefall/project.json: %v", err), mo.None[string]()))
 	}
 
 	results = append(results, domain.SettingsFile.Pass())
@@ -63,7 +83,7 @@ func (d *Diagnose) settings(_ context.Context, dir string, results []domain.Resu
 		var syntaxErr *json.SyntaxError
 		if errors.As(err, &syntaxErr) {
 			return append(results, domain.SettingsJSON.Fail(
-				fmt.Sprintf("settings.json is not valid JSON at byte %d: %v", syntaxErr.Offset, syntaxErr),
+				fmt.Sprintf("project.json is not valid JSON at byte %d: %v", syntaxErr.Offset, syntaxErr),
 				mo.None[string]()))
 		}
 
@@ -74,18 +94,18 @@ func (d *Diagnose) settings(_ context.Context, dir string, results []domain.Resu
 			results = append(results, domain.SettingsJSON.Pass())
 
 			return append(results, domain.SettingsComplete.Fail(
-				"settings.json's top level must be a JSON object", fixRemedy))
+				"project.json's top level must be a JSON object", fixRemedy))
 		}
 
 		return append(results, domain.SettingsJSON.Fail(
-			fmt.Sprintf("settings.json is not valid JSON: %v", err), mo.None[string]()))
+			fmt.Sprintf("project.json is not valid JSON: %v", err), mo.None[string]()))
 	}
 
 	results = append(results, domain.SettingsJSON.Pass())
 
 	if problems := settings.Validate(doc); len(problems) > 0 {
 		return append(results, domain.SettingsComplete.Fail(
-			"settings.json is incomplete: "+strings.Join(problems, "; "), fixRemedy))
+			"project.json is incomplete: "+strings.Join(problems, "; "), fixRemedy))
 	}
 
 	results = append(results, domain.SettingsComplete.Pass())

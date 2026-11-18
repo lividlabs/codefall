@@ -25,18 +25,25 @@ var (
 	// A file the manifest records for each harness, which is what tells an install apart from a
 	// skills directory that was already there: the skills go into the directory the harness reads,
 	// and only a finished run puts them there.
-	claudeSkill       = filepath.Join(workingDir, ".claude", "skills", "design", "SKILL.md")
-	agentsSkill       = filepath.Join(workingDir, ".agents", "skills", "design", "SKILL.md")
-	settingsPath      = filepath.Join(codefallDir, "settings.json")
-	manifestPath      = filepath.Join(workingDir, manifest.Name)
-	ignorePath        = filepath.Join(workingDir, settings.IgnoreName)
-	gitIgnorePath     = filepath.Join(workingDir, settings.GitIgnoreName)
-	gitAttributesPath = filepath.Join(workingDir, settings.GitAttributesName)
+	claudeSkill  = filepath.Join(workingDir, ".claude", "skills", "design", "SKILL.md")
+	agentsSkill  = filepath.Join(workingDir, ".agents", "skills", "design", "SKILL.md")
+	settingsPath = filepath.Join(codefallDir, "project.json")
+	// The settings file under the name an earlier release wrote it: a project that has only this
+	// is refused with the run that moves it. A project with both files passes the settings checks,
+	// and upgrade is the one that reports the leftover.
+	formerSettingsPath = filepath.Join(codefallDir, "settings.json")
+	manifestPath       = filepath.Join(workingDir, manifest.Name)
+	ignorePath         = filepath.Join(workingDir, settings.IgnoreName)
+	gitIgnorePath      = filepath.Join(workingDir, settings.GitIgnoreName)
+	gitAttributesPath  = filepath.Join(workingDir, settings.GitAttributesName)
 	// The script the fixture's local block names, by the relative path the block uses.
 	localScript = filepath.Join(workingDir, "scripts", "local.sh")
 	// The directory the fixture's settings declare their test cases live in.
 	testingDir   = filepath.Join(workingDir, settings.DefaultTestDir)
-	schemaRemedy = "create .codefall/settings.json; schema: " + settings.SchemaID
+	schemaRemedy = "create .codefall/project.json; schema: " + settings.SchemaID
+	// The remedy for the old name, which is upgrade's whatever the manifest says: a project that
+	// has only the old file was set up by an earlier release, and init refuses it.
+	moveRemedy   = "run codefall project upgrade, which moves it to .codefall/project.json"
 	fixRemedy    = "fix the fields above; schema: " + settings.SchemaID
 	ignoreRemedy = "add " + settings.IgnoreEntry + " to " + settings.IgnoreName +
 		", or run codefall project upgrade"
@@ -457,56 +464,67 @@ func TestDiagnoseRun(t *testing.T) {
 			wantRemedy: mo.None[string](),
 		},
 		{
-			name: "settings.json is missing",
+			name: "project.json is missing",
 			mutate: func(f *fakeFileSystem, _ *fakeCommandRunner) {
 				delete(f.files, settingsPath)
 			},
 			want:       outcomes(map[string]domain.Status{domain.SettingsFile.ID: domain.StatusFail}, afterSettingsFile...),
 			target:     domain.SettingsFile.ID,
-			wantDetail: ".codefall/settings.json not found",
+			wantDetail: ".codefall/project.json not found",
 			wantRemedy: mo.Some(schemaRemedy),
 		},
 		{
-			name: "settings.json cannot be read",
+			name: "the settings are still under the name an earlier release wrote",
+			mutate: func(f *fakeFileSystem, _ *fakeCommandRunner) {
+				f.files[formerSettingsPath] = f.files[settingsPath]
+				delete(f.files, settingsPath)
+			},
+			want:       outcomes(map[string]domain.Status{domain.SettingsFile.ID: domain.StatusFail}, afterSettingsFile...),
+			target:     domain.SettingsFile.ID,
+			wantDetail: "the settings file is still .codefall/settings.json, the name an earlier release wrote",
+			wantRemedy: mo.Some(moveRemedy),
+		},
+		{
+			name: "project.json cannot be read",
 			mutate: func(f *fakeFileSystem, _ *fakeCommandRunner) {
 				f.errs[settingsPath] = errors.New("permission denied")
 			},
 			want:       outcomes(map[string]domain.Status{domain.SettingsFile.ID: domain.StatusFail}, afterSettingsFile...),
 			target:     domain.SettingsFile.ID,
-			wantDetail: "Cannot read .codefall/settings.json: permission denied",
+			wantDetail: "Cannot read .codefall/project.json: permission denied",
 			wantRemedy: mo.None[string](),
 		},
 		{
-			name: "settings.json is not valid JSON",
+			name: "project.json is not valid JSON",
 			mutate: func(f *fakeFileSystem, _ *fakeCommandRunner) {
 				f.files[settingsPath] = []byte("{\n  \"version\": 1,,\n}")
 			},
 			want:   outcomes(map[string]domain.Status{domain.SettingsJSON.ID: domain.StatusFail}, afterSettingsJSON...),
 			target: domain.SettingsJSON.ID,
-			wantDetail: "settings.json is not valid JSON at byte 18: " +
+			wantDetail: "project.json is not valid JSON at byte 18: " +
 				"invalid character ',' looking for beginning of object key string",
 			wantRemedy: mo.None[string](),
 		},
 		{
-			name: "settings.json is valid JSON but not an object",
+			name: "project.json is valid JSON but not an object",
 			mutate: func(f *fakeFileSystem, _ *fakeCommandRunner) {
 				f.files[settingsPath] = []byte(`["nope"]`)
 			},
 			want: outcomes(map[string]domain.Status{domain.SettingsComplete.ID: domain.StatusFail},
 				afterSettingsDone...),
 			target:     domain.SettingsComplete.ID,
-			wantDetail: "settings.json's top level must be a JSON object",
+			wantDetail: "project.json's top level must be a JSON object",
 			wantRemedy: mo.Some(fixRemedy),
 		},
 		{
-			name: "settings.json is incomplete",
+			name: "project.json is incomplete",
 			mutate: func(f *fakeFileSystem, _ *fakeCommandRunner) {
 				f.files[settingsPath] = []byte(`{"version": 2}`)
 			},
 			want: outcomes(map[string]domain.Status{domain.SettingsComplete.ID: domain.StatusFail},
 				afterSettingsDone...),
 			target:     domain.SettingsComplete.ID,
-			wantDetail: "settings.json is incomplete: version: must be 1; tracker: missing; harnesses: missing",
+			wantDetail: "project.json is incomplete: version: must be 1; tracker: missing; harnesses: missing",
 			wantRemedy: mo.Some(fixRemedy),
 		},
 		{
@@ -860,7 +878,7 @@ func TestDiagnoseRun(t *testing.T) {
 				domain.TestDeclared.ID: domain.StatusWarn, domain.HarnessesInstalled.ID: domain.StatusFail},
 				append([]string{domain.SharedInstalled.ID, domain.HarnessesLeftOver.ID}, afterTestUndeclared...)...),
 			target:     domain.TestDeclared.ID,
-			wantDetail: "no testing root is declared in settings.json",
+			wantDetail: "no testing root is declared in project.json",
 			wantRemedy: mo.Some("codefall project init"),
 		},
 		{
@@ -874,7 +892,7 @@ func TestDiagnoseRun(t *testing.T) {
 			},
 			want:       outcomes(map[string]domain.Status{domain.HarnessNames.ID: domain.StatusWarn}),
 			target:     domain.HarnessNames.ID,
-			wantDetail: ".codefall/settings.json and .codefall/manifest.json name claude-code (now claude)",
+			wantDetail: ".codefall/project.json and .codefall/manifest.json name claude-code (now claude)",
 			wantRemedy: mo.Some(renameRemedy),
 		},
 		{
@@ -904,7 +922,7 @@ func TestDiagnoseRun(t *testing.T) {
 			},
 			want:       outcomes(map[string]domain.Status{domain.HarnessNames.ID: domain.StatusWarn}),
 			target:     domain.HarnessNames.ID,
-			wantDetail: ".codefall/settings.json names antigravity (now agy) and claude-code (now claude)",
+			wantDetail: ".codefall/project.json names antigravity (now agy) and claude-code (now claude)",
 			wantRemedy: mo.Some(renameRemedy),
 		},
 		{
@@ -972,7 +990,7 @@ func TestDiagnoseRun(t *testing.T) {
 			want: outcomes(map[string]domain.Status{domain.SettingsComplete.ID: domain.StatusFail},
 				afterSettingsDone...),
 			target: domain.SettingsComplete.ID,
-			wantDetail: `settings.json is incomplete: harnessConfig.codex-direct.harness: missing; a key that is not a ` +
+			wantDetail: `project.json is incomplete: harnessConfig.codex-direct.harness: missing; a key that is not a ` +
 				`harness name says which harness runs it ("agy", "claude", "codex", "muse", "opencode"); ` +
 				`agents: [0].review[0].harness: unknown value "codex-direct" ` +
 				`(expected "agy", "claude", "codex", "current", "muse", "opencode", or a harnessConfig key)`,
@@ -1059,7 +1077,7 @@ func TestDiagnoseRun(t *testing.T) {
 			want: outcomes(map[string]domain.Status{domain.SettingsComplete.ID: domain.StatusFail},
 				afterSettingsDone...),
 			target: domain.SettingsComplete.ID,
-			wantDetail: `settings.json is incomplete: agents: [0].review[0].harness: unknown value "cursor" ` +
+			wantDetail: `project.json is incomplete: agents: [0].review[0].harness: unknown value "cursor" ` +
 				`(expected "agy", "claude", "codex", "current", "muse", "opencode", or a harnessConfig key)`,
 			wantRemedy: mo.Some(fixRemedy),
 		},
@@ -1071,7 +1089,7 @@ func TestDiagnoseRun(t *testing.T) {
 			want: outcomes(map[string]domain.Status{domain.SettingsComplete.ID: domain.StatusFail},
 				afterSettingsDone...),
 			target:     domain.SettingsComplete.ID,
-			wantDetail: `settings.json is incomplete: agents: names activeAgent "muse" twice`,
+			wantDetail: `project.json is incomplete: agents: names activeAgent "muse" twice`,
 			wantRemedy: mo.Some(fixRemedy),
 		},
 		{
@@ -1084,7 +1102,7 @@ func TestDiagnoseRun(t *testing.T) {
 			want: outcomes(map[string]domain.Status{domain.LocalDeclared.ID: domain.StatusWarn},
 				afterLocalUndeclared...),
 			target:     domain.LocalDeclared.ID,
-			wantDetail: "no local start and update commands are declared in settings.json",
+			wantDetail: "no local start and update commands are declared in project.json",
 			wantRemedy: mo.Some(equipRemedy),
 		},
 		{
@@ -1166,7 +1184,7 @@ func TestDiagnoseRun(t *testing.T) {
 			want: outcomes(map[string]domain.Status{domain.TestDeclared.ID: domain.StatusWarn},
 				afterTestUndeclared...),
 			target:     domain.TestDeclared.ID,
-			wantDetail: "no testing root is declared in settings.json",
+			wantDetail: "no testing root is declared in project.json",
 			wantRemedy: mo.Some("codefall project upgrade"),
 		},
 		{
@@ -1180,7 +1198,7 @@ func TestDiagnoseRun(t *testing.T) {
 				domain.SettingsComplete.ID: domain.StatusFail, domain.TestDeclared.ID: domain.StatusWarn},
 				afterSettingsDone...),
 			target:     domain.SettingsComplete.ID,
-			wantDetail: `settings.json is incomplete: test.dir: must be a relative path inside the project, such as "testing"`,
+			wantDetail: `project.json is incomplete: test.dir: must be a relative path inside the project, such as "testing"`,
 			wantRemedy: mo.Some(fixRemedy),
 		},
 		{
@@ -1192,7 +1210,7 @@ func TestDiagnoseRun(t *testing.T) {
 			},
 			want:       outcomes(map[string]domain.Status{domain.TestEquipped.ID: domain.StatusWarn}),
 			target:     domain.TestEquipped.ID,
-			wantDetail: "no test runner is declared in settings.json",
+			wantDetail: "no test runner is declared in project.json",
 			wantRemedy: mo.Some(equipTestRemedy),
 		},
 		{
@@ -1202,7 +1220,7 @@ func TestDiagnoseRun(t *testing.T) {
 			},
 			want:       outcomes(map[string]domain.Status{domain.TestEquipped.ID: domain.StatusWarn}),
 			target:     domain.TestEquipped.ID,
-			wantDetail: "no test runner is declared in settings.json",
+			wantDetail: "no test runner is declared in project.json",
 			wantRemedy: mo.Some(equipTestRemedy),
 		},
 		{
@@ -1223,7 +1241,7 @@ func TestDiagnoseRun(t *testing.T) {
 			},
 			want:       outcomes(map[string]domain.Status{domain.TestDirExists.ID: domain.StatusFail}),
 			target:     domain.TestDirExists.ID,
-			wantDetail: "testing/ is declared in settings.json and is not there",
+			wantDetail: "testing/ is declared in project.json and is not there",
 			wantRemedy: mo.Some("codefall project upgrade"),
 		},
 		{

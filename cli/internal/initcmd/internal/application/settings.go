@@ -19,12 +19,24 @@ import (
 // Where settings live, relative to the directory init is run in. The display form is what a person
 // reads in a report; the path form is what the file system is given. codefallDir is the project's
 // own codefall directory, which also holds the manifest and, since the install layout, the files
-// every harness reaches by a path codefall writes (ADR-006).
+// every harness reaches by a path codefall writes (ADR-006). The former names are the ones an
+// earlier release wrote the settings under: codefall project upgrade moves a file that still carries
+// one, and init refuses a project that has it.
 const (
-	codefallDir  = ".codefall"
-	settingsFile = "settings.json"
-	settingsName = codefallDir + "/" + settingsFile
+	codefallDir        = ".codefall"
+	settingsFile       = "project.json"
+	settingsName       = codefallDir + "/" + settingsFile
+	formerSettingsFile = "settings.json"
+	formerSettingsName = codefallDir + "/" + formerSettingsFile
 )
+
+func settingsPath(dir string) string {
+	return filepath.Join(dir, codefallDir, settingsFile)
+}
+
+func formerSettingsPath(dir string) string {
+	return filepath.Join(dir, codefallDir, formerSettingsFile)
+}
 
 // SettingsExist reports whether dir already has settings. Presentation asks before it prompts: there
 // is no point surveying a project for answers that will not be written.
@@ -41,7 +53,53 @@ func (i *Initialize) SettingsExist(dir string) (bool, error) {
 	}
 }
 
-// ChosenHarnesses reports the harnesses .codefall/settings.json records, so a rerun installs for what
+// FormerSettingsExist reports whether dir still has the settings file under the name an earlier
+// release wrote it, .codefall/settings.json. Presentation asks so init can refuse such a project
+// and name codefall project upgrade, whose run moves the file: init writes the settings once and
+// never under the old name, so a project that has the file is not init's to set up.
+func (i *Initialize) FormerSettingsExist(dir string) (bool, error) {
+	_, err := i.files.ReadFile(formerSettingsPath(dir))
+
+	switch {
+	case err == nil:
+		return true, nil
+	case errors.Is(err, fs.ErrNotExist):
+		return false, nil
+	default:
+		return false, fmt.Errorf("read %s: %w", formerSettingsName, err)
+	}
+}
+
+// readSettings returns the settings file's bytes and the name they were read under:
+// .codefall/project.json's, or .codefall/settings.json's when a project an earlier release set up
+// still has only the old file. The callers are the reads that happen before the settings step moves
+// it — the harnesses, the testing root, and the former harness spellings — and the only command
+// that reaches them with the old file still there is codefall project upgrade, which is the run
+// that moves it; init has already refused the project. Neither file being there is an error that
+// satisfies errors.Is(err, fs.ErrNotExist).
+func (i *Initialize) readSettings(dir string) ([]byte, string, error) {
+	data, err := i.files.ReadFile(settingsPath(dir))
+	if err == nil {
+		return data, settingsName, nil
+	}
+
+	if !errors.Is(err, fs.ErrNotExist) {
+		return nil, "", fmt.Errorf("read %s: %w", settingsName, err)
+	}
+
+	former, err := i.files.ReadFile(formerSettingsPath(dir))
+	if err == nil {
+		return former, formerSettingsName, nil
+	}
+
+	if !errors.Is(err, fs.ErrNotExist) {
+		return nil, "", fmt.Errorf("read %s: %w", formerSettingsName, err)
+	}
+
+	return nil, "", err
+}
+
+// ChosenHarnesses reports the harnesses .codefall/project.json records, so a rerun installs for what
 // the project already chose rather than asking again. None means there is no settings file, or the
 // file records none — which is what a file written before the field existed looks like (ADR-GO-03).
 //
@@ -49,15 +107,17 @@ func (i *Initialize) SettingsExist(dir string) (bool, error) {
 // name it has now, which is the name every step installs for and the settings step writes back.
 //
 // It decodes the one field it needs rather than the whole document: what the rest of the file may
-// hold is the format's business, and this is a question about one answer the project gave.
+// hold is the format's business, and this is a question about one answer the project gave. The
+// file is read through readSettings, so a project that still has only the old name is read on the
+// run that moves it.
 func (i *Initialize) ChosenHarnesses(dir string) (mo.Option[[]string], error) {
-	data, err := i.files.ReadFile(settingsPath(dir))
+	data, from, err := i.readSettings(dir)
 
 	switch {
 	case errors.Is(err, fs.ErrNotExist):
 		return mo.None[[]string](), nil
 	case err != nil:
-		return mo.None[[]string](), fmt.Errorf("read %s: %w", settingsName, err)
+		return mo.None[[]string](), err
 	}
 
 	var document struct {
@@ -65,7 +125,7 @@ func (i *Initialize) ChosenHarnesses(dir string) (mo.Option[[]string], error) {
 	}
 
 	if err := json.Unmarshal(data, &document); err != nil {
-		return mo.None[[]string](), fmt.Errorf("decode %s: %w", settingsName, err)
+		return mo.None[[]string](), fmt.Errorf("decode %s: %w", from, err)
 	}
 
 	if len(document.Harnesses) == 0 {
@@ -80,7 +140,7 @@ func (i *Initialize) ChosenHarnesses(dir string) (mo.Option[[]string], error) {
 	return mo.Some(names), nil
 }
 
-// DeclaredTestDir reports the testing root .codefall/settings.json records, so a rerun works with
+// DeclaredTestDir reports the testing root .codefall/project.json records, so a rerun works with
 // the root the project already declared rather than asking for it again. None means there is no
 // settings file, or the file declares no root — which is what a file written before the block
 // existed looks like (ADR-GO-03).
@@ -88,13 +148,13 @@ func (i *Initialize) ChosenHarnesses(dir string) (mo.Option[[]string], error) {
 // Like ChosenHarnesses, it decodes the one field it needs: what the rest of the file may hold is the
 // format's business, and this is a question about one answer the project gave.
 func (i *Initialize) DeclaredTestDir(dir string) (mo.Option[string], error) {
-	data, err := i.files.ReadFile(settingsPath(dir))
+	data, from, err := i.readSettings(dir)
 
 	switch {
 	case errors.Is(err, fs.ErrNotExist):
 		return mo.None[string](), nil
 	case err != nil:
-		return mo.None[string](), fmt.Errorf("read %s: %w", settingsName, err)
+		return mo.None[string](), err
 	}
 
 	var document struct {
@@ -104,7 +164,7 @@ func (i *Initialize) DeclaredTestDir(dir string) (mo.Option[string], error) {
 	}
 
 	if err := json.Unmarshal(data, &document); err != nil {
-		return mo.None[string](), fmt.Errorf("decode %s: %w", settingsName, err)
+		return mo.None[string](), fmt.Errorf("decode %s: %w", from, err)
 	}
 
 	if document.Test.Dir == "" {
@@ -114,23 +174,32 @@ func (i *Initialize) DeclaredTestDir(dir string) (mo.Option[string], error) {
 	return mo.Some(document.Test.Dir), nil
 }
 
-// settings is the first step of a run: it writes .codefall/settings.json, the file doctor checks.
+// settings is the first step of a run: it writes .codefall/project.json, the file doctor checks.
 //
 // Settings that are already there are left alone: the run is an upgrade, or an init finishing a
 // project that was set up before the manifest existed, and the steps after this one still have work
-// to do either way. Three edits are made to them. An old spelling of a harness name in the settings
-// or the manifest is rewritten to the name the harness has now, a harness this run installs for that
-// the settings do not name is added to their list, which is what `upgrade --harness` asks for, and a
-// $schema URL an earlier release wrote is pointed at the one codefall publishes now. Nothing else in
-// either file changes: changing an answer the settings already record is a hand edit, until a
-// command exists for it.
+// to do either way. Three edits are made to them: an old spelling of a harness name in the settings
+// or the manifest is rewritten to the name the harness has now, a harness this run installs for
+// that the settings do not name is added to their list, which is what `upgrade --harness` asks for,
+// and a $schema URL an earlier release wrote is pointed at the one codefall publishes now. A
+// settings file an earlier release wrote under the old name is moved to the new one before any of
+// the edits, and a project that has both files keeps project.json and is told the old one is the
+// person's to remove. Nothing else in either file changes: changing an answer the settings already
+// record is a hand edit, until a command exists for it.
 func (i *Initialize) settings(_ context.Context, request Request) (domain.StepResult, error) {
 	exists, err := i.SettingsExist(request.Dir)
 	if err != nil {
 		return domain.StepResult{}, err
 	}
 
-	if exists {
+	// The move comes before the edits: a project an earlier release set up has its settings under
+	// the old name, and every edit below reads and writes the new one.
+	moved, err := i.moveSettings(request.Dir, exists)
+	if err != nil {
+		return domain.StepResult{}, err
+	}
+
+	if exists || moved {
 		renamed, err := i.respell(request.Dir, true)
 		if err != nil {
 			return domain.StepResult{}, err
@@ -148,6 +217,10 @@ func (i *Initialize) settings(_ context.Context, request Request) (domain.StepRe
 
 		var edits []string
 
+		if moved {
+			edits = append(edits, "moved "+formerSettingsName+" to "+settingsName)
+		}
+
 		if renamed != "" {
 			edits = append(edits, renamed)
 		}
@@ -158,6 +231,20 @@ func (i *Initialize) settings(_ context.Context, request Request) (domain.StepRe
 
 		if repointed {
 			edits = append(edits, "pointed $schema in "+settingsName+" at the current schema")
+		}
+
+		// A project that has both files keeps project.json, the file this binary reads, and the
+		// old one stays: a person may have put either there by hand, so which file goes is not
+		// codefall's to decide. The report says so, and removing it is the person's.
+		if !moved {
+			left, err := i.FormerSettingsExist(request.Dir)
+			if err != nil {
+				return domain.StepResult{}, err
+			}
+
+			if left {
+				edits = append(edits, "left "+formerSettingsName+" where it is, for you to remove")
+			}
 		}
 
 		if len(edits) > 0 {
@@ -201,10 +288,6 @@ func (i *Initialize) settings(_ context.Context, request Request) (domain.StepRe
 	}
 
 	return domain.SettingsStep.Done(wrote), nil
-}
-
-func settingsPath(dir string) string {
-	return filepath.Join(dir, codefallDir, settingsFile)
 }
 
 // describe is what the step reports it wrote, in the terms the person answering the survey used.

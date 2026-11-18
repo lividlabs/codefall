@@ -22,7 +22,7 @@ import (
 const renameRemedy = "run codefall project upgrade, which rewrites them"
 
 // settingsName is the settings file as a person reads it in a report.
-const settingsName = ".codefall/settings.json"
+const settingsName = ".codefall/project.json"
 
 // harnesses runs checks 11 to 14, all of which read .codefall/manifest.json, so the file is read once
 // here and handed to each of them.

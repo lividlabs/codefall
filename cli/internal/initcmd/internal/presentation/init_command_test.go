@@ -23,19 +23,20 @@ import (
 )
 
 type fakeInitialize struct {
-	report      domain.Report
-	err         error
-	exists      bool
-	existsErr   error
-	manifest    bool
-	suggestion  mo.Option[string]
-	root        mo.Option[string]
-	installed   mo.Option[application.Installation]
-	harnesses   mo.Option[[]string]
-	testDir     mo.Option[string]
-	formers     []string
-	breaking    mo.Option[[]application.BreakingRelease]
-	breakingErr error
+	report         domain.Report
+	err            error
+	exists         bool
+	existsErr      error
+	formerSettings bool
+	manifest       bool
+	suggestion     mo.Option[string]
+	root           mo.Option[string]
+	installed      mo.Option[application.Installation]
+	harnesses      mo.Option[[]string]
+	testDir        mo.Option[string]
+	formers        []string
+	breaking       mo.Option[[]application.BreakingRelease]
+	breakingErr    error
 
 	got       application.Request
 	ran       bool
@@ -57,6 +58,12 @@ func (f *fakeInitialize) Run(
 
 func (f *fakeInitialize) SettingsExist(string) (bool, error) {
 	return f.exists, f.existsErr
+}
+
+// FormerSettingsExist on the fake reports no file under the old name unless a test says otherwise:
+// a project that still has it is upgrade's, and the tests that check the refusal set the field.
+func (f *fakeInitialize) FormerSettingsExist(string) (bool, error) {
+	return f.formerSettings, nil
 }
 
 // ManifestExists on the fake reports no finished run unless a test says otherwise: init's tests
@@ -108,7 +115,7 @@ func (f *fakeInitialize) RepositoryRoot(context.Context, string) mo.Option[strin
 
 func newFakeInitialize() *fakeInitialize {
 	return &fakeInitialize{
-		report:     domain.NewReport(domain.SettingsStep.Done("wrote .codefall/settings.json (tracker: beads)")),
+		report:     domain.NewReport(domain.SettingsStep.Done("wrote .codefall/project.json (tracker: beads)")),
 		suggestion: mo.None[string](),
 		root:       mo.None[string](),
 		installed:  mo.None[application.Installation](),
@@ -383,7 +390,7 @@ func TestInitCommandAsksNothingWhenSettingsAlreadyExist(t *testing.T) {
 	initialize.exists = true
 	initialize.harnesses = mo.Some([]string{harness.Claude})
 	initialize.report = domain.NewReport(
-		domain.SettingsStep.Skipped(".codefall/settings.json already exists"))
+		domain.SettingsStep.Skipped(".codefall/project.json already exists"))
 
 	out, err := run(t, initialize)
 	if err != nil {
@@ -398,7 +405,7 @@ func TestInitCommandAsksNothingWhenSettingsAlreadyExist(t *testing.T) {
 		t.Error("asked gh for a repository, want nothing asked when the settings are already there")
 	}
 
-	want := "- .codefall/settings.json already exists\n" + nextStep + "\n"
+	want := "- .codefall/project.json already exists\n" + nextStep + "\n"
 	if out != want {
 		t.Errorf("output =\n%q\nwant\n%q", out, want)
 	}
@@ -422,10 +429,28 @@ func TestInitCommandRefusesAProjectThatIsAlreadySetUp(t *testing.T) {
 	}
 }
 
+// A project whose settings are still under the old name is an earlier release's: init neither
+// surveys over the file it cannot read nor writes a second one beside it, and the refusal names
+// the run that moves it.
+func TestInitCommandRefusesSettingsUnderTheFormerName(t *testing.T) {
+	initialize := newFakeInitialize()
+	initialize.formerSettings = true
+
+	_, err := run(t, initialize, "--harness", "claude")
+	if err == nil || !strings.Contains(err.Error(), "the settings file is still .codefall/settings.json") ||
+		!strings.Contains(err.Error(), "run codefall project upgrade") {
+		t.Fatalf("Execute error = %v, want it to name the old file and codefall project upgrade", err)
+	}
+
+	if initialize.ran {
+		t.Error("the use case ran, want the command to stop before it")
+	}
+}
+
 func TestInitCommandPrintsALineForEachFinishedStepAndWhatToRunNext(t *testing.T) {
 	initialize := newFakeInitialize()
 	initialize.report = domain.NewReport(
-		domain.SettingsStep.Done("wrote .codefall/settings.json (tracker: beads)"),
+		domain.SettingsStep.Done("wrote .codefall/project.json (tracker: beads)"),
 		domain.ExtensionStep.Skipped(
 			"the codefall marketplace is declared and codefall@codefall enabled in .claude/settings.json"),
 	)
@@ -437,7 +462,7 @@ func TestInitCommandPrintsALineForEachFinishedStepAndWhatToRunNext(t *testing.T)
 	}
 
 	// New settings carry the default agents entry, so the run says where another harness is added.
-	want := "✓ wrote .codefall/settings.json (tracker: beads)\n" +
+	want := "✓ wrote .codefall/project.json (tracker: beads)\n" +
 		"- the codefall marketplace is declared and codefall@codefall enabled in .claude/settings.json\n" +
 		"To add another harness as a reviewer, run /codefall-equip agents.\n" +
 		nextStep + "\n"
@@ -489,13 +514,13 @@ func TestStepLine(t *testing.T) {
 	}{
 		{
 			name:   "a step that did its work",
-			result: domain.SettingsStep.Done("wrote .codefall/settings.json (tracker: beads)"),
-			want:   "✓ wrote .codefall/settings.json (tracker: beads)",
+			result: domain.SettingsStep.Done("wrote .codefall/project.json (tracker: beads)"),
+			want:   "✓ wrote .codefall/project.json (tracker: beads)",
 		},
 		{
 			name:   "a step that found its work done",
-			result: domain.SettingsStep.Skipped(".codefall/settings.json already exists"),
-			want:   "- .codefall/settings.json already exists",
+			result: domain.SettingsStep.Skipped(".codefall/project.json already exists"),
+			want:   "- .codefall/project.json already exists",
 		},
 		{
 			name:   "an outcome from nowhere",
@@ -569,7 +594,7 @@ func TestProgressObserverReportsEachStep(t *testing.T) {
 
 	observer.StepStarted(domain.SettingsStep)
 
-	result := domain.SettingsStep.Done("wrote .codefall/settings.json (tracker: beads)")
+	result := domain.SettingsStep.Done("wrote .codefall/project.json (tracker: beads)")
 	observer.StepFinished(result)
 
 	if want := domain.SettingsStep.Title + "…"; len(progress.labels) != 1 || progress.labels[0] != want {
@@ -852,15 +877,18 @@ func TestInitCommandChecksPrerequisitesAfterTheRefusalsThatNeedNoTool(t *testing
 	for _, tc := range []struct {
 		name     string
 		manifest bool
+		former   bool
 		args     []string
 		want     string
 	}{
 		{name: "already set up", manifest: true, args: []string{"--harness", "claude"}, want: "codefall project upgrade"},
+		{name: "settings under the old name", former: true, args: []string{"--harness", "claude"}, want: "codefall project upgrade"},
 		{name: "unknown tracker", args: []string{"--tracker", "nope"}, want: "unknown tracker"},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			initialize := newFakeInitialize()
 			initialize.manifest = tc.manifest
+			initialize.formerSettings = tc.former
 
 			var called bool
 

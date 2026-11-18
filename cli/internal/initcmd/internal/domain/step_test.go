@@ -3,8 +3,8 @@ package domain
 import "testing"
 
 func TestStepResults(t *testing.T) {
-	done := SettingsStep.Done("wrote .codefall/settings.json")
-	if done.Outcome != OutcomeDone || done.Step != SettingsStep || done.Detail != "wrote .codefall/settings.json" {
+	done := SettingsStep.Done("wrote .codefall/project.json")
+	if done.Outcome != OutcomeDone || done.Step != SettingsStep || done.Detail != "wrote .codefall/project.json" {
 		t.Errorf("Done() = %+v, want the step, DONE, and the detail", done)
 	}
 

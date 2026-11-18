@@ -96,9 +96,9 @@ func (c Check) Fail(detail string, remedy mo.Option[string]) Result {
 // The twenty-seven checks doctor runs, in the order it runs them.
 var (
 	CodefallDir      = Check{ID: "codefall-dir", Title: ".codefall/ exists", Category: CategorySettings}
-	SettingsFile     = Check{ID: "settings-file", Title: ".codefall/settings.json exists", Category: CategorySettings}
-	SettingsJSON     = Check{ID: "settings-json", Title: "settings.json is valid JSON", Category: CategorySettings}
-	SettingsComplete = Check{ID: "settings-complete", Title: "settings.json is complete", Category: CategorySettings}
+	SettingsFile     = Check{ID: "settings-file", Title: ".codefall/project.json exists", Category: CategorySettings}
+	SettingsJSON     = Check{ID: "settings-json", Title: "project.json is valid JSON", Category: CategorySettings}
+	SettingsComplete = Check{ID: "settings-complete", Title: "project.json is complete", Category: CategorySettings}
 	ReviewsIgnored   = Check{ID: "reviews-ignored", Title: ".ignore hides review findings", Category: CategorySettings}
 	// TestsIgnored is the same question for the reports an agentic test run commits (ADR-007).
 	TestsIgnored = Check{ID: "tests-ignored", Title: ".ignore hides test run reports", Category: CategorySettings}

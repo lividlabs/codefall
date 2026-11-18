@@ -61,7 +61,7 @@ func TestSetHarnessConfigCreatesTheObject(t *testing.T) {
 		t.Fatalf("SetHarnessConfig: %v", err)
 	}
 
-	if want := domain.Changed("set harnessConfig.codex in .codefall/settings.json"); write != want {
+	if want := domain.Changed("set harnessConfig.codex in .codefall/project.json"); write != want {
 		t.Errorf("write = %+v, want %+v", write, want)
 	}
 
@@ -80,7 +80,7 @@ func TestSetHarnessConfigCreatesTheObject(t *testing.T) {
   }
 }`, 1)
 	if got := string(files.files[settingsFull]); got != want {
-		t.Errorf("settings.json =\n%s\nwant\n%s", got, want)
+		t.Errorf("project.json =\n%s\nwant\n%s", got, want)
 	}
 }
 
@@ -99,7 +99,7 @@ func TestSetHarnessConfigReplacesOneBlockAndLeavesTheRestAlone(t *testing.T) {
 		`"codex-direct": { "harness": "codex", "args": ["-c", "model_reasoning_effort=high"] }`,
 		`"codex-direct": {"harness":"codex","modelFlag":"-m"}`, 1)
 	if got := string(files.files[settingsFull]); got != want {
-		t.Errorf("settings.json =\n%s\nwant\n%s", got, want)
+		t.Errorf("project.json =\n%s\nwant\n%s", got, want)
 	}
 }
 
@@ -125,7 +125,7 @@ func TestSetHarnessConfigAddsABlockToTheObject(t *testing.T) {
     }
   },`, 1)
 	if got := string(files.files[settingsFull]); got != want {
-		t.Errorf("settings.json =\n%s\nwant\n%s", got, want)
+		t.Errorf("project.json =\n%s\nwant\n%s", got, want)
 	}
 
 	// A block under a harness name carries no harness field: the key says.
@@ -136,7 +136,7 @@ func TestSetHarnessConfigAddsABlockToTheObject(t *testing.T) {
 	}
 
 	if got := string(files.files[settingsFull]); !strings.Contains(got, "\"claude\": {\n      \"provider\": \"bedrock\"\n    }") {
-		t.Errorf("settings.json =\n%s\nwant a claude block holding only the provider", got)
+		t.Errorf("project.json =\n%s\nwant a claude block holding only the provider", got)
 	}
 }
 
@@ -151,7 +151,7 @@ func TestSetHarnessConfigThatIsAlreadySetWritesNothing(t *testing.T) {
 		t.Fatalf("SetHarnessConfig: %v", err)
 	}
 
-	if want := domain.Unchanged(".codefall/settings.json already sets harnessConfig.codex that way"); write != want {
+	if want := domain.Unchanged(".codefall/project.json already sets harnessConfig.codex that way"); write != want {
 		t.Errorf("write = %+v, want %+v", write, want)
 	}
 
@@ -188,7 +188,7 @@ func TestSetHarnessConfigRefuses(t *testing.T) {
 			settings: withBlocks,
 			key:      "bedrock",
 			block:    settings.HarnessConfig{Provider: mo.Some("amazon-bedrock-runtime")},
-			want:     "that change would leave .codefall/settings.json invalid, so nothing was changed: harnessConfig.bedrock.harness: missing",
+			want:     "that change would leave .codefall/project.json invalid, so nothing was changed: harnessConfig.bedrock.harness: missing",
 		},
 		{
 			name:     "a variant on current",
@@ -209,7 +209,7 @@ func TestSetHarnessConfigRefuses(t *testing.T) {
 			settings: `{"version": 1, "harnesses": ["claude"]}`,
 			key:      "codex",
 			block:    settings.HarnessConfig{Provider: mo.Some("x")},
-			want:     ".codefall/settings.json is not valid, so nothing was changed: tracker: missing",
+			want:     ".codefall/project.json is not valid, so nothing was changed: tracker: missing",
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
@@ -237,7 +237,7 @@ func TestClearHarnessConfigRemovesTheBlock(t *testing.T) {
 		t.Fatalf("ClearHarnessConfig: %v", err)
 	}
 
-	if want := domain.Changed("removed harnessConfig.codex from .codefall/settings.json"); write != want {
+	if want := domain.Changed("removed harnessConfig.codex from .codefall/project.json"); write != want {
 		t.Errorf("write = %+v, want %+v", write, want)
 	}
 
@@ -249,7 +249,7 @@ func TestClearHarnessConfigRemovesTheBlock(t *testing.T) {
     },
 `, "", 1)
 	if got := string(files.files[settingsFull]); got != want {
-		t.Errorf("settings.json =\n%s\nwant\n%s", got, want)
+		t.Errorf("project.json =\n%s\nwant\n%s", got, want)
 	}
 
 	_, err = NewConfig(files).ClearHarnessConfig(workingDir, "codex-direct")
@@ -258,7 +258,7 @@ func TestClearHarnessConfigRemovesTheBlock(t *testing.T) {
 	}
 
 	if got := string(files.files[settingsFull]); got != want {
-		t.Errorf("settings.json changed on a refusal:\n%s", got)
+		t.Errorf("project.json changed on a refusal:\n%s", got)
 	}
 }
 
@@ -282,7 +282,7 @@ func TestClearHarnessConfigRemovesTheObjectLeftEmpty(t *testing.T) {
 		t.Fatalf("ClearHarnessConfig: %v", err)
 	}
 
-	if want := domain.Changed("removed harnessConfig.codex from .codefall/settings.json, and harnessConfig with it, since it held nothing else"); write != want {
+	if want := domain.Changed("removed harnessConfig.codex from .codefall/project.json, and harnessConfig with it, since it held nothing else"); write != want {
 		t.Errorf("write = %+v, want %+v", write, want)
 	}
 
@@ -295,7 +295,7 @@ func TestClearHarnessConfigRemovesTheObjectLeftEmpty(t *testing.T) {
 }
 `
 	if got := string(files.files[settingsFull]); got != want {
-		t.Errorf("settings.json =\n%s\nwant\n%s", got, want)
+		t.Errorf("project.json =\n%s\nwant\n%s", got, want)
 	}
 }
 
@@ -308,7 +308,7 @@ func TestClearHarnessConfigThatIsNotSetWritesNothing(t *testing.T) {
 			t.Fatalf("ClearHarnessConfig: %v", err)
 		}
 
-		if want := domain.Unchanged(".codefall/settings.json has no harnessConfig.muse to clear"); write != want {
+		if want := domain.Unchanged(".codefall/project.json has no harnessConfig.muse to clear"); write != want {
 			t.Errorf("write = %+v, want %+v", write, want)
 		}
 
@@ -360,12 +360,12 @@ func TestSetListAcceptsAVariantKeyOnlyWhenTheFileHoldsIt(t *testing.T) {
 		t.Fatalf("SetList: %v", err)
 	}
 
-	if want := domain.Changed("set claude consult in .codefall/settings.json: codex-direct:gpt-6-astra"); write != want {
+	if want := domain.Changed("set claude consult in .codefall/project.json: codex-direct:gpt-6-astra"); write != want {
 		t.Errorf("write = %+v, want %+v", write, want)
 	}
 
 	_, err = NewConfig(project(initSettings)).SetList(workingDir, "claude", "consult", []settings.Agent{agent("codex-direct")})
-	if err == nil || !strings.Contains(err.Error(), `that change would leave .codefall/settings.json invalid, so nothing was changed: `+
+	if err == nil || !strings.Contains(err.Error(), `that change would leave .codefall/project.json invalid, so nothing was changed: `+
 		`agents: [1].consult[0].harness: unknown value "codex-direct" (expected "agy", "claude", "codex", "current", "muse", "opencode", or a harnessConfig key)`) {
 		t.Errorf("SetList with a key the file lacks: error = %v, want the settings module's refusal", err)
 	}

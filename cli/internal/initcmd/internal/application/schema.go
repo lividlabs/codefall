@@ -9,7 +9,7 @@ import (
 	"github.com/lividlabs/codefall/cli/internal/shared/settings"
 )
 
-// currentSchema points .codefall/settings.json's $schema at the schema URL codefall publishes now
+// currentSchema points .codefall/project.json's $schema at the schema URL codefall publishes now
 // when the file names one an earlier release wrote, and reports whether it did. A project set up
 // before 0.26.0 carries a URL that no longer resolves, and an editor that follows it validates
 // nothing.
