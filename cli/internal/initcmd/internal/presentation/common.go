@@ -38,11 +38,6 @@ type InitializeUseCase interface {
 	// commands never do each other's work.
 	ManifestExists(dir string) (bool, error)
 	SettingsExist(dir string) (bool, error)
-	// FormerSettingsExist reports whether the settings file is still under the name an earlier
-	// release wrote it, .codefall/settings.json. init refuses such a project and names codefall
-	// project upgrade, whose run moves the file; upgrade reads the old name on that run and no
-	// command other than those two so much as looks for the file.
-	FormerSettingsExist(dir string) (bool, error)
 	SuggestIssuesRepo(ctx context.Context, dir string) mo.Option[string]
 	// RepositoryRoot reports the root of the git work tree dir sits below, or None when dir is the
 	// root or not in a work tree. It is what decides whether there is a location to ask about.

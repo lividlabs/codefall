@@ -23,7 +23,7 @@ import (
 // Every detail is a whole sentence, because the report prints it under a category header without the
 // check's title in front of it.
 //
-// The settings file an earlier release wrote under the name .codefall/project.json is never read
+// The settings file an earlier release wrote under the name .codefall/settings.json is never read
 // as if it were the new one: the check fails and names the run that moves it, so the project is not
 // told to create a file it already has.
 //
@@ -35,8 +35,8 @@ func (d *Diagnose) settings(_ context.Context, dir string, results []domain.Resu
 	settingsPath := filepath.Join(codefallDir, "project.json")
 	formerSettingsPath := filepath.Join(codefallDir, "settings.json")
 	createRemedy := mo.Some("create .codefall/project.json; schema: " + settings.SchemaID)
-	// The move is upgrade's whatever the manifest says — a project with only the old file was set
-	// up by an earlier release, and init refuses it rather than writing the settings again.
+	// The remedy names upgrade, as every remedy for an installed project does. A project with the
+	// old file and no manifest is sent on to init by upgrade, and init's run moves the file too.
 	moveRemedy := mo.Some("run codefall project upgrade, which moves it to .codefall/project.json")
 
 	exists, err := d.files.DirExists(codefallDir)

@@ -23,20 +23,19 @@ import (
 )
 
 type fakeInitialize struct {
-	report         domain.Report
-	err            error
-	exists         bool
-	existsErr      error
-	formerSettings bool
-	manifest       bool
-	suggestion     mo.Option[string]
-	root           mo.Option[string]
-	installed      mo.Option[application.Installation]
-	harnesses      mo.Option[[]string]
-	testDir        mo.Option[string]
-	formers        []string
-	breaking       mo.Option[[]application.BreakingRelease]
-	breakingErr    error
+	report      domain.Report
+	err         error
+	exists      bool
+	existsErr   error
+	manifest    bool
+	suggestion  mo.Option[string]
+	root        mo.Option[string]
+	installed   mo.Option[application.Installation]
+	harnesses   mo.Option[[]string]
+	testDir     mo.Option[string]
+	formers     []string
+	breaking    mo.Option[[]application.BreakingRelease]
+	breakingErr error
 
 	got       application.Request
 	ran       bool
@@ -58,12 +57,6 @@ func (f *fakeInitialize) Run(
 
 func (f *fakeInitialize) SettingsExist(string) (bool, error) {
 	return f.exists, f.existsErr
-}
-
-// FormerSettingsExist on the fake reports no file under the old name unless a test says otherwise:
-// a project that still has it is upgrade's, and the tests that check the refusal set the field.
-func (f *fakeInitialize) FormerSettingsExist(string) (bool, error) {
-	return f.formerSettings, nil
 }
 
 // ManifestExists on the fake reports no finished run unless a test says otherwise: init's tests
@@ -422,24 +415,6 @@ func TestInitCommandRefusesAProjectThatIsAlreadySetUp(t *testing.T) {
 	_, err := run(t, initialize)
 	if err == nil || !strings.Contains(err.Error(), "run codefall project upgrade") {
 		t.Fatalf("Execute error = %v, want it to name codefall project upgrade", err)
-	}
-
-	if initialize.ran {
-		t.Error("the use case ran, want the command to stop before it")
-	}
-}
-
-// A project whose settings are still under the old name is an earlier release's: init neither
-// surveys over the file it cannot read nor writes a second one beside it, and the refusal names
-// the run that moves it.
-func TestInitCommandRefusesSettingsUnderTheFormerName(t *testing.T) {
-	initialize := newFakeInitialize()
-	initialize.formerSettings = true
-
-	_, err := run(t, initialize, "--harness", "claude")
-	if err == nil || !strings.Contains(err.Error(), "the settings file is still .codefall/settings.json") ||
-		!strings.Contains(err.Error(), "run codefall project upgrade") {
-		t.Fatalf("Execute error = %v, want it to name the old file and codefall project upgrade", err)
 	}
 
 	if initialize.ran {
@@ -877,18 +852,15 @@ func TestInitCommandChecksPrerequisitesAfterTheRefusalsThatNeedNoTool(t *testing
 	for _, tc := range []struct {
 		name     string
 		manifest bool
-		former   bool
 		args     []string
 		want     string
 	}{
 		{name: "already set up", manifest: true, args: []string{"--harness", "claude"}, want: "codefall project upgrade"},
-		{name: "settings under the old name", former: true, args: []string{"--harness", "claude"}, want: "codefall project upgrade"},
 		{name: "unknown tracker", args: []string{"--tracker", "nope"}, want: "unknown tracker"},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			initialize := newFakeInitialize()
 			initialize.manifest = tc.manifest
-			initialize.formerSettings = tc.former
 
 			var called bool
 

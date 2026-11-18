@@ -150,8 +150,7 @@ func TestRunWritesNoSettingsUnderTheFormerName(t *testing.T) {
 
 // The reads a run makes before its steps — the harnesses, the testing root, and the old harness
 // spellings — reach a project that still has only the old name, so the run that moves the file is
-// built from the settings it is about to move. No other command reaches them: init has refused the
-// project already.
+// built from the settings it is about to move.
 func TestTheReadsBeforeTheStepsReachTheFormerName(t *testing.T) {
 	files := newFakeFileSystem()
 	files.files[formerSettingsFull] = []byte(
@@ -185,5 +184,32 @@ func TestTheReadsBeforeTheStepsReachTheFormerName(t *testing.T) {
 
 	if want := []string{"claude-code"}; !slices.Equal(formers, want) {
 		t.Errorf("FormerHarnessNames = %q, want %q", formers, want)
+	}
+}
+
+// Settings under the old name are settings: init is told the project has them, so it asks nothing
+// and its run moves the file. Refusing the project here would leave it with no command to run,
+// because upgrade refuses a project that has no manifest.
+func TestSettingsUnderTheFormerNameCountAsSettings(t *testing.T) {
+	files := settledUnderTheFormerName()
+
+	initialize := NewInitialize(files, toolsInstalled(), newFakeExtensionSource(), noChanges())
+
+	exists, err := initialize.SettingsExist(workingDir)
+	if err != nil {
+		t.Fatalf("SettingsExist: %v", err)
+	}
+
+	if !exists {
+		t.Errorf("SettingsExist = false for a project with only %s, want true", formerSettingsName)
+	}
+
+	recorded, err := initialize.ManifestExists(workingDir)
+	if err != nil {
+		t.Fatalf("ManifestExists: %v", err)
+	}
+
+	if recorded {
+		t.Fatal("the fixture has a manifest, want none: this is the project upgrade refuses")
 	}
 }

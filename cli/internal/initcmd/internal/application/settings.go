@@ -20,8 +20,8 @@ import (
 // reads in a report; the path form is what the file system is given. codefallDir is the project's
 // own codefall directory, which also holds the manifest and, since the install layout, the files
 // every harness reaches by a path codefall writes (ADR-006). The former names are the ones an
-// earlier release wrote the settings under: codefall project upgrade moves a file that still carries
-// one, and init refuses a project that has it.
+// earlier release wrote the settings under: the settings step moves a file that still carries one,
+// whichever command runs it.
 const (
 	codefallDir        = ".codefall"
 	settingsFile       = "project.json"
@@ -38,9 +38,23 @@ func formerSettingsPath(dir string) string {
 	return filepath.Join(dir, codefallDir, formerSettingsFile)
 }
 
-// SettingsExist reports whether dir already has settings. Presentation asks before it prompts: there
-// is no point surveying a project for answers that will not be written.
+// SettingsExist reports whether dir already has settings, under the name they have now or the one
+// an earlier release wrote. Presentation asks before it prompts: there is no point surveying a
+// project for answers that will not be written, and settings under the old name are answers on
+// record like any others. The settings step moves them, so init finishes such a project the way it
+// finishes any project that has settings and no manifest. Refusing it here would leave it with no
+// command to run, because upgrade refuses a project that has no manifest.
 func (i *Initialize) SettingsExist(dir string) (bool, error) {
+	current, err := i.currentSettingsExist(dir)
+	if err != nil || current {
+		return current, err
+	}
+
+	return i.formerSettingsExist(dir)
+}
+
+// currentSettingsExist reports whether dir has .codefall/project.json, the name every reader uses.
+func (i *Initialize) currentSettingsExist(dir string) (bool, error) {
 	_, err := i.files.ReadFile(settingsPath(dir))
 
 	switch {
@@ -53,11 +67,9 @@ func (i *Initialize) SettingsExist(dir string) (bool, error) {
 	}
 }
 
-// FormerSettingsExist reports whether dir still has the settings file under the name an earlier
-// release wrote it, .codefall/settings.json. Presentation asks so init can refuse such a project
-// and name codefall project upgrade, whose run moves the file: init writes the settings once and
-// never under the old name, so a project that has the file is not init's to set up.
-func (i *Initialize) FormerSettingsExist(dir string) (bool, error) {
+// formerSettingsExist reports whether dir still has the settings file under the name an earlier
+// release wrote it, .codefall/settings.json.
+func (i *Initialize) formerSettingsExist(dir string) (bool, error) {
 	_, err := i.files.ReadFile(formerSettingsPath(dir))
 
 	switch {
@@ -73,10 +85,9 @@ func (i *Initialize) FormerSettingsExist(dir string) (bool, error) {
 // readSettings returns the settings file's bytes and the name they were read under:
 // .codefall/project.json's, or .codefall/settings.json's when a project an earlier release set up
 // still has only the old file. The callers are the reads that happen before the settings step moves
-// it — the harnesses, the testing root, and the former harness spellings — and the only command
-// that reaches them with the old file still there is codefall project upgrade, which is the run
-// that moves it; init has already refused the project. Neither file being there is an error that
-// satisfies errors.Is(err, fs.ErrNotExist).
+// it — the harnesses, the testing root, and the former harness spellings — on the run that moves
+// it: codefall project upgrade, or codefall project init finishing a project that has settings and
+// no manifest. Neither file being there is an error that satisfies errors.Is(err, fs.ErrNotExist).
 func (i *Initialize) readSettings(dir string) ([]byte, string, error) {
 	data, err := i.files.ReadFile(settingsPath(dir))
 	if err == nil {
@@ -187,7 +198,7 @@ func (i *Initialize) DeclaredTestDir(dir string) (mo.Option[string], error) {
 // person's to remove. Nothing else in either file changes: changing an answer the settings already
 // record is a hand edit, until a command exists for it.
 func (i *Initialize) settings(_ context.Context, request Request) (domain.StepResult, error) {
-	exists, err := i.SettingsExist(request.Dir)
+	exists, err := i.currentSettingsExist(request.Dir)
 	if err != nil {
 		return domain.StepResult{}, err
 	}
@@ -237,7 +248,7 @@ func (i *Initialize) settings(_ context.Context, request Request) (domain.StepRe
 		// old one stays: a person may have put either there by hand, so which file goes is not
 		// codefall's to decide. The report says so, and removing it is the person's.
 		if !moved {
-			left, err := i.FormerSettingsExist(request.Dir)
+			left, err := i.formerSettingsExist(request.Dir)
 			if err != nil {
 				return domain.StepResult{}, err
 			}

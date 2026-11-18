@@ -236,21 +236,6 @@ func buildRequest(
 			"codefall is already set up here; run codefall project upgrade to bring the install current")
 	}
 
-	// The settings file under its old name marks a project an earlier release set up: init writes
-	// the settings once and never under that name, and the run that moves the file is upgrade's.
-	// A project that has both files is the same project — its remedy is the same command, which
-	// keeps project.json and says the old file is the person's to remove.
-	former, err := initialize.FormerSettingsExist(dir)
-	if err != nil {
-		return application.Request{}, false, initKind.wrap(err)
-	}
-
-	if former {
-		return application.Request{}, false, errors.New(
-			"the settings file is still .codefall/settings.json, the name an earlier release wrote; " +
-				"run codefall project upgrade, which moves it")
-	}
-
 	// Every run from here on initialises Beads and leaves a project whose verbs open issues and pull
 	// requests, so this is where a missing git or bd, or a gh that is not logged in, refuses the run:
 	// after the refusals that cost nothing to check, and before the survey.
@@ -260,7 +245,8 @@ func buildRequest(
 
 	// Settings with no manifest behind them are a project set up before the manifest existed, and
 	// this is its one run of init: nothing is asked, because the answers are already on record, and
-	// the run finishes by writing the manifest that sends every later run to upgrade.
+	// the run finishes by writing the manifest that sends every later run to upgrade. Settings still
+	// under the name an earlier release wrote count: the settings step moves the file on this run.
 	settled, err := initialize.SettingsExist(dir)
 	if err != nil {
 		return application.Request{}, false, initKind.wrap(err)
