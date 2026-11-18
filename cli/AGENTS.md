@@ -6,13 +6,15 @@ below is relative to `cli/` unless it says otherwise.
 
 A Go command-line tool. One surface, one app, one module.
 
-**State: five components and nine shared modules.** `internal/doctor/` (`codefall doctor`) is the
-first component and the reference for the rules below, and exports its checks on git, bd, and gh as
-the prerequisite check init and create run before their first step; `internal/initcmd/`
+**State: five components and nine shared modules.** `internal/doctor/` (`codefall doctor`, also
+spelled `codefall project doctor`) is the first component and the reference for the rules below, and
+exports its checks on git, bd, and gh as the prerequisite check init and create run before
+their first step; `internal/initcmd/`
 (`codefall project init` and `codefall project upgrade`, one use case behind two commands, exported
 through `Commands`) is the second, and follows it; `internal/create/` (`codefall project create`) is
 the third, and runs init's command in the directory it makes; `internal/config/` (`codefall config`,
-an interactive editor in a terminal and subcommands for scripts, over one use case) is the fourth,
+also spelled `codefall project config`, an interactive editor in a terminal and subcommands for
+scripts, over one use case) is the fourth,
 and reads and writes the agents list, one entry per active agent with its review, consult, and work
 lists, how each harness is called, whether review posts, and the persona. `internal/update/`
 (`codefall update`) is the fifth: it finds out how the running binary was installed and replaces it
