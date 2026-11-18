@@ -37,7 +37,7 @@ const (
 
 // formerNames is every spelling a harness had before it was named for its binary, and the name it
 // has now. A project's checked-in settings and manifest may still carry one, so Parse accepts them,
-// and codefall init rewrites them on its next run.
+// and codefall project init rewrites them on its next run.
 var formerNames = map[string]string{
 	"antigravity": Agy,
 	"claude-code": Claude,

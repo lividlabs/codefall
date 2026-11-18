@@ -799,8 +799,9 @@ func TestRunOverACurrentInstallRepairsAMissingIgnoreLine(t *testing.T) {
 }
 
 // A skill or shared file deleted or edited by hand is put back by the copy out of the binary, which
-// runs on a current install too, and the step names what it wrote. doctor names `codefall upgrade`
-// as the remedy for a missing skill or shared file, so the run it sends a person to has to do this.
+// runs on a current install too, and the step names what it wrote. doctor names `codefall project
+// upgrade` as the remedy for a missing skill or shared file, so the run it sends a person to has to
+// do this.
 func TestRunOverACurrentInstallRestoresACopiedFile(t *testing.T) {
 	skill := filepath.Join(workingDir, ".claude/skills/design/SKILL.md")
 	shared := filepath.Join(workingDir, ".codefall/shared/preflight.sh")

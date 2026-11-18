@@ -1,7 +1,8 @@
 // Package doctor is the facade for `codefall doctor`, the command that reports whether a project has
-// what it needs to run codefall end to end. It reports and never repairs; `codefall init` and
-// `codefall upgrade` own the fixes. It also exports the checks about the machine as a prerequisite
-// check, which `codefall init` and `codefall create` run before their first step.
+// what it needs to run codefall end to end. It reports and never repairs; `codefall project init`
+// and `codefall project upgrade` own the fixes. It also exports the checks about the machine as a
+// prerequisite check, which `codefall project init` and `codefall project create` run before their
+// first step.
 //
 // Exported identifiers here are the component's whole public API. Its layers live under this
 // package's own internal/, where the compiler keeps them (ADR-BASE-02).
@@ -47,9 +48,10 @@ func Command(injector do.Injector) *cobra.Command {
 	return presentation.NewDoctorCommand(do.MustInvoke[presentation.DiagnoseUseCase](injector))
 }
 
-// Prerequisites returns the check `codefall init` and `codefall create` run before their first step:
-// doctor's checks on git, bd, and gh, and none of the checks that describe an install. The composition
-// root passes it to those commands, which is how they reach it without importing this package.
+// Prerequisites returns the check `codefall project init` and `codefall project create` run before
+// their first step: doctor's checks on git, bd, and gh, and none of the checks that describe an
+// install. The composition root passes it to those commands, which is how they reach it without
+// importing this package.
 //
 // The check writes nothing and returns nil when every check passes. When one fails it writes each
 // failing category to w as `codefall doctor` prints it and returns an error counting the failures. A

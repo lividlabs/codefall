@@ -23,8 +23,8 @@ func TestUpgradeCommandRefusesAProjectWithNoManifest(t *testing.T) {
 	initialize.harnesses = mo.Some([]string{harness.Claude})
 
 	_, err := runUpgradeCommand(t, initialize)
-	if err == nil || !strings.Contains(err.Error(), "run codefall init first") {
-		t.Fatalf("Execute error = %v, want it to name codefall init", err)
+	if err == nil || !strings.Contains(err.Error(), "run codefall project init first") {
+		t.Fatalf("Execute error = %v, want it to name codefall project init", err)
 	}
 
 	if initialize.ran {

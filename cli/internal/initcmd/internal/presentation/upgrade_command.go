@@ -16,9 +16,9 @@ import (
 	"github.com/lividlabs/codefall/cli/internal/shared/ui"
 )
 
-// NewUpgradeCommand builds `codefall upgrade`, every run after the first: it brings a project's
-// install level with the binary, for the harnesses the settings record, and touches nothing it did
-// not write.
+// NewUpgradeCommand builds `codefall project upgrade`, every run after the first: it brings a
+// project's install level with the binary, for the harnesses the settings record, and touches
+// nothing it did not write.
 func NewUpgradeCommand(initialize InitializeUseCase) *cobra.Command {
 	flags := &upgradeFlags{}
 
@@ -37,7 +37,7 @@ func NewUpgradeCommand(initialize InitializeUseCase) *cobra.Command {
 			"that has gone missing or been edited; upgrade reports what it restored, and reports the " +
 			"install as up to date only when nothing changed. " +
 			"--harness adds a harness the project did not choose at init and records it in the settings. " +
-			"Upgrade needs a manifest: a project that has none is codefall init's. " +
+			"Upgrade needs a manifest: a project that has none is codefall project init's. " +
 			"Run below the root of a git repository, upgrade asks whether the install is there or at " +
 			"the root; --location answers without asking.",
 		Args: cobra.NoArgs,
@@ -132,7 +132,7 @@ func buildUpgradeRequest(
 
 	if !recorded {
 		return application.Request{}, errors.New(
-			"codefall is not set up here; run codefall init first")
+			"codefall is not set up here; run codefall project init first")
 	}
 
 	// The harnesses the project chose are recorded in its settings, so the run installs for those

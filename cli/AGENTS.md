@@ -1,22 +1,23 @@
 # codefall
 
 The CLI is a component of the repo in `cli/`; `extensions/` holds the skills, hooks, and shared
-scripts that `codefall init` installs (the old "plugin" is renamed extension). Every path below is
-relative to `cli/` unless it says otherwise.
+scripts that `codefall project init` installs (the old "plugin" is renamed extension). Every path
+below is relative to `cli/` unless it says otherwise.
 
 A Go command-line tool. One surface, one app, one module.
 
 **State: five components and nine shared modules.** `internal/doctor/` (`codefall doctor`) is the
 first component and the reference for the rules below, and exports its checks on git, bd, and gh as
 the prerequisite check init and create run before their first step; `internal/initcmd/`
-(`codefall init` and `codefall upgrade`, one use case behind two commands, exported through
-`Commands`) is the second, and follows it; `internal/create/` (`codefall create`) is the third, and runs init's command in the
-directory it makes; `internal/config/` (`codefall config`, an interactive editor in a terminal and
-subcommands for scripts, over one use case) is the fourth, and reads and writes the agents list, one
-entry per active agent with its review, consult, and work lists, how each harness is called, whether review
-posts, and the persona. `internal/update/` (`codefall update`) is the fifth: it finds out how the
-running binary was installed and replaces it with a release only when the install script put it
-there (ADR-015). `internal/shared/ui/` holds the palette,
+(`codefall project init` and `codefall project upgrade`, one use case behind two commands, exported
+through `Commands`) is the second, and follows it; `internal/create/` (`codefall project create`) is
+the third, and runs init's command in the directory it makes; `internal/config/` (`codefall config`,
+an interactive editor in a terminal and subcommands for scripts, over one use case) is the fourth,
+and reads and writes the agents list, one entry per active agent with its review, consult, and work
+lists, how each harness is called, whether review posts, and the persona. `internal/update/`
+(`codefall update`) is the fifth: it finds out how the running binary was installed and replaces it
+with a release only when the install script put it there (ADR-015). `internal/shared/ui/` holds the
+palette,
 the marks, the colour-profile writer, the spinner runner, and the reusable Bubble Tea models that are
 generic over their data (`OrderList`); `internal/shared/process/` holds the command runner and the file
 system; `internal/shared/buildinfo/` holds the version the binary reports, for `--version` and for

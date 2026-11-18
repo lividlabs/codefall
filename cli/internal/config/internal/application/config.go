@@ -33,7 +33,7 @@ const settingsName = ".codefall/settings.json"
 
 // errNotSetUp is what every write refuses a directory with no settings with. The settings are what
 // init writes first, and a project without them has nothing for config to change.
-var errNotSetUp = errors.New(settingsName + " not found; run codefall init first")
+var errNotSetUp = errors.New(settingsName + " not found; run codefall project init first")
 
 // Config reads and writes the two files a person configures codefall through: the checked-in
 // .codefall/settings.json, for the agents, and the per-user .codefall/user.json, for the persona.

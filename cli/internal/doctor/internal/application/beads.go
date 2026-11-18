@@ -11,7 +11,7 @@ import (
 )
 
 // beads runs checks 23 and 24. A missing bd is a failure; a directory bd does not yet know about is
-// only a warning, because `codefall init` will own initialising it.
+// only a warning, because `codefall project init` will own initialising it.
 //
 // There is deliberately no test for a literal .beads/ directory: BEADS_DIR relocates it, so `bd
 // info` run in the working directory is the only reliable question to ask.
@@ -40,7 +40,7 @@ func (d *Diagnose) beads(ctx context.Context, dir string, results []domain.Resul
 
 // beadsInstalled runs check 23 alone, and reports whether bd is there to be asked anything further.
 // It is the half of the Beads checks that is about the machine: Prerequisites runs it without check
-// 24, because a directory with no Beads database is what `codefall init` is run to fix.
+// 24, because a directory with no Beads database is what `codefall project init` is run to fix.
 func (d *Diagnose) beadsInstalled(
 	ctx context.Context, dir string, results []domain.Result,
 ) ([]domain.Result, bool) {

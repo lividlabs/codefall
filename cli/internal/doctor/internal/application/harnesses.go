@@ -19,7 +19,7 @@ import (
 // for its binary: upgrade rewrites both files. A project with a manifest is the only kind that can
 // carry the spelling there, and a project whose settings alone carry it is upgrade's too once a run
 // has recorded itself, so the command is named outright.
-const renameRemedy = "run codefall upgrade, which rewrites them"
+const renameRemedy = "run codefall project upgrade, which rewrites them"
 
 // settingsName is the settings file as a person reads it in a report.
 const settingsName = ".codefall/settings.json"
@@ -173,9 +173,9 @@ func (d *Diagnose) installed(
 }
 
 // firstMissing reports whether any of the recorded files has gone from the project. A half-written
-// install is not an install: the run that wrote the record wrote all of them, and `codefall upgrade`
-// is the remedy either way. A file system that refuses a stat returns the path it refused, so the
-// report can name it.
+// install is not an install: the run that wrote the record wrote all of them, and `codefall project
+// upgrade` is the remedy either way. A file system that refuses a stat returns the path it refused,
+// so the report can name it.
 func (d *Diagnose) firstMissing(dir string, files []string) (bool, string, error) {
 	for _, file := range files {
 		path := filepath.Join(dir, file)
@@ -233,7 +233,7 @@ func (d *Diagnose) sharedInstalled(
 	}
 
 	if len(missing) > 0 {
-		return append(results, domain.SharedInstalled.Fail(missingFiles(missing), mo.Some("codefall upgrade")))
+		return append(results, domain.SharedInstalled.Fail(missingFiles(missing), mo.Some("codefall project upgrade")))
 	}
 
 	return append(results, domain.SharedInstalled.PassWithDetail(sharedCount(len(shared.Files))))

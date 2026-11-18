@@ -581,8 +581,8 @@ func TestWritesRefuseADirectoryWithNoSettings(t *testing.T) {
 	_, personaErr := config.SetPersona(workingDir, userfile.PersonaProductManager)
 
 	for _, err := range []error{setErr, clearErr, postErr, personaErr} {
-		if !errors.Is(err, errNotSetUp) || !strings.Contains(err.Error(), "run codefall init") {
-			t.Errorf("error = %v, want it to name codefall init", err)
+		if !errors.Is(err, errNotSetUp) || !strings.Contains(err.Error(), "run codefall project init") {
+			t.Errorf("error = %v, want it to name codefall project init", err)
 		}
 	}
 }

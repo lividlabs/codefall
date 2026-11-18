@@ -28,11 +28,12 @@ const (
 	trackerLinear = "linear"
 )
 
-// NewInitCommand builds `codefall init`, the run that happens once: it makes a directory ready for
-// codefall, and a project that already has .codefall/manifest.json is `codefall upgrade`'s.
+// NewInitCommand builds `codefall project init`, the run that happens once: it makes a directory
+// ready for codefall, and a project that already has .codefall/manifest.json is `codefall project
+// upgrade`'s.
 //
-// prerequisites is the check the run makes before its survey. `codefall create` has made it already
-// by the time it runs init, so the composition root gives that instance one that passes.
+// prerequisites is the check the run makes before its survey. `codefall project create` has made it
+// already by the time it runs init, so the composition root gives that instance one that passes.
 func NewInitCommand(initialize InitializeUseCase, prerequisites Prerequisites) *cobra.Command {
 	flags := &initFlags{}
 
@@ -48,7 +49,7 @@ func NewInitCommand(initialize InitializeUseCase, prerequisites Prerequisites) *
 			"Before the survey, init runs doctor's checks on git, bd, and gh and refuses to start when " +
 			"one fails, listing each with its fix. " +
 			"Init runs once: a project that already has .codefall/manifest.json is brought current by " +
-			"codefall upgrade, which init names and refuses to repeat. " +
+			"codefall project upgrade, which init names and refuses to repeat. " +
 			"Run below the root of a git repository, init asks whether to install there or at the " +
 			"root; --location answers without asking.",
 		Args: cobra.NoArgs,
@@ -232,7 +233,7 @@ func buildRequest(
 
 	if recorded {
 		return application.Request{}, false, errors.New(
-			"codefall is already set up here; run codefall upgrade to bring the install current")
+			"codefall is already set up here; run codefall project upgrade to bring the install current")
 	}
 
 	// Every run from here on initialises Beads and leaves a project whose verbs open issues and pull

@@ -14,7 +14,7 @@
       "enum": ["beads", "github"]
     },
     "harnesses": {
-      "description": "The harnesses the project is set up for, each named for its binary. codefall still reads claude-code and antigravity, the names claude and agy had before, and codefall upgrade rewrites them. A name appears once.",
+      "description": "The harnesses the project is set up for, each named for its binary. codefall still reads claude-code and antigravity, the names claude and agy had before, and codefall project upgrade rewrites them. A name appears once.",
       "type": "array",
       "minItems": 1,
       "uniqueItems": true,
@@ -24,7 +24,7 @@
       }
     },
     "agents": {
-      "description": "Who codefall reaches for when a verb needs another reader, by the harness the session is running in (ADR-009.2). Each entry is for one active agent, one of the five harness names or default, and holds a review list, a consult list, and a work list, each the agents to try in order. A list left out means the default entry's list; a default entry left out means the current harness's own subagent. Absent means one default entry whose review and consult lists each hold current, which codefall init writes explicitly; a work list left out resolves to current the same way (ADR-009.7).",
+      "description": "Who codefall reaches for when a verb needs another reader, by the harness the session is running in (ADR-009.2). Each entry is for one active agent, one of the five harness names or default, and holds a review list, a consult list, and a work list, each the agents to try in order. A list left out means the default entry's list; a default entry left out means the current harness's own subagent. Absent means one default entry whose review and consult lists each hold current, which codefall project init writes explicitly; a work list left out resolves to current the same way (ADR-009.7).",
       "type": "array",
       "items": {
         "type": "object",
@@ -134,7 +134,7 @@
       "properties": {
         "dir": {
           "type": "string",
-          "description": "The testing root, relative to the directory holding .codefall/. codefall init asks for it and defaults to testing.",
+          "description": "The testing root, relative to the directory holding .codefall/. codefall project init asks for it and defaults to testing.",
           "pattern": "^[A-Za-z0-9_-][A-Za-z0-9._-]*(/[A-Za-z0-9_-][A-Za-z0-9._-]*)*$"
         },
         "runners": {
