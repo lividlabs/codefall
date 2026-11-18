@@ -23,8 +23,8 @@ This is the path `codefall-plan` takes at tier 0 followed by the path `codefall-
 a single bead, written as one procedure. Anything bigger is `codefall-plan`'s.
 
 Paths that start with `../` are relative to this skill's directory, not the user's project. A path
-through `../../../.codefall/` is the one that leaves the skills directory: it names a file `codefall
-init` installed in the project's own `.codefall/`.
+through `../../../.codefall/` is the one that leaves the skills directory: it names a file
+`codefall project init` installed in the project's own `.codefall/`.
 
 ## Files beside this one
 
@@ -122,8 +122,8 @@ Walk [the scope](#scope--one-bead-tier-0) out loud — "one component, no interf
 no ADR: a fix." Any failure is the exit.
 
 A bead whose criteria name a test case needs an equipped harness: `test=unequipped` names
-`/codefall-equip`, `test=undeclared` names `codefall upgrade`, and the run stops. Never set a harness
-up.
+`/codefall-equip`, `test=undeclared` names `codefall project upgrade`, and the run stops. Never set
+a harness up.
 
 ### 4. The one confirmation
 

@@ -30,8 +30,8 @@ The sections after this one carry what each step searches for, writes, and prove
 
 The target is the path argument, or the working directory. Read the `test` block in
 `.codefall/settings.json`, per [The declaration](#the-declaration). No block, or no
-`.codefall/settings.json` at all: stop and say `codefall init` declares the testing root first.
-Then read the project's root `AGENTS.md`, and `<root>/AGENTS.md`.
+`.codefall/settings.json` at all: stop and say `codefall project init` declares the testing root
+first. Then read the project's root `AGENTS.md`, and `<root>/AGENTS.md`.
 
 ### 2. Find what is already there
 
@@ -102,11 +102,12 @@ Read the `test` block out of `.codefall/settings.json`:
 }
 ```
 
-- **No block, or no settings file.** Stop. `codefall init` asks for the testing root, `codefall
-  upgrade` declares it on a project set up before the block existed, and either makes the
-  tree under it; this skill declares neither, and nothing else here can be done without a root.
-- **A block whose `dir` names a directory that is not there.** Stop and say `codefall init` makes
-  the tree; `codefall doctor` fails `test-dir-exists` on the same state.
+- **No block, or no settings file.** Stop. `codefall project init` asks for the testing root,
+  `codefall project upgrade` declares it on a project set up before the block existed, and either
+  makes the tree under it; this skill declares neither, and nothing else here can be done without
+  a root.
+- **A block whose `dir` names a directory that is not there.** Stop and say `codefall project init`
+  makes the tree; `codefall doctor` fails `test-dir-exists` on the same state.
 - **`runners` already naming a runner.** This run is a revision: read the configuration that runner
   uses, change the smallest thing the project's tools now need, and leave the rest.
 
@@ -203,8 +204,8 @@ export default defineConfig({
   already is, and **the match is the suffix** so that the case's own markdown is never collected.
 - **Retries are `0` and there is one worker.** A rerun is a new run with its own report, and specs
   run against the services the declared `start` brought up.
-- **Everything a run produces goes under `<root>/.artifacts/`**, the entry `codefall init` already
-  added to `.gitignore`.
+- **Everything a run produces goes under `<root>/.artifacts/`**, the entry `codefall project init`
+  already added to `.gitignore`.
 - **The base URL is the project's**, taken from what the declared `start` command brings up.
 
 Commands, as the Runners line will carry them: all specs `npx playwright test`; one case
@@ -253,8 +254,9 @@ which runner-specific rules apply, and `codefall doctor`, for `test-equipped`.
 
 ## The Runners line
 
-`<root>/AGENTS.md` has a `## Runners` section that `codefall init` left empty. Fill it with one line
-per runner — its name, the command that runs every spec, and the command that runs one case:
+`<root>/AGENTS.md` has a `## Runners` section that `codefall project init` left empty. Fill it with
+one line per runner — its name, the command that runs every spec, and the command that runs one
+case:
 
 ```markdown
 - **playwright** — all: `npm run e2e`. One case: `npm run e2e -- testing/test-cases/<area>/<slug>.e2e.ts`.

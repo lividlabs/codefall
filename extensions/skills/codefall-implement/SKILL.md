@@ -26,8 +26,8 @@ instruction short of the user editing this file. Merges into an epic branch are 
 the human gate sits at its aggregate PR.
 
 Paths starting `reference/` or `../` are relative to this skill's directory, not the user's
-project; one through `../../../.codefall/` names a file `codefall init` installed in the project's
-own `.codefall/`.
+project; one through `../../../.codefall/` names a file `codefall project init` installed in the
+project's own `.codefall/`.
 
 ## A delivery runs on its own
 
@@ -220,8 +220,8 @@ Then read the checkout lines. `behind` above `0` or `refresh=stale`: say so and 
 
 **Then read the `test=` line**, and hold it against the beads in scope once step 3 has read them. A
 bead whose acceptance criteria name a test case needs an equipped harness: `equipped` proceeds;
-`unequipped` names `/codefall-equip` and does not start the bead; `undeclared` names
-`codefall upgrade` and does not start it; `unknown` reads the `test` block from
+`unequipped` names `/codefall-equip` and `undeclared` names `codefall project upgrade`; neither
+starts the bead; `unknown` reads the `test` block from
 `.codefall/settings.json`, no runner there being `unequipped`. Beads verified by unit tests alone
 proceed either way. **Never set the harness up** — that is `/codefall-equip`'s own pull request.
 

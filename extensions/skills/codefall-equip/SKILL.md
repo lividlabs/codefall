@@ -30,7 +30,7 @@ runs with and declares it; it runs it only to prove it.
 
 Paths that start with `reference/`, `templates/`, or `../` are relative to this skill's directory,
 not the user's project. A path through `../../../.codefall/` is the one that leaves the skills
-directory: it names a file `codefall init` installed in the project's own `.codefall/`.
+directory: it names a file `codefall project init` installed in the project's own `.codefall/`.
 
 ## The four tracks
 
@@ -81,8 +81,8 @@ Read each when its track says to; none is loaded up front.
 | Installing or declaring a spec runner per surface | Writing a test case | `codefall-implement` |
 | Revising either when the project's tools change | Deciding which tools the project uses | `codefall-plan` |
 | Declaring `local`, `test.runners`, `harnessConfig`, and the `agents` lists in `.codefall/settings.json` | Per-branch databases, shared or otherwise | the project |
-| Recording the runner's commands in the testing root's `AGENTS.md` | The testing root, its tree, and the `CODEFALL TESTING` section | `codefall init` |
-| Proving a candidate meets the contract, or an agent answers | Any other settings field | `codefall init` |
+| Recording the runner's commands in the testing root's `AGENTS.md` | The testing root, its tree, and the `CODEFALL TESTING` section | `codefall project init` |
+| Proving a candidate meets the contract, or an agent answers | Any other settings field | `codefall project init` |
 | Installing the workflow and label that merge document pull requests | Changing a branch rule or any other repository setting | the owner |
 
 **Every run does the same thing**, whether what it equips exists or not, first draft and revision
@@ -133,8 +133,8 @@ answers, the draft or the revision, the declaration, the proof, and the report. 
 step 1 and follow it. The track ends with the `local` block declared and its pull request open.
 
 1. **Read the project**: `.codefall/settings.json` and whether a `local` block is declared, the
-   declared scripts, and the project's `AGENTS.md` files; no settings file means `codefall init`
-   comes first.
+   declared scripts, and the project's `AGENTS.md` files; no settings file means `codefall project
+   init` comes first.
 2. **Find what is already there**, per `reference/signals.md`: the entry points and the signals,
    each candidate checked against `reference/contract.md` by reading it. Then **ask the one
    question** with the evidence beside it: declare what exists, draft new, or revise what is
@@ -155,8 +155,8 @@ and follow it. `<root>` is the testing root `test.dir` declares. The track ends 
 `test.runners` declared, the Runners line recorded, and its pull request open.
 
 1. **Read the declaration**: the `test` block, then the project's root `AGENTS.md` and
-   `<root>/AGENTS.md`; no block, or no settings file, means `codefall init` declares the testing
-   root first.
+   `<root>/AGENTS.md`; no block, or no settings file, means `codefall project init` declares the
+   testing root first.
 2. **Find what is already there**: a runner configuration and the end-to-end test directories, each
    hit read; name the surfaces.
 3. **Ask the one question**: declare what exists, or set up the default runner for each surface. A
@@ -175,8 +175,8 @@ and follow it. `<root>` is the testing root `test.dir` declares. The track ends 
 `reference/agent-setup.md` carries this track in full. Read it at step 1 and follow it. Every reply fits
 on one screen: the configuration, one question, one change.
 
-1. **Read** `harnesses`, `harnessConfig`, and `agents`; no settings file means `codefall init`
-   comes first. Answer which harness this is per
+1. **Read** `harnesses`, `harnessConfig`, and `agents`; no settings file means `codefall project
+   init` comes first. Answer which harness this is per
    `../../../.codefall/shared/running-agents.md`.
 2. **Show the configuration** in the reference's shape, then **ask what to change**: set up a
    harness, change the lists, or nothing. A file `codefall doctor` says does not match the schema
@@ -196,7 +196,7 @@ on one screen: the configuration, one question, one change.
 `reference/landing.md` carries this track in full. Read it at step 1 and follow it.
 
 1. **Read** `.codefall/settings.json`, the default branch, and the GitHub repository; no settings
-   file means `codefall init` comes first, and no GitHub remote is a stop.
+   file means `codefall project init` comes first, and no GitHub remote is a stop.
 2. **Find what is already there**: the workflow file, any other merging workflow, and the branch
    rule, read with `gh api` and never changed.
 3. **Ask the one question**: install the workflow, shown in full, with the branch-rule finding in a

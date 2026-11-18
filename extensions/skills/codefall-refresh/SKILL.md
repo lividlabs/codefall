@@ -25,7 +25,7 @@ declared is sent to `codefall-equip`.
 
 Paths that start with `reference/` or `../` are relative to this skill's directory, not the user's
 project. A path through `../../../.codefall/` is the one that leaves the skills directory: it names
-a file `codefall init` installed in the project's own `.codefall/`.
+a file `codefall project init` installed in the project's own `.codefall/`.
 
 ## Files beside this one
 
@@ -85,8 +85,8 @@ is kept.
 
 `.codefall/refresh.stamp` holds the commit `update` last exited `0` at, on this machine. It is
 written here and nowhere else, after a clean `update`, as one line. It is per machine and
-git-ignored — `codefall init` adds the entry — and a stamp matching `HEAD` is what lets a session
-that starts three times on the same commit run `update` once.
+git-ignored — `codefall project init` adds the entry — and a stamp matching `HEAD` is what lets a
+session that starts three times on the same commit run `update` once.
 
 ## Project customizations and persona
 
@@ -101,7 +101,7 @@ run, and say so.
 
 The target is the path argument, or the working directory. Read `.codefall/settings.json`.
 
-- No file: stop and say `codefall init` comes first.
+- No file: stop and say `codefall project init` comes first.
 - No `local` block, or a block missing `start` or `update`: stop and say the project is not
   equipped yet, and that `/codefall-equip` is what does it.
 
@@ -215,7 +215,7 @@ git -C <primary> rev-parse HEAD > <primary>/.codefall/refresh.stamp
 ```
 
 Then confirm the stamp is ignored — `git -C <primary> check-ignore -q .codefall/refresh.stamp` —
-and, when it is not, say so and name `codefall upgrade` as the fix. Never add the entry from here.
+and, when it is not, say so and name `codefall project upgrade` as the fix. Never add the entry from here.
 
 A non-zero exit: read `reference/failures.md`, match the stderr, and say three things — what
 failed, what it means, and what to do — in one short paragraph a teammate who does not read
@@ -249,9 +249,9 @@ One block, short:
 - The environment: `start` ran; `update` ran or was skipped as current.
 - The stamp: written at `<short>`, or not, and why.
 - **Last, what the user does next**: nothing, or the commit or stash a stop asked for, the
-  `codefall upgrade` for `.gitignore`, the `/codefall-equip` for a broken script. When the session
-  is still in a worktree directory, removed or not, the next step is to open the next session in
-  `<primary>`.
+  `codefall project upgrade` for `.gitignore`, the `/codefall-equip` for a broken script. When the
+  session is still in a worktree directory, removed or not, the next step is to open the next
+  session in `<primary>`.
 
 ## Rules
 
@@ -273,5 +273,5 @@ One block, short:
 - **`start` always, `update` when the stamp says so** or the user asks.
 - **The stamp is written after a clean `update` and never otherwise**, and only here.
 - **A failure is a sentence, not a stack trace**: what failed, what it means, what to do.
-- **Never adds the `.gitignore` entry**; names `codefall init`.
+- **Never adds the `.gitignore` entry**; names `codefall project init`.
 - **Runs only what is declared**, from the primary checkout's root, as written.

@@ -69,9 +69,9 @@ sessions may be using. Uncommitted work in the primary checkout stops the run be
 moves, and running `update` anyway would set the environment to a checkout the user is about to
 leave.
 
-**Adding the `.gitignore` entry when the stamp is not ignored.** That is `codefall init`'s line to
-write, and a verb that writes it too is a second owner of the same entry. Refresh says so and
-names init.
+**Adding the `.gitignore` entry when the stamp is not ignored.** That is `codefall project init`'s
+line to write, and a verb that writes it too is a second owner of the same entry. Refresh says so
+and names init.
 
 **Editing a script that fails.** The scripts are the project's, revised by `codefall-equip` at the
 point a change makes them stale. A refresh that patched a script would put a change nobody
@@ -104,6 +104,6 @@ repository on 2026-11-09: one `bd dolt push` gives the remote its branch, and th
 exits 0. Refresh makes that push itself, because the remote is already the project's, every verb
 pushes to it after its first bead write anyway, and a stop here would send a teammate away for a
 command the run can give. Wiring a remote where none exists stays the user's: that one is a
-decision about where the beads travel, and this one is not. `codefall init` makes the same push
-when it creates the database, so this row is reached by a project set up before it did, or by one
-whose push failed at init.
+decision about where the beads travel, and this one is not. `codefall project init` makes the same
+push when it creates the database, so this row is reached by a project set up before it did, or by
+one whose push failed at init.

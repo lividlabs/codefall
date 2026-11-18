@@ -41,7 +41,7 @@ are a person's to merge, and so are this verb's own.
 ## 1. Read the project
 
 The target is the path argument, or the working directory. Read `.codefall/settings.json`; none
-means `codefall init` comes first. Read the default branch from
+means `codefall project init` comes first. Read the default branch from
 `git symbolic-ref --short refs/remotes/origin/HEAD`, and the repository from `gh repo view --json
 nameWithOwner`. No remote on GitHub is a stop: the workflow has nowhere to run.
 
