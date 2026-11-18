@@ -18,12 +18,12 @@ func NewCreateRefusal() *cobra.Command {
 	return &cobra.Command{
 		Use:                "create",
 		Short:              "Refused; the command moved under codefall project",
-		Long:               "codefall create is now codefall project create.",
+		Long:               "the create command is now codefall project create.",
 		Hidden:             true,
 		DisableFlagParsing: true,
 		Args:               cobra.ArbitraryArgs,
 		RunE: func(*cobra.Command, []string) error {
-			return errors.New("codefall create is now codefall project create")
+			return errors.New("the create command is now codefall project create")
 		},
 	}
 }

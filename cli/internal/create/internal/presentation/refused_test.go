@@ -31,7 +31,7 @@ func TestCreateRefusalNamesTheCommandUnderProject(t *testing.T) {
 			t.Fatalf("run %v: want an error, got nil", args)
 		}
 
-		if want := "codefall create is now codefall project create"; err.Error() != want {
+		if want := "the create command is now codefall project create"; err.Error() != want {
 			t.Errorf("run %v: error = %q, want %q", args, err.Error(), want)
 		}
 

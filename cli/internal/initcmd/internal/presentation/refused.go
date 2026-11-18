@@ -13,13 +13,13 @@ import (
 // NewInitRefusal builds the root `codefall init`, which refuses and names the command under project
 // that replaced it.
 func NewInitRefusal() *cobra.Command {
-	return newRefusal("init", "codefall init is now codefall project init")
+	return newRefusal("init", "the init command is now codefall project init")
 }
 
 // NewUpgradeRefusal builds the root `codefall upgrade`, which refuses and names the command under
 // project that replaced it.
 func NewUpgradeRefusal() *cobra.Command {
-	return newRefusal("upgrade", "codefall upgrade is now codefall project upgrade")
+	return newRefusal("upgrade", "the upgrade command is now codefall project upgrade")
 }
 
 // newRefusal builds a command that refuses with one sentence naming the command under project that

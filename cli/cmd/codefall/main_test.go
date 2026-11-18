@@ -78,7 +78,7 @@ func TestRunRefusesTheOldRootNames(t *testing.T) {
 
 			// Fang's ErrorText style capitalises the first word, so the sentence is matched without
 			// regard to case.
-			want := "codefall " + name + " is now codefall project " + name
+			want := "the " + name + " command is now codefall project " + name
 			if !strings.Contains(strings.ToLower(errOut.String()), want) {
 				t.Errorf("run %v: error does not say %q:\n%s", args, want, errOut.String())
 			}

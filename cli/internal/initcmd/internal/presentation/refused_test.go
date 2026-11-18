@@ -18,12 +18,12 @@ func TestRefusalsNameTheCommandsUnderProject(t *testing.T) {
 		{
 			name:     "init",
 			refusal:  func() *cobra.Command { return NewInitRefusal() },
-			sentence: "codefall init is now codefall project init",
+			sentence: "the init command is now codefall project init",
 		},
 		{
 			name:     "upgrade",
 			refusal:  func() *cobra.Command { return NewUpgradeRefusal() },
-			sentence: "codefall upgrade is now codefall project upgrade",
+			sentence: "the upgrade command is now codefall project upgrade",
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
