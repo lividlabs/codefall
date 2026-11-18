@@ -125,8 +125,9 @@ Codefall needs these tools on your `PATH`:
 - At least one supported coding agent: Claude Code, Codex, OpenCode (version 2 or later), Antigravity,
   or Muse.
 
-`codefall init` and `codefall create` check for `git`, `bd`, and `gh` before they change anything.
-When a check fails, the command stops and prints the fix for each one, such as `gh auth login`.
+`codefall project init` and `codefall project create` check for `git`, `bd`, and `gh` before they
+change anything. When a check fails, the command stops and prints the fix for each one, such as
+`gh auth login`.
 
 ### Install script
 
@@ -169,7 +170,7 @@ Linux, on Intel and ARM.
 In the repository, run:
 
 ```sh
-codefall init
+codefall project init
 ```
 
 `init` asks which coding agents the project uses, where its tests should live, and whether to copy
@@ -187,7 +188,7 @@ you can take or decline; `/codefall-upgrade adopt` offers the ones you declined 
 A new project takes three steps. First, create the repository:
 
 ```sh
-codefall create todo
+codefall project create todo
 ```
 
 `create` makes the directory and a git repository with a first commit, then runs `init` there.
@@ -234,8 +235,9 @@ codefall doctor
 `doctor` lists everything Codefall needs, marks what is missing, and says how to fix each problem.
 It never changes anything itself.
 
-After you install a newer version of `codefall`, run `codefall upgrade` in each project to bring its
-skills up to date. [Setting up a project](docs/guide/setup.md) lists everything `init` writes.
+After you install a newer version of `codefall`, run `codefall project upgrade` in each project to
+bring its skills up to date. [Setting up a project](docs/guide/setup.md) lists everything `init`
+writes.
 
 ## Using Codefall
 
@@ -403,9 +405,9 @@ The agent may run any of the others on its own when the work calls for it.
 
 | Command | What it does |
 | --- | --- |
-| `codefall create <dir>` | Makes a new directory and git repository, then runs `init` in it. |
-| `codefall init` | Sets up Codefall in an existing repository. It runs once per project. |
-| `codefall upgrade` | Updates a project's skills, hooks, and settings to match the installed `codefall`. |
+| `codefall project create <dir>` | Makes a new directory and git repository, then runs `init` in it. |
+| `codefall project init` | Sets up Codefall in an existing repository. It runs once per project. |
+| `codefall project upgrade` | Updates a project's skills, hooks, and settings to match the installed `codefall`. |
 | `codefall update` | Replaces the `codefall` binary with the latest release. |
 | `codefall config` | Opens an editor for the project's review agents and your persona. |
 | `codefall doctor` | Checks that a project has everything Codefall needs, and says how to fix what is missing. |

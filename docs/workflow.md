@@ -13,8 +13,8 @@ installs, by `extensions/scripts/workflow-sync.sh --write`, and CI fails when th
 
 ## What `init` puts in place
 
-`codefall init` (or `codefall create` for a new directory) asks which harnesses the project uses and
-installs for each:
+`codefall project init` (or `codefall project create` for a new directory) asks which harnesses the
+project uses and installs for each:
 
 - the skills, into the harness's own skills directory (`.claude/skills/`, `.agents/skills/`), because
   that is the one place a harness finds them by convention;
@@ -156,19 +156,19 @@ Four verbs sit beside the chain rather than in it:
   moved, record the commit in a git-ignored stamp. Uncommitted work in the primary checkout stops
   it. It never rebases, stashes, deletes a remote branch, or settles a conflict the sync halts on.
 - **`upgrade`** brings the install and the documents current, in that order. When the manifest
-  records an older version than the binary's, it offers `codefall upgrade`, runs it only on a yes,
-  and puts the command's breaking changes and its question to the user. Then it brings a scaffolded
-  project's documents up to the current templates, reporting each difference with its provenance
-  and applying only what the user takes. It also handles first-time adoption of the stance on an
-  existing repo. A missing template the user declines is recorded and not offered again, and
-  `/codefall-upgrade adopt` offers the declined ones again.
-- **`codefall upgrade`** prints the breaking changes recorded between the installed version and the
-  binary's and asks to continue, then reinstalls the skills, shared files, and hooks for the harnesses
-  the settings record, replaces its own marked sections and registrations, rewrites a harness name
-  still spelled the old way, points a `$schema` URL an earlier release wrote at the current one,
-  removes what the previous install wrote that this one does not ship, and touches nothing else.
-  `codefall init` runs once and refuses a project that has a manifest, naming
-  `upgrade`
+  records an older version than the binary's, it offers `codefall project upgrade`, runs it only on
+  a yes, and puts the command's breaking changes and its question to the user. Then it brings a
+  scaffolded project's documents up to the current templates, reporting each difference with its
+  provenance and applying only what the user takes. It also handles first-time adoption of the
+  stance on an existing repo. A missing template the user declines is recorded and not offered
+  again, and `/codefall-upgrade adopt` offers the declined ones again.
+- **`codefall project upgrade`** prints the breaking changes recorded between the installed version
+  and the binary's and asks to continue, then reinstalls the skills, shared files, and hooks for
+  the harnesses the settings record, replaces its own marked sections and registrations, rewrites
+  a harness name still spelled the old way, points a `$schema` URL an earlier release wrote at the
+  current one, removes what the previous install wrote that this one does not ship, and touches
+  nothing else. `codefall project init` runs once and refuses a project that has a manifest, naming
+  `codefall project upgrade`
   ([ADR-010](https://github.com/lividlabs/codefall/blob/main/docs/adrs/ADR-010-upgrade.md)).
 
 The scripts stay current at the point of introduction: a task that adds infrastructure, a

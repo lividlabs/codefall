@@ -99,7 +99,7 @@ repository. In order, refresh:
 7. Records that commit in `.codefall/refresh.stamp`, so the next session on the same commit skips
    `update`.
 
-The stamp is per machine, and `codefall init` adds it to `.gitignore`.
+The stamp is per machine, and `codefall project init` adds it to `.gitignore`.
 
 Refresh moves the checkout only with `git switch` and `git pull --ff-only`. It never merges,
 rebases, or resets a branch. When the primary checkout has uncommitted changes, refresh lists the
@@ -122,8 +122,8 @@ in the same pull request. Each skill plays a part:
 - `/codefall-implement` counts it as part of finishing the task.
 - `/codefall-review` has a `local` lens that checks for it.
 
-`codefall init` writes this rule into the project's `AGENTS.md`. `codefall doctor` checks that the
-scripts are declared and that the stamp is git-ignored. Every skill that reads the repository tells
-you when `main` has moved or the environment is out of date. The notice at the start of each
-session reports the same two things, so you hear about a moved `main` before it causes a merge
-conflict.
+`codefall project init` writes this rule into the project's `AGENTS.md`. `codefall doctor` checks
+that the scripts are declared and that the stamp is git-ignored. Every skill that reads the
+repository tells you when `main` has moved or the environment is out of date. The notice at the
+start of each session reports the same two things, so you hear about a moved `main` before it
+causes a merge conflict.

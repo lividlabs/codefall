@@ -1,9 +1,9 @@
 # Setting up a project
 
-`codefall init` prepares a repository for Codefall. It installs the skills into each coding agent the
-project uses, saves the project's answers in a settings file, and adds what the skills expect to find
-in the repository. This page describes what `init` asks, what it writes, and how `codefall upgrade`
-keeps all of it current.
+`codefall project init` prepares a repository for Codefall. It installs the skills into each coding
+agent the project uses, saves the project's answers in a settings file, and adds what the skills
+expect to find in the repository. This page describes what `init` asks, what it writes, and how
+`codefall project upgrade` keeps all of it current.
 
 A *skill* is a set of instructions a coding agent follows when you type its slash command, such as
 `/codefall-specify`. A *coding agent* is an AI tool that reads and edits the code in your repository,
@@ -14,7 +14,7 @@ such as Claude Code or Codex. Codefall's settings and flags call coding agents *
 Run `init` in the repository:
 
 ```sh
-codefall init
+codefall project init
 ```
 
 `init` asks these questions, and each one has a flag that answers it without asking:
@@ -47,7 +47,8 @@ changes nothing and prints each failure with the command that fixes it:
 Run the fixes, then run `init` again.
 
 `init` runs once per project. When the project already has `.codefall/manifest.json`, the record of
-a finished install, `init` says so and stops; from then on, `codefall upgrade` maintains the install.
+a finished install, `init` says so and stops; from then on, `codefall project upgrade` maintains
+the install.
 A project set up before the manifest existed runs `init` one more time, which writes the manifest,
 and uses `upgrade` after that. [ADR-010](../adrs/ADR-010-upgrade.md) records why `init` runs once
 and `upgrade` is its own command. An ADR (architecture decision record) is a short document that
@@ -55,10 +56,10 @@ records one hard-to-reverse decision and the reasons for it.
 
 ## Start a new project
 
-`codefall create` makes the directory for a new project, then sets it up:
+`codefall project create` makes the directory for a new project, then sets it up:
 
 ```sh
-codefall create todo --remote git@github.com:acme/todo.git
+codefall project create todo --remote git@github.com:acme/todo.git
 ```
 
 It creates the directory and its git repository, commits a `README.md` and a `.gitignore`, runs
@@ -97,7 +98,7 @@ Codefall supports OpenCode 2 and later. A project on OpenCode 1.x upgrades it by
 
 Earlier releases called Claude Code `claude-code` and Antigravity `antigravity`. A project set up with
 those names keeps working: `codefall doctor` warns about the old names, and the next
-`codefall upgrade` rewrites them.
+`codefall project upgrade` rewrites them.
 
 ## What init writes
 
@@ -204,8 +205,8 @@ whose state it could not read.
 
 OpenCode has no session start event, so its plugin acts on the event that announces a new session.
 It adds the Beads report and the notice as one message without starting a turn, and the model reads
-it with the first prompt. The plugin is in the form OpenCode 2 loads, and `codefall upgrade` replaces
-the plugin an earlier release installed, which OpenCode 2 refuses to load.
+it with the first prompt. The plugin is in the form OpenCode 2 loads, and `codefall project upgrade`
+replaces the plugin an earlier release installed, which OpenCode 2 refuses to load.
 
 The agents that review, consult, or build in another harness run headless, and the scripts that start
 them set `CODEFALL_HEADLESS=1` in every harness's environment. A session start notice stays silent
@@ -220,7 +221,7 @@ Testing, Git, Beads, and GitHub CLI.
 
 The Testing category, for example, looks at what the project declared about tests:
 
-- It warns when no testing root is declared, and names `codefall upgrade` as the fix.
+- It warns when no testing root is declared, and names `codefall project upgrade` as the fix.
 - It warns when no test runner is declared, and names `/codefall-equip`.
 - It fails when the declared testing directory does not exist.
 
@@ -230,7 +231,7 @@ After you install a newer `codefall`, run `upgrade` in each project to bring its
 the binary:
 
 ```sh
-codefall upgrade
+codefall project upgrade
 ```
 
 For the agents the settings record, `upgrade`:
@@ -271,22 +272,22 @@ report says so.
 it in the settings:
 
 ```sh
-codefall upgrade --harness codex
+codefall project upgrade --harness codex
 ```
 
 ### Upgrade from the layout before `.codefall/`
 
-Run `codefall upgrade`. It removes the files the old install recorded that the new layout does not
-write. A manifest from before file lists existed records none, so you delete the old copies by hand;
-the pull request that introduced the new layout lists what to delete.
+Run `codefall project upgrade`. It removes the files the old install recorded that the new layout
+does not write. A manifest from before file lists existed records none, so you delete the old
+copies by hand; the pull request that introduced the new layout lists what to delete.
 
 ## CLI commands
 
 | Command | What it does |
 | --- | --- |
-| `codefall create <dir>` | Makes the directory and its git repository, commits a `README.md` and a `.gitignore`, runs `init` there, and offers to push. |
-| `codefall init` | Sets up a directory for Codefall, once: the settings, the skills for each agent, Beads, the hooks, the `AGENTS.md` sections, the testing root, and the manifest that records the run. |
-| `codefall upgrade` | Brings an installed project level with the binary for the agents the settings record. It warns about breaking changes in between, reinstalls, removes what the release no longer ships, and touches nothing it did not write. |
+| `codefall project create <dir>` | Makes the directory and its git repository, commits a `README.md` and a `.gitignore`, runs `init` there, and offers to push. |
+| `codefall project init` | Sets up a directory for Codefall, once: the settings, the skills for each agent, Beads, the hooks, the `AGENTS.md` sections, the testing root, and the manifest that records the run. |
+| `codefall project upgrade` | Brings an installed project level with the binary for the agents the settings record. It warns about breaking changes in between, reinstalls, removes what the release no longer ships, and touches nothing it did not write. |
 | `codefall update` | Replaces a binary the install script installed with the latest release, or with a version given as an argument. `--check` reports how the binary was installed and changes nothing. See [Installing codefall](install.md#update-codefall). |
 | `codefall config` | Opens an editor for the review, consult, and work agents, review posting, and your persona. Its subcommands set the same values from a script, and both refuse a value the settings would not accept. See [Configuration](configuration.md). |
 | `codefall doctor` | Reports whether a project has what Codefall needs, with a fix for each failed check, and repairs nothing. |

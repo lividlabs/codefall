@@ -9,7 +9,7 @@ This directory is the extension. Everything above it is packaging.
 | --- | --- |
 | [`codefall-envision`](skills/codefall-envision/SKILL.md) | Get an idea onto paper before anyone specifies or scaffolds it: a numbered vision document under `docs/visions/` carrying the problem, the rough shape of an answer, and what nobody has decided yet. |
 | [`codefall-scaffold`](skills/codefall-scaffold/SKILL.md) | Start a new project on the Clean + package-by-component stance: ratified ADRs, scoped `AGENTS.md`, optionally project files and boundary lint. |
-| [`codefall-upgrade`](skills/codefall-upgrade/SKILL.md) | Bring a project's install and docs current: offer `codefall upgrade` when the manifest is behind the binary, then report what changed in the templates since the project's version, with per-file provenance, and apply only what the user takes. Also handles first-time adoption of the stance. |
+| [`codefall-upgrade`](skills/codefall-upgrade/SKILL.md) | Bring a project's install and docs current: offer `codefall project upgrade` when the manifest is behind the binary, then report what changed in the templates since the project's version, with per-file provenance, and apply only what the user takes. Also handles first-time adoption of the stance. |
 | [`codefall-specify`](skills/codefall-specify/SKILL.md) | Turn a feature idea into a specification another session can implement: a spec document under `docs/specs/` holding requirements with EARS acceptance criteria, mirrored to the issue tracker. |
 | [`codefall-report`](skills/codefall-report/SKILL.md) | Turn a bug into a report another session can fix: interview the person who saw it for the steps, the expected and actual result, screenshots, and the environment, try to reproduce it on the spot, and write a bug report under `docs/bugs/` with acceptance criteria, mirrored to the issue tracker, with one bead triaged per `shared/triage.md`. With `triage`, walk the backlog, every open item whatever its type, fill in missing fields, merge duplicates, and create a followup epic from the items the person picks. |
 | [`codefall-fix`](skills/codefall-fix/SKILL.md) | Fix something small in one run: `plan` at tier 0 for one bead, then `implement` on it, behind one confirmation instead of two. Takes a bead, a bug report, an issue, or a description; stops and names `plan` when the work needs a plan document, an ADR, or more than one bead. Never merges to `main`. |
@@ -41,19 +41,19 @@ checkout behind the default branch, an environment that has not been refreshed s
 testing root or a runner nobody has declared, a Beads precondition that is blocking. The notice
 reads the shared preflight, prints nothing when everything is current, and reports only: no hook
 pulls or runs the project's `update`. The shared scripts both hooks run live in `hooks/shared/`;
-`codefall init` merges the definitions or copies the plugin.
+`codefall project init` merges the definitions or copies the plugin.
 
-`codefall init` copies three of the directories here and leaves the rest. `skills/` goes into each
-chosen harness's own skills directory, because that is the only part a harness finds by convention.
-`hooks/shared/` and [`shared/`](shared/) go into the project's `.codefall/`, once per install
-whatever harnesses were chosen, because every path that reaches them is codefall's at both ends — a
-skill names a shared file `../../../.codefall/shared/<file>`, and every harness's hook definition
-names `.codefall/hooks/shared/…`. The per-harness definitions under `hooks/<harness>/` are read
-straight from the binary and never copied, and so are the documents under [`agents/`](agents/): the
-four sections `init` writes into a project's `AGENTS.md` and the two skeletons it writes at the
-testing root. This file, [`AGENTS.md`](AGENTS.md),
-[`skills/AGENTS.md`](skills/AGENTS.md), [`docs/`](docs/), and each skill's `NOTES.md` are written for
-someone working on codefall and are installed nowhere.
+`codefall project init` copies three of the directories here and leaves the rest. `skills/` goes
+into each chosen harness's own skills directory, because that is the only part a harness finds by
+convention. `hooks/shared/` and [`shared/`](shared/) go into the project's `.codefall/`, once per
+install whatever harnesses were chosen, because every path that reaches them is codefall's at both
+ends — a skill names a shared file `../../../.codefall/shared/<file>`, and every harness's hook
+definition names `.codefall/hooks/shared/…`. The per-harness definitions under `hooks/<harness>/`
+are read straight from the binary and never copied, and so are the documents under
+[`agents/`](agents/): the four sections `init` writes into a project's `AGENTS.md` and the two
+skeletons it writes at the testing root. This file, [`AGENTS.md`](AGENTS.md),
+[`skills/AGENTS.md`](skills/AGENTS.md), [`docs/`](docs/), and each skill's `NOTES.md` are written
+for someone working on codefall and are installed nowhere.
 [ADR-006](../docs/adrs/ADR-006-install-layout.md) records the layout.
 
 See the [architecture guide](../docs/guide/architecture.md) for the architectural stance and the

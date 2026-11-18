@@ -36,8 +36,8 @@ The confirmation says which of the three supplied the commands.
 
 A *test case* is one Markdown file that describes how to check a behavior through the running
 product. It lives at `<root>/test-cases/<area>/<slug>.md`, where `<root>` is the *testing root*:
-the directory `codefall init` asked you for, such as `testing/`. A case for list export might be
-`testing/test-cases/lists/export.md`.
+the directory `codefall project init` asked you for, such as `testing/`. A case for list export
+might be `testing/test-cases/lists/export.md`.
 
 The file's path is its identifier, `lists/export`, so no separate list of cases has to be
 kept in step with the directory. The file has two parts:

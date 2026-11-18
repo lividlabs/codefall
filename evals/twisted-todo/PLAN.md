@@ -63,8 +63,9 @@ library, so the app has no runtime dependencies and no native build, and Playwri
 play.
 
 `fixture/setup.sh` creates the throwaway: builds `codefall` from this branch, copies the fixture,
-makes a private GitHub repository and pushes it, runs `codefall init --harness claude --tracker
-github` (which runs `bd init`), sets the persona to `product-manager`, copies the document-landing
+makes a private GitHub repository and pushes it, runs `codefall project init --harness claude
+--tracker github` (which runs `bd init`), sets the persona to `product-manager`, copies the
+document-landing
 Action from the template codefall ships (`extensions/skills/codefall-equip/templates/
 codefall-land-documents.yml`) into `.github/workflows/`, creates the `auto-merge` label the Action
 listens for, pushes, and adopts the git origin as the Beads Dolt remote. It declares nothing under `local` or `test.runners`: the chain's first two
@@ -212,8 +213,8 @@ level; dropping review lenses the simulator does not need; one variant per test 
    where implement's report leaves a person. Keep the merge?
 3. **Models and effort.** Sessions default to `opus`, the simulator to `sonnet`. Workers take what
    the plan proposes. The judge's model is whatever `muse` or `opencode` is configured with in the
-   project's `harnessConfig`, which `codefall init` leaves empty, so each runs with its own default.
-   Change any of these?
+   project's `harnessConfig`, which `codefall project init` leaves empty, so each runs with its own
+   default. Change any of these?
 4. **The Dolt remote.** `setup.sh` runs `bd dolt push --yes`, which pushes `refs/dolt/data` to the
    throwaway so no verb asks about adopting a remote. Fine for a throwaway?
 5. **Review's implement run under the product-manager persona.** Implement says it is engineering

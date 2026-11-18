@@ -22,8 +22,8 @@ never restates the reasoning.
 ## Hooks
 
 - `hooks/shared/` holds the script every harness's guard runs, and `hooks/<harness>/` holds the
-  definition `codefall init` registers — never copied as files. Hooks are the one place a skill's
-  relative-path rule does not apply.
+  definition `codefall project init` registers — never copied as files. Hooks are the one place a
+  skill's relative-path rule does not apply.
 - **Every definition names the guard under `.codefall/hooks/shared/`**, which is where `init`
   installs it for every harness (ADR-006). Claude Code's and Codex's reach it from
   `$(git rev-parse --show-toplevel)`, Antigravity's from the workspace, and the OpenCode plugin's
@@ -41,11 +41,11 @@ never restates the reasoning.
 
 ## AGENTS.md sections
 
-- `agents/sections/` holds the four sections `codefall init` writes into a project's `AGENTS.md` —
-  `codefall.md`, `beads.md`, `local.md`, `testing.md` — and `agents/testing/` the two skeletons it
-  writes at the testing root. Like the hook definitions, they are read from the binary one file at
-  a time and never copied: `init` splices a section between its markers and writes a skeleton only
-  where none exists.
+- `agents/sections/` holds the four sections `codefall project init` writes into a project's
+  `AGENTS.md` — `codefall.md`, `beads.md`, `local.md`, `testing.md` — and `agents/testing/` the two
+  skeletons it writes at the testing root. Like the hook definitions, they are read from the binary
+  one file at a time and never copied: `init` splices a section between its markers and writes a
+  skeleton only where none exists.
 - **A section is its markers and nothing outside them.** The opening marker is the first line, the
   closing marker is the last, the file ends with one newline, and neither marker appears twice.
   `init` refuses a file that breaks this, and the facade test pins the shipped ones. The markers

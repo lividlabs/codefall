@@ -8,7 +8,7 @@
 #   2. builds the codefall binary from this checkout of the codefall repository;
 #   3. copies the fixture into a fresh directory, makes it a git repository on `main`, and creates a
 #      private GitHub repository for it (`gh repo create --private`), pushed;
-#   4. runs `codefall init` for Claude Code with the GitHub tracker, which also runs `bd init`;
+#   4. runs `codefall project init` for Claude Code with the GitHub tracker, which also runs `bd init`;
 #   5. sets the persona to `product-manager`;
 #   6. installs the document-landing Action by copying the template codefall ships
 #      (extensions/skills/codefall-equip/templates/codefall-land-documents.yml) to
@@ -96,8 +96,8 @@ gh repo create "$owner/$name" --private --source=. --remote=origin --push \
 git remote set-head origin -a >/dev/null
 gh repo edit "$owner/$name" --enable-squash-merge --delete-branch-on-merge --enable-merge-commit=false --enable-rebase-merge=false >/dev/null
 
-say "Running codefall init (it runs bd init too)"
-"$codefall" init --harness claude --tracker github --issues-repo "$owner/$name" --test-dir testing
+say "Running codefall project init (it runs bd init too)"
+"$codefall" project init --harness claude --tracker github --issues-repo "$owner/$name" --test-dir testing
 bd config get issue_prefix
 
 say "Setting the persona to product-manager"
@@ -112,7 +112,7 @@ gh label create auto-merge --description "merge this document pull request" --co
 
 say "Committing the install and pushing"
 git add -A
-git commit -qm "chore: codefall init, persona, and the document-landing Action"
+git commit -qm "chore: codefall project init, persona, and the document-landing Action"
 git push -q origin main
 
 say "Adopting the git origin as the Beads Dolt remote"
