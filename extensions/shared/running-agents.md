@@ -27,7 +27,7 @@ or no answer, is `unknown`. Nothing is detected from the environment or the proc
 
 ## Resolving the list
 
-`.codefall/settings.json` holds a top-level `agents` array of entries, one per harness a session
+`.codefall/project.json` holds a top-level `agents` array of entries, one per harness a session
 may run in:
 
 ```json

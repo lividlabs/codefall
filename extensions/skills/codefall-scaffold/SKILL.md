@@ -306,7 +306,7 @@ name it as the first task the user owes the project.
 **Either code tier also equips the project**, per `../codefall-equip/reference/followers.md` and
 the profile's depth notes: draft from what this run emitted,
 `start` exits `0` with nothing to bring up yet, and declare both under `local` in
-`.codefall/settings.json` when it exists — otherwise report the declaration as owed once
+`.codefall/project.json` when it exists — otherwise report the declaration as owed once
 `codefall project init` has run. Docs-only output writes no scripts and names `codefall-equip` as
 owed.
 

@@ -89,8 +89,8 @@
 #                goes beside it, in <out-file>.transcript. Keep both outside the
 #                worktree, or the worker may commit them
 #
-# How a harness is called comes from `harnessConfig` in `../settings.json`,
-# the project's `.codefall/settings.json`, read with jq when both are present,
+# How a harness is called comes from `harnessConfig` in `../project.json`,
+# the project's `.codefall/project.json`, read with jq when both are present,
 # exactly as `run-agent.sh` reads it: the agent's harness is the lookup key, a
 # key that is a harness name configures that harness, any other key is a
 # variant whose `harness` field names the binary, and a block may carry
@@ -107,7 +107,7 @@
 #
 # Environment
 #   CODEFALL_WORK_TIMEOUT   seconds before the run is killed (default 3600)
-#   CODEFALL_SETTINGS       the settings file to read (default ../settings.json
+#   CODEFALL_SETTINGS       the settings file to read (default ../project.json
 #                           beside this script)
 #
 # Set in the environment of every harness this script starts, whichever it is
@@ -199,7 +199,7 @@ fi
 # --- read the harness block ------------------------------------------------------------------
 
 # Copied from run-agent.sh; the two change together.
-settings=${CODEFALL_SETTINGS:-$(dirname "$0")/../settings.json}
+settings=${CODEFALL_SETTINGS:-$(dirname "$0")/../project.json}
 harness=$key
 model_flag_name=--model
 provider=""

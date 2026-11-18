@@ -17,7 +17,7 @@ The attempt checks the report: a step it cannot follow is a step the report is m
 ## Where the attempt runs
 
 **The local environment, at the checkout's commit, started through the project's declared `start`**
-— the one `local.start` names in `.codefall/settings.json`. Nothing else is started, and a shared or
+— the one `local.start` names in `.codefall/project.json`. Nothing else is started, and a shared or
 production environment is never driven: a bug seen only there is recorded as `Not attempted`, with
 that reason, and the reporter's evidence carries the report.
 

@@ -63,7 +63,7 @@ emit "project_dir=$PWD"
 # --- checkout -----------------------------------------------------------------------------------
 
 # The stamp is machine-local and git-ignored; `refresh` writes it and nothing else does.
-settings_file=.codefall/settings.json
+settings_file=.codefall/project.json
 stamp_file=.codefall/refresh.stamp
 # The user file is one person's and git-ignored, like the stamp; the person writes it, by hand or
 # through `codefall config persona`.

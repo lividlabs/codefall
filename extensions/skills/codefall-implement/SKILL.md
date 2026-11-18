@@ -222,7 +222,7 @@ Then read the checkout lines. `behind` above `0` or `refresh=stale`: say so and 
 bead whose acceptance criteria name a test case needs an equipped harness: `equipped` proceeds;
 `unequipped` names `/codefall-equip` and `undeclared` names `codefall project upgrade`; neither
 starts the bead; `unknown` reads the `test` block from
-`.codefall/settings.json`, no runner there being `unequipped`. Beads verified by unit tests alone
+`.codefall/project.json`, no runner there being `unequipped`. Beads verified by unit tests alone
 proceed either way. **Never set the harness up** — that is `/codefall-equip`'s own pull request.
 
 Then read the project's `AGENTS.md` (root and scoped), `../../../.codefall/shared/decisions.md`,

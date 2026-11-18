@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
 # The two Playwright-specific case checks. They run only when the project declares that runner in
-# `test.runners` in .codefall/settings.json; otherwise the script says so and exits 0, so a CI job
+# `test.runners` in .codefall/project.json; otherwise the script says so and exits 0, so a CI job
 # can call it unconditionally.
 #
 # Usage: check-cases-playwright.sh [project-dir] [--root <dir>]
@@ -62,7 +62,7 @@ if ! cd "$project_dir" 2>/dev/null; then
   exit 2
 fi
 
-settings_file=.codefall/settings.json
+settings_file=.codefall/project.json
 default_root=testing
 
 declares_playwright() {

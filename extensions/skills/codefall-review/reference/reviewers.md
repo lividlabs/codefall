@@ -35,7 +35,7 @@ via=agy              via=agy:<model>
 ```
 
 The five harness names and `current` are the ones a project may configure, and so is any key of
-`harnessConfig` in `.codefall/settings.json`, such as `via=codex-direct:gpt-6-astra`, per *How a
+`harnessConfig` in `.codefall/project.json`, such as `via=codex-direct:gpt-6-astra`, per *How a
 harness is called* in `../../../../.codefall/shared/running-agents.md`. The model strings are
 examples and will age — whatever the harness accepts is passed through untouched.
 

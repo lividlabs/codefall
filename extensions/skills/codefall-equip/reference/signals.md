@@ -24,7 +24,7 @@ Search these first. A hit is a candidate; read its body before offering it.
 | `Taskfile.yml`, `.mise.toml` `[tasks]` | tasks with the same names |
 | `scripts/`, `bin/`, `script/` | `setup`, `bootstrap`, `dev`, `up`, `start`, `update`, `sync`, `migrate`, with or without `.sh` |
 | `README.md`, `CONTRIBUTING.md`, `docs/` | a "getting started" or "local development" section that lists commands nobody scripted |
-| `.codefall/settings.json` | a `local` block already declared — the revision case |
+| `.codefall/project.json` | a `local` block already declared — the revision case |
 
 A README section that lists commands is not an entry point; it is the evidence for a draft.
 

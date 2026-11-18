@@ -2,7 +2,7 @@
 
 **Status:** supported.
 
-No mirror. `tracker` is `beads` in `.codefall/settings.json`, which means the project copies its
+No mirror. `tracker` is `beads` in `.codefall/project.json`, which means the project copies its
 specs and bug reports nowhere: the document is the whole record, and Beads holds the tasks from the
 moment `codefall-plan` creates them, as it does under every tracker. Nothing in this profile
 touches GitHub, and `gh` is used only for the pull request.

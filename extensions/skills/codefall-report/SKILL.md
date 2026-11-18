@@ -38,7 +38,7 @@ Read each when its step says to; none is loaded up front.
   it is stripped on emit.
 - `templates/bugs/AGENTS.md` — the operative rules this skill installs at `docs/bugs/AGENTS.md`.
 - `trackers/<name>/PROFILE.md` — the tracker profile, `<name>` being `tracker` in
-  `.codefall/settings.json`: the issue shape, the label, creating, refreshing, and archiving. Read
+  `.codefall/project.json`: the issue shape, the label, creating, refreshing, and archiving. Read
   at step 3 for the duplicate search and at step 9.
 - `../../../.codefall/shared/landing.md` — the branch, the commit, the push, and the pull request.
   Read at step 8.

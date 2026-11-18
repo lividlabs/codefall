@@ -33,7 +33,7 @@ session. `unknown` shows the `default` entry and reads no session.
 ## Showing the configuration
 
 No `codefall` on `PATH`: stop and say to install codefall. Read `harnesses`, `harnessConfig`, and
-`agents` out of `.codefall/settings.json`. No `.codefall/settings.json` at all: stop and say
+`agents` out of `.codefall/project.json`. No `.codefall/project.json` at all: stop and say
 `codefall project init` comes first.
 
 When `codefall doctor`'s settings checks say the file does not match the schema, show nothing of
@@ -222,7 +222,7 @@ The `agents` command replaces a list, so pass the whole list the user confirmed,
 agent.
 
 A file that does not match the schema is the one exception: the CLI refuses to write to it. Write
-the `harnessConfig` block and the `agents` lists into `.codefall/settings.json` directly, keeping
+the `harnessConfig` block and the `agents` lists into `.codefall/project.json` directly, keeping
 every other key and the file's formatting, then run `codefall doctor` and confirm its settings
 checks pass before going on.
 

@@ -94,7 +94,7 @@ caller decides what to do with it.
 
 When a requirement's **Design notes** carry `Mockup: pending`, a successful import clears it: remove
 the line from the spec, and when the project mirrors to GitHub (`tracker` is `github` in
-`.codefall/settings.json`), remove the mirror's label from the requirement's issue:
+`.codefall/project.json`), remove the mirror's label from the requirement's issue:
 
 ```bash
 gh issue edit <number> --remove-label "requires-mockup"

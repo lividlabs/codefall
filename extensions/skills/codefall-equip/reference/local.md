@@ -16,10 +16,10 @@ local track and follow it. `signals.md` and `contract.md` are read at the steps 
 
 ## 1. Read the project
 
-The target is the path argument, or the working directory. Read `.codefall/settings.json` and note
+The target is the path argument, or the working directory. Read `.codefall/project.json` and note
 whether a `local` block is declared; read the declared scripts when it is. Read the project's
 `AGENTS.md`, root and scoped, for verify commands and conventions. If there is no
-`.codefall/settings.json` at all, stop and say `codefall project init` comes first.
+`.codefall/project.json` at all, stop and say `codefall project init` comes first.
 
 ## 2. Find what is already there
 
@@ -63,7 +63,7 @@ branch, `git switch -c equip/local`; on another branch, ask once which to use.
 
 ## 4. Declare
 
-Write the `local` block into `.codefall/settings.json`, keeping every other key and the file's
+Write the `local` block into `.codefall/project.json`, keeping every other key and the file's
 formatting:
 
 ```json
