@@ -93,7 +93,7 @@ func build() (do.Injector, *cobra.Command) {
 	// does for a command with subcommands and no body.
 	project := &cobra.Command{
 		Use:   "project",
-		Short: "Set a project up and keep it current",
+		Short: "Set a project up, keep it current, configure it, and check it",
 	}
 	project.AddCommand(initcmd.Commands(injector, prerequisites)...)
 	// create runs init in the directory it makes, so it gets an init command of its own. create has
