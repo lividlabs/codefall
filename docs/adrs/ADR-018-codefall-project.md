@@ -134,15 +134,15 @@ Three things are left to later records:
 - **Every project and script that runs a root name changes it once.** The refusal names the
   command under `project`, so a person changing a script has the new name in the error. The
   command rename and the settings-file rename release together, so a project crosses one
-  breaking release, not two, and the rename rides the warning ADR-010 puts in upgrade, which
-  prints a release's breaking changes before it applies anything.
+  breaking release, not two. Both renames reach a project through the warning ADR-010 puts in
+  upgrade, which prints a release's breaking changes before it applies anything.
 - **The installed text changes in the same pull requests as the code.** The skills, the
   `AGENTS.md` sections, and the hook notices under `extensions/` name `init` and `upgrade` 68
   times, and the settings file in 37 files, and all of it is installed into every project. The
   command names change in the pull request that moves the commands, and the file name in the
-  one that moves the file, each with the Go code that reads and writes it. A test in
-  `extensions/` reads every `codefall <command>` the installed text names and fails on one the
-  command tree does not hold, which keeps the next rename from leaving one behind.
+  one that moves the file, each with the Go code that reads and writes it. A test reads every
+  `codefall <command>` the installed text names and fails on one the command tree does not hold,
+  which keeps the next rename from leaving one behind.
 - **A project's own script that reads `.codefall/settings.json` changes its path.** `codefall
   project upgrade` moves the file, reports the move, and replaces the installed skills in the
   same run, so no installed skill reads a file that is not there. A script the project wrote
