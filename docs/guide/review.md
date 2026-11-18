@@ -55,7 +55,7 @@ The review runs in a different agent from the one that fixes the problems. An ag
 and fixes problems grades its own work, and a second reading by the same agent has the same blind
 spots as the first. The session you started triages the findings with you and applies the fixes.
 
-The reviewer comes from the `review` list in `.codefall/settings.json`. Codefall reads the list for
+The reviewer comes from the `review` list in `.codefall/project.json`. Codefall reads the list for
 the coding agent you are using, or the `default` list when yours has none, and takes the first agent
 on it that this machine can run. With nothing configured, the reviewer is a subagent of your current
 coding agent. Every reviewer runs in a read-only mode.
@@ -149,6 +149,6 @@ Yes, once a project turns posting on. It is off by default. To turn it on, run:
 codefall config review posting on
 ```
 
-That sets `postToPullRequest` in the `review` block of `.codefall/settings.json`. With posting on,
+That sets `postToPullRequest` in the `review` block of `.codefall/project.json`. With posting on,
 the findings you marked `fixed` or `deferred` appear on the pull request as inline comments after
 triage. Dismissed findings are never posted.

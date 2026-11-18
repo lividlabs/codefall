@@ -118,7 +118,7 @@ export function makeGh(repo: string, cwd: string, log: (line: string) => void) {
       save("git-log.txt", sh("git", ["log", "--oneline", "--decorate", "-n", "80", "origin/main"]));
       save("docs-tree.txt", sh("git", ["ls-tree", "-r", "--name-only", "origin/main", "docs"]));
       save("src-tree.txt", sh("git", ["ls-tree", "-r", "--name-only", "origin/main", "src", "testing", "test"]));
-      save("settings.json", sh("git", ["show", "origin/main:.codefall/settings.json"]));
+      save("project.json", sh("git", ["show", "origin/main:.codefall/project.json"]));
       save("epic.txt", sh("bd", ["epic", "status", "--json"]));
       save("epic-show.txt", sh("bd", ["show", epicGuess]));
       save("children.txt", sh("bd", ["list", "--parent", epicGuess, "--all", "--limit", "0"]));

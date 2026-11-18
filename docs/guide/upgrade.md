@@ -30,6 +30,11 @@ your installed version and the new one. It never runs the command with `--yes`. 
 not on your `PATH`, the skill says so and goes on to the documents, which need no binary. The files
 the command changes are left uncommitted for you to commit.
 
+`codefall project upgrade` also moves the project's settings file: a release before this one wrote
+`.codefall/settings.json`, and the command moves it to `.codefall/project.json`, changing nothing in
+it but the `$schema` URL. A script of the project's own that reads the old path has to change to the
+new one.
+
 You start `/codefall-upgrade` yourself. An agent never runs it on its own, and no other skill starts
 it, because it changes documents a project depends on.
 

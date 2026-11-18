@@ -64,7 +64,7 @@ be built, or the round count reached the ceiling. `.codefall/shared/decisions.md
 
 A failed task gets one second opinion and one retry. The *root*, which is the session coordinating
 the run, sends the failure, the bead, and the options it sees to the project's *consult* agents.
-Those are the second-opinion readers listed under `consult` in `.codefall/settings.json`; with
+Those are the second-opinion readers listed under `consult` in `.codefall/project.json`; with
 nothing configured, the consult is a fresh subagent of your current coding agent. The root then
 starts a new worker at a higher effort or with a stronger model, with the failure reason and the
 consult's answer added to its instructions.

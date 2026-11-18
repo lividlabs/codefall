@@ -141,7 +141,7 @@ as a web front end or a Go service:
 Equip then writes four things:
 
 - the runner's configuration, pointed at `<root>/test-cases`;
-- the runner's name in `test.runners` in `.codefall/settings.json`;
+- the runner's name in `test.runners` in `.codefall/project.json`;
 - its run-all and run-one commands in the testing root's `AGENTS.md`;
 - whatever the runner's own install needs, such as Playwright's browsers, added to the project's
   `update` script.

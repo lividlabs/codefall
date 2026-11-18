@@ -8,7 +8,7 @@ Codefall keeps these settings in two files:
 
 | File | Describes | Checked in |
 | --- | --- | --- |
-| `.codefall/settings.json` | the project: what `init` recorded, and what the skills read back | yes |
+| `.codefall/project.json` | the project: what `init` recorded, and what the skills read back | yes |
 | `.codefall/user.json` | you, the person at the keyboard | no |
 
 You can edit either file by hand, but the `codefall config` command does it for you and refuses a
@@ -16,7 +16,7 @@ value the settings would not accept.
 
 ## An example
 
-Here is the part of a `settings.json` this page covers:
+Here is the part of a `project.json` this page covers:
 
 ```json
 "agents": [
@@ -49,7 +49,7 @@ different agent from the one that wrote it. Several skills also *consult*: when 
 question of fact it cannot settle, such as how the existing system behaves in a case nobody
 described, it asks another agent once and brings the answer to you as a proposal. And
 `/codefall-implement` can give a task to a *worker* in another harness, such as a cheaper model for
-a mechanical change. The `agents` list in `settings.json` decides who these agents are.
+a mechanical change. The `agents` list in `project.json` decides who these agents are.
 
 Codefall calls each coding agent a *harness* and names it after its command: `claude`, `codex`,
 `opencode`, `agy`, or `muse`. The harness you are running Codefall in is the *active agent*, and each
@@ -183,7 +183,7 @@ Your *persona* tells the skills how to talk to you. There are two:
 - `product-manager`, which has the skills speak in product terms and hold technical decisions for an
   engineer.
 
-The persona lives in `.codefall/user.json`, beside `settings.json`. That file describes you rather
+The persona lives in `.codefall/user.json`, beside `project.json`. That file describes you rather
 than the project, so it is never checked in: `init` adds it to `.gitignore`. Its one field today is
 `persona`, and a missing file or a missing field means `engineer`.
 

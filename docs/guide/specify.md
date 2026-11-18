@@ -63,7 +63,7 @@ Numbers are only ever added, at every level. A retired number is never reused, s
 
 ## How the spec reaches GitHub
 
-Whether the spec is copied anywhere is the `tracker` setting in `.codefall/settings.json`, which
+Whether the spec is copied anywhere is the `tracker` setting in `.codefall/project.json`, which
 `init` asks about. `github` copies specs and bug reports to GitHub Issues; `beads` copies them
 nowhere, and the document is the whole record. Beads holds the tasks under either setting, from the
 moment [`/codefall-plan`](plan.md) creates them.
