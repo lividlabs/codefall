@@ -2,7 +2,7 @@
 
 Off unless the project turned it on. Read at step 5 when the target is an open pull request.
 
-`.codefall/settings.json` carries the switch as `postToPullRequest` in the `review` block. The key
+`.codefall/project.json` carries the switch as `postToPullRequest` in the `review` block. The key
 is optional and absent means off, so a `review` block holding only its `agents` order posts nothing:
 
 ```json

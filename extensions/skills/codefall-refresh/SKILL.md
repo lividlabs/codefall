@@ -20,7 +20,7 @@ a git pull moves the code and leaves the team's beads, the database, the depende
 generated code where they were.
 
 Refreshing is not equipping. This skill runs the `start` and `update` commands the project declared
-under `local` in `.codefall/settings.json`; it never drafts or edits them. A project with nothing
+under `local` in `.codefall/project.json`; it never drafts or edits them. A project with nothing
 declared is sent to `codefall-equip`.
 
 Paths that start with `reference/` or `../` are relative to this skill's directory, not the user's
@@ -99,7 +99,7 @@ run, and say so.
 
 ### 1. Read the declaration
 
-The target is the path argument, or the working directory. Read `.codefall/settings.json`.
+The target is the path argument, or the working directory. Read `.codefall/project.json`.
 
 - No file: stop and say `codefall project init` comes first.
 - No `local` block, or a block missing `start` or `update`: stop and say the project is not

@@ -255,7 +255,7 @@ run, and say so.
 
 1. **Resolve and confirm.** Resolve the target per [Targets](#targets); refuse what is not
    reviewable. Interview a prose scope until the file list is recognised. Read
-   `.codefall/settings.json`'s `review` block, `../../../.codefall/shared/decisions.md`, and
+   `.codefall/project.json`'s `review` block, `../../../.codefall/shared/decisions.md`, and
    `.codefall/skills/codefall-review/CUSTOMIZE.md` if present. Answer which harness this is and
    take its `agents` entry's `review` list per `../../../.codefall/shared/running-agents.md`, or
    take the `via=` override. Check the `.ignore` entry and append it if it is missing. Read

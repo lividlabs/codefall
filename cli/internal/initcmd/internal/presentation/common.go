@@ -46,16 +46,16 @@ type InitializeUseCase interface {
 	// harness was installed at, or None when there is no manifest or it records no usable version.
 	// The gate compares it one harness at a time against the binary's own version.
 	Installed(dir string) (mo.Option[application.Installation], error)
-	// ChosenHarnesses reads the harnesses .codefall/settings.json records, or None when there are no
+	// ChosenHarnesses reads the harnesses .codefall/project.json records, or None when there are no
 	// settings or they record none. A run over settled settings installs for what the project
 	// already chose rather than asking again.
 	ChosenHarnesses(dir string) (mo.Option[[]string], error)
-	// DeclaredTestDir reads the testing root .codefall/settings.json records, or None when there are
+	// DeclaredTestDir reads the testing root .codefall/project.json records, or None when there are
 	// no settings or they declare none. A run over settled settings works with the root the project
 	// already declared and never moves it (ADR-007).
 	DeclaredTestDir(dir string) (mo.Option[string], error)
-	// FormerHarnessNames reads the old harness spellings .codefall/settings.json and
-	// .codefall/manifest.json still carry. An upgrade that finds one has a rewrite to make, so it is
+	// FormerHarnessNames reads the old harness spellings the settings and .codefall/manifest.json
+	// still carry. An upgrade that finds one has a rewrite to make, so it is
 	// never a no-op.
 	FormerHarnessNames(dir string) ([]string, error)
 	// BreakingChanges reads the breaking changes recorded between the version the manifest records

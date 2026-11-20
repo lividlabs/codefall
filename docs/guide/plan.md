@@ -209,7 +209,7 @@ that supersedes it.
 Plan raises a concern once and lets you decide. When a technical point is still open after the
 concern has been raised and the code and the ADRs have been read, plan asks the project's *consult*
 agents about it, once. The consult agents are the second-opinion readers listed under `consult` in
-`.codefall/settings.json`; with nothing configured, the consult is a fresh subagent of your current
+`.codefall/project.json`; with nothing configured, the consult is a fresh subagent of your current
 coding agent. Plan sends the question, the relevant files, and the options it sees, and the answer
 is handled this way:
 

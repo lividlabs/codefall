@@ -17,24 +17,25 @@ import (
 	"github.com/lividlabs/codefall/cli/internal/shared/settings"
 )
 
-// FormerHarnessNames reports the spellings .codefall/settings.json and .codefall/manifest.json still
+// FormerHarnessNames reports the spellings the settings and .codefall/manifest.json still
 // use for a harness that has since been named for its binary, sorted and without repeats. Presentation
 // asks before it decides a rerun has nothing to do: a project whose files carry an old spelling has a
 // rewrite waiting, however current the version that installed it.
 //
-// A file that is not there has no spelling to report. A settings file that cannot be decoded is an
-// error, as it is everywhere else init reads one.
+// A file that is not there has no spelling to report — the settings are read through readSettings,
+// so a project that still has only the old name is read on the run that moves it. A settings file
+// that cannot be decoded is an error, as it is everywhere else init reads one.
 func (i *Initialize) FormerHarnessNames(dir string) ([]string, error) {
 	var found []string
 
-	data, err := i.files.ReadFile(settingsPath(dir))
+	data, from, err := i.readSettings(dir)
 
 	switch {
 	case errors.Is(err, fs.ErrNotExist):
 	case err != nil:
-		return nil, fmt.Errorf("read %s: %w", settingsName, err)
+		return nil, err
 	default:
-		_, edits, err := respelledSettings(data)
+		_, edits, err := respelledSettings(data, from)
 		if err != nil {
 			return nil, err
 		}
@@ -55,8 +56,8 @@ func (i *Initialize) FormerHarnessNames(dir string) ([]string, error) {
 	return slices.Compact(slices.Sorted(slices.Values(found))), nil
 }
 
-// respell rewrites the old spellings of a harness in .codefall/settings.json and
-// .codefall/manifest.json to the names the harnesses have now, and returns the sentence the settings
+// respell rewrites the old spellings of a harness in the settings and .codefall/manifest.json to
+// the names the harnesses have now, and returns the sentence the settings
 // step reports about it, or "" when neither file carried one. An old spelling of a harness the file
 // already names under its current name is removed rather than rewritten, so the file does not end up
 // naming the harness twice.
@@ -184,7 +185,7 @@ func (i *Initialize) respellSettings(dir string) (harnessEdits, error) {
 		return harnessEdits{}, fmt.Errorf("read %s: %w", settingsName, err)
 	}
 
-	body, edits, err := respelledSettings(data)
+	body, edits, err := respelledSettings(data, settingsName)
 	if err != nil || edits.empty() {
 		return harnessEdits{}, err
 	}
@@ -234,7 +235,8 @@ func (i *Initialize) respellManifest(dir string) (harnessEdits, error) {
 }
 
 // respelledSettings is the settings file's text with every old spelling in the harnesses list
-// replaced by the name the harness has now, and what it did to the old spellings. An old spelling of
+// replaced by the name the harness has now, and what it did to the old spellings. The name is the
+// file's, for the error a text that cannot be decoded reports. An old spelling of
 // a harness the list already names under its current name is removed rather than replaced, so the
 // rewrite never leaves the list naming one harness twice.
 //
@@ -243,11 +245,11 @@ func (i *Initialize) respellManifest(dir string) (harnessEdits, error) {
 // reorder every key and drop whatever a project had added. Only the bytes of the names change, and a
 // removed name takes one separator with it. A harnesses field that is not a list has nothing to
 // rename, and validation is what says so.
-func respelledSettings(data []byte) ([]byte, harnessEdits, error) {
+func respelledSettings(data []byte, name string) ([]byte, harnessEdits, error) {
 	decoder := json.NewDecoder(bytes.NewReader(data))
 
 	if start, err := decoder.Token(); err != nil {
-		return nil, harnessEdits{}, fmt.Errorf("decode %s: %w", settingsName, err)
+		return nil, harnessEdits{}, fmt.Errorf("decode %s: %w", name, err)
 	} else if delim, ok := start.(json.Delim); !ok || delim != '{' {
 		return data, harnessEdits{}, nil
 	}
@@ -257,12 +259,12 @@ func respelledSettings(data []byte) ([]byte, harnessEdits, error) {
 	for decoder.More() {
 		key, err := decoder.Token()
 		if err != nil {
-			return nil, harnessEdits{}, fmt.Errorf("decode %s: %w", settingsName, err)
+			return nil, harnessEdits{}, fmt.Errorf("decode %s: %w", name, err)
 		}
 
 		var value json.RawMessage
 		if err := decoder.Decode(&value); err != nil {
-			return nil, harnessEdits{}, fmt.Errorf("decode %s: %w", settingsName, err)
+			return nil, harnessEdits{}, fmt.Errorf("decode %s: %w", name, err)
 		}
 
 		if key != settings.FieldHarnesses {

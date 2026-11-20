@@ -43,7 +43,7 @@ func (d *Diagnose) local(_ context.Context, dir string, results []domain.Result)
 		// missing is refresh, which is the thing that brings a teammate's environment current, and
 		// the remedy is the verb that fills the block in.
 		return append(results, domain.LocalDeclared.Warn(
-			"no local start and update commands are declared in settings.json", mo.Some(equipRemedy)))
+			"no local start and update commands are declared in project.json", mo.Some(equipRemedy)))
 	}
 
 	results = append(results, domain.LocalDeclared.Pass())
@@ -146,7 +146,7 @@ func (d *Diagnose) programExists(dir, program string) (bool, string, error) {
 // unexpected here is nothing to report a second time — it is simply no answer, and the check that
 // asked is skipped.
 func (d *Diagnose) settingsDocument(dir string) (settings.Document, bool) {
-	data, err := d.files.ReadFile(filepath.Join(dir, ".codefall", "settings.json"))
+	data, err := d.files.ReadFile(filepath.Join(dir, ".codefall", "project.json"))
 	if err != nil {
 		return nil, false
 	}

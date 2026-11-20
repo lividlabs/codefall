@@ -3,7 +3,7 @@
 # Check every test case file against the case-file contract.
 #
 # A case is a markdown file at <root>/test-cases/<area>/<slug>.md, where <root> is the testing root
-# the project declares as `test.dir` in .codefall/settings.json (default: testing). A project's CI
+# the project declares as `test.dir` in .codefall/project.json (default: testing). A project's CI
 # calls this script; it reads, it never writes, and it needs nothing beyond coreutils — jq only to
 # read the declared root.
 #
@@ -71,7 +71,7 @@ if ! cd "$project_dir" 2>/dev/null; then
   exit 2
 fi
 
-settings_file=.codefall/settings.json
+settings_file=.codefall/project.json
 default_root=testing
 
 root=$root_override

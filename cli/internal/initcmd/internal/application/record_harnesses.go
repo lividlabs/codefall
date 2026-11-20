@@ -10,7 +10,7 @@ import (
 	"github.com/lividlabs/codefall/cli/internal/shared/settings"
 )
 
-// recordHarnesses adds to .codefall/settings.json's harnesses list every name in wanted that it does
+// recordHarnesses adds to .codefall/project.json's harnesses list every name in wanted that it does
 // not carry, and returns what it added, sorted. It runs after respell, so the list is read under the
 // names the harnesses have now and a former spelling is not counted as missing.
 //

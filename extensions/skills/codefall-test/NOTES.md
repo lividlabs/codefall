@@ -99,7 +99,7 @@ whole picture belongs.
 
 **The skill reads preflight's `test=` line.** That line lands with `codefall-equip`'s own change, one
 pull request after this one. Until then no preflight emits it, so the skill reads the `test` block
-from `.codefall/settings.json` directly when the line is absent and treats the two the same way.
+from `.codefall/project.json` directly when the line is absent and treats the two the same way.
 
 **Test files and reports; implement runs the next round.** Under ADR-013 through ADR-013.6 a test
 of an epic's work ended by running implement to build what the person took. Under ADR-013.7 the

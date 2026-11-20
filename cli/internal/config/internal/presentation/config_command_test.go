@@ -161,7 +161,7 @@ func TestShowSaysWhenTheListIsTheDefault(t *testing.T) {
 		t.Fatalf("Execute: %v", err)
 	}
 
-	want := "agents (the built-in default; .codefall/settings.json sets none):\n" +
+	want := "agents (the built-in default; .codefall/project.json sets none):\n" +
 		"  default (any harness without its own entry):\n" +
 		"    review: this harness\n" +
 		"    consult: this harness\n" +
@@ -194,7 +194,7 @@ func TestAgentsPrintsTheEntries(t *testing.T) {
 
 // Every agent reaches the use case parsed, in the order given, with a model when one was typed.
 func TestAgentsSetsAListAndPrintsTheWrite(t *testing.T) {
-	config := &fakeConfig{write: domain.Changed("set muse review in .codefall/settings.json: claude, codex:gpt-5-codex")}
+	config := &fakeConfig{write: domain.Changed("set muse review in .codefall/project.json: claude, codex:gpt-5-codex")}
 
 	out, err := run(t, config, "agents", "muse", "review", "claude", "codex:gpt-5-codex")
 	if err != nil {
@@ -205,13 +205,13 @@ func TestAgentsSetsAListAndPrintsTheWrite(t *testing.T) {
 		t.Errorf("SetList was given %q %q %+v, want muse review claude, codex:gpt-5-codex", config.active, config.feature, config.agents)
 	}
 
-	if want := "✓ set muse review in .codefall/settings.json: claude, codex:gpt-5-codex\n"; out != want {
+	if want := "✓ set muse review in .codefall/project.json: claude, codex:gpt-5-codex\n"; out != want {
 		t.Errorf("output = %q, want %q", out, want)
 	}
 }
 
 func TestAgentsSetsAWorkList(t *testing.T) {
-	config := &fakeConfig{write: domain.Changed("set claude work in .codefall/settings.json: opencode:digitalocean/glm-5.3#max, current")}
+	config := &fakeConfig{write: domain.Changed("set claude work in .codefall/project.json: opencode:digitalocean/glm-5.3#max, current")}
 
 	out, err := run(t, config, "agents", "claude", "work", "opencode:digitalocean/glm-5.3#max", "current")
 	if err != nil {
@@ -222,13 +222,13 @@ func TestAgentsSetsAWorkList(t *testing.T) {
 		t.Errorf("SetList was given %q %q %+v, want claude work opencode:digitalocean/glm-5.3#max, current", config.active, config.feature, config.agents)
 	}
 
-	if want := "✓ set claude work in .codefall/settings.json: opencode:digitalocean/glm-5.3#max, current\n"; out != want {
+	if want := "✓ set claude work in .codefall/project.json: opencode:digitalocean/glm-5.3#max, current\n"; out != want {
 		t.Errorf("output = %q, want %q", out, want)
 	}
 }
 
 func TestAgentsClearsAList(t *testing.T) {
-	config := &fakeConfig{write: domain.Changed("removed muse consult from .codefall/settings.json")}
+	config := &fakeConfig{write: domain.Changed("removed muse consult from .codefall/project.json")}
 
 	if _, err := run(t, config, "agents", "muse", "consult", "--clear"); err != nil {
 		t.Fatalf("Execute: %v", err)
@@ -270,7 +270,7 @@ func TestAgentsRefusesTheWrongArguments(t *testing.T) {
 
 // A refusal from the use case is returned as it is, so the settings module's words reach the person.
 func TestAgentsReturnsTheRefusalAsItIs(t *testing.T) {
-	refusal := errors.New(`.codefall/settings.json is not valid, so nothing was changed: tracker: missing`)
+	refusal := errors.New(`.codefall/project.json is not valid, so nothing was changed: tracker: missing`)
 
 	_, err := run(t, &fakeConfig{err: refusal}, "agents", "default", "review", "current")
 	if !errors.Is(err, refusal) {
@@ -349,14 +349,14 @@ func TestHarnessPrintsTheBlocks(t *testing.T) {
 		t.Fatalf("Execute: %v", err)
 	}
 
-	if want := "harnessConfig: none set in .codefall/settings.json; every harness runs bare\n"; out != want {
+	if want := "harnessConfig: none set in .codefall/project.json; every harness runs bare\n"; out != want {
 		t.Errorf("output = %q, want %q", out, want)
 	}
 }
 
 // Every flag reaches the use case as the field it stands for, and a flag not given is absent.
 func TestHarnessSetsABlockAndPrintsTheWrite(t *testing.T) {
-	config := &fakeConfig{write: domain.Changed("set harnessConfig.codex-direct in .codefall/settings.json")}
+	config := &fakeConfig{write: domain.Changed("set harnessConfig.codex-direct in .codefall/project.json")}
 
 	out, err := run(t, config, "harness", "codex-direct", "--harness", "codex",
 		"--arg", "-c", "--arg", "model_reasoning_effort=high", "--env", "aws configure export-credentials --format env")
@@ -378,11 +378,11 @@ func TestHarnessSetsABlockAndPrintsTheWrite(t *testing.T) {
 		t.Errorf("SetHarnessConfig was given %q %+v, want codex-direct %+v", config.key, config.block, want)
 	}
 
-	if want := "✓ set harnessConfig.codex-direct in .codefall/settings.json\n"; out != want {
+	if want := "✓ set harnessConfig.codex-direct in .codefall/project.json\n"; out != want {
 		t.Errorf("output = %q, want %q", out, want)
 	}
 
-	config = &fakeConfig{write: domain.Changed("set harnessConfig.codex in .codefall/settings.json")}
+	config = &fakeConfig{write: domain.Changed("set harnessConfig.codex in .codefall/project.json")}
 
 	if _, err := run(t, config, "harness", "codex", "--model-flag", "--model", "--provider", "amazon-bedrock-runtime"); err != nil {
 		t.Fatalf("Execute: %v", err)
@@ -395,7 +395,7 @@ func TestHarnessSetsABlockAndPrintsTheWrite(t *testing.T) {
 }
 
 func TestHarnessClearsABlock(t *testing.T) {
-	config := &fakeConfig{write: domain.Changed("removed harnessConfig.codex from .codefall/settings.json")}
+	config := &fakeConfig{write: domain.Changed("removed harnessConfig.codex from .codefall/project.json")}
 
 	if _, err := run(t, config, "harness", "codex", "--clear"); err != nil {
 		t.Fatalf("Execute: %v", err)
@@ -436,7 +436,7 @@ func TestHarnessRefusesTheWrongArguments(t *testing.T) {
 
 // A refusal from the use case is returned as it is, so the settings module's words reach the person.
 func TestHarnessReturnsTheRefusalAsItIs(t *testing.T) {
-	refusal := errors.New(`that change would leave .codefall/settings.json invalid, so nothing was changed: harnessConfig.bedrock.harness: missing`)
+	refusal := errors.New(`that change would leave .codefall/project.json invalid, so nothing was changed: harnessConfig.bedrock.harness: missing`)
 
 	_, err := run(t, &fakeConfig{err: refusal}, "harness", "bedrock", "--provider", "amazon-bedrock-runtime")
 	if !errors.Is(err, refusal) {
@@ -446,7 +446,7 @@ func TestHarnessReturnsTheRefusalAsItIs(t *testing.T) {
 
 // A variant key is an agent like any harness name; the file decides whether it is there.
 func TestAgentsAcceptsAVariantKey(t *testing.T) {
-	config := &fakeConfig{write: domain.Changed("set claude consult in .codefall/settings.json: codex-direct:gpt-6-astra")}
+	config := &fakeConfig{write: domain.Changed("set claude consult in .codefall/project.json: codex-direct:gpt-6-astra")}
 
 	if _, err := run(t, config, "agents", "claude", "consult", "codex-direct:gpt-6-astra"); err != nil {
 		t.Fatalf("Execute: %v", err)
@@ -462,7 +462,7 @@ func TestReviewPostingHandsOverOnOrOff(t *testing.T) {
 		arg  string
 		want bool
 	}{{"on", true}, {"off", false}} {
-		config := &fakeConfig{write: domain.Changed("set posting " + tc.arg + " in .codefall/settings.json")}
+		config := &fakeConfig{write: domain.Changed("set posting " + tc.arg + " in .codefall/project.json")}
 
 		out, err := run(t, config, "review", "posting", tc.arg)
 		if err != nil {
@@ -473,7 +473,7 @@ func TestReviewPostingHandsOverOnOrOff(t *testing.T) {
 			t.Errorf("SetPosting was given %v, want %v", config.posting, tc.want)
 		}
 
-		if want := "✓ set posting " + tc.arg + " in .codefall/settings.json\n"; out != want {
+		if want := "✓ set posting " + tc.arg + " in .codefall/project.json\n"; out != want {
 			t.Errorf("output = %q, want %q", out, want)
 		}
 	}

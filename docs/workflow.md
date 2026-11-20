@@ -18,7 +18,7 @@ project uses and installs for each:
 
 - the skills, into the harness's own skills directory (`.claude/skills/`, `.agents/skills/`), because
   that is the one place a harness finds them by convention;
-- `.codefall/`, once for all harnesses: `settings.json` (what the project told `init`, read back by
+- `.codefall/`, once for all harnesses: `project.json` (what the project told `init`, read back by
   the verbs), `manifest.json` (what the last run wrote), `hooks/shared/` (the guard scripts), and
   `shared/` (the files every skill reads and the scripts a verb runs);
 - two hooks: a `PreToolUse` guard that denies merges and pushes to the default branch, and, where
@@ -35,7 +35,7 @@ project uses and installs for each:
   the file does not already name it.
 
 `codefall doctor` checks that all of it is present and runnable. [ADR-006](adrs/ADR-006-install-layout.md)
-records the layout. `codefall config` changes who reviews, consults, and builds in `settings.json` and
+records the layout. `codefall config` changes who reviews, consults, and builds in `project.json` and
 the persona in `user.json` afterwards, one command at a time and without prompting.
 
 ## The chain
@@ -134,7 +134,7 @@ records the rule.
 Four verbs sit beside the chain rather than in it:
 
 - **`equip`** builds and rebuilds what the other verbs need the project to have. One track is the
-  local environment: `start` and `update`, declared under `local` in `.codefall/settings.json`
+  local environment: `start` and `update`, declared under `local` in `.codefall/project.json`
   ([ADR-005](https://github.com/lividlabs/codefall/blob/main/docs/adrs/ADR-005-local-environment-scripts.md)).
   The other is the test harness: a spec runner per surface, declared in `test.runners`, its
   commands recorded in the testing root's `AGENTS.md`
@@ -180,7 +180,7 @@ dependency, a migration, or generated code changes `start` or `update` in the sa
 - **Documents in the repository** are canonical for the why (vision), the what (spec), what is
   wrong (bug report), and the how (plan). Each carries a `Status` that describes the document only.
 - **The tracker** mirrors specs and bug reports so people can see what is ready, in progress, and
-  done; the document stays canonical. Which tracker is `tracker` in `.codefall/settings.json`, and
+  done; the document stays canonical. Which tracker is `tracker` in `.codefall/project.json`, and
   that value names the profile a verb reads, `codefall-specify/trackers/<name>/PROFILE.md` and
   `codefall-report/trackers/<name>/PROFILE.md`: `github` is GitHub Issues in the repository
   `github.issuesRepo` names, and `beads` is no mirror at all — the documents and Beads carry

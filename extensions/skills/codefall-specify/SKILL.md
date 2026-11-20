@@ -45,7 +45,7 @@ Read each at the step named; none is loaded up front.
   on emit.
 - `templates/specs/AGENTS.md` — the operative rules this skill installs at `docs/specs/AGENTS.md`.
 - `trackers/<name>/PROFILE.md` — the tracker profile, `<name>` being `tracker` in
-  `.codefall/settings.json`: issue shape, labels, creating, refreshing, archiving. Steps 3 and 13.
+  `.codefall/project.json`: issue shape, labels, creating, refreshing, archiving. Steps 3 and 13.
 - `reference/consulting.md` — a question of fact the user cannot answer, put to the configured
   agents. Steps 5 and 7. Names `../../../.codefall/shared/running-agents.md`,
   `../../../.codefall/shared/run-agent.sh`, `../../../.codefall/shared/consult-prompt.md`,

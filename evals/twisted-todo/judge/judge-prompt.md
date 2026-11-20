@@ -23,7 +23,7 @@ The run directory, which is your working directory, holds:
 - `evidence/` — what the repository looked like after the run: pull requests with their base
   branches, draft flags, labels, and states (`prs.json`), issues (`issues.json`), the Beads epic and its
   children (`epic.txt`, `children.txt`), the epic's notes (`epic-show.txt`), the git log of `main`
-  (`git-log.txt`), the document tree on `main` (`docs-tree.txt`), the settings (`settings.json`),
+  (`git-log.txt`), the document tree on `main` (`docs-tree.txt`), the settings (`project.json`),
   the review and test records (`reviews/`, `tests/`), the test cases (`test-cases/`), the source
   tree after the merge (`src-tree.txt`), and the Action's run list (`action-runs.json`).
 - `deviations.txt` — what the driver did between sessions. A line starting `(not a deviation)` is

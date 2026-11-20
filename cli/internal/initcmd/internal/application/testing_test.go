@@ -51,7 +51,7 @@ func TestTestingStepMakesTheTreeAndDeclaresTheRoot(t *testing.T) {
 		t.Errorf("outcome = %v, want DONE", result.Outcome)
 	}
 
-	want := "declared testing/ in .codefall/settings.json and created testing/AGENTS.md, " +
+	want := "declared testing/ in .codefall/project.json and created testing/AGENTS.md, " +
 		"testing/README.md and testing/CLAUDE.md"
 	if result.Detail != want {
 		t.Errorf("detail = %q, want %q", result.Detail, want)
@@ -85,7 +85,7 @@ func TestTestingStepWorksAtTheDeclaredRoot(t *testing.T) {
 
 	result := testingResult(t, files, request)
 
-	want := "declared packages/web/e2e/ in .codefall/settings.json and created " +
+	want := "declared packages/web/e2e/ in .codefall/project.json and created " +
 		"packages/web/e2e/AGENTS.md, packages/web/e2e/README.md and packages/web/e2e/CLAUDE.md"
 	if result.Detail != want {
 		t.Errorf("detail = %q, want %q", result.Detail, want)
@@ -96,7 +96,7 @@ func TestTestingStepWorksAtTheDeclaredRoot(t *testing.T) {
 	}
 
 	if got := string(files.files[settingsFull]); !strings.Contains(got, `"dir": "packages/web/e2e"`) {
-		t.Errorf("settings.json =\n%s\nwant it to declare the root", got)
+		t.Errorf("project.json =\n%s\nwant it to declare the root", got)
 	}
 }
 
@@ -143,7 +143,7 @@ func TestTestingStepDeclaresTheRootWithoutDisturbingTheSettings(t *testing.T) {
 `
 
 	if got := string(files.files[settingsFull]); got != want {
-		t.Errorf("settings.json =\n%s\nwant\n%s", got, want)
+		t.Errorf("project.json =\n%s\nwant\n%s", got, want)
 	}
 }
 
@@ -169,7 +169,7 @@ func TestTestingStepLeavesADeclarationThatIsAlreadyThere(t *testing.T) {
 	result := testingResult(t, files, request)
 
 	if got := string(files.files[settingsFull]); got != before {
-		t.Errorf("settings.json =\n%s\nwant it untouched", got)
+		t.Errorf("project.json =\n%s\nwant it untouched", got)
 	}
 
 	if strings.Contains(result.Detail, "declared") {
@@ -268,19 +268,19 @@ func TestTestingStepReportsWhatItCannotUse(t *testing.T) {
 		{
 			name:  "the settings cannot be read",
 			setup: func(f *fakeFileSystem) { f.errs[settingsFull] = errors.New("permission denied") },
-			want:  "read .codefall/settings.json",
+			want:  "read .codefall/project.json",
 		},
 		{
 			name:  "the settings are not JSON",
 			setup: func(f *fakeFileSystem) { f.files[settingsFull] = []byte("{,}") },
-			want:  "decode .codefall/settings.json",
+			want:  "decode .codefall/project.json",
 		},
 		{
 			name: "the settings cannot be written",
 			setup: func(f *fakeFileSystem) {
 				f.errs["write "+settingsFull] = errors.New("no space left on device")
 			},
-			want: "write .codefall/settings.json",
+			want: "write .codefall/project.json",
 		},
 		{
 			name:  "a skeleton cannot be read",

@@ -1,6 +1,6 @@
 ---
 name: codefall-equip
-description: Equip a project with the four things it has to have before the other verbs work. The local environment — start and update, declared under local in .codefall/settings.json and run by codefall-refresh. The test harness — a spec runner per surface, pointed at the testing root, declared in test.runners, its commands recorded in the testing root's AGENTS.md, which codefall-test runs cases through. The agents — how another harness is called, under harnessConfig, and who reviews, consults, and builds, in the agents lists — set up from any harness. The document landing — the GitHub Action that merges a document pull request once a person adds the auto-merge label to it or approves it. Each finds what the project already has, or drafts it from what the repository or the session shows, confirms, writes, and declares. Builds and rebuilds; codefall-scaffold and codefall-implement follow the local-scripts procedure.
+description: Equip a project with the four things it has to have before the other verbs work. The local environment — start and update, declared under local in .codefall/project.json and run by codefall-refresh. The test harness — a spec runner per surface, pointed at the testing root, declared in test.runners, its commands recorded in the testing root's AGENTS.md, which codefall-test runs cases through. The agents — how another harness is called, under harnessConfig, and who reviews, consults, and builds, in the agents lists — set up from any harness. The document landing — the GitHub Action that merges a document pull request once a person adds the auto-merge label to it or approves it. Each finds what the project already has, or drafts it from what the repository or the session shows, confirms, writes, and declares. Builds and rebuilds; codefall-scaffold and codefall-implement follow the local-scripts procedure.
 argument-hint: "[local | test | agents | landing] [path]"
 disable-model-invocation: true
 allowed-tools:
@@ -21,7 +21,7 @@ environment match the checkout; the **test harness** — the spec runner that co
 beside the project's test cases; the **agents** — how another harness is called, and who reviews
 and consults; and the **document landing** — the GitHub Action that merges a document pull request
 once a person labels it `auto-merge` or approves it. The first three are declared in
-`.codefall/settings.json`: `local`, which `codefall-refresh` runs; `test.runners`, which
+`.codefall/project.json`: `local`, which `codefall-refresh` runs; `test.runners`, which
 `codefall-test` reads; `harnessConfig` and the `agents` lists, which `codefall-review` and every
 consult read. The fourth is one file under `.github/workflows/` and one label.
 
@@ -45,7 +45,7 @@ its own proof, and its own pull request.
 | `landing` | the Action that merges document pull requests | [Process — the document landing](#process--the-document-landing) |
 
 A path may follow any word; it is the project directory, and the working directory is the default.
-With no word at all, read `.codefall/settings.json` and `.github/workflows/`, say what `local`,
+With no word at all, read `.codefall/project.json` and `.github/workflows/`, say what `local`,
 `test`, `harnessConfig`, `agents`, and the landing declare today, and ask which of the four to
 equip before anything else.
 
@@ -80,7 +80,7 @@ Read each when its track says to; none is loaded up front.
 | Drafting the scripts when there are none | Running a suite or a case | `codefall-test` |
 | Installing or declaring a spec runner per surface | Writing a test case | `codefall-implement` |
 | Revising either when the project's tools change | Deciding which tools the project uses | `codefall-plan` |
-| Declaring `local`, `test.runners`, `harnessConfig`, and the `agents` lists in `.codefall/settings.json` | Per-branch databases, shared or otherwise | the project |
+| Declaring `local`, `test.runners`, `harnessConfig`, and the `agents` lists in `.codefall/project.json` | Per-branch databases, shared or otherwise | the project |
 | Recording the runner's commands in the testing root's `AGENTS.md` | The testing root, its tree, and the `CODEFALL TESTING` section | `codefall project init` |
 | Proving a candidate meets the contract, or an agent answers | Any other settings field | `codefall project init` |
 | Installing the workflow and label that merge document pull requests | Changing a branch rule or any other repository setting | the owner |
@@ -132,7 +132,7 @@ run, and say so.
 answers, the draft or the revision, the declaration, the proof, and the report. Read it before
 step 1 and follow it. The track ends with the `local` block declared and its pull request open.
 
-1. **Read the project**: `.codefall/settings.json` and whether a `local` block is declared, the
+1. **Read the project**: `.codefall/project.json` and whether a `local` block is declared, the
    declared scripts, and the project's `AGENTS.md` files; no settings file means `codefall project
    init` comes first.
 2. **Find what is already there**, per `reference/signals.md`: the entry points and the signals,
@@ -142,7 +142,7 @@ step 1 and follow it. The track ends with the `local` block declared and its pul
 3. **Draft or revise**: two targets in the project's task-runner idiom, or `templates/local.sh`
    when it has none. Show the full draft or the diff, confirm, and branch to `equip/local` before
    the first write.
-4. **Declare** the `local` block in `.codefall/settings.json`, keeping every other key.
+4. **Declare** the `local` block in `.codefall/project.json`, keeping every other key.
 5. **Prove them**, on a yes: `start`, then `update`, then `update` again; then `codefall doctor`.
 6. **Report** what was declared, the proof, and the landing as its own pull request; end with the
    merge as the one step.
@@ -195,7 +195,7 @@ on one screen: the configuration, one question, one change.
 
 `reference/landing.md` carries this track in full. Read it at step 1 and follow it.
 
-1. **Read** `.codefall/settings.json`, the default branch, and the GitHub repository; no settings
+1. **Read** `.codefall/project.json`, the default branch, and the GitHub repository; no settings
    file means `codefall project init` comes first, and no GitHub remote is a stop.
 2. **Find what is already there**: the workflow file, any other merging workflow, and the branch
    rule, read with `gh api` and never changed.

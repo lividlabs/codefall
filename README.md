@@ -175,7 +175,7 @@ codefall project init
 
 `init` asks which coding agents the project uses, where its tests should live, and whether to copy
 specs and bug reports to GitHub Issues. It then installs
-the skills for each agent, saves Codefall's settings in `.codefall/settings.json`, sets up Beads,
+the skills for each agent, saves Codefall's settings in `.codefall/project.json`, sets up Beads,
 and adds a Codefall section to `AGENTS.md`, the file coding agents read for project instructions.
 The settings are meant to be checked in, so everyone on the team works from the same ones.
 
@@ -395,7 +395,7 @@ says what a customization may change.
 | **Project upkeep** | | |
 | [`/codefall-scaffold`](docs/guide/architecture.md) | Starts a new project on Codefall's architecture. | `docs/adrs/`, `AGENTS.md` |
 | [`/codefall-upgrade`](docs/guide/upgrade.md) | Brings a project's installed skills and documents up to date after a new release. | the project's Codefall files |
-| [`/codefall-equip`](docs/guide/local-environment.md) | Sets up what the other skills need: local environment scripts, a test runner, review agents, and automatic merging for document pull requests. | `.codefall/settings.json` |
+| [`/codefall-equip`](docs/guide/local-environment.md) | Sets up what the other skills need: local environment scripts, a test runner, review agents, and automatic merging for document pull requests. | `.codefall/project.json` |
 | [`/codefall-refresh`](docs/guide/local-environment.md) | Brings the checkout, the beads, and the local environment up to date with `main`. | nothing |
 
 You run `/codefall-upgrade` and `/codefall-equip` yourself, because they change the project's setup.

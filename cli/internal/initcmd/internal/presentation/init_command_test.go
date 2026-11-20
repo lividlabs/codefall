@@ -108,7 +108,7 @@ func (f *fakeInitialize) RepositoryRoot(context.Context, string) mo.Option[strin
 
 func newFakeInitialize() *fakeInitialize {
 	return &fakeInitialize{
-		report:     domain.NewReport(domain.SettingsStep.Done("wrote .codefall/settings.json (tracker: beads)")),
+		report:     domain.NewReport(domain.SettingsStep.Done("wrote .codefall/project.json (tracker: beads)")),
 		suggestion: mo.None[string](),
 		root:       mo.None[string](),
 		installed:  mo.None[application.Installation](),
@@ -383,7 +383,7 @@ func TestInitCommandAsksNothingWhenSettingsAlreadyExist(t *testing.T) {
 	initialize.exists = true
 	initialize.harnesses = mo.Some([]string{harness.Claude})
 	initialize.report = domain.NewReport(
-		domain.SettingsStep.Skipped(".codefall/settings.json already exists"))
+		domain.SettingsStep.Skipped(".codefall/project.json already exists"))
 
 	out, err := run(t, initialize)
 	if err != nil {
@@ -398,7 +398,7 @@ func TestInitCommandAsksNothingWhenSettingsAlreadyExist(t *testing.T) {
 		t.Error("asked gh for a repository, want nothing asked when the settings are already there")
 	}
 
-	want := "- .codefall/settings.json already exists\n" + nextStep + "\n"
+	want := "- .codefall/project.json already exists\n" + nextStep + "\n"
 	if out != want {
 		t.Errorf("output =\n%q\nwant\n%q", out, want)
 	}
@@ -425,7 +425,7 @@ func TestInitCommandRefusesAProjectThatIsAlreadySetUp(t *testing.T) {
 func TestInitCommandPrintsALineForEachFinishedStepAndWhatToRunNext(t *testing.T) {
 	initialize := newFakeInitialize()
 	initialize.report = domain.NewReport(
-		domain.SettingsStep.Done("wrote .codefall/settings.json (tracker: beads)"),
+		domain.SettingsStep.Done("wrote .codefall/project.json (tracker: beads)"),
 		domain.ExtensionStep.Skipped(
 			"the codefall marketplace is declared and codefall@codefall enabled in .claude/settings.json"),
 	)
@@ -437,7 +437,7 @@ func TestInitCommandPrintsALineForEachFinishedStepAndWhatToRunNext(t *testing.T)
 	}
 
 	// New settings carry the default agents entry, so the run says where another harness is added.
-	want := "✓ wrote .codefall/settings.json (tracker: beads)\n" +
+	want := "✓ wrote .codefall/project.json (tracker: beads)\n" +
 		"- the codefall marketplace is declared and codefall@codefall enabled in .claude/settings.json\n" +
 		"To add another harness as a reviewer, run /codefall-equip agents.\n" +
 		nextStep + "\n"
@@ -489,13 +489,13 @@ func TestStepLine(t *testing.T) {
 	}{
 		{
 			name:   "a step that did its work",
-			result: domain.SettingsStep.Done("wrote .codefall/settings.json (tracker: beads)"),
-			want:   "✓ wrote .codefall/settings.json (tracker: beads)",
+			result: domain.SettingsStep.Done("wrote .codefall/project.json (tracker: beads)"),
+			want:   "✓ wrote .codefall/project.json (tracker: beads)",
 		},
 		{
 			name:   "a step that found its work done",
-			result: domain.SettingsStep.Skipped(".codefall/settings.json already exists"),
-			want:   "- .codefall/settings.json already exists",
+			result: domain.SettingsStep.Skipped(".codefall/project.json already exists"),
+			want:   "- .codefall/project.json already exists",
 		},
 		{
 			name:   "an outcome from nowhere",
@@ -569,7 +569,7 @@ func TestProgressObserverReportsEachStep(t *testing.T) {
 
 	observer.StepStarted(domain.SettingsStep)
 
-	result := domain.SettingsStep.Done("wrote .codefall/settings.json (tracker: beads)")
+	result := domain.SettingsStep.Done("wrote .codefall/project.json (tracker: beads)")
 	observer.StepFinished(result)
 
 	if want := domain.SettingsStep.Title + "…"; len(progress.labels) != 1 || progress.labels[0] != want {

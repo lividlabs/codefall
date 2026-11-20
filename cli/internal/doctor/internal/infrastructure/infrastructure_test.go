@@ -51,7 +51,7 @@ func TestExecCommandRunnerConvertsTheResult(t *testing.T) {
 
 func TestOSFileSystemDelegates(t *testing.T) {
 	root := t.TempDir()
-	path := filepath.Join(root, "settings.json")
+	path := filepath.Join(root, "project.json")
 
 	if err := os.WriteFile(path, []byte(`{"version":1}`), 0o600); err != nil {
 		t.Fatalf("write: %v", err)

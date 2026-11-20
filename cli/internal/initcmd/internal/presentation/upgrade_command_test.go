@@ -42,7 +42,7 @@ func TestUpgradeCommandPrintsALineForEachFinishedStepAndWhatToRunNext(t *testing
 	initialize.harnesses = mo.Some([]string{harness.Claude})
 	initialize.testDir = mo.Some(settings.DefaultTestDir)
 	initialize.report = domain.NewReport(
-		domain.SettingsStep.Skipped(".codefall/settings.json already exists"),
+		domain.SettingsStep.Skipped(".codefall/project.json already exists"),
 		domain.ExtensionStep.Done("installed the codefall extension for claude"),
 	)
 
@@ -51,7 +51,7 @@ func TestUpgradeCommandPrintsALineForEachFinishedStepAndWhatToRunNext(t *testing
 		t.Fatalf("Execute: %v", err)
 	}
 
-	want := "- .codefall/settings.json already exists\n" +
+	want := "- .codefall/project.json already exists\n" +
 		"✓ installed the codefall extension for claude\n" +
 		nextStep + "\n"
 	if out != want {
@@ -216,7 +216,7 @@ func TestUpgradeCommandReportsWhatARunOverACurrentInstallRepaired(t *testing.T) 
 	initialize.installed = mo.Some(application.Installation{
 		Versions: map[string]string{harness.Claude: buildinfo.Version()}})
 	initialize.report = domain.NewReport(
-		domain.SettingsStep.Skipped(".codefall/settings.json already exists"),
+		domain.SettingsStep.Skipped(".codefall/project.json already exists"),
 		domain.HookStep.Skipped("codefall's hooks are already in .claude/settings.json"),
 		domain.IgnoreStep.Done("added .codefall/user.json to .gitignore"),
 	)
@@ -243,7 +243,7 @@ func TestUpgradeCommandSaysACurrentInstallWithNothingMissingIsUpToDate(t *testin
 	initialize.installed = mo.Some(application.Installation{
 		Versions: map[string]string{harness.Claude: buildinfo.Version()}})
 	initialize.report = domain.NewReport(
-		domain.SettingsStep.Skipped(".codefall/settings.json already exists"),
+		domain.SettingsStep.Skipped(".codefall/project.json already exists"),
 		domain.IgnoreStep.Skipped(".gitignore already names .codefall/user.json"),
 	)
 
@@ -297,7 +297,7 @@ func TestUpgradeCommandPrintsTheBreakingChangesBeforeItRuns(t *testing.T) {
 		{Version: "0.17.0", Notes: []string{"**skills:** conceptualize is now envision", "**skills:** the Beads section changed"}},
 		{Version: "0.19.0", Notes: []string{"**cli:** harnesses are named for their binaries"}},
 	})
-	initialize.report = domain.NewReport(domain.SettingsStep.Skipped(".codefall/settings.json already exists"))
+	initialize.report = domain.NewReport(domain.SettingsStep.Skipped(".codefall/project.json already exists"))
 
 	out, err := runUpgradeCommand(t, initialize, "--yes")
 	if err != nil {
@@ -309,7 +309,7 @@ func TestUpgradeCommandPrintsTheBreakingChangesBeforeItRuns(t *testing.T) {
 		"  • **skills:** the Beads section changed\n" +
 		"Breaking changes in 0.19.0\n" +
 		"  • **cli:** harnesses are named for their binaries\n" +
-		"- .codefall/settings.json already exists\n" +
+		"- .codefall/project.json already exists\n" +
 		nextStep + "\n"
 	if out != want {
 		t.Errorf("output =\n%q\nwant\n%q", out, want)

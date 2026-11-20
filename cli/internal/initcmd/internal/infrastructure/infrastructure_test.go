@@ -59,7 +59,7 @@ func TestOSFileSystemDelegates(t *testing.T) {
 		t.Fatalf("MkdirAll: %v", err)
 	}
 
-	path := filepath.Join(nested, "settings.json")
+	path := filepath.Join(nested, "project.json")
 	if err := files.WriteFile(path, []byte(`{"version":1}`)); err != nil {
 		t.Fatalf("WriteFile: %v", err)
 	}

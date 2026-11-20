@@ -32,8 +32,8 @@
 #   schema-file  the JSON schema the answer follows, when the harness can take one
 #   out-file     where the harness's final message is written
 #
-# How a harness is called comes from `harnessConfig` in `../settings.json`,
-# the project's `.codefall/settings.json`, read with jq when both are present.
+# How a harness is called comes from `harnessConfig` in `../project.json`,
+# the project's `.codefall/project.json`, read with jq when both are present.
 # The agent's harness is the lookup key. A key that is a harness name configures
 # that harness; any other key is a variant whose `harness` field names the
 # binary, so a project can call codex two ways. A block may carry:
@@ -67,7 +67,7 @@
 #
 # Environment
 #   CODEFALL_REVIEW_TIMEOUT   seconds before the run is killed (default 900)
-#   CODEFALL_SETTINGS         the settings file to read (default ../settings.json
+#   CODEFALL_SETTINGS         the settings file to read (default ../project.json
 #                             beside this script)
 #
 # Set in the environment of every harness this script starts, whichever it is
@@ -137,7 +137,7 @@ fi
 # The block is read into plain variables, and only when there is one to read.
 # Every read below tolerates an absent field, so a block naming one field is as
 # good as a block naming five.
-settings=${CODEFALL_SETTINGS:-$(dirname "$0")/../settings.json}
+settings=${CODEFALL_SETTINGS:-$(dirname "$0")/../project.json}
 harness=$key
 model_flag_name=--model
 provider=""

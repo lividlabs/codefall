@@ -35,7 +35,7 @@ track named, equip says what the project declares today and asks which to set up
 
 Every track works the same way. Equip searches the repository first, shows you what it found, and
 asks one question. It shows the full draft or the diff before it writes anything. For the first three
-tracks it then declares the result in `.codefall/settings.json`. It runs the result once to prove it
+tracks it then declares the result in `.codefall/project.json`. It runs the result once to prove it
 works, and opens a pull request for it on its own branch, such as `equip/local`. When the search leaves something unclear, equip asks
 the project's *consult* agents once before it asks you. A consult is a second opinion from the
 agents your settings list for that purpose, and its answer appears as the proposed option for you
@@ -48,7 +48,7 @@ project's setup.
 
 `start` brings up what the project needs running locally, such as a database. `update` makes the
 local environment match the checkout: it installs dependencies, runs migrations, and regenerates
-code. Both are declared under `local` in `.codefall/settings.json` as plain shell commands:
+code. Both are declared under `local` in `.codefall/project.json` as plain shell commands:
 
 ```json
 "local": {

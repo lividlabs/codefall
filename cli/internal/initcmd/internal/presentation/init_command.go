@@ -40,7 +40,7 @@ func NewInitCommand(initialize InitializeUseCase, prerequisites Prerequisites) *
 	cmd := &cobra.Command{
 		Use:   "init",
 		Short: "Set this directory up for codefall",
-		Long: "Creates .codefall/settings.json from your answers, including which coding harnesses the " +
+		Long: "Creates .codefall/project.json from your answers, including which coding harnesses the " +
 			"project uses. Every question is also a flag, so a scripted run passes them and is never " +
 			"prompted. The codefall extension is installed for each harness chosen: Claude Code gets it " +
 			"at project scope into .claude/settings.json, and a harness that reads the .agents/skills " +
@@ -245,7 +245,8 @@ func buildRequest(
 
 	// Settings with no manifest behind them are a project set up before the manifest existed, and
 	// this is its one run of init: nothing is asked, because the answers are already on record, and
-	// the run finishes by writing the manifest that sends every later run to upgrade.
+	// the run finishes by writing the manifest that sends every later run to upgrade. Settings still
+	// under the name an earlier release wrote count: the settings step moves the file on this run.
 	settled, err := initialize.SettingsExist(dir)
 	if err != nil {
 		return application.Request{}, false, initKind.wrap(err)

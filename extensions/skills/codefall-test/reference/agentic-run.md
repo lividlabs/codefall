@@ -43,7 +43,7 @@ refusing the case: its `spec` modality, when it declares one, still runs.
 ## Bringing the application up
 
 The application runs through the project's declared `start` command — the one `local.start` names in
-`.codefall/settings.json`. It is not started any other way, and a run never starts a service the
+`.codefall/project.json`. It is not started any other way, and a run never starts a service the
 project did not declare.
 
 When `local` is undeclared, stop and name `/codefall-equip`. When the application is down after

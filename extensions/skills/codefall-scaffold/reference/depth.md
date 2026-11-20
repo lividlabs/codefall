@@ -19,7 +19,7 @@ The concrete file list for both code tiers is the profile's business — see its
 Follow the profile rather than reaching for what you would reflexively pick for the language.
 
 Both code tiers also write the project's local-environment scripts, `start` and `update`, and
-declare them under `local` in `.codefall/settings.json` when that file exists. The profile's depth
+declare them under `local` in `.codefall/project.json` when that file exists. The profile's depth
 notes say what `update` does for the language; `start` exits `0` with nothing to bring up until a
 task adds a service. The procedure is `codefall-equip`'s.
 

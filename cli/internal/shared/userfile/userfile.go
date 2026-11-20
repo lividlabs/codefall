@@ -29,7 +29,7 @@ type Document map[string]any
 // The published constants of the user file's format. The schema test in this package holds
 // schemas/user.schema.json equal to these.
 const (
-	// Name is where the file lives, beside settings.json. It is also the .gitignore entry.
+	// Name is where the file lives, beside project.json. It is also the .gitignore entry.
 	Name     = ".codefall/user.json"
 	Version  = 1
 	SchemaID = "https://raw.githubusercontent.com/lividlabs/codefall/main/cli/schemas/user.schema.json"

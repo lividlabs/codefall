@@ -28,7 +28,7 @@ codefall project init
 | May `/codefall-review` post its findings to a pull request? | `--review-post-to-pr` | Off unless you say yes. |
 | Where should the project's test cases live? | `--test-dir` | Defaults to `testing`. |
 
-`init` records the answers in `.codefall/settings.json`, which the skills read back.
+`init` records the answers in `.codefall/project.json`, which the skills read back.
 
 Before it asks these questions, `init` checks the tools the skills need: that `git` and `bd` are
 installed, and that `gh` is installed, logged in to github.com, and holding a token with the `repo`
@@ -82,7 +82,7 @@ the root. `--location here` or `--location root` answers for a script. `upgrade`
 ## Choose coding agents
 
 A project can use more than one coding agent. `init` asks which ones to set up and never picks for
-you. Each agent is named for its command-line binary, and that name is what `.codefall/settings.json`
+you. Each agent is named for its command-line binary, and that name is what `.codefall/project.json`
 records:
 
 | Coding agent | Name |
@@ -119,7 +119,7 @@ reach these files by paths Codefall writes, so they do not need to be in an agen
 
 | Path | Holds |
 | --- | --- |
-| `.codefall/settings.json` | what the project told `init`, which the skills read back |
+| `.codefall/project.json` | what the project told `init`, which the skills read back |
 | `.codefall/manifest.json` | what the last finished run wrote, for each agent and for `.codefall/` itself |
 | `.codefall/hooks/shared/` | the scripts every agent's hooks run |
 | `.codefall/shared/` | the files the skills read, and the scripts a skill runs |
@@ -240,6 +240,8 @@ For the agents the settings record, `upgrade`:
 - replaces the sections Codefall wrote into `AGENTS.md`;
 - rewrites an agent name still spelled the old way;
 - points a `$schema` URL that an earlier release wrote at the current one;
+- moves the settings file, when a release before this one wrote it as `.codefall/settings.json`,
+  to `.codefall/project.json`, changing nothing in it but the `$schema` URL;
 - records the run in the manifest.
 
 It changes nothing it did not write. It reinstalls on every run, even when the binary's version

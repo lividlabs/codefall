@@ -42,7 +42,7 @@ type ConfigUseCase interface {
 var stdoutIsTerminal = ui.StdoutIsTerminal
 
 // settingsName is the settings file as a person reads its path.
-const settingsName = ".codefall/settings.json"
+const settingsName = ".codefall/project.json"
 
 // NewConfigCommand builds `codefall config`. With no arguments in a terminal it opens the editor;
 // anywhere else it prints what `show` prints and says where the editor is. The subcommands are for

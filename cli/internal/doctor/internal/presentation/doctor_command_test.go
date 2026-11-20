@@ -180,19 +180,19 @@ func TestDoctorCommandFailsWhenAnyCheckFails(t *testing.T) {
 			name: "one category",
 			report: domain.NewReport(
 				domain.CodefallDir.Pass(),
-				domain.SettingsFile.Fail(".codefall/settings.json not found", mo.None[string]()),
+				domain.SettingsFile.Fail(".codefall/project.json not found", mo.None[string]()),
 			),
 			wantErr: "doctor found issues in 1 category",
 			want: headingLines +
 				"[✗] Settings\n" +
-				"╰─ ✗ .codefall/settings.json not found\n",
+				"╰─ ✗ .codefall/project.json not found\n",
 		},
 		{
 			name: "a failure and a warning in different categories",
 			report: domain.NewReport(
 				domain.CodefallDir.Pass(),
-				domain.SettingsFile.Fail(".codefall/settings.json not found",
-					mo.Some("create .codefall/settings.json")),
+				domain.SettingsFile.Fail(".codefall/project.json not found",
+					mo.Some("create .codefall/project.json")),
 				domain.BeadsInstalled.PassWithDetail("bd version 1.2.2 (Homebrew)"),
 				domain.BeadsInitialized.Warn("This repository has no Beads database", mo.Some("bd init")),
 				domain.GHInstalled.PassWithDetail("gh version 2.97.0 (2026-07-31)"),
@@ -201,8 +201,8 @@ func TestDoctorCommandFailsWhenAnyCheckFails(t *testing.T) {
 			wantErr: "doctor found issues in 2 categories",
 			want: headingLines +
 				"[✗] Settings\n" +
-				"╰─ ✗ .codefall/settings.json not found\n" +
-				"   ╰─ fix: create .codefall/settings.json\n" +
+				"╰─ ✗ .codefall/project.json not found\n" +
+				"   ╰─ fix: create .codefall/project.json\n" +
 				"[!] Beads (bd version 1.2.2 (Homebrew))\n" +
 				"╰─ ! This repository has no Beads database\n" +
 				"   ╰─ fix: bd init\n" +
@@ -303,7 +303,7 @@ func TestSectionHeader(t *testing.T) {
 				Category: domain.CategorySettings,
 				Results: []domain.Result{
 					domain.CodefallDir.Pass(),
-					domain.SettingsFile.Fail(".codefall/settings.json not found", mo.None[string]()),
+					domain.SettingsFile.Fail(".codefall/project.json not found", mo.None[string]()),
 				},
 			},
 			want: "[✗] Settings",
@@ -350,7 +350,7 @@ func TestSectionHeaderStylesTheBracketsWithTheMark(t *testing.T) {
 			section: domain.Section{
 				Category: domain.CategorySettings,
 				Results: []domain.Result{
-					domain.SettingsFile.Fail(".codefall/settings.json not found", mo.None[string]()),
+					domain.SettingsFile.Fail(".codefall/project.json not found", mo.None[string]()),
 				},
 			},
 			status: domain.StatusFail,
@@ -380,8 +380,8 @@ func TestProblemLine(t *testing.T) {
 		},
 		{
 			name:   "a failure",
-			result: domain.SettingsJSON.Fail("settings.json is not valid JSON at byte 4: x", mo.None[string]()),
-			want:   "✗ settings.json is not valid JSON at byte 4: x",
+			result: domain.SettingsJSON.Fail("project.json is not valid JSON at byte 4: x", mo.None[string]()),
+			want:   "✗ project.json is not valid JSON at byte 4: x",
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
@@ -399,16 +399,16 @@ func TestSectionTreeGuidesEveryProblemAndItsRemedy(t *testing.T) {
 		Category: domain.CategorySettings,
 		Results: []domain.Result{
 			domain.CodefallDir.Pass(),
-			domain.SettingsFile.Fail(".codefall/settings.json not found",
-				mo.Some("create .codefall/settings.json")),
-			domain.SettingsJSON.Fail("settings.json is not valid JSON at byte 4: x", mo.None[string]()),
+			domain.SettingsFile.Fail(".codefall/project.json not found",
+				mo.Some("create .codefall/project.json")),
+			domain.SettingsJSON.Fail("project.json is not valid JSON at byte 4: x", mo.None[string]()),
 		},
 	}
 
 	want := "[✗] Settings\n" +
-		"├─ ✗ .codefall/settings.json not found\n" +
-		"│  ╰─ fix: create .codefall/settings.json\n" +
-		"╰─ ✗ settings.json is not valid JSON at byte 4: x"
+		"├─ ✗ .codefall/project.json not found\n" +
+		"│  ╰─ fix: create .codefall/project.json\n" +
+		"╰─ ✗ project.json is not valid JSON at byte 4: x"
 
 	if got := stripANSI(sectionTree(section)); got != want {
 		t.Errorf("sectionTree() =\n%q\nwant\n%q", got, want)

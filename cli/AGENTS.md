@@ -25,7 +25,7 @@ generic over their data (`OrderList`); `internal/shared/process/` holds the comm
 system; `internal/shared/buildinfo/` holds the version the binary reports, for `--version` and for
 the manifest init writes. `internal/shared/harness/` holds the harnesses codefall can set up and where each one reads
 skills, `internal/shared/manifest/` the `.codefall/manifest.json` format,
-`internal/shared/settings/` the `.codefall/settings.json` format, `internal/shared/userfile/` the
+`internal/shared/settings/` the `.codefall/project.json` format, `internal/shared/userfile/` the
 per-user `.codefall/user.json` format, `internal/shared/version/` the release comparison, and
 `internal/shared/text/` the string helpers both components need — all six **pure** (ADR-003), so the
 inner layers may import them. `cmd/codefall/main.go` is the composition root and builds the
@@ -204,8 +204,8 @@ The why lives in the ADRs. This file is the operative rules only — never resta
   `application/` and a throwaway `internal/shared/proof/` importing its facade. The `update`
   component's were proven the same way on 2026-10-07.
 - **`depguard` matches `_test.go` too.** Inner-layer tests are internal test packages (`package
-  domain`, `package application`), so a `domain` test cannot import `os`. The schema test that holds
-  `schemas/settings.schema.json` equal to the settings constants lives in `internal/shared/settings`,
+  `domain`, `package application`), so a `domain` test cannot import `os`. The schema test that holds
+  `schemas/project.schema.json` equal to the settings constants lives in `internal/shared/settings`,
   beside the format it pins — a pure shared module is not an inner layer, so its tests may read the
   file.
 - **`go.mod` requires `samber/do`, `samber/mo`, Cobra, Fang, Lip Gloss v2, Bubble Tea v2, Bubbles v2,

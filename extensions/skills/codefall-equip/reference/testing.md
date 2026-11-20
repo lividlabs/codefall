@@ -3,7 +3,7 @@
 The testing track in full: the eight steps, what the declaration says, what to search for, the
 runner each surface takes, what setting one up means, what is written where, and how the result is
 proven. Read before step 1 of the testing track and follow it. `<root>` is the testing root
-`test.dir` declares in `.codefall/settings.json`.
+`test.dir` declares in `.codefall/project.json`.
 
 ## Contents
 
@@ -29,8 +29,8 @@ The sections after this one carry what each step searches for, writes, and prove
 ### 1. Read the declaration
 
 The target is the path argument, or the working directory. Read the `test` block in
-`.codefall/settings.json`, per [The declaration](#the-declaration). No block, or no
-`.codefall/settings.json` at all: stop and say `codefall project init` declares the testing root
+`.codefall/project.json`, per [The declaration](#the-declaration). No block, or no
+`.codefall/project.json` at all: stop and say `codefall project init` declares the testing root
 first. Then read the project's root `AGENTS.md`, and `<root>/AGENTS.md`.
 
 ### 2. Find what is already there
@@ -58,7 +58,7 @@ take the branch step of `../../../../.codefall/shared/landing.md`: standing on t
 
 ### 5. Declare and record
 
-Write `test.runners` into `.codefall/settings.json`, keeping every other key and the file's
+Write `test.runners` into `.codefall/project.json`, keeping every other key and the file's
 formatting, per [Declaring the runner](#declaring-the-runner). Write the runner's line into the
 Runners section of `<root>/AGENTS.md`, per [The Runners line](#the-runners-line): its name, the
 command that runs every spec, and the command that runs one case. Names go to settings because
@@ -93,7 +93,7 @@ second step.
 
 ## The declaration
 
-Read the `test` block out of `.codefall/settings.json`:
+Read the `test` block out of `.codefall/project.json`:
 
 ```json
 "test": {

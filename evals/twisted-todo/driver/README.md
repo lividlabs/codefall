@@ -153,6 +153,6 @@ merge to `main`; a denial in a transcript is the system working. A `Skill` tool 
 - Cost figures come from the SDK's `total_cost_usd`, an estimate. `modelUsage` in the last `result`
   line of each `.jsonl` has per-model tokens. The judge's cost is the other harness's and is not
   counted.
-- `run-agent.sh` reads `harnessConfig` from the project's `.codefall/settings.json`. `codefall
+- `run-agent.sh` reads `harnessConfig` from the project's `.codefall/project.json`. `codefall
   project init` writes none, so `muse` and `opencode` run with their own default model unless
   `/codefall-equip agents` was run on the project first.

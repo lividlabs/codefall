@@ -29,14 +29,24 @@ type FileSystem interface {
 
 // settingsName is the settings file as a person reads its path, relative to the directory that holds
 // .codefall/.
-const settingsName = ".codefall/settings.json"
+const settingsName = ".codefall/project.json"
+
+// formerSettingsName is the name an earlier release wrote the settings under. Config never reads
+// that file as settings: a project that still has only it is refused with the command that moves it.
+const formerSettingsName = ".codefall/settings.json"
 
 // errNotSetUp is what every write refuses a directory with no settings with. The settings are what
 // init writes first, and a project without them has nothing for config to change.
 var errNotSetUp = errors.New(settingsName + " not found; run codefall project init first")
 
+// errFormerName is what every read and write refuses a directory whose settings are still under the
+// name an earlier release wrote them, for the person to be sent to the run that moves the file
+// rather than told to create one.
+var errFormerName = errors.New("the settings file is still " + formerSettingsName +
+	", the name an earlier release wrote; run codefall project upgrade, which moves it")
+
 // Config reads and writes the two files a person configures codefall through: the checked-in
-// .codefall/settings.json, for the agents, and the per-user .codefall/user.json, for the persona.
+// .codefall/project.json, for the agents, and the per-user .codefall/user.json, for the persona.
 // It never prompts; every value arrives as an argument, so it runs the same under a script.
 type Config struct {
 	files FileSystem
@@ -54,12 +64,18 @@ type projectSettings struct {
 	doc  settings.Document
 }
 
-// readSettings reads and decodes .codefall/settings.json, refusing a directory that has none.
+// readSettings reads and decodes .codefall/project.json, refusing a directory that has none. A
+// directory whose settings are still under the former name is refused with the command that moves
+// them, because config reads the file every other reader reads and not a name no step writes.
 func (c *Config) readSettings(dir string) (projectSettings, error) {
 	data, err := c.files.ReadFile(settingsPath(dir))
 
 	switch {
 	case errors.Is(err, fs.ErrNotExist):
+		if _, err := c.files.ReadFile(formerSettingsPath(dir)); err == nil {
+			return projectSettings{}, errFormerName
+		}
+
 		return projectSettings{}, errNotSetUp
 	case err != nil:
 		return projectSettings{}, fmt.Errorf("read %s: %w", settingsName, err)
@@ -155,6 +171,10 @@ func decodeUserFile(data []byte) (userfile.Document, error) {
 
 func settingsPath(dir string) string {
 	return filepath.Join(dir, filepath.FromSlash(settingsName))
+}
+
+func formerSettingsPath(dir string) string {
+	return filepath.Join(dir, filepath.FromSlash(formerSettingsName))
 }
 
 func userFilePath(dir string) string {

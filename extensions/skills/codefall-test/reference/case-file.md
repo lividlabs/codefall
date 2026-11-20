@@ -23,7 +23,7 @@ The format of a test case. Read it before running a case, and before writing one
 <root>/test-cases/<area>/<slug>.md
 ```
 
-`<root>` is the testing root `test.dir` declares in `.codefall/settings.json`, and `<area>` is a
+`<root>` is the testing root `test.dir` declares in `.codefall/project.json`, and `<area>` is a
 product area — `checkout`, `search`, `billing` — not a layer and not a runner. `<slug>` is words and
 hyphens: no numeric prefix, no `CASE-01` registry.
 

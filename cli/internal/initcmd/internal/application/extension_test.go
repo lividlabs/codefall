@@ -19,7 +19,7 @@ func extensionRequest() Request {
 	return Request{Dir: workingDir, Tracker: settings.TrackerBeads, Harnesses: []string{harness.Claude}}
 }
 
-// settled is a file system whose .codefall/settings.json is already written, with whatever
+// settled is a file system whose .codefall/project.json is already written, with whatever
 // .claude/settings.json the test wants beside it.
 func settled(claudeSettings string) *fakeFileSystem {
 	files := newFakeFileSystem()

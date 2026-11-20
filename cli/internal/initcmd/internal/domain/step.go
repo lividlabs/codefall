@@ -26,7 +26,7 @@ type Step struct {
 // and the CLAUDE.md that points at it — and it has to come before the ignore step, which keeps the
 // testing root's run output out of the repository and cannot name a root before it is declared.
 var (
-	SettingsStep  = Step{ID: "settings", Title: "Writing .codefall/settings.json"}
+	SettingsStep  = Step{ID: "settings", Title: "Writing .codefall/project.json"}
 	ExtensionStep = Step{ID: "extension", Title: "Installing the codefall extension"}
 	CleanupStep   = Step{ID: "cleanup", Title: "Removing what this version no longer ships"}
 	BeadsStep     = Step{ID: "beads", Title: "Initializing Beads"}

@@ -1,7 +1,7 @@
 <!-- BEGIN CODEFALL LOCAL -->
 ## Local environment
 
-`codefall-refresh` runs `start` and `update`, declared under `local` in `.codefall/settings.json`.
+`codefall-refresh` runs `start` and `update`, declared under `local` in `.codefall/project.json`.
 
 - Run `/codefall-refresh` before new work and after a pull request merges; it ends on the
   default branch, wherever it starts. Never pull by hand.

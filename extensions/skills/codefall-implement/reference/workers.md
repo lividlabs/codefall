@@ -33,7 +33,7 @@ instead.
 
 | Placeholder | What the root renders |
 | --- | --- |
-| `{{TESTING_ROOT}}` | `test.dir` from `.codefall/settings.json`, as the worker sees it from the repository root — `testing` |
+| `{{TESTING_ROOT}}` | `test.dir` from `.codefall/project.json`, as the worker sees it from the repository root — `testing` |
 | `{{CASE_FILE_FORMAT}}` | the absolute path of `codefall-test`'s `reference/case-file.md` in the skills directory this run was invoked from — `<repo>/.claude/skills/codefall-test/reference/case-file.md`, or `.agents/skills/…` under a harness that mirrors the tree |
 
 A worker reads the format by that absolute path because it cannot resolve a skill-relative one: it

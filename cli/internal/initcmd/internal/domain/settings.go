@@ -2,7 +2,7 @@
 // with, the harnesses codefall knows about, and the steps a run is made of. It performs no IO and
 // names no delivery, encoding, or infrastructure type (ADR-BASE-01).
 //
-// What .codefall/settings.json may contain is not initcmd's — doctor reads the same file — so the
+// What .codefall/project.json may contain is not initcmd's — doctor reads the same file — so the
 // format lives in the pure shared module internal/shared/settings and the value objects here are
 // built from its rules (ADR-003).
 package domain
@@ -32,7 +32,7 @@ type ReviewSettings struct {
 	PostToPullRequest bool
 }
 
-// Settings is a complete, valid .codefall/settings.json as a value: the tracker, the block that
+// Settings is a complete, valid .codefall/project.json as a value: the tracker, the block that
 // tracker selects, and the review block. Exactly one tracker block is present, which is what the
 // schema's oneOf says as well. Beads carries no fields of its own — bd keeps its configuration under
 // .beads/ — so it needs no member here.

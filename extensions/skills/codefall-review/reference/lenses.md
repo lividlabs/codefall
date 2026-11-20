@@ -59,7 +59,7 @@ is an ordinary fix.
 
 **`local` looks at the diff's shape, not its code.** A compose file, a migrations directory, a
 lockfile, a codegen config, or an `.env.example` changed with no change under the commands
-`.codefall/settings.json` declares under `local` is the finding, and the fix is `codefall-equip`'s
+`.codefall/project.json` declares under `local` is the finding, and the fix is `codefall-equip`'s
 procedure applied to the change. A project with no `local` block gets one finding saying so, not
 one per file. A change under those scripts that drops, resets, or deletes is a finding too, against
 the contract in `codefall-equip`.

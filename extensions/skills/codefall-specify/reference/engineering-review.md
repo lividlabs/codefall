@@ -29,7 +29,7 @@ the persona changes only how the findings are put to the person.
 One subagent of this harness, launched with `Agent`, prompted from `../engineering-review-prompt.md`
 by plain substitution of every `{{…}}` placeholder. It is read-only: it reads the draft and the
 project, and its final message is one JSON object. It is not the `review` or `consult` list of
-`.codefall/settings.json`; those lists belong to
+`.codefall/project.json`; those lists belong to
 `../../../../.codefall/shared/running-agents.md`, and this review is the skill's own subagent,
 launched the way `codefall-implement` launches a worker. The persona is never rendered
 into the prompt.

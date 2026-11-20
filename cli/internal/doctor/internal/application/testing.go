@@ -38,7 +38,7 @@ func (d *Diagnose) testing(_ context.Context, dir string, results []domain.Resul
 		// What the block decides is where the cases go, and init is what asks — so the two checks
 		// below have nothing to ask about until it has, and are absent from the report.
 		return append(results, domain.TestDeclared.Warn(
-			"no testing root is declared in settings.json", mo.Some(d.setupCommand(dir))))
+			"no testing root is declared in project.json", mo.Some(d.setupCommand(dir))))
 	}
 
 	results = append(results, domain.TestDeclared.PassWithDetail(declared.Dir+"/"))
@@ -47,7 +47,7 @@ func (d *Diagnose) testing(_ context.Context, dir string, results []domain.Resul
 		// Also a warning. A project declares its root before it is equipped, and until a runner is
 		// installed there is nothing to run a spec with — which is equip's work and nobody else's.
 		results = append(results, domain.TestEquipped.Warn(
-			"no test runner is declared in settings.json", mo.Some(equipTestRemedy)))
+			"no test runner is declared in project.json", mo.Some(equipTestRemedy)))
 	} else {
 		results = append(results, domain.TestEquipped.PassWithDetail(strings.Join(declared.Runners, ", ")))
 	}
@@ -69,7 +69,7 @@ func (d *Diagnose) testDirExists(dir, root string, results []domain.Result) []do
 
 	if !there {
 		return append(results, domain.TestDirExists.Fail(
-			root+"/ is declared in settings.json and is not there", mo.Some(d.setupCommand(dir))))
+			root+"/ is declared in project.json and is not there", mo.Some(d.setupCommand(dir))))
 	}
 
 	return append(results, domain.TestDirExists.Pass())

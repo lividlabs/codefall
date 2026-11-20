@@ -80,7 +80,7 @@ The argument's shape decides what is run.
 | a path under `<root>/test-cases/` | the case that path names | the file itself |
 | an epic ID, or `PLAN-NNN` | the epic's work: every case its children's criteria name, plus `changed`, on the epic's branch | `bd list --parent <epic> --all --json --limit 0`, each `<area>/<slug>` in the acceptance criteria; [Epic targets](#epic-targets) |
 
-`<root>` is the testing root `test.dir` declares in `.codefall/settings.json`. The default branch is
+`<root>` is the testing root `test.dir` declares in `.codefall/project.json`. The default branch is
 what preflight's `default_branch` line names. An argument that resolves to nothing is a stop, not a
 guess — say what was looked for and where.
 
@@ -106,14 +106,14 @@ with the remedy `codefall-implement`'s preflight table names; every other target
 | --- | --- | --- |
 | `test=undeclared` | settings carry no `test` block | Say `codefall project upgrade` declares the testing root, and stop |
 | `test=unequipped` | no runner is declared | A case target stops and names `/codefall-equip`; a suite target carries on |
-| `test=unknown` | there is a `test` block, and preflight had no jq to read it | Read the block from `.codefall/settings.json` and act on what it says; `runners` absent or empty is `unequipped` |
+| `test=unknown` | there is a `test` block, and preflight had no jq to read it | Read the block from `.codefall/project.json` and act on what it says; `runners` absent or empty is `unequipped` |
 | `refresh=stale`, or `behind` above `0`, on the default branch | the checkout or the environment is behind | Say so and run `/codefall-refresh`, which ends on this branch |
 | `behind` above `0` on another branch | the branch is missing commits the default branch has | Say so and that the rebase is the user's; carry on. Never run `/codefall-refresh`, which leaves the branch |
 | `refresh=stale` on another branch | the environment may not match the branch | Say so and run the declared `local.update` here, once |
 | `refresh=undeclared` | no `local` block | Say so and name `/codefall-equip`; an agentic run stops, since it has no declared `start` |
 
 A preflight that emits no `test=` line at all is an older install: read the `test` block from
-`.codefall/settings.json` directly and read it the same way.
+`.codefall/project.json` directly and read it the same way.
 
 **Never run the other remedies.** `codefall project init` and `/codefall-equip` are the user's to run.
 
@@ -216,7 +216,7 @@ run, and say so.
 
 ### 1. Check preconditions
 
-Run [the preflight](#preflight) and act on the lines. Read `.codefall/settings.json` for the `test`
+Run [the preflight](#preflight) and act on the lines. Read `.codefall/project.json` for the `test`
 block, the project's `AGENTS.md` (root and scoped), `<root>/AGENTS.md`, and
 `../../../.codefall/shared/decisions.md`. Check the `.ignore` entry and add it when it is missing.
 

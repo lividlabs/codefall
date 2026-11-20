@@ -147,7 +147,7 @@ type Observer interface {
 	StepFinished(result domain.StepResult)
 }
 
-// Initialize sets a project up for codefall: it writes .codefall/settings.json, installs the harness
+// Initialize sets a project up for codefall: it writes .codefall/project.json, installs the harness
 // extension, initialises Beads, registers codefall's hooks with the harness, writes the sections of
 // AGENTS.md that say how the project uses it, and makes the tree its test cases live in. It is the
 // one use case behind two commands: `codefall project init` runs it once, on a project with no

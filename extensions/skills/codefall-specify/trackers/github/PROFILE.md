@@ -2,7 +2,7 @@
 
 **Status:** supported.
 
-GitHub Issues, in the project's own repository — `github.issuesRepo` in `.codefall/settings.json`,
+GitHub Issues, in the project's own repository — `github.issuesRepo` in `.codefall/project.json`,
 the one tracker a verb files on, per *Who is authoritative for what* in
 `../../../../../.codefall/shared/workflow.md` — optionally placed on a GitHub Project. This is the
 profile `codefall-specify` uses when the mirror's home is the same forge as the code.

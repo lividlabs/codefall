@@ -21,7 +21,7 @@ const workingDir = "/work"
 
 var (
 	codefallFull      = filepath.Join(workingDir, ".codefall")
-	settingsFull      = filepath.Join(codefallFull, "settings.json")
+	settingsFull      = filepath.Join(codefallFull, "project.json")
 	claudeSettingsDir = filepath.Join(workingDir, ".claude")
 	claudeFull        = filepath.Join(claudeSettingsDir, "settings.json")
 	// The tree the testing step makes at the root a request that declares none takes by default.
@@ -345,7 +345,7 @@ func TestRunWritesSettingsAndReportsWhatItWrote(t *testing.T) {
 		t.Errorf("outcome = %v, want DONE", results[0].Outcome)
 	}
 
-	want := "wrote .codefall/settings.json (tracker: github, harnesses: claude, " +
+	want := "wrote .codefall/project.json (tracker: github, harnesses: claude, " +
 		"issues repo: lividlabs/codefall-cli, issues project: 3)"
 	if results[0].Detail != want {
 		t.Errorf("detail = %q, want %q", results[0].Detail, want)
@@ -426,7 +426,7 @@ func TestRunEncodesGitHubSettings(t *testing.T) {
 `
 
 	if got := string(files.files[settingsFull]); got != want {
-		t.Errorf("settings.json =\n%s\nwant\n%s", got, want)
+		t.Errorf("project.json =\n%s\nwant\n%s", got, want)
 	}
 }
 
@@ -536,11 +536,11 @@ func TestRunEncodesTheOptionalFieldsTheWayTheSchemaExpects(t *testing.T) {
 
 			got := string(files.files[settingsFull])
 			if !strings.HasSuffix(got, tc.want) {
-				t.Errorf("settings.json =\n%s\nwant it to end with\n%s", got, tc.want)
+				t.Errorf("project.json =\n%s\nwant it to end with\n%s", got, tc.want)
 			}
 
 			if strings.Contains(got, "null") {
-				t.Errorf("settings.json =\n%s\nwant no null in it", got)
+				t.Errorf("project.json =\n%s\nwant no null in it", got)
 			}
 		})
 	}
@@ -564,7 +564,7 @@ func TestRunSkipsSettingsThatAreAlreadyThere(t *testing.T) {
 		t.Fatalf("Results() = %+v, want the settings step to have skipped", results)
 	}
 
-	want := ".codefall/settings.json already exists"
+	want := ".codefall/project.json already exists"
 	if results[0].Detail != want {
 		t.Errorf("detail = %q, want %q", results[0].Detail, want)
 	}
@@ -575,11 +575,11 @@ func TestRunSkipsSettingsThatAreAlreadyThere(t *testing.T) {
 	got := string(files.files[settingsFull])
 
 	if strings.Contains(got, "tracker") {
-		t.Errorf("settings.json = %q, want the settings step to have left it alone", got)
+		t.Errorf("project.json = %q, want the settings step to have left it alone", got)
 	}
 
 	if !strings.Contains(got, `"dir": "testing"`) {
-		t.Errorf("settings.json = %q, want the testing step to have declared the root", got)
+		t.Errorf("project.json = %q, want the testing step to have declared the root", got)
 	}
 }
 
@@ -608,7 +608,7 @@ func TestRunStopsOnAStepThatFails(t *testing.T) {
 			setup: func(f *fakeFileSystem) {
 				f.errs["write "+settingsFull] = errors.New("no space left on device")
 			},
-			want: "write .codefall/settings.json",
+			want: "write .codefall/project.json",
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
@@ -655,7 +655,7 @@ func TestRunReportsAnUnreadableSettingsFile(t *testing.T) {
 		t.Context(),
 		Request{Dir: workingDir, Tracker: settings.TrackerBeads, Harnesses: []string{harness.Claude}},
 		nil,
-	); err == nil || !strings.Contains(err.Error(), "read .codefall/settings.json") {
+	); err == nil || !strings.Contains(err.Error(), "read .codefall/project.json") {
 		t.Errorf("Run error = %v, want it to say the settings could not be read", err)
 	}
 }
