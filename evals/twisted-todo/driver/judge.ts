@@ -32,7 +32,7 @@ export async function judgeRun(opts: {
   copyFileSync(opts.briefPath, join(opts.runDir, "brief.md"));
 
   const script = join(opts.projectDir, ".codefall", "shared", "run-agent.sh");
-  if (!existsSync(script)) throw new Error(`no run-agent.sh at ${script}; was codefall init run on the project?`);
+  if (!existsSync(script)) throw new Error(`no run-agent.sh at ${script}; was codefall project init run on the project?`);
 
   const schemaPath = join(opts.judgeDir, "verdict.schema.json");
   const schema = readFileSync(schemaPath, "utf8");

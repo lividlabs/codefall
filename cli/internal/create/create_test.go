@@ -32,3 +32,16 @@ func TestRegisterProvidesEverythingCommandNeeds(t *testing.T) {
 		t.Errorf("Command().Name() = %q, want %q", got, "create")
 	}
 }
+
+// The name create had at the root refuses, naming the command under project that replaced it, and
+// shows nowhere in the root's help (ADR-018).
+func TestRefusedCommandHoldsTheOldRootName(t *testing.T) {
+	cmd := create.RefusedCommand()
+	if got := cmd.Name(); got != "create" {
+		t.Errorf("RefusedCommand().Name() = %q, want %q", got, "create")
+	}
+
+	if !cmd.Hidden {
+		t.Error("the refused create is not hidden from the root's help")
+	}
+}

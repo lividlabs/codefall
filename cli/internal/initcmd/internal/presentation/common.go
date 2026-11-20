@@ -3,8 +3,8 @@
 // the one use case as a contract, and prints what each step did. The palette, the writer, and the
 // spinner are the shared UI module's; what belongs here is which tone a step's outcome is drawn in.
 //
-// This file holds what both commands share. init_command.go is `codefall init`, the first run, and
-// upgrade_command.go is `codefall upgrade`, every run after it.
+// This file holds what both commands share. init_command.go is `codefall project init`, the first
+// run, and upgrade_command.go is `codefall project upgrade`, every run after it.
 package presentation
 
 import (

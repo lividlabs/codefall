@@ -16,12 +16,12 @@ declined in an earlier run.
 Codefall's skills are instructions your coding agent follows when you type a slash command; the
 [README](../../README.md) introduces them.
 
-## How is it different from `codefall upgrade`?
+## How is it different from `codefall project upgrade`?
 
 The two cover different files.
 
-- **`codefall upgrade`**, the command-line tool, reinstalls the skills, shared files, and hooks.
-  [Setting up a project](setup.md) describes it.
+- **`codefall project upgrade`**, the command-line tool, reinstalls the skills, shared files, and
+  hooks. [Setting up a project](setup.md) describes it.
 - **`/codefall-upgrade`**, the skill, offers to run that command first and then works on the
   project's documents.
 

@@ -125,7 +125,7 @@ exact_case() {
 #
 # A skill names a shared file by the path it has once installed —
 # ../../../.codefall/shared/<file> from a skill directory, one level deeper from a supporting
-# file. `codefall init` writes that copy into the project's .codefall/; in this repository the
+# file. `codefall project init` writes that copy into the project's .codefall/; in this repository the
 # same file is under extensions/, so the .codefall/ prefix resolves there instead.
 resolve() {
   local base="$1" ref="$2" target

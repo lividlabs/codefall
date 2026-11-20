@@ -31,7 +31,8 @@ and that verb lands them: steps 1, 6, and 10 say what is skipped.
 Plugin paths in this document — the ones that start with `../` — are relative to this skill's
 directory, the one holding this `SKILL.md`. Resolve them from where the file lives; they are not
 relative to the user's project. A path through `../../../.codefall/` is the one that leaves the
-skills directory: it names a file `codefall init` installed in the project's own `.codefall/`.
+skills directory: it names a file `codefall project init` installed in the project's own
+`.codefall/`.
 
 ## What it decides, and what it leaves alone
 

@@ -100,8 +100,8 @@ where they are. The user commits them with their own work or not at all.
 
 ## Kept out of codebase search
 
-`codefall init` writes the `.ignore` line and `codefall doctor` warns when it is missing. Before
-the review, when it is missing, offer:
+`codefall project init` writes the `.ignore` line and `codefall doctor` warns when it is missing.
+Before the review, when it is missing, offer:
 
 > `.ignore` doesn't list `.codefall/reviews/`, so findings from this review will show up in
 > codebase searches. Add the line?

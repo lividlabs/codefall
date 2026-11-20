@@ -27,7 +27,8 @@ table — when the work earns one. **The tasks in Beads**, with their dependency
 Planning is not implementing. Once the document is written and the graph exists, stop.
 
 Paths starting `../` are relative to this skill's directory, not the user's project; one through
-`../../../.codefall/` names a file `codefall init` installed in the project's own `.codefall/`.
+`../../../.codefall/` names a file `codefall project init` installed in the project's own
+`.codefall/`.
 
 ## Files beside this one
 

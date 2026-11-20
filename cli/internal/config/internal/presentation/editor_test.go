@@ -128,7 +128,7 @@ func quits(e editor, msg tea.Msg) bool {
 }
 
 func TestEditorRefusesADirectoryItCannotRead(t *testing.T) {
-	failure := errors.New(".codefall/settings.json not found; run codefall init first")
+	failure := errors.New(".codefall/settings.json not found; run codefall project init first")
 
 	if _, err := newEditor(&fakeConfig{err: failure}, "/project"); !errors.Is(err, failure) {
 		t.Fatalf("newEditor error = %v, want %v", err, failure)

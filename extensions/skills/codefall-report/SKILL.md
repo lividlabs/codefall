@@ -25,7 +25,8 @@ Reporting is not fixing. Once the report is written and mirrored, stop.
 
 Paths that start with `reference/`, `templates/`, or `trackers/` are relative to this skill's
 directory, not the user's project. A path through `../../../.codefall/` is the one that leaves the
-skills directory: it names a file `codefall init` installed in the project's own `.codefall/`.
+skills directory: it names a file `codefall project init` installed in the project's own
+`.codefall/`.
 
 ## Files beside this one
 

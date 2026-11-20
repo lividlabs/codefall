@@ -33,7 +33,7 @@ func TestRegisterProvidesEverythingCommandNeeds(t *testing.T) {
 		t.Errorf("Command().Name() = %q, want %q", got, "init")
 	}
 
-	// Both commands share the use case, and the root mounts both.
+	// Both commands share the use case, and the project group mounts both.
 	var names []string
 	for _, cmd := range initcmd.Commands(injector, initcmd.Checked) {
 		names = append(names, cmd.Name())
@@ -41,6 +41,28 @@ func TestRegisterProvidesEverythingCommandNeeds(t *testing.T) {
 
 	if want := []string{"init", "upgrade"}; !slices.Equal(names, want) {
 		t.Errorf("Commands() names = %q, want %q", names, want)
+	}
+}
+
+// The names the two commands had at the root refuse, each naming the command under project that
+// replaced it, and neither shows in the root's help (ADR-018).
+func TestRefusedCommandsHoldTheOldRootNames(t *testing.T) {
+	names := map[string]bool{}
+	hidden := map[string]bool{}
+
+	for _, cmd := range initcmd.RefusedCommands() {
+		names[cmd.Name()] = true
+		hidden[cmd.Name()] = cmd.Hidden
+	}
+
+	for _, name := range []string{"init", "upgrade"} {
+		if !names[name] {
+			t.Errorf("RefusedCommands() holds no %q", name)
+		}
+
+		if !hidden[name] {
+			t.Errorf("the refused %q is not hidden from the root's help", name)
+		}
 	}
 }
 

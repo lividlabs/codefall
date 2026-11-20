@@ -34,7 +34,7 @@ session. `unknown` shows the `default` entry and reads no session.
 
 No `codefall` on `PATH`: stop and say to install codefall. Read `harnesses`, `harnessConfig`, and
 `agents` out of `.codefall/settings.json`. No `.codefall/settings.json` at all: stop and say
-`codefall init` comes first.
+`codefall project init` comes first.
 
 When `codefall doctor`'s settings checks say the file does not match the schema, show nothing of
 it. Say one line and go straight to choice 1:

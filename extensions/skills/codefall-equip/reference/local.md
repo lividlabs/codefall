@@ -19,7 +19,7 @@ local track and follow it. `signals.md` and `contract.md` are read at the steps 
 The target is the path argument, or the working directory. Read `.codefall/settings.json` and note
 whether a `local` block is declared; read the declared scripts when it is. Read the project's
 `AGENTS.md`, root and scoped, for verify commands and conventions. If there is no
-`.codefall/settings.json` at all, stop and say `codefall init` comes first.
+`.codefall/settings.json` at all, stop and say `codefall project init` comes first.
 
 ## 2. Find what is already there
 
@@ -84,7 +84,7 @@ the environment's — Docker not running — is reported with what to do.
 
 Then run `codefall doctor` when the CLI is on `PATH` and read its **Local environment** section:
 both checks pass, or the declaration is wrong and step 4 is repeated. A warning about the refresh
-stamp not being git-ignored is `codefall upgrade`'s to fix; name it in the report.
+stamp not being git-ignored is `codefall project upgrade`'s to fix; name it in the report.
 
 ## 6. Report
 

@@ -109,7 +109,7 @@ case $refresh in
 esac
 
 case $test_state in
-  undeclared) say "no testing root is declared: run codefall init" ;;
+  undeclared) say "no testing root is declared: run codefall project init" ;;
   unequipped) say "no test runner is declared: run /codefall-equip test" ;;
 esac
 

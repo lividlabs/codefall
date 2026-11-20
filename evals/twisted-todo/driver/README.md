@@ -123,7 +123,8 @@ not listen, which it must leave running.
 
 After every turn the simulator classifies the agent's last text: a question or a document shown for
 approval is a `reply`; a final report that names what happens next or says it is safe to `/clear` is
-`done`; a stop whose remedy is a command for the person (install something, run `codefall upgrade`)
+`done`; a stop whose remedy is a command for the person (install something, run `codefall project
+upgrade`)
 is also `done`, and the chain stops there because the next verb would hit the same wall. A turn
 that ends with the verb still working and nothing asked, such as implement saying a builder is
 running in the background and it will report when the task finishes, is `wait`: the driver sends
@@ -152,6 +153,6 @@ merge to `main`; a denial in a transcript is the system working. A `Skill` tool 
 - Cost figures come from the SDK's `total_cost_usd`, an estimate. `modelUsage` in the last `result`
   line of each `.jsonl` has per-model tokens. The judge's cost is the other harness's and is not
   counted.
-- `run-agent.sh` reads `harnessConfig` from the project's `.codefall/settings.json`. `codefall init`
-  writes none, so `muse` and `opencode` run with their own default model unless `/codefall-equip
-  agents` was run on the project first.
+- `run-agent.sh` reads `harnessConfig` from the project's `.codefall/settings.json`. `codefall
+  project init` writes none, so `muse` and `opencode` run with their own default model unless
+  `/codefall-equip agents` was run on the project first.

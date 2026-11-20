@@ -24,7 +24,7 @@ warning is harmless.
 | `test/*.test.js` | unit tests on `node:test`, run by `npm test` |
 | `scripts/local.sh` | `start`, `update`, and `stop`; what the chain's `equip local` session finds and declares |
 | `playwright.config.ts` | the runner, collecting `*.e2e.ts` from `testing/test-cases/`; what the chain's `equip test` session finds and declares |
-| `AGENTS.md` | the project's rules; `codefall init` adds its sections below them |
+| `AGENTS.md` | the project's rules; `codefall project init` adds its sections below them |
 | `setup.sh`, `teardown.sh` | create and delete the throwaway repository |
 
 The document-landing Action is not in the fixture. `setup.sh` copies it from the template codefall
@@ -33,8 +33,8 @@ runs the same file a project gets from `/codefall-equip landing`, and a change t
 reaches the eval without a second copy to keep in step. `setup.sh` also creates the `auto-merge`
 label the Action listens for, which the landing track would create.
 
-`codefall init` creates `testing/` with its `AGENTS.md`, `README.md`, and `CLAUDE.md`; the fixture
-does not carry them.
+`codefall project init` creates `testing/` with its `AGENTS.md`, `README.md`, and `CLAUDE.md`; the
+fixture does not carry them.
 
 ## setup.sh
 

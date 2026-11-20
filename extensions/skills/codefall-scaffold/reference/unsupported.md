@@ -48,7 +48,7 @@ asks for a profile for this stack. The result decides what is offered:
   ```
 
 - **A closed issue, completed.** A later codefall ships the profile. Say so, name the issue, and
-  stop: the next step is `codefall upgrade`, then this verb again.
+  stop: the next step is `codefall project upgrade`, then this verb again.
 - **A closed issue, not planned.** Name it and its closing comment, and go on to the own stack.
 - **No issue.** Hand the person a finished issue to paste at
   `https://github.com/lividlabs/codefall/issues/new`: the title `scaffold: a <stack> surface profile`

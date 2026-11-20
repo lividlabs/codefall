@@ -46,7 +46,7 @@ var errCancelled = errors.New("create cancelled")
 // repository root, so there is no location to choose.
 var skippedInitFlags = []string{"location"}
 
-// NewCreateCommand builds `codefall create`. initCommand is init's own command, built by the
+// NewCreateCommand builds `codefall project create`. initCommand is init's own command, built by the
 // composition root; create runs it in the new directory and takes its flags as its own, so a
 // scripted run answers init's questions on the same command line.
 //
@@ -61,11 +61,11 @@ func NewCreateCommand(
 		Use:   "create <directory>",
 		Short: "Create a new project and set it up for codefall",
 		Long: "Creates the directory, initializes a git repository, adds the remote when there is one, " +
-			"and commits a README.md and a stack-agnostic .gitignore. Then it runs codefall init in the " +
-			"new directory, and offers to push to the remote. Every question is also a flag, including " +
-			"init's, so a scripted run passes them and is never prompted. Before it asks or makes " +
-			"anything, create runs doctor's checks on git, bd, and gh and refuses to start when one " +
-			"fails, listing each with its fix.",
+			"and commits a README.md and a stack-agnostic .gitignore. Then it runs codefall project init " +
+			"in the new directory, and offers to push to the remote. Every question is also a flag, " +
+			"including init's, so a scripted run passes them and is never prompted. Before it asks or " +
+			"makes anything, create runs doctor's checks on git, bd, and gh and refuses to start when " +
+			"one fails, listing each with its fix.",
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return runCreate(cmd, create, initCommand, prerequisites, flags, args[0])
@@ -232,7 +232,7 @@ func runInit(cmd, initCommand *cobra.Command, dir string) error {
 	initCommand.SetErr(cmd.ErrOrStderr())
 
 	if err := initCommand.RunE(initCommand, nil); err != nil {
-		return fmt.Errorf("%w (the project is created in %s; run codefall init there to finish)", err, dir)
+		return fmt.Errorf("%w (the project is created in %s; run codefall project init there to finish)", err, dir)
 	}
 
 	return nil

@@ -13,11 +13,12 @@ import (
 // prerequisitesLabel is what the spinner says while git, bd, and gh are asked about themselves.
 const prerequisitesLabel = "Checking prerequisites…"
 
-// NewPrerequisiteCheck builds the check `codefall init` and `codefall create` run before their first
-// step. It runs doctor's checks on git, bd, and gh. When every one passes it writes nothing and returns
-// nil. When one fails it writes each failing category to w the way `codefall doctor` prints it, the
-// remedy under the problem, and returns an error that counts the failures, so the person clears all
-// of them in one pass. A warning is not a failure and is not printed: doctor is where it is read.
+// NewPrerequisiteCheck builds the check `codefall project init` and `codefall project create` run
+// before their first step. It runs doctor's checks on git, bd, and gh. When every one passes it
+// writes nothing and returns nil. When one fails it writes each failing category to w the way
+// `codefall doctor` prints it, the remedy under the problem, and returns an error that counts the
+// failures, so the person clears all of them in one pass. A warning is not a failure and is not
+// printed: doctor is where it is read.
 //
 // A run stopped with Ctrl-C returns context.Canceled, which is the caller's to put in its own words.
 //

@@ -41,12 +41,34 @@ func run(args []string, stdout, stderr io.Writer) error {
 		args = []string{}
 	}
 
-	injector := do.New()
+	injector, root := build()
 	defer func() {
 		if report := injector.Shutdown(); !report.Succeed {
 			_, _ = fmt.Fprintln(stderr, report.Error())
 		}
 	}()
+
+	root.SetArgs(args)
+	root.SetOut(stdout)
+	root.SetErr(stderr)
+
+	return fang.Execute(
+		context.Background(),
+		root,
+		// The string carries its own commit, so fang.WithCommit is not used: Fang would append a
+		// second one, and it has no way to say a build had uncommitted changes.
+		fang.WithVersion(buildinfo.Display()),
+		fang.WithColorSchemeFunc(codefallColorScheme),
+		fang.WithErrorHandler(renderError),
+	)
+}
+
+// build wires the injector and the command tree the binary runs: the root, the project group under
+// it, and the commands that hold the group's old root names. The installed-text test walks the same
+// tree, so the commands it holds the text to are the ones the binary builds, not a list kept by
+// hand.
+func build() (do.Injector, *cobra.Command) {
+	injector := do.New()
 
 	config.Register(injector)
 	create.Register(injector)
@@ -58,30 +80,33 @@ func run(args []string, stdout, stderr io.Writer) error {
 		Use:   "codefall",
 		Short: "Codefall's command-line tool",
 	}
-	root.SetArgs(args)
-	root.SetOut(stdout)
-	root.SetErr(stderr)
-	// init and create run doctor's checks on git, bd, and gh before their first step, and refuse to start
-	// when one fails. The check is doctor's and crosses to them here.
+	// project init and project create run doctor's checks on git, bd, and gh before their first
+	// step, and refuse to start when one fails. The check is doctor's and crosses to them here.
 	prerequisites := doctor.Prerequisites(injector)
 
 	root.AddCommand(doctor.Command(injector))
-	root.AddCommand(initcmd.Commands(injector, prerequisites)...)
 	root.AddCommand(config.Command(injector))
 	root.AddCommand(update.Command(injector))
+
+	// The commands that set a project up and keep it current, under the group that names what they
+	// act on (ADR-018). The group runs nothing itself: run alone it prints its help, which Cobra
+	// does for a command with subcommands and no body.
+	project := &cobra.Command{
+		Use:   "project",
+		Short: "Set a project up and keep it current",
+	}
+	project.AddCommand(initcmd.Commands(injector, prerequisites)...)
 	// create runs init in the directory it makes, so it gets an init command of its own. create has
 	// run the check before it made the directory, so that init does not run it again.
-	root.AddCommand(create.Command(injector, initcmd.Command(injector, initcmd.Checked), prerequisites))
+	project.AddCommand(create.Command(injector, initcmd.Command(injector, initcmd.Checked), prerequisites))
+	root.AddCommand(project)
 
-	return fang.Execute(
-		context.Background(),
-		root,
-		// The string carries its own commit, so fang.WithCommit is not used: Fang would append a
-		// second one, and it has no way to say a build had uncommitted changes.
-		fang.WithVersion(buildinfo.Display()),
-		fang.WithColorSchemeFunc(codefallColorScheme),
-		fang.WithErrorHandler(renderError),
-	)
+	// The names the three kept at the root until now refuse, each naming the command under project
+	// that replaced it. They are hidden: the root's help lists the group alone.
+	root.AddCommand(initcmd.RefusedCommands()...)
+	root.AddCommand(create.RefusedCommand())
+
+	return injector, root
 }
 
 // codefallColorScheme is the teal trail palette. It replaces Fang's default

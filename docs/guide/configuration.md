@@ -1,8 +1,8 @@
 # Configuration
 
-This page explains the settings you can change after `codefall init`: which agents review your work
-and answer questions, how Codefall starts each coding agent, and how the skills talk to you.
-[Setting up a project](setup.md) covers everything else `init` writes.
+This page explains the settings you can change after `codefall project init`: which agents review
+your work and answer questions, how Codefall starts each coding agent, and how the skills talk to
+you. [Setting up a project](setup.md) covers everything else `init` writes.
 
 Codefall keeps these settings in two files:
 

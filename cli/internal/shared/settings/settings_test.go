@@ -49,7 +49,7 @@ func TestValidate(t *testing.T) {
 		},
 		{
 			// A project whose checked-in settings predate the rename is still valid: doctor warns
-			// about the old spelling, and codefall init rewrites it.
+			// about the old spelling, and codefall project init rewrites it.
 			name: "a harness under the spelling it had before it was named for its binary",
 			doc:  with(complete(), FieldHarnesses, []any{"claude-code", "antigravity"}),
 		},
@@ -111,8 +111,8 @@ func TestValidate(t *testing.T) {
 			want: []string{`harnesses: names "claude-code" twice`},
 		},
 		{
-			// Doctor warns about the former spelling and names codefall upgrade, which removes it.
-			// Refusing the file would stop doctor before that check.
+			// Doctor warns about the former spelling and names codefall project upgrade, which removes
+			// it. Refusing the file would stop doctor before that check.
 			name: "one harness under its current name and its former spelling",
 			doc:  with(complete(), FieldHarnesses, []any{"claude", "claude-code"}),
 		},

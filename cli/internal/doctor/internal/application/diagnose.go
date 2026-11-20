@@ -42,8 +42,8 @@ type CommandResult struct {
 }
 
 // Diagnose inspects a working directory and reports what codefall needs and what is missing. It
-// reports and never repairs — every unmet check carries the remedy as text, and `codefall init` or
-// `codefall upgrade` is what runs them.
+// reports and never repairs — every unmet check carries the remedy as text, and `codefall project
+// init` or `codefall project upgrade` is what runs them.
 type Diagnose struct {
 	files  FileSystem
 	runner CommandRunner
@@ -54,17 +54,18 @@ func NewDiagnose(files FileSystem, runner CommandRunner) *Diagnose {
 	return &Diagnose{files: files, runner: runner}
 }
 
-// setupCommand is the command that puts right what codefall installs: `codefall upgrade` for a
-// project a finished run has recorded in .codefall/manifest.json, and `codefall init` for one no run
-// has, because upgrade refuses the second and init refuses the first (ADR-010). A manifest that
-// cannot be stat'd is read as present, which names upgrade; upgrade then says what is wrong with it.
+// setupCommand is the command that puts right what codefall installs: `codefall project upgrade`
+// for a project a finished run has recorded in .codefall/manifest.json, and `codefall project init`
+// for one no run has, because upgrade refuses the second and init refuses the first (ADR-010). A
+// manifest that cannot be stat'd is read as present, which names upgrade; upgrade then says what is
+// wrong with it.
 func (d *Diagnose) setupCommand(dir string) string {
 	there, err := d.files.Exists(filepath.Join(dir, manifest.Name))
 	if err == nil && !there {
-		return "codefall init"
+		return "codefall project init"
 	}
 
-	return "codefall upgrade"
+	return "codefall project upgrade"
 }
 
 // Run executes every check that is worth running and returns the report. A check whose prerequisite
@@ -97,8 +98,9 @@ func (d *Diagnose) Run(ctx context.Context, dir string) (domain.Report, error) {
 
 // Prerequisites runs the checks about the machine and none about the directory: that git and bd are
 // on PATH, and that gh is on PATH, logged in to github.com, and holding a token with the scopes
-// codefall needs. They are the checks `codefall init` and `codefall create` run before their first
-// step. The other checks describe an install, and fail on a directory init has not set up yet.
+// codefall needs. They are the checks `codefall project init` and `codefall project create` run
+// before their first step. The other checks describe an install, and fail on a directory init has
+// not set up yet.
 //
 // dir is where the tools are run, and nothing is read from it. The error return is for a cancelled
 // context only, as it is for Run.

@@ -38,7 +38,7 @@ func NewUpdateCommand(update UpdateUseCase) *cobra.Command {
 			"install script installed is replaced with the latest release, or the version given, after " +
 			"its checksum is verified. A binary mise or go install manages is left alone, and the " +
 			"command that updates it is printed. To bring a project's install level with the binary, " +
-			"run codefall upgrade after this.",
+			"run codefall project upgrade after this.",
 		Args: cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			out := ui.NewWriter(cmd.OutOrStdout())

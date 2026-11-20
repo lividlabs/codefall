@@ -4,8 +4,8 @@ Opinionated skills for the software development lifecycle, plus the CLI that ins
 holds two components; each scopes its own operative rules:
 
 - `cli/` — the Go installer. Rules: [cli/AGENTS.md](cli/AGENTS.md)
-- `extensions/` — the skills, hooks, and shared scripts that `codefall init` installs, and the
-  sections it writes into a project's `AGENTS.md`. Rules: [extensions/AGENTS.md](extensions/AGENTS.md)
+- `extensions/` — the skills, hooks, and shared scripts that `codefall project init` installs, and
+  the sections it writes into a project's `AGENTS.md`. Rules: [extensions/AGENTS.md](extensions/AGENTS.md)
 
 Decisions for the whole repository live in [`docs/adrs/`](docs/adrs/); the in-flight scratchpad is
 [`docs/decision-log.md`](docs/decision-log.md). Provenance for the scaffolded documents is
@@ -67,17 +67,17 @@ apply to all of them.
 
 ## How codefall works
 
-`codefall init` installs the verbs into each harness a project uses, and `.codefall/` beside them
-with the settings, shared scripts, and hooks the verbs read. The verbs chain from an idea to open
-pull requests, and each leaves something the next one reads: `envision` → `docs/visions/`, `specify`
-→ `docs/specs/` mirrored to the tracker, `report` → `docs/bugs/` mirrored the same way, `mock-up` →
-`docs/mockups/`, `plan` → `docs/plans/` and beads with dependency edges, `implement` → a test
-case and a pull request per task, built in a worktree, `review` → `.codefall/reviews/`, `test` →
-`.codefall/tests/`. Beside the chain, `fix` runs `plan` at tier 0 and `implement` on one bead in
-one run, `scaffold` starts a project, `upgrade` brings its install and documents current, and
-`equip` and `refresh` keep the local environment level with the checkout. Bead state travels over
-the git remote as `refs/dolt/data`: a verb runs `bd dolt push` after every bead write, and `refresh`
-runs `bd sync`.
+`codefall project init` installs the verbs into each harness a project uses, and `.codefall/` beside
+them with the settings, shared scripts, and hooks the verbs read. The verbs chain from an idea to
+open pull requests, and each leaves something the next one reads: `envision` → `docs/visions/`,
+`specify` → `docs/specs/` mirrored to the tracker, `report` → `docs/bugs/` mirrored the same way,
+`mock-up` → `docs/mockups/`, `plan` → `docs/plans/` and beads with dependency edges, `implement` →
+a test case and a pull request per task, built in a worktree, `review` → `.codefall/reviews/`,
+`test` → `.codefall/tests/`. Beside the chain, `fix` runs `plan` at tier 0 and `implement` on one
+bead in one run, `scaffold` starts a project, `upgrade` brings its install and documents current,
+and `equip` and `refresh` keep the local environment level with the checkout. Bead state travels
+over the git remote as `refs/dolt/data`: a verb runs `bd dolt push` after every bead write, and
+`refresh` runs `bd sync`.
 `upgrade` and `equip` are invoked deliberately by a user; every other verb may also be run by an
 agent, and a verb runs the verb upstream of it when the work needs it. Every verb applies only what the user takes; no verb merges to `main`, and a hook denies the
 attempt. A person merges code pull requests; a GitHub Action a project installs with `equip landing`

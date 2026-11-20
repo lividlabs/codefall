@@ -137,9 +137,9 @@ checked, and what you decided about every finding. The files are committed with 
 review of uncommitted work, they are left unstaged for you to commit with the work or not at all.
 
 The findings stay in the repository so you can see patterns across reviews. A line in `.ignore`
-keeps them out of searches that use ripgrep, which most coding agents do. `codefall init` writes
-that line, `codefall doctor` warns when it is missing, and the review skill adds it back and says
-so before it writes findings.
+keeps them out of searches that use ripgrep, which most coding agents do. `codefall project init`
+writes that line, `codefall doctor` warns when it is missing, and the review skill adds it back and
+says so before it writes findings.
 
 ## Can it post the findings to a pull request?
 

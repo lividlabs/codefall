@@ -145,7 +145,7 @@ func runChecking(
 	return runCommand(t, NewInitCommand(initialize, prerequisites), args...)
 }
 
-// runUpgradeCommand is run for `codefall upgrade`.
+// runUpgradeCommand is run for `codefall project upgrade`.
 func runUpgradeCommand(t *testing.T, initialize InitializeUseCase, args ...string) (string, error) {
 	t.Helper()
 
@@ -413,8 +413,8 @@ func TestInitCommandRefusesAProjectThatIsAlreadySetUp(t *testing.T) {
 	initialize.harnesses = mo.Some([]string{harness.Claude})
 
 	_, err := run(t, initialize)
-	if err == nil || !strings.Contains(err.Error(), "run codefall upgrade") {
-		t.Fatalf("Execute error = %v, want it to name codefall upgrade", err)
+	if err == nil || !strings.Contains(err.Error(), "run codefall project upgrade") {
+		t.Fatalf("Execute error = %v, want it to name codefall project upgrade", err)
 	}
 
 	if initialize.ran {
@@ -855,7 +855,7 @@ func TestInitCommandChecksPrerequisitesAfterTheRefusalsThatNeedNoTool(t *testing
 		args     []string
 		want     string
 	}{
-		{name: "already set up", manifest: true, args: []string{"--harness", "claude"}, want: "codefall upgrade"},
+		{name: "already set up", manifest: true, args: []string{"--harness", "claude"}, want: "codefall project upgrade"},
 		{name: "unknown tracker", args: []string{"--tracker", "nope"}, want: "unknown tracker"},
 	} {
 		t.Run(tc.name, func(t *testing.T) {

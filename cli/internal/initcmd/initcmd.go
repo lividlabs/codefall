@@ -1,10 +1,12 @@
-// Package initcmd is the facade for `codefall init` and `codefall upgrade`: the command that makes a
-// directory ready for codefall, once, and the command that brings that install level with the binary
-// on every run after it. Both run one use case — write the .codefall/settings.json that doctor
-// checks, install the codefall extension for the harnesses, initialise the tracker, register the
-// hooks, write the marked sections, make the testing tree, record the run in the manifest — and
-// differ only in how the request is built: init from a survey or flags, upgrade from what the
-// settings and the manifest already record (ADR-010).
+// Package initcmd is the facade for `codefall project init` and `codefall project upgrade`: the
+// command that makes a directory ready for codefall, once, and the command that brings that install
+// level with the binary on every run after it. Both run one use case — write the .codefall/settings.json
+// that doctor checks, install the codefall extension for the harnesses, initialise the tracker,
+// register the hooks, write the marked sections, make the testing tree, record the run in the
+// manifest — and differ only in how the request is built: init from a survey or flags, upgrade from
+// what the settings and the manifest already record (ADR-010). The package also holds the two
+// commands that refuse the names the commands had at the root, before they moved under
+// `codefall project` (ADR-018).
 //
 // The package is named initcmd rather than init because a package called init cannot be imported
 // without an alias — `import ".../internal/init"` does not compile, since init must be a func.
@@ -60,8 +62,9 @@ func Register(injector do.Injector) {
 	})
 }
 
-// Commands returns both of initcmd's commands, init and upgrade, for the composition root to mount. A
-// *cobra.Command is a delivery type, not a domain entity, so ADR-001 does not apply to it.
+// Commands returns both of initcmd's commands, init and upgrade, for the composition root to mount
+// on the project group. A *cobra.Command is a delivery type, not a domain entity, so ADR-001 does not
+// apply to it.
 //
 // prerequisites is the check init runs before its survey, which the composition root takes
 // from doctor's facade. Upgrade does not run it: it repairs an install, and a machine without gh can
@@ -73,7 +76,7 @@ func Commands(
 }
 
 // Command returns the init command alone. create runs init in the directory it makes and needs an
-// instance of its own, never the one mounted on the root. create has run the prerequisite check
+// instance of its own, never the one mounted on the group. create has run the prerequisite check
 // before it made the directory, so the instance built for it is given Checked.
 func Command(injector do.Injector, prerequisites func(context.Context, io.Writer) error) *cobra.Command {
 	return presentation.NewInitCommand(
@@ -87,4 +90,12 @@ func Checked(context.Context, io.Writer) error { return nil }
 // UpgradeCommand returns the upgrade command alone.
 func UpgradeCommand(injector do.Injector) *cobra.Command {
 	return presentation.NewUpgradeCommand(do.MustInvoke[presentation.InitializeUseCase](injector))
+}
+
+// RefusedCommands returns the commands that hold the names init and upgrade had at the root before
+// they moved under codefall project (ADR-018). Each refuses with one sentence naming the command
+// under project, so a script that runs the old name learns the new one from the error, and each is
+// hidden from the root's help.
+func RefusedCommands() []*cobra.Command {
+	return []*cobra.Command{presentation.NewInitRefusal(), presentation.NewUpgradeRefusal()}
 }

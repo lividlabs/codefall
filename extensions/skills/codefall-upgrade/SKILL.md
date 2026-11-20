@@ -1,6 +1,6 @@
 ---
 name: codefall-upgrade
-description: Bring a project's installed codefall and its documents current. The installed skills, shared files, and hooks come through `codefall upgrade`, offered first when the manifest is behind the binary and run only on a yes. The documents — inherited ADRs, `docs/adrs/TEMPLATE.md`, `AGENTS.md` skeletons, `.codefall/scaffold.json` — are compared against the current templates, every difference is reported with its provenance, and only the pieces the user takes are applied, one at a time. Works on projects scaffolded before provenance existed, and on repos adopting the stance for the first time. A declined template is not offered again until `adopt` is given.
+description: Bring a project's installed codefall and its documents current. The installed skills, shared files, and hooks come through `codefall project upgrade`, offered first when the manifest is behind the binary and run only on a yes. The documents — inherited ADRs, `docs/adrs/TEMPLATE.md`, `AGENTS.md` skeletons, `.codefall/scaffold.json` — are compared against the current templates, every difference is reported with its provenance, and only the pieces the user takes are applied, one at a time. Works on projects scaffolded before provenance existed, and on repos adopting the stance for the first time. A declined template is not offered again until `adopt` is given.
 argument-hint: "[path] [adopt]"
 disable-model-invocation: true
 allowed-tools:
@@ -19,8 +19,9 @@ allowed-tools:
 
 A project keeps the templates and the installed skills it was scaffolded with; everything the
 extension gained since lives in the extension. This verb closes both gaps: it offers
-`codefall upgrade` for the install, then reads the project's documents, compares them against what
-the extension ships now, reports every difference, and applies exactly the pieces the user takes.
+`codefall project upgrade` for the install, then reads the project's documents, compares them
+against what the extension ships now, reports every difference, and applies exactly the pieces the
+user takes.
 
 Three rules hold throughout. An existing project is never replaced: this verb adds to it and
 supersedes within it. Application is per item, never wholesale. And where a revised template meets
@@ -48,8 +49,8 @@ is relative to the user's project.
 
 ## Scope — the install, then documents, not code
 
-The install is `codefall upgrade`'s, and this verb only offers it (step 1). Past that it moves
-**documents**. It does not restructure code.
+The install is `codefall project upgrade`'s, and this verb only offers it (step 1). Past that it
+moves **documents**. It does not restructure code.
 
 | In scope | Out of scope |
 | --- | --- |
@@ -104,7 +105,7 @@ Read `persona` in `.codefall/user.json`; when it is not `engineer`, follow that 
 
 The target is the path argument, or the current directory without one; `adopt` offers declined
 templates again. Read `.codefall/manifest.json` there. With none, say codefall is not set up here
-and `codefall init` comes first, and stop; the user reruns this verb after it.
+and `codefall project init` comes first, and stop; the user reruns this verb after it.
 
 The installed version is the `shared` entry's `version`, or the highest harness entry's when
 `shared` carries none. The binary's is what `codefall --version` prints after `codefall version`.
@@ -114,20 +115,21 @@ difference between the two strings counts as behind.
 - **No `codefall` on PATH** — say so, name the installed version, and continue to step 2: the
   documents need no binary.
 - **Level, or the manifest ahead** — say which in one line and continue.
-- **Behind** — name both versions and offer to run `codefall upgrade` first. On no, continue to
-  step 2. On yes, run it in the directory holding the manifest and put its own question to the
-  user, since the session has no terminal to show it:
-  1. `printf 'n\n' | ACCESSIBLE=1 codefall upgrade --location here` prints the breaking changes
-     between the two versions and asks whether to continue; the `n` declines and nothing changes.
+- **Behind** — name both versions and offer to run `upgrade` first. On no, continue to step 2. On
+  yes, run it in the directory holding the manifest and put its own question to the user, since
+  the session has no terminal to show it:
+  1. `printf 'n\n' | ACCESSIBLE=1 codefall project upgrade --location here` prints the breaking
+     changes between the two versions and asks whether to continue; the `n` declines and nothing
+     changes.
   2. Show the user what it printed, the breaking changes verbatim, and ask its question.
-  3. On yes, `printf 'y\n' | ACCESSIBLE=1 codefall upgrade --location here`. On no, continue
-     without it.
+  3. On yes, `printf 'y\n' | ACCESSIBLE=1 codefall project upgrade --location here`. On no,
+     continue without it.
 
-  A first run that asked nothing had nothing to ask and has already installed. Either way, show
-  the report it printed — what it installed, what it removed, what it renamed — before step 2.
+  A first run that asked nothing has already installed. Either way, show the report it printed —
+  what it installed, removed, and renamed — before step 2.
 
-The files `codefall upgrade` changed are the install's. They do not count against step 6's clean
-tree, and this verb's commit leaves them out; step 8 names them as the user's to commit.
+The files `upgrade` changed are the install's. They do not count against step 6's clean tree, and
+this verb's commit leaves them out; step 8 names them as the user's to commit.
 
 ### 2. Read the project — the gate
 
@@ -281,7 +283,7 @@ the documents' changes should be reviewable as one coherent change.
 
 ### 8. Report what took
 
-- What `codefall upgrade` did, when it ran, and the files it changed, left uncommitted.
+- What `codefall project upgrade` did, when it ran, and the files it changed, left uncommitted.
 - What was **taken**, file by file.
 - What was **left**, and why — amended, edited, retired, or declined.
 - Stale references the user chose to keep.
@@ -289,18 +291,18 @@ the documents' changes should be reviewable as one coherent change.
 - The landing, per `../../../.codefall/shared/landing.md`: what took, committed by path on the
   branch, pushed, and its pull request opened. A person merges it. A run where nothing took has
   nothing to land.
-- What the user still owes the project: the install's changes to commit when `codefall upgrade`
-  ran, the hand-merges they said they'd do, and — after an adoption — the boundary-enforcement
-  obligation, named exactly as `codefall-scaffold` names it after a docs-only run.
-- **Last, what the user does next**: merge the pull request, and nothing after it. What is owed is
-  said above, never as a step after the merge.
+- What the user still owes the project: the install's changes to commit when `upgrade` ran, the
+  hand-merges they said they'd do, and — after an adoption — the boundary-enforcement obligation,
+  named exactly as `codefall-scaffold` names it after a docs-only run.
+- **Last, what the user does next**: merge the pull request. What is owed is said above, never as
+  a step after the merge.
 
 ## Rules
 
 - **Only ever invoked explicitly.** Never suggested, never fired from a passing remark, never
   chained into from another skill.
-- **`codefall upgrade` runs only on a yes**, never with `--yes`, and its breaking changes reach the
-  user before they answer its question.
+- **`codefall project upgrade` runs only on a yes**, never with `--yes`, and its breaking changes
+  reach the user before they answer its question.
 - **Documents, not code.** Moving code between architectures or extracting a service is `migrate`'s
   work; say so and stop.
 - **Report, then stop.** Nothing is applied unrequested, and what is applied is one item at a time.

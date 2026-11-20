@@ -39,19 +39,19 @@ var (
 	schemaRemedy = "create .codefall/settings.json; schema: " + settings.SchemaID
 	fixRemedy    = "fix the fields above; schema: " + settings.SchemaID
 	ignoreRemedy = "add " + settings.IgnoreEntry + " to " + settings.IgnoreName +
-		", or run codefall upgrade"
+		", or run codefall project upgrade"
 	testsIgnoreRemedy = "add " + settings.IgnoreEntryTests + " to " + settings.IgnoreName +
-		", or run codefall upgrade"
+		", or run codefall project upgrade"
 	stampRemedy = "add " + settings.RefreshStamp + " to " + settings.GitIgnoreName +
-		", or run codefall upgrade"
-	userRemedy    = "run codefall config persona engineer, which adds the line, or run codefall upgrade"
+		", or run codefall project upgrade"
+	userRemedy    = "run codefall config persona engineer, which adds the line, or run codefall project upgrade"
 	userFilePath  = filepath.Join(workingDir, userfile.Name)
 	personaRemedy = "run codefall config persona <engineer|product-manager>, or remove " + userfile.Name +
 		" to use the engineer persona"
 	personaRemoveRemedy = "remove " + userfile.Name + " to use the engineer persona, then run " +
 		"codefall config persona <engineer|product-manager> to choose another"
 	mergeRemedy = "add " + settings.InteractionsAttribute + " to " + settings.GitAttributesName +
-		", or run codefall upgrade"
+		", or run codefall project upgrade"
 	leftoverRemedy = "remove the files " + manifest.Name +
 		" lists for codex; upgrade removes stale files only for the harnesses the settings name"
 )
@@ -600,7 +600,7 @@ func TestDiagnoseRun(t *testing.T) {
 			target:     domain.UserIgnored.ID,
 			wantDetail: ".gitignore does not name " + userfile.Name,
 			wantRemedy: mo.Some("run codefall config persona product-manager, which adds the line, " +
-				"or run codefall upgrade"),
+				"or run codefall project upgrade"),
 		},
 		{
 			// No user file is the default persona, which is what every project had before the file
@@ -704,7 +704,7 @@ func TestDiagnoseRun(t *testing.T) {
 			want:       outcomes(map[string]domain.Status{domain.HarnessesInstalled.ID: domain.StatusFail}),
 			target:     domain.HarnessesInstalled.ID,
 			wantDetail: "codefall is not installed for claude",
-			wantRemedy: mo.Some("codefall upgrade"),
+			wantRemedy: mo.Some("codefall project upgrade"),
 		},
 		{
 			// A harness codefall was never run for has no entry at all, which is the same answer as a
@@ -716,7 +716,7 @@ func TestDiagnoseRun(t *testing.T) {
 			want:       outcomes(map[string]domain.Status{domain.HarnessesInstalled.ID: domain.StatusFail}),
 			target:     domain.HarnessesInstalled.ID,
 			wantDetail: "codefall is not installed for codex",
-			wantRemedy: mo.Some("codefall upgrade"),
+			wantRemedy: mo.Some("codefall project upgrade"),
 		},
 		{
 			name: "both harnesses are installed",
@@ -767,7 +767,7 @@ func TestDiagnoseRun(t *testing.T) {
 				domain.SharedInstalled.ID, domain.HarnessesLeftOver.ID),
 			target:     domain.HarnessesInstalled.ID,
 			wantDetail: "codefall is not installed for claude",
-			wantRemedy: mo.Some("codefall init"),
+			wantRemedy: mo.Some("codefall project init"),
 		},
 		{
 			// A manifest that cannot be decoded records nothing, the same as no manifest; the file is
@@ -780,7 +780,7 @@ func TestDiagnoseRun(t *testing.T) {
 				domain.SharedInstalled.ID, domain.HarnessesLeftOver.ID),
 			target:     domain.HarnessesInstalled.ID,
 			wantDetail: "codefall is not installed for claude",
-			wantRemedy: mo.Some("codefall upgrade"),
+			wantRemedy: mo.Some("codefall project upgrade"),
 		},
 		{
 			name:       "every shared file the manifest records is there",
@@ -799,7 +799,7 @@ func TestDiagnoseRun(t *testing.T) {
 			want:       outcomes(map[string]domain.Status{domain.SharedInstalled.ID: domain.StatusFail}),
 			target:     domain.SharedInstalled.ID,
 			wantDetail: ".codefall/shared/preflight.sh is missing",
-			wantRemedy: mo.Some("codefall upgrade"),
+			wantRemedy: mo.Some("codefall project upgrade"),
 		},
 		{
 			name: "two shared files are gone",
@@ -811,7 +811,7 @@ func TestDiagnoseRun(t *testing.T) {
 			target: domain.SharedInstalled.ID,
 			wantDetail: ".codefall/shared/preflight.sh and .codefall/shared/run-agent.sh " +
 				"are missing",
-			wantRemedy: mo.Some("codefall upgrade"),
+			wantRemedy: mo.Some("codefall project upgrade"),
 		},
 		{
 			// More than a handful gone is named by the first few and counted after that, so the line
@@ -826,7 +826,7 @@ func TestDiagnoseRun(t *testing.T) {
 			target: domain.SharedInstalled.ID,
 			wantDetail: ".codefall/hooks/shared/codefall-block-merge-to-main.sh, .codefall/shared/landing.md, " +
 				".codefall/shared/personas.md and 2 more are missing",
-			wantRemedy: mo.Some("codefall upgrade"),
+			wantRemedy: mo.Some("codefall project upgrade"),
 		},
 		{
 			name: "a shared file cannot be stat'd",
@@ -861,7 +861,7 @@ func TestDiagnoseRun(t *testing.T) {
 				append([]string{domain.SharedInstalled.ID, domain.HarnessesLeftOver.ID}, afterTestUndeclared...)...),
 			target:     domain.TestDeclared.ID,
 			wantDetail: "no testing root is declared in settings.json",
-			wantRemedy: mo.Some("codefall init"),
+			wantRemedy: mo.Some("codefall project init"),
 		},
 		{
 			// A project set up before its harnesses were named for their binaries records the old
@@ -1167,7 +1167,7 @@ func TestDiagnoseRun(t *testing.T) {
 				afterTestUndeclared...),
 			target:     domain.TestDeclared.ID,
 			wantDetail: "no testing root is declared in settings.json",
-			wantRemedy: mo.Some("codefall upgrade"),
+			wantRemedy: mo.Some("codefall project upgrade"),
 		},
 		{
 			// A block Validate would reject is no declaration at all, and doctor's settings check has
@@ -1224,7 +1224,7 @@ func TestDiagnoseRun(t *testing.T) {
 			want:       outcomes(map[string]domain.Status{domain.TestDirExists.ID: domain.StatusFail}),
 			target:     domain.TestDirExists.ID,
 			wantDetail: "testing/ is declared in settings.json and is not there",
-			wantRemedy: mo.Some("codefall upgrade"),
+			wantRemedy: mo.Some("codefall project upgrade"),
 		},
 		{
 			name: "the declared testing directory cannot be stat'd",

@@ -26,8 +26,8 @@ canonical**; the issues are regenerated from it. Specifying is not planning: onc
 written and confirmed, stop.
 
 Paths starting `../` or `trackers/` are relative to this skill's directory, not the user's project;
-one through `../../../.codefall/` names a file `codefall init` installed in the project's own
-`.codefall/`.
+one through `../../../.codefall/` names a file `codefall project init` installed in the project's
+own `.codefall/`.
 
 ## Files beside this one
 

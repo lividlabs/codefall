@@ -1,8 +1,8 @@
 // Package userfile is the one definition of the .codefall/user.json format: the settings that
 // describe the person at the keyboard rather than the project. The file is never checked in —
-// codefall init adds it to .gitignore — so two people on one project each keep their own. doctor
-// reads it, the skills read it through the shared preflight script, and a codefall command writes
-// it, so it lives here rather than in any one component's domain (ADR-003).
+// codefall project init adds it to .gitignore — so two people on one project each keep their own.
+// doctor reads it, the skills read it through the shared preflight script, and a codefall command
+// writes it, so it lives here rather than in any one component's domain (ADR-003).
 //
 // It is a sibling of the settings module rather than a second document type inside it. settings is
 // the checked-in project file, and everything in it is shared by everyone who clones the project;

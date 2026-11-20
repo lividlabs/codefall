@@ -1,7 +1,7 @@
 # Forfeit
 
-A small web app for one person on one laptop. The rules for working in it are here; `codefall init`
-adds its own sections below.
+A small web app for one person on one laptop. The rules for working in it are here; `codefall
+project init` adds its own sections below.
 
 ## Stack
 

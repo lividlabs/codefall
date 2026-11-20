@@ -27,7 +27,7 @@ should do, and neither is read to decide a verdict.
 
 Paths that start with `reference/` or `../` are relative to this skill's directory, not the user's
 project. A path through `../../../.codefall/` is the one that leaves the skills directory: it names
-a file `codefall init` installed in the project's own `.codefall/`.
+a file `codefall project init` installed in the project's own `.codefall/`.
 
 ## Files beside this one
 
@@ -104,7 +104,7 @@ with the remedy `codefall-implement`'s preflight table names; every other target
 
 | Line | What it says | What happens |
 | --- | --- | --- |
-| `test=undeclared` | settings carry no `test` block | Say `codefall upgrade` declares the testing root, and stop |
+| `test=undeclared` | settings carry no `test` block | Say `codefall project upgrade` declares the testing root, and stop |
 | `test=unequipped` | no runner is declared | A case target stops and names `/codefall-equip`; a suite target carries on |
 | `test=unknown` | there is a `test` block, and preflight had no jq to read it | Read the block from `.codefall/settings.json` and act on what it says; `runners` absent or empty is `unequipped` |
 | `refresh=stale`, or `behind` above `0`, on the default branch | the checkout or the environment is behind | Say so and run `/codefall-refresh`, which ends on this branch |
@@ -115,7 +115,7 @@ with the remedy `codefall-implement`'s preflight table names; every other target
 A preflight that emits no `test=` line at all is an older install: read the `test` block from
 `.codefall/settings.json` directly and read it the same way.
 
-**Never run the other remedies.** `codefall init` and `/codefall-equip` are the user's to run.
+**Never run the other remedies.** `codefall project init` and `/codefall-equip` are the user's to run.
 
 ## The confirmation
 
@@ -199,7 +199,7 @@ git-ignored under `<root>/.artifacts/`.
 ### Kept out of codebase search
 
 A `.ignore` file beside `.codefall/` holds the line `.codefall/tests/`, so ripgrep-backed harnesses
-skip old run reports. `codefall init` writes it and `codefall doctor` warns when it is missing.
+skip old run reports. `codefall project init` writes it and `codefall doctor` warns when it is missing.
 
 **Check it before the run.** When the line is missing, append it — never replace the file — and
 say so in a line: `.ignore` did not list `.codefall/tests/`, so the line was added to keep run
@@ -314,7 +314,7 @@ passed, nothing.
   goes to the person as issue text, never filed. In a delivery the children it files are built by
   `codefall-implement` in the next round; this run builds nothing.
 - **Name the remedy, never apply it**, except `/codefall-refresh` on the default branch and the
-  declared `update` on a branch. This verb does not run `codefall init` or `/codefall-equip`.
+  declared `update` on a branch. This verb does not run `codefall project init` or `/codefall-equip`.
 - **`/codefall-refresh` runs on the default branch only, during a run.** It ends on the
   default branch, so on any other branch it takes the user away from what is under test; once an
   epic run is over, the report names it as the way back.

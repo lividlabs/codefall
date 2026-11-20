@@ -258,7 +258,7 @@ func TestCreateSaysHowToFinishWhenInitFails(t *testing.T) {
 		t.Fatal("Execute: want an error, got nil")
 	}
 
-	for _, want := range []string{"missing --tracker", "run codefall init there to finish"} {
+	for _, want := range []string{"missing --tracker", "run codefall project init there to finish"} {
 		if !strings.Contains(err.Error(), want) {
 			t.Errorf("error %q does not contain %q", err, want)
 		}

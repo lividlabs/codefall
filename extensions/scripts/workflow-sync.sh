@@ -3,7 +3,7 @@
 # Hold extensions/shared/workflow.md to docs/workflow.md.
 #
 # docs/workflow.md is the description of how codefall works, edited in this
-# repository. extensions/shared/workflow.md is the copy `codefall init` installs
+# repository. extensions/shared/workflow.md is the copy `codefall project init` installs
 # into a project as .codefall/shared/workflow.md, which the Codefall section of
 # the project's AGENTS.md points at. The copy carries its own opening, and then
 # the sections a project needs, byte for byte from the source. This script

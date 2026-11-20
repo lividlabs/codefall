@@ -103,7 +103,7 @@ writes it.
 
 ## Testing Strategy
 
-A test in `extensions/` reads every `codefall <command>` the installed text names, in the skills,
+A test in `cli/cmd/codefall/` reads every `codefall <command>` the installed text names, in the skills,
 the `AGENTS.md` sections, and the hook notices, and fails on one the command tree does not hold.
 T2 changes 68 of those references, and the test keeps the next rename from leaving one behind.
 

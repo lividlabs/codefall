@@ -132,8 +132,8 @@ type Request struct {
 	// version has already been through, and so needs no bd on PATH. Every other step still runs, the
 	// extension copy and the cleanup after it included, because a person can delete a skill, a shared
 	// script, a line, or a section between two runs of the same version, and doctor's remedy for each
-	// is `codefall upgrade`. Each step reports a skip when it found its work already done, which is
-	// how the command knows whether to say the install is up to date.
+	// is `codefall project upgrade`. Each step reports a skip when it found its work already done,
+	// which is how the command knows whether to say the install is up to date.
 	Current bool
 }
 
@@ -150,9 +150,9 @@ type Observer interface {
 // Initialize sets a project up for codefall: it writes .codefall/settings.json, installs the harness
 // extension, initialises Beads, registers codefall's hooks with the harness, writes the sections of
 // AGENTS.md that say how the project uses it, and makes the tree its test cases live in. It is the
-// one use case behind two commands: `codefall init` runs it once, on a project with no manifest, and
-// `codefall upgrade` runs it again for the harnesses the settings record, replacing what it owns and
-// touching nothing else.
+// one use case behind two commands: `codefall project init` runs it once, on a project with no
+// manifest, and `codefall project upgrade` runs it again for the harnesses the settings record,
+// replacing what it owns and touching nothing else.
 type Initialize struct {
 	files   FileSystem
 	runner  CommandRunner

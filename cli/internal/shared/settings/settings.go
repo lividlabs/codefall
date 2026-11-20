@@ -273,8 +273,8 @@ type Local struct {
 }
 
 // testFields is the shape of the test block. The directory is required once the block is there —
-// nothing else in the block means anything without it, and codefall init is what asks for it — while
-// the runners are optional, because a project declares its root before it is equipped and
+// nothing else in the block means anything without it, and codefall project init is what asks for
+// it — while the runners are optional, because a project declares its root before it is equipped and
 // codefall-equip writes the runners afterwards (ADR-007).
 var testFields = []fieldSpec{
 	{FieldTestDir, true, isTestDir},
@@ -705,14 +705,15 @@ func isTracker(v any) string {
 // harness at all has nowhere to install.
 //
 // A name is checked through harness.Parse, so a spelling a harness had before it was named for its
-// binary is accepted: the file is still valid, doctor warns about the spelling, and codefall upgrade
-// rewrites it. The schema lists only the current names, and the message for a name nobody knows
-// offers only those.
+// binary is accepted: the file is still valid, doctor warns about the spelling, and codefall project
+// upgrade rewrites it. The schema lists only the current names, and the message for a name nobody
+// knows offers only those.
 //
 // A name written twice is refused: the list is a set of places to install, and no command writes a
 // name into it twice. A harness under both its former spelling and its current name is accepted, for
-// the reason a former spelling alone is: doctor warns about the spelling and names codefall upgrade,
-// which removes the former one, and refusing the file here would stop doctor before it said so.
+// the reason a former spelling alone is: doctor warns about the spelling and names codefall project
+// upgrade, which removes the former one, and refusing the file here would stop doctor before it
+// said so.
 func isHarnesses(v any) string {
 	values, ok := v.([]any)
 	if !ok {
