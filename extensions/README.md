@@ -3,7 +3,8 @@ codefall
 
 **Opinionated skills for the software development lifecycle.**
 
-This directory is the extension. Everything above it is packaging.
+This directory is the extension: what `codefall project init` installs into a project. The
+command-line tool that installs it is in [`cli/`](../cli/).
 
 | Skill | Does |
 | --- | --- |

@@ -21,12 +21,12 @@ architecture decision records (ADRs).
 Each skill leaves its result in your repository as a document, a task, or a pull request, where the
 next skill, and the next session, reads it.
 
-The `codefall` command installs the skills into your project for the coding agents it uses: Claude
-Code, Codex, OpenCode, Antigravity, or Muse. A *skill* is a set of instructions the agent follows
-when you type its slash command, such as `/codefall-specify`. The skills take a feature from an idea
-to a pull request you merge, and other skills start a new project, write up a bug, draw a mockup,
-and keep the install current. [Using Codefall](#using-codefall) walks one feature through them;
-[Skills](#skills) lists them all.
+The `codefall` command sets up a *project*: your repository with the skills installed for the
+coding agents it uses (Claude Code, Codex, OpenCode, Antigravity, or Muse) and the settings the
+skills read. A *skill* is a set of instructions the agent follows when you type its slash command,
+such as `/codefall-specify`. The skills take a feature from an idea to a pull request you merge,
+and other skills start a new project, write up a bug, draw a mockup, and keep the install current.
+[Using Codefall](#using-codefall) walks one feature through them; [Skills](#skills) lists them all.
 
 Codefall is meant for production-quality code, the code you ship and maintain. Its process spends
 effort on requirements, a design, review by a second agent, and tests written from the acceptance
@@ -403,6 +403,10 @@ The agent may run any of the others on its own when the work calls for it.
 
 ## CLI commands
 
+The commands that set a project up and keep it current are grouped under `codefall project`.
+`config` and `doctor` work with or without the prefix. Codefall is growing an IDE of its own, and
+the group keeps the commands that act on a project apart from the ones that will not need one.
+
 | Command | What it does |
 | --- | --- |
 | `codefall project create <dir>` | Makes a new directory and git repository, then runs `init` in it. |
@@ -489,6 +493,8 @@ project to its profiles.
   project that chose one. The document is the record, and the mirror is regenerated from it.
 - **Persona:** whether the skills talk to you as an engineer or as a product manager.
 - **Profile:** the templates and decisions scaffold applies to one kind of code, such as Go.
+- **Project:** a repository set up for Codefall: the skills installed for its coding agents and the
+  settings they read, in `.codefall/project.json`.
 - **Skill:** a set of instructions a coding agent follows when you type its slash command.
 - **Spec:** a document that lists a feature's requirements and their acceptance criteria.
 - **Spec-driven development:** agreeing in writing on what to build before an agent builds it, with

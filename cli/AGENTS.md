@@ -42,7 +42,8 @@ The why lives in the ADRs. This file is the operative rules only — never resta
   [ADR-GO-03 Optional values](../docs/adrs/ADR-GO-03-optional-values.md)
 - This project's own decisions: [ADR-001 Facade contracts](../docs/adrs/ADR-001-facade-contracts.md) ·
   [ADR-002 CLI libraries](../docs/adrs/ADR-002-cli-libraries.md) ·
-  [ADR-003 Pure shared modules](../docs/adrs/ADR-003-pure-shared-modules.md). New ones use
+  [ADR-003 Pure shared modules](../docs/adrs/ADR-003-pure-shared-modules.md) ·
+  [ADR-018 The project and its commands](../docs/adrs/ADR-018-codefall-project.md). New ones use
   [`docs/adrs/TEMPLATE.md`](../docs/adrs/TEMPLATE.md); decisions still moving live in
   [`docs/decision-log.md`](../docs/decision-log.md).
 
@@ -112,14 +113,25 @@ The why lives in the ADRs. This file is the operative rules only — never resta
   `cmd/codefall/main.go`, the only importer of `github.com/charmbracelet/fang`. Fang owns help,
   usage, error, `--version`, `completion`, and `man` output — change it with `fang.With*` options,
   never with Cobra templates. The version is `buildinfo.Display()`, passed with `fang.WithVersion`.
-- Commands are built in a component's `presentation/`, exported through its facade, and mounted on
-  the root in the composition root. Flags are `pflag` — never the standard library `flag`.
+- Commands are built in a component's `presentation/`, exported through its facade, and mounted in
+  the composition root. A command that sets a project up or keeps it current is mounted on the
+  `project` group, which `main` builds; every other command is mounted on the root (ADR-018). Flags
+  are `pflag` — never the standard library `flag`.
+- `config` and `doctor` are mounted twice, on the root and on the `project` group, each mount with a
+  command built for it alone. A subcommand or a flag one spelling gains, the other gains in the same
+  change, until a root command covers something outside a project (ADR-018).
+- A name a command had before it moved stays as a hidden command that refuses in one sentence naming
+  the new name, whatever flags it was given. The component that held the name builds it and exports
+  it, as `initcmd.RefusedCommands` and `create.RefusedCommand` do.
+- A file under `extensions/` that names a `codefall` command names one the tree holds:
+  `cmd/codefall/installed_text_test.go` fails on one that does not. A pull request that moves or
+  renames a command changes the installed text with it.
 - A component's facade exports `Register(do.Injector)` and `Command(do.Injector) *cobra.Command`;
   `main` calls the first and mounts the second. A component with several top-level commands adds
   `Commands(do.Injector) []*cobra.Command` when that happens. A command that runs another
   component's command takes it as a parameter —
   `create.Command(injector, initcmd.Command(injector, initcmd.Checked), prerequisites)` — built by
-  `main` for it alone, never the instance mounted on the root.
+  `main` for it alone, never the instance mounted on the `project` group.
 - A command that needs another component's check takes it the same way: `doctor.Prerequisites`
   returns a function over standard types, and `main` passes it to `initcmd.Commands` and
   `create.Command`. The consumer declares the function type in its own `presentation/` and imports
