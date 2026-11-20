@@ -408,6 +408,8 @@ The agent may run any of the others on its own when the work calls for it.
 | `codefall project create <dir>` | Makes a new directory and git repository, then runs `init` in it. |
 | `codefall project init` | Sets up Codefall in an existing repository. It runs once per project. |
 | `codefall project upgrade` | Updates a project's skills, hooks, and settings to match the installed `codefall`. |
+| `codefall project config` | The same command as `codefall config`. |
+| `codefall project doctor` | The same command as `codefall doctor`. |
 | `codefall update` | Replaces the `codefall` binary with the latest release. |
 | `codefall config` | Opens an editor for the project's review agents and your persona. |
 | `codefall doctor` | Checks that a project has everything Codefall needs, and says how to fix what is missing. |

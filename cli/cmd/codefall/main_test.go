@@ -2,8 +2,11 @@ package main
 
 import (
 	"bytes"
+	"slices"
 	"strings"
 	"testing"
+
+	"github.com/spf13/cobra"
 )
 
 // These exercise the composition root end to end — a real injector, real providers, the real command
@@ -38,8 +41,8 @@ func TestRunWithoutArgumentsPrintsRootHelp(t *testing.T) {
 	}
 }
 
-// The group prints its help when it is run alone, and the help lists the three commands it holds
-// (ADR-018).
+// The group prints its help when it is run alone, and the help lists the five commands it holds:
+// the three that moved under it and the second spellings of config and doctor (ADR-018).
 func TestProjectAlonePrintsHelpNamingItsCommands(t *testing.T) {
 	var out bytes.Buffer
 
@@ -47,9 +50,89 @@ func TestProjectAlonePrintsHelpNamingItsCommands(t *testing.T) {
 		t.Fatalf("run: %v", err)
 	}
 
-	for _, want := range []string{"COMMANDS", "create", "init", "upgrade"} {
+	for _, want := range []string{"COMMANDS", "config", "create", "doctor", "init", "upgrade"} {
 		if !strings.Contains(out.String(), want) {
 			t.Errorf("output does not contain %q:\n%s", want, out.String())
+		}
+	}
+}
+
+// Config and doctor stay at the root and take the prefix as a second spelling, and each mount is a
+// command built for it alone (ADR-018): a *cobra.Command holds the parent it was mounted under and
+// names the path down to it in its usage line, so the instance on the root cannot serve both
+// places. This holds the tree to that: the prefixed commands exist beside the root's, they name the
+// prefixed path, and they are not the root's instances. The prefixed config holds the subcommands
+// the root's does, so a script that reaches for one under the prefix finds it.
+func TestTheProjectGroupHoldsSecondMountsOfConfigAndDoctor(t *testing.T) {
+	_, root := build()
+
+	project := childNamed(root, "project")
+	if project == nil {
+		t.Fatal("the root does not hold the project group")
+	}
+
+	for _, name := range []string{"config", "doctor"} {
+		atRoot, prefixed := childNamed(root, name), childNamed(project, name)
+		if atRoot == nil {
+			t.Fatalf("the root no longer holds %q", name)
+		}
+		if prefixed == nil {
+			t.Fatalf("the project group does not hold %q", name)
+		}
+		if prefixed == atRoot {
+			t.Errorf(
+				"%s under project is the instance mounted on the root; each mount needs a command built for it alone",
+				name)
+		}
+		if got, want := prefixed.CommandPath(), "codefall project "+name; got != want {
+			t.Errorf("%s under project names its path %q, want %q", name, got, want)
+		}
+	}
+
+	rootSubcommands := subcommandNames(childNamed(root, "config"))
+	prefixedSubcommands := subcommandNames(childNamed(project, "config"))
+	if !slices.Equal(rootSubcommands, prefixedSubcommands) {
+		t.Errorf("config under project holds %v, want the root config's subcommands %v",
+			prefixedSubcommands, rootSubcommands)
+	}
+}
+
+// subcommandNames lists a command's visible subcommands in the order Cobra holds them, which is by
+// name.
+func subcommandNames(cmd *cobra.Command) []string {
+	var names []string
+
+	for _, child := range cmd.Commands() {
+		if !child.Hidden {
+			names = append(names, child.Name())
+		}
+	}
+
+	return names
+}
+
+// The prefixed spellings print help that names the prefixed path, and config's subcommands work
+// under the prefix with prefixed paths of their own (ADR-018).
+func TestRunPrintsHelpForTheSecondSpellings(t *testing.T) {
+	for _, args := range [][]string{
+		{"project", "config", "--help"},
+		{"project", "doctor", "--help"},
+		{"project", "config", "show", "--help"},
+		{"project", "config", "agents", "--help"},
+		{"project", "config", "harness", "--help"},
+		{"project", "config", "review", "--help"},
+		{"project", "config", "persona", "--help"},
+	} {
+		var out bytes.Buffer
+
+		if err := run(args, &out, &out); err != nil {
+			t.Fatalf("run %v: %v", args, err)
+		}
+
+		// The usage line is the path the command was run under, without the --help flag.
+		want := strings.Join(args[:len(args)-1], " ")
+		if !strings.Contains(out.String(), want) {
+			t.Errorf("run %v: output does not contain %q:\n%s", args, want, out.String())
 		}
 	}
 }

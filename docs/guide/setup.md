@@ -288,6 +288,8 @@ copies by hand; the pull request that introduced the new layout lists what to de
 | `codefall project create <dir>` | Makes the directory and its git repository, commits a `README.md` and a `.gitignore`, runs `init` there, and offers to push. |
 | `codefall project init` | Sets up a directory for Codefall, once: the settings, the skills for each agent, Beads, the hooks, the `AGENTS.md` sections, the testing root, and the manifest that records the run. |
 | `codefall project upgrade` | Brings an installed project level with the binary for the agents the settings record. It warns about breaking changes in between, reinstalls, removes what the release no longer ships, and touches nothing it did not write. |
+| `codefall project config` | The same command as `codefall config`. |
+| `codefall project doctor` | The same command as `codefall doctor`. |
 | `codefall update` | Replaces a binary the install script installed with the latest release, or with a version given as an argument. `--check` reports how the binary was installed and changes nothing. See [Installing codefall](install.md#update-codefall). |
 | `codefall config` | Opens an editor for the review, consult, and work agents, review posting, and your persona. Its subcommands set the same values from a script, and both refuse a value the settings would not accept. See [Configuration](configuration.md). |
 | `codefall doctor` | Reports whether a project has what Codefall needs, with a fix for each failed check, and repairs nothing. |

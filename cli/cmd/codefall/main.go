@@ -64,9 +64,9 @@ func run(args []string, stdout, stderr io.Writer) error {
 }
 
 // build wires the injector and the command tree the binary runs: the root, the project group under
-// it, and the commands that hold the group's old root names. The installed-text test walks the same
-// tree, so the commands it holds the text to are the ones the binary builds, not a list kept by
-// hand.
+// it, the second mounts of config and doctor on the group, and the commands that hold the group's
+// old root names. The installed-text test walks the same tree, so the commands it holds the text to
+// are the ones the binary builds, not a list kept by hand.
 func build() (do.Injector, *cobra.Command) {
 	injector := do.New()
 
@@ -93,12 +93,19 @@ func build() (do.Injector, *cobra.Command) {
 	// does for a command with subcommands and no body.
 	project := &cobra.Command{
 		Use:   "project",
-		Short: "Set a project up and keep it current",
+		Short: "Set a project up, keep it current, configure it, and check it",
 	}
 	project.AddCommand(initcmd.Commands(injector, prerequisites)...)
 	// create runs init in the directory it makes, so it gets an init command of its own. create has
 	// run the check before it made the directory, so that init does not run it again.
 	project.AddCommand(create.Command(injector, initcmd.Command(injector, initcmd.Checked), prerequisites))
+	// config and doctor run under the group as a second spelling of the commands at the root
+	// (ADR-018): every setting and every check is about the project today, so the two spellings do
+	// the same thing. Each mount is a command built for it alone, as the CLI rules require of a
+	// command in two places: a command's usage line names the path it was mounted under, and one
+	// instance holds one path.
+	project.AddCommand(config.Command(injector))
+	project.AddCommand(doctor.Command(injector))
 	root.AddCommand(project)
 
 	// The names the three kept at the root until now refuse, each naming the command under project
