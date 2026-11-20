@@ -2313,9 +2313,34 @@ Decided at scaffold, 2026-08-16.
   open: the checks that remain in init's and create's own preflights, `bd` and git on PATH,
   which upgrade still needs from init's.
 
+- **The project commands move under `codefall project`, 2026-11-18.** What `init` sets up has a
+  name, a *project*: the skills and the config they read, set up together and never apart. `init`,
+  `upgrade`, and `create` are `codefall project init`, `codefall project upgrade`, and
+  `codefall project create`, mounted on a group `main` builds. The names they had at the root stay
+  as hidden commands that refuse in one sentence naming the new one, each exported by the component
+  that held the name. `config` and `doctor` stay at the root and are mounted a second time on the
+  group, each mount a command of its own, and the two spellings do the same thing because every
+  setting and every check is about the project today. The project's settings file is
+  `.codefall/project.json`. The settings step moves `.codefall/settings.json` there, in init as
+  well as in upgrade: upgrade refuses a project that has no manifest and names init, so a project
+  with the old file and no manifest has only init to run, and an init that refused it would leave
+  it no command at all. A project that has both files keeps `project.json` and is told the other is
+  its own to remove. A test in `cli/cmd/codefall` holds every `codefall <command>` the installed
+  text names to the tree `main` builds; it lives there because `extensions/` cannot import
+  `cli/internal/`, and the composition root is the one package that sees both. The two renames are
+  breaking and are released together, so a project crosses one breaking release. The group exists
+  because codefall is growing an IDE of its own, whose commands and settings will not depend on a
+  project. ADR-018 records the reasoning and the alternatives seen and not taken, and
+  `docs/plans/PLAN-001-codefall-project.md` the tasks. Left open: the three items under Open below.
+
 ## Open
 
-- (nothing open; the last item graduated to ADR-012 on 2026-09-27)
+- **The IDE.** Codefall is growing one. What it does, the commands it adds, and the name and place
+  of its settings file are not decided; ADR-018 settles only that none of them depends on a project.
+- **`codefall project remove`.** Deleting what a project's install wrote, from the record the
+  manifest keeps.
+- **A skill set that does not ship in the binary.** The manifest records one owner for every file
+  today, and installing a second set needs it to record which set wrote which.
 
 ## Parking lot
 

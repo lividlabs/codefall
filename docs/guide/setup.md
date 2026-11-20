@@ -5,9 +5,11 @@ agent the project uses, saves the project's answers in a settings file, and adds
 expect to find in the repository. This page describes what `init` asks, what it writes, and how
 `codefall project upgrade` keeps all of it current.
 
-A *skill* is a set of instructions a coding agent follows when you type its slash command, such as
-`/codefall-specify`. A *coding agent* is an AI tool that reads and edits the code in your repository,
-such as Claude Code or Codex. Codefall's settings and flags call coding agents *harnesses*.
+A repository set up this way is a *project*: the skills and the settings they read, installed
+together. A *skill* is a set of instructions a coding agent follows when you type its slash command,
+such as `/codefall-specify`. A *coding agent* is an AI tool that reads and edits the code in your
+repository, such as Claude Code or Codex. Codefall's settings and flags call coding agents
+*harnesses*.
 
 ## Set up an existing repository
 
@@ -284,6 +286,11 @@ does not write. A manifest from before file lists existed records none, so you d
 copies by hand; the pull request that introduced the new layout lists what to delete.
 
 ## CLI commands
+
+The commands that set a project up and keep it current are grouped under `codefall project`.
+`config` and `doctor` work with or without the prefix, and do the same thing either way. Codefall is
+growing an IDE of its own, and the group keeps the commands that act on a project apart from the
+ones that will not need one.
 
 | Command | What it does |
 | --- | --- |

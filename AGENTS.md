@@ -1,9 +1,12 @@
 # codefall
 
-Opinionated skills for the software development lifecycle, plus the CLI that installs them. The repo
-holds two components; each scopes its own operative rules:
+Codefall is a command-line tool for building software with coding agents. It sets up a *project*:
+opinionated skills for the software development lifecycle and the config they read, installed
+together in a repository. An IDE of its own is planned beside that, and what the IDE does will not
+depend on a project (ADR-018). The repo holds two components; each scopes its own operative rules:
 
-- `cli/` — the Go installer. Rules: [cli/AGENTS.md](cli/AGENTS.md)
+- `cli/` — the Go command-line tool. Its `codefall project` commands set a project up and keep it
+  current. Rules: [cli/AGENTS.md](cli/AGENTS.md)
 - `extensions/` — the skills, hooks, and shared scripts that `codefall project init` installs, and
   the sections it writes into a project's `AGENTS.md`. Rules: [extensions/AGENTS.md](extensions/AGENTS.md)
 
