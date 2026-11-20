@@ -6,6 +6,34 @@ below were written by hand, before that was wired up.
 Tags are bare version numbers (`0.1.2`), not `v`-prefixed, so they match the `ref` the marketplace
 pins. A `v0.1.1` tag also exists from before that convention was settled.
 
+## [0.41.0](https://github.com/lividlabs/codefall/compare/v0.40.0...v0.41.0) (2026-11-20)
+
+
+### ⚠ BREAKING CHANGES
+
+* **cli:** the project's settings file is .codefall/project.json. codefall project upgrade moves .codefall/settings.json there. A script of your own that reads the old path has to read the new one.
+* **cli:** codefall init, codefall upgrade, and codefall create are now codefall project init, codefall project upgrade, and codefall project create. The old names exit with a sentence that names the new one.
+* **cli:** codefall init and codefall create refuse to start unless git, bd, and gh are on PATH and gh is logged in to github.com with a token that has the repo scope. Install the missing tools and run `gh auth login` before running either command. Check with `codefall doctor`.
+
+### Features
+
+* **cli:** accept codefall project config and codefall project doctor ([#267](https://github.com/lividlabs/codefall/issues/267)) ([3acc2e8](https://github.com/lividlabs/codefall/commit/3acc2e8a176dd4b651f1ebc6976f1092cfc4f6b5))
+* **cli:** move init, upgrade, and create under codefall project ([#266](https://github.com/lividlabs/codefall/issues/266)) ([1b034ad](https://github.com/lividlabs/codefall/commit/1b034ada003b5c00e326ce0bd1752876e95add0b))
+* **cli:** rename the project's settings file to .codefall/project.json ([#268](https://github.com/lividlabs/codefall/issues/268)) ([22908e0](https://github.com/lividlabs/codefall/commit/22908e087c46afe1447c24e3c40f5b559fbcc179))
+
+
+### Bug Fixes
+
+* **cli:** init and create run doctor's checks on git, bd, and gh before they start ([#257](https://github.com/lividlabs/codefall/issues/257)) ([8b10e0f](https://github.com/lividlabs/codefall/commit/8b10e0f46b047c259bda567c6249482ae1aece64))
+
+
+### Documentation
+
+* **adrs:** ADR-018, the project and its commands ([#265](https://github.com/lividlabs/codefall/issues/265)) ([f06eb6d](https://github.com/lividlabs/codefall/commit/f06eb6d2096b81c6da8b4c90a95a3034d940b987))
+* explain how Codefall works in the README intro and retitle the walkthrough ([#259](https://github.com/lividlabs/codefall/issues/259)) ([e42ed0d](https://github.com/lividlabs/codefall/commit/e42ed0d0b5100c068415c473eb813d2885153c90))
+* **plans:** PLAN-001, the project commands move under codefall project ([#263](https://github.com/lividlabs/codefall/issues/263)) ([681d191](https://github.com/lividlabs/codefall/commit/681d191d655a960f82fcbe4b57783c92b5f56ff2))
+* say what a project is, and that codefall is a tool growing an IDE ([#269](https://github.com/lividlabs/codefall/issues/269)) ([f521811](https://github.com/lividlabs/codefall/commit/f5218110b14d1c9e3b382d1f4a36d67c3e39d577))
+
 ## [0.40.0](https://github.com/lividlabs/codefall/compare/v0.39.0...v0.40.0) (2026-11-10)
 
 
