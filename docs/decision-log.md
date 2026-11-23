@@ -2356,6 +2356,38 @@ Decided at scaffold, 2026-08-16.
   passed `go build`, `go vet`, `golangci-lint run`, and `go test`, with the lint rule proven
   against deliberate chi imports. Left open: a gRPC library, a queue client, and a CLI library
   for the profile; request validation and an OpenAPI document; and the database library.
+- **The Go profile's data access is `sqlc` on `pgx`, with goose, 2026-11-23.** The `go` profile
+  named no database library and no migration tool. Recorded as the template `ADR-GO-05`, which a
+  Go surface with no database drops. **The database is the project's to choose and PostgreSQL is
+  the default**: it is the one override the `go` profile offers at the interview. MySQL and SQLite
+  keep `sqlc` and goose and amend the ADR; a database `sqlc` does not read drops it. Only the
+  PostgreSQL path was run here. **Queries are `sqlc`**, generating for `pgx/v5`, with `pgxpool` for
+  connections. Seen and not taken: GORM and `bun`, which build queries while the program runs;
+  `ent`, whose schema is one graph for the whole app, the shared data model ADR-BASE-03 forbids;
+  and `pgx` alone. Also not taken: `sqlc`'s `database/sql` mode, first recommended here for its
+  standard types and dropped after generating both ways, because in that mode the generated code
+  imports `lib/pq` for arrays beside whichever driver the project uses. **Two `sqlc` settings give
+  the generated rows standard types**: pointers for nullable columns, which `mo.PointerToOption`
+  turns into an `Option`, and overrides for `timestamptz` and `uuid`. A `uuid` is
+  `google/uuid`'s type and the repository parses an id before the query; with `uuid` mapped to
+  `string`, a malformed id reached PostgreSQL and came back to the client as a 500. **Each
+  component owns its SQL**, in its own `infrastructure/`, with a PostgreSQL schema and a goose
+  version table of its own, and one `sqlc.yaml` entry whose schema is its own migrations: a query
+  that joined another component's table failed `sqlc generate`. **A transaction is a `Transactor`
+  interface in `application/`**, implemented with `pgx` and carried in the context. Seen and not
+  taken: one transaction per repository method, which cannot join two writes, and passing
+  transaction-bound repositories to the function, which is more code. **Migrations are goose**,
+  compiled into the app and run by `<app> migrate`, never at startup. Atlas writes a migration
+  from a description of the schema and was not taken because its free edition does not manage
+  views, functions, triggers, or extensions; `golang-migrate` and `tern` were not compared.
+  **Repository tests run against a real PostgreSQL** named by `TEST_DATABASE_URL` and are skipped
+  without it; `testcontainers-go` was not taken for the size of its dependency. **`sqlc` is
+  installed with `mise`** and stays out of `go.mod`, where it added 37 requirement lines as a Go
+  tool. `sqlc generate` fails on a component with no query, so a skeleton has migrations and no
+  `sqlc.yaml`, which arrives with the first query. The ADR's code was copied from a sample project
+  run against PostgreSQL 17. Left open: the `mise` command in the profile was not run; the
+  `go` profile's lint template still rejects `samber/mo` in `domain/`, which this ADR's own
+  example uses.
 
 ## Open
 
