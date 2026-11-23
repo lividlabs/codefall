@@ -57,8 +57,13 @@ in Consequences.
 - **`do.InvokeAs[T]`** — resolves by scanning registered services for one assignable to `T`. Use only
   where the exact registered type genuinely is not known; it is a runtime scan and becomes ambiguous
   once two services satisfy the same interface.
-- `MustInvoke` is correct in the composition root, where a failure should stop the process at
-  startup. Prefer the error-returning form anywhere that runs later.
+- **Three places resolve from the injector, and no others**: the composition root, the providers
+  in a component's registration function, and the functions a component's facade exports for the
+  root to call, such as one that returns the component's routes or its commands. `MustInvoke` is
+  correct in all three, where a failure should stop the process at startup.
+- **Everything else takes what it needs through its constructor** and never holds a `do.Injector`:
+  a handler, a command, a use case, a repository. A type that resolves its own dependencies hides
+  them, because nothing in its constructor says what it uses, and a test cannot hand it a fake.
 
 ### Lifecycle
 
@@ -66,6 +71,11 @@ in Consequences.
   shutdown on exit. Do not hand-roll a teardown ordering the container already knows.
 - `do.HealthCheck[T]` is available for services that can report readiness. Wire it where an operator
   would actually look at it, not reflexively.
+- **Every service the injector holds lives as long as the process**, and every request running at
+  the same moment shares it. A service holds nothing that belongs to one request.
+- **What belongs to one request travels in `context.Context`**: its deadline, its cancellation, and
+  whatever one layer attaches for the layers under it. Every use case and every gateway method
+  takes a `context.Context` first and passes it on. Do not open a `samber/do` scope per request.
 
 ### Injection discipline
 

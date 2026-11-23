@@ -55,6 +55,11 @@ The why lives in the ADRs. This file is the operative rules only — never resta
   when a concrete type must also be reachable by interface. Avoid `do.InvokeAs` — it is a runtime
   scan and goes ambiguous once two services satisfy the same interface.
 - Inject interfaces only, declared by the consumer in `application/`.
+- **Only `main`, a registration function's providers, and the functions a facade exports resolve
+  from the injector.** A handler, a command, a use case, and a repository take what they need
+  through their constructors and never hold a `do.Injector`.
+- A service lives as long as the process and holds nothing that belongs to one request. That
+  travels in `context.Context`, which every use case and gateway method takes first.
 - **One interface per gateway role per component**, not per use case. Split narrower only when a
   different component needs a subset. If two interfaces in the same `application/` package differ by
   fewer than two methods, they are one interface.

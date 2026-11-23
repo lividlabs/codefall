@@ -160,6 +160,12 @@ Go needs no formatter config, no test-runner dependency, and no build tool — `
 ship with the toolchain. Do not add `testify`, a mock generator, or a task runner reflexively; add
 them when a project asks.
 
+**Add every dependency with `go get`**, never by writing a version into `go.mod` by hand: a version
+written from memory is whatever was current when the model was trained. Run `go mod tidy` once the
+code that imports a module exists; until then `go.mod` marks it `// indirect`. A dependency arrives
+with the code that uses it: `samber/do` with the composition root, by
+`go get github.com/samber/do/v2`, and `samber/mo` with the first optional value.
+
 The local scripts at this tier: `update` runs `go mod download`, and `mise install` first when the
 project pins a toolchain; `start` exits `0` with nothing to bring up. Where the tier added a
 `Makefile`, they are two targets there rather than a script.
@@ -179,9 +185,7 @@ packages.
 `cmd/<app>/main.go` sets the default `slog` logger, provides the `*http.Server` through the
 injector, listens on the port in `PORT` or on 8080, serves until `SIGINT` or `SIGTERM`, and shuts
 the injector down with a deadline. `.golangci.yml` gains the `http-router` rule. Add chi with
-`go get github.com/go-chi/chi/v5`, never by writing a version into `go.mod` by hand: a version
-written from memory is whatever was current when the model was trained. Run `go mod tidy` once the
-code that imports it exists; until then `go.mod` marks it `// indirect`.
+`go get github.com/go-chi/chi/v5`.
 
 A component gets no routes in the skeleton. Its `presentation/routes.go`, its facade's `Routes`,
 and its mount in `main.go` arrive with the component's first handler.
