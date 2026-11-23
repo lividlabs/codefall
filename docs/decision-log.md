@@ -2388,6 +2388,24 @@ Decided at scaffold, 2026-08-16.
   run against PostgreSQL 17. Left open: the `mise` command in the profile was not run; the
   `go` profile's lint template still rejects `samber/mo` in `domain/`, which this ADR's own
   example uses.
+- **The Go profile's lint template enforces all five boundary rules, 2026-11-23.** Scaffold
+  requires the boundary config to enforce five rules, and the `go` profile told it to emit two
+  `depguard` rules that enforced part of one. A fresh agent tested the config as specified:
+  `net/http` in `domain/`, `database/sql` in `application/`, and a shared module importing a
+  component each passed lint, and `samber/mo` in `domain/`, which ADR-GO-03 asks for, failed. The
+  agent then wrote four rules of its own. The template ADR-GO-02 now shows five rules. The two
+  strict lists allow `samber/mo` and deny `net/http` and `database/sql`, the two packages rule 5
+  names; this repository's own config denies all of `net`, and `os` in `domain/`, and the template
+  does not copy that. **"Sideways" in rule 2 now has a meaning**: `infrastructure/` and
+  `presentation/` do not import each other, held by a deny rule on each. `shared-modules` holds
+  rule 4. One `application-layer` rule serves every component, with an allow entry for each,
+  because the compiler already keeps one component out of another's; the profile's "one rule per
+  component" had been read as three rules. The sample enables golangci-lint's standard linters,
+  where it had enabled `depguard` alone. A new component is four entries, and the profile and the
+  skeleton say so. Seen and not taken: `go-arch-lint` in place of `depguard`, a second tool for
+  what five rules express. The config was assembled from the YAML in ADR-GO-02, ADR-GO-04, and
+  ADR-GO-05 word for word and proven against nine deliberate imports. This repository's own copy
+  of ADR-GO-02 in `docs/adrs/` is unchanged, and `codefall-upgrade` will offer it the revision.
 
 ## Open
 
