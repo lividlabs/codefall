@@ -2332,6 +2332,30 @@ Decided at scaffold, 2026-08-16.
   because codefall is growing an IDE of its own, whose commands and settings will not depend on a
   project. ADR-018 records the reasoning and the alternatives seen and not taken, and
   `docs/plans/PLAN-001-codefall-project.md` the tasks. Left open: the three items under Open below.
+- **The Go profile's HTTP layer is `chi`, 2026-11-23.** The `go` profile named no router and no
+  way for a handler to report an error, so every scaffolded Go service chose its own. Recorded as
+  the template `ADR-GO-04`, which a Go surface that serves no HTTP drops, the way a backend-only
+  project drops `ADR-TS-02`. It is a profile ADR and not a base one, because a base ADR reaches a
+  Flutter app and a CLI. **The router is `chi` v5**, imported only in a component's
+  `presentation/` and in the shared module `internal/shared/httpx/`, and a `depguard` rule holds
+  it there. A handler reads a path parameter with `r.PathValue`, which chi fills in, so no handler
+  imports chi. Seen and not taken: the standard library's `ServeMux`, which has no route groups
+  and no middleware stack; Gin and Echo, whose handlers take a context type of their own; Fiber,
+  which does not run on `net/http`; and `huma` over chi, which also decides how the API contract
+  is written. **A handler returns its error** through an adapter the project owns, and one
+  function, `writeError`, turns an error into a response: an `*httpx.Error` gives its status and
+  detail through any `%w` wrapping, and any other error is a 500 logged with `log/slog` and sent
+  with no text. **The error body is RFC 9457 problem details**; the `typescript-react` profile
+  has no HTTP layer and so no shape to match. **The handler gives a domain error its status**,
+  because `domain/` and `application/` name no transport. A panic and an unknown path go through
+  `writeError`, by a recover middleware of the module's own in place of chi's `Recoverer`. A
+  wrong method keeps chi's 405, because a handler set in its place loses the `Allow` header;
+  this was checked against chi 5.5.0. **Scaffold ships no Go source for it**: the ADR holds the
+  code, and the profile's depth notes list the files and tests the runnable skeleton owes, as
+  they do for the rest of the profile. The ADR's code was copied from a sample project that
+  passed `go build`, `go vet`, `golangci-lint run`, and `go test`, with the lint rule proven
+  against deliberate chi imports. Left open: a gRPC library, a queue client, and a CLI library
+  for the profile; request validation and an OpenAPI document; and the database library.
 
 ## Open
 
