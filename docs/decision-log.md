@@ -2406,6 +2406,19 @@ Decided at scaffold, 2026-08-16.
   what five rules express. The config was assembled from the YAML in ADR-GO-02, ADR-GO-04, and
   ADR-GO-05 word for word and proven against nine deliberate imports. This repository's own copy
   of ADR-GO-02 in `docs/adrs/` is unchanged, and `codefall-upgrade` will offer it the revision.
+- **The Go profile's HTTP and data ADRs follow what a surface does, 2026-11-23.** As first written,
+  the profile decided between them by the kind of program: its examples said a CLI has no
+  database and a worker serves no HTTP. A CLI can hold a database, and a service can have none.
+  ADR-GO-04 is now taken by a surface that answers HTTP requests and ADR-GO-05 by one that reads or
+  writes a relational database, each on its own, so a surface takes both, either, or neither.
+  Whatever else a surface talks to, such as a message broker, a queue, or a cache, is a gateway
+  with no ADR in the profile, and the project records its client in an ADR of its own. Any other
+  way a surface is reached, such as gRPC, a queue it consumes, or a CLI's commands, is delivery
+  with no ADR in the profile either; a gRPC ADR was raised and not taken yet. In
+  ADR-GO-05, `migrate` is a command of the app, which a CLI adds beside its other commands, and
+  the references to ADR-BASE-03 and ADR-GO-04 read correctly on a surface that has neither:
+  component-owned tables now rest on ADR-BASE-02's facade. The profile says what else changes on
+  SQLite. Left open: a CLI on SQLite has not been built or run.
 
 ## Open
 
