@@ -8,15 +8,18 @@ Accepted — <date>
 
 A Go surface that keeps its data in a relational database needs a way to run SQL, a driver, and a
 way to change the schema. ADR-BASE-01 puts all three in `infrastructure/`, behind interfaces that
-`application/` declares, and decides none of them. This ADR applies to a surface with a database; a
-surface without one has no use for it.
+`application/` declares, and decides none of them. This ADR applies to any surface that reads or
+writes a relational database, whether it is a service, a worker, or a CLI. A surface that uses none
+has no use for it.
 
 Two rules already in force narrow the choice. `domain/` and `application/` import no database
 library (ADR-GO-02), so a row is converted to a domain entity in `infrastructure/` whichever library
-reads it. And each component owns its tables, with no data model shared between components
-(ADR-BASE-03). An *object-relational mapper* (ORM), a library that maps tables to objects and
-follows the relations between them, earns its keep from one model of the whole database, which is
-what the second rule forbids.
+reads it. And a component's facade is its whole public API (ADR-BASE-02), so a table that another
+component reads is a way around the facade: each component owns its tables, with no data model
+shared between components. ADR-BASE-03 spells that rule out for a surface that could be split into
+services, and this ADR keeps it on every surface. An *object-relational mapper* (ORM), a library
+that maps tables to objects and follows the relations between them, earns its keep from one model
+of the whole database, which is what the second rule forbids.
 
 The libraries considered were `sqlc`, GORM, `ent`, `bun`, and `pgx` used alone. GORM and `bun`
 build each query while the program runs, so a wrong column name is found when the code runs. `ent`
@@ -55,7 +58,7 @@ sqlc.yaml          at the module root, one entry per component
 ```
 
 - A component's tables live in a PostgreSQL schema of its own, named for the component, and its
-  migrations are tracked in a version table of its own, `goose_<component>` (ADR-BASE-03, rule 1).
+  migrations are tracked in a version table of its own, `goose_<component>`.
 - **One `sqlc.yaml` entry per component, whose `schema` is that component's migrations alone:**
 
   ```yaml
@@ -140,7 +143,8 @@ func (r *PostgresOrderRepository) Find(ctx context.Context, id string) (domain.O
   nothing, so it is not found. Passed through unparsed, it comes back from PostgreSQL as an error
   that reaches the client as a 500.
 - **The repository returns the domain's errors, never `pgx`'s.** `pgx.ErrNoRows` becomes the
-  component's not-found error here, which is what a handler matches with `errors.Is` (ADR-GO-04).
+  component's not-found error here, which is what the caller in `presentation/` matches with
+  `errors.Is`.
 
 ### Transactions
 
@@ -191,8 +195,8 @@ func (r *PostgresOrderRepository) in(ctx context.Context) *db.Queries {
 ```
 
 - The transaction commits when `fn` returns `nil` and rolls back when it returns an error.
-- **A transaction belongs to one component** (ADR-BASE-03, rule 2). Each component that needs one
-  has its own `Transactor`.
+- **A transaction belongs to one component.** Each component that needs one has its own
+  `Transactor`, and no transaction covers two components' writes.
 
 ### Migrations
 
@@ -227,8 +231,10 @@ func (r *PostgresOrderRepository) in(ctx context.Context) *db.Queries {
   }
   ```
 
-- **`<app> migrate` applies every component's migrations and exits. Serving never migrates.** The
-  composition root opens the pool before it builds the injector and closes it after the injector
+- **Migrating is a command of the app: `<app> migrate` applies every component's migrations and
+  exits, and nothing else the app does migrates.** A CLI adds `migrate` beside its other commands. A
+  service checks for the argument before it serves, as below.
+- The composition root opens the pool before it builds the injector and closes it after the injector
   has shut down, because `pgxpool.Pool` has no method `samber/do` calls on shutdown:
 
   ```go
@@ -250,7 +256,7 @@ func (r *PostgresOrderRepository) in(ctx context.Context) *db.Queries {
 
 ### Enforcement
 
-One `depguard` rule, beside the rules of ADR-GO-02 and ADR-GO-04:
+One `depguard` rule, beside the rules of ADR-GO-02:
 
 ```yaml
 database-driver:
@@ -293,8 +299,11 @@ database-driver:
 ## Related
 
 - ADR-BASE-01 — Clean Architecture (repository interfaces live in `application/`)
-- ADR-BASE-03 — Extraction readiness (each component owns its data; one transaction, one component)
+- ADR-BASE-02 — Package-by-component (the facade a shared table would go around)
+- ADR-BASE-03 — Extraction readiness, on a surface that has it (each component owns its data; one
+  transaction, one component)
 - ADR-GO-01 — Dependency injection (the injector the pool is provided to; hand-written fakes)
 - ADR-GO-02 — Boundary enforcement (why `application/` cannot import `pgx`)
 - ADR-GO-03 — Optional values (`mo.Option` for a nullable column)
-- ADR-GO-04 — HTTP delivery (the handler that gives the repository's domain error its status)
+- ADR-GO-04 — HTTP delivery, on a surface that has it (the handler that gives the repository's
+  domain error its status)

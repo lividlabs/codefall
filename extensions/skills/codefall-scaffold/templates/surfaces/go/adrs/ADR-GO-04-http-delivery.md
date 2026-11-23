@@ -8,7 +8,7 @@ Accepted — <date>
 
 A Go surface that serves HTTP needs a router, and its handlers need one way to report a failure.
 ADR-BASE-01 puts both in `presentation/` and decides neither. This ADR applies to a surface that
-serves HTTP; a CLI, a worker, or a daemon with no listener has no use for it.
+answers HTTP requests, whatever else it does. A surface that answers none has no use for it.
 
 The standard library's handler signature allows a bug that no tool reports. A handler writes an
 error response and must then return. When the `return` is forgotten, the handler runs on into its

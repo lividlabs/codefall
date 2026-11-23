@@ -110,7 +110,7 @@ The why lives in the ADRs. This file is the operative rules only — never resta
   context the function received to every repository call; any other context is outside the
   transaction.
 - A migration is `NNNNN_name.sql`, five digits, with `-- +goose Up` and `-- +goose Down`.
-  `<app> migrate` applies them, and serving never migrates.
+  `<app> migrate` applies them, and nothing else the app does migrates.
 - A repository's test runs against the database in `TEST_DATABASE_URL` and is skipped without it.
 - The `database-driver` rule in `.golangci.yml` fails an import of `pgx` from `presentation/`.
 

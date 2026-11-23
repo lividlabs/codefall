@@ -103,21 +103,29 @@ still holds; only the outer wrapper is gone.
 - `adrs/ADR-GO-04-http-delivery.md` — **surfaces that serve no HTTP skip this one.**
 - `adrs/ADR-GO-05-data-access.md` — **surfaces with no database skip this one.**
 
-A surface serves HTTP when step 1's description says it answers HTTP requests: a JSON API, or the
-backend of a web or mobile client. A CLI, a worker, a daemon with no listener, and a service that
-speaks only gRPC do not. Ask once when the description leaves it open. On a surface that serves
-none, drop the ADR, and delete the HTTP section and the ADR-GO-04 link from the `AGENTS.md`
-written from the skeleton.
-
-A surface has a database when step 1's description says it keeps data of its own. A CLI that works
-on files, and a service that only calls other services, do not. Ask once when the description leaves
-it open. On a surface with none, drop the ADR, and delete the Data section and the ADR-GO-05 link
+**Each of the two follows what the surface does, not what kind of program it is.** Take ADR-GO-04
+when the surface answers HTTP requests, and ADR-GO-05 when it reads or writes a relational database.
+A surface takes both, either, or neither: an API with no database, a CLI with one, a worker that
+only consumes a queue. Read each answer from step 1's description, and ask once when the description
+leaves one open. For an ADR the surface does not take, drop it, and delete its section and its link
 from the `AGENTS.md` written from the skeleton.
+
+**Whatever else a surface talks to has no ADR in this profile**: a message broker, a queue, a cache,
+another service's API. Each is a gateway like any other (ADR-BASE-01), with its interface in
+`application/` and its implementation in `infrastructure/`. Codefall has no opinion on the client
+library, and the project records its choice in an ADR of its own.
+
+**The same holds for any other way a surface is reached**: gRPC, a queue it consumes, a CLI's
+commands. Each is delivery in `presentation/` (ADR-BASE-01), with no ADR in this profile, and the
+project records its choice of library in an ADR of its own.
 
 **The database is the one override this profile offers.** The interview says *this will use
 PostgreSQL unless you want a different database now*, and proposes nothing else. On MySQL or SQLite,
 amend ADR-GO-05 for the project: `sqlc` and goose stay, `sqlc` generates for `database/sql`, and the
-driver is that database's own. On a database `sqlc` does not read, drop ADR-GO-05; the project
+driver is that database's own. On SQLite more than the driver changes: there is no `compose.yaml`,
+a transaction is a `*sql.Tx`, and a component's tables take a prefix where PostgreSQL gave them a
+schema. The ADR's code was run on PostgreSQL only, so on another database run each piece of it
+before the amended ADR records it. On a database `sqlc` does not read, drop ADR-GO-05; the project
 records the decision in an ADR of its own.
 
 Numbering is per profile and starts at 01, so this profile has no gaps and no relationship to any
@@ -202,7 +210,8 @@ The module's tests use `testing` and `net/http/httptest`, and cover each of thes
 The skeleton then adds, with no table in it:
 
 - In `cmd/<app>/main.go`: the pool opened from `DATABASE_URL` and provided to the injector, and the
-  `migrate` argument.
+  `migrate` command. A service checks for the argument before it serves; a CLI adds `migrate`
+  beside its other commands.
 - In each component: `infrastructure/migrations/00001_create_schema.sql`, which creates the
   component's PostgreSQL schema and nothing else; `infrastructure/migrate.go`; and a `Migrate`
   function on the facade.
