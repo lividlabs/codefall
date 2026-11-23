@@ -181,7 +181,8 @@ First fix the **applicable set** — which templates this project should have at
 decisions come from `scaffold.json` when present, from which profile's ADRs are on disk otherwise,
 and from step 2's detection for adoption. A surface under `ownStack` takes only the
 stack-agnostic templates. Apply `codefall-scaffold`'s gates, not your own: a surface that can never
-be split skips ADR-BASE-03, a backend-only project has no use for ADR-TS-02. If a gate
+be split skips ADR-BASE-03, a backend-only project skips ADR-TS-02, a Go surface serving no HTTP
+skips ADR-GO-04. If a gate
 genuinely can't be answered from the project, ask — once, batched with anything else step 5 needs.
 
 Then classify every difference:

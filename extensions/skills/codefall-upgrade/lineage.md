@@ -84,6 +84,7 @@ in `docs/adrs/` under the same basename.
 | `surfaces/go/adrs/ADR-GO-01-dependency-injection.md` | 0.3.0 | — |
 | `surfaces/go/adrs/ADR-GO-02-boundary-enforcement.md` | 0.3.0 | — |
 | `surfaces/go/adrs/ADR-GO-03-optional-values.md` | 0.3.0 | — |
+| `surfaces/go/adrs/ADR-GO-04-http-delivery.md` | 0.42.0 | — |
 | `surfaces/dart-flutter/PROFILE.md` | 0.33.0 | — |
 | `surfaces/dart-flutter/AGENTS.md.skeleton` | 0.33.0 | — |
 | `surfaces/dart-flutter/adrs/ADR-DART-01-dependency-injection.md` | 0.33.0 | — |

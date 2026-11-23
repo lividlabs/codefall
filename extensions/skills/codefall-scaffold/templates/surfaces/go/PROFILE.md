@@ -84,6 +84,8 @@ still holds; only the outer wrapper is gone.
 | Interface granularity | One per gateway role per **component**, not per use case | ADR-GO-01 |
 | Optional values | `samber/mo` — `Option` only, not `Result` | ADR-GO-03 |
 | Error handling | stdlib `error`, `%w` wrapping, `errors.Is` / `errors.As` | ADR-GO-03 |
+| Web framework | `chi` v5, with an error-returning handler adapter the project owns | ADR-GO-04 |
+| HTTP error responses | RFC 9457 problem details, written by one function; `log/slog` for what is not sent | ADR-GO-04 |
 | Facade enforcement | `internal/` packages — the compiler | ADR-GO-02 |
 | Layer-direction enforcement | `depguard` via `golangci-lint`, strict allow-lists | ADR-GO-02 |
 | Architecture gate (optional) | `go-arch-lint` | ADR-GO-02 |
@@ -95,6 +97,13 @@ still holds; only the outer wrapper is gone.
 - `adrs/ADR-GO-01-dependency-injection.md`
 - `adrs/ADR-GO-02-boundary-enforcement.md`
 - `adrs/ADR-GO-03-optional-values.md`
+- `adrs/ADR-GO-04-http-delivery.md` — **surfaces that serve no HTTP skip this one.**
+
+A surface serves HTTP when step 1's description says it answers HTTP requests: a JSON API, or the
+backend of a web or mobile client. A CLI, a worker, a daemon with no listener, and a service that
+speaks only gRPC do not. Ask once when the description leaves it open. On a surface that serves
+none, drop the ADR, and delete the HTTP section and the ADR-GO-04 link from the `AGENTS.md`
+written from the skeleton.
 
 Numbering is per profile and starts at 01, so this profile has no gaps and no relationship to any
 other profile's numbers. `ADR-GO-01` and `ADR-TS-01` are different decisions that happen to sit first
@@ -127,7 +136,41 @@ The **runnable skeleton** tier adds `cmd/<app>/main.go` wiring the composition r
 no features in it, plus each component directory with its facade file and the four nested layer
 packages.
 
+**On a surface that serves HTTP**, the skeleton also adds the shared module
+`internal/shared/httpx/`, written from ADR-GO-04:
+
+- `handler.go` — the `Handler` type and its `ServeHTTP`.
+- `error.go` — `Error`, `NewError`, the `problem` body, and `writeError`.
+- `json.go` — `Decode` and `Encode`.
+- `router.go` — `NewRouter`, the recover middleware, the not-found handler, and `GET /healthz`.
+
+`cmd/<app>/main.go` sets the default `slog` logger, provides the `*http.Server` through the
+injector, listens on the port in `PORT` or on 8080, serves until `SIGINT` or `SIGTERM`, and shuts
+the injector down with a deadline. `.golangci.yml` gains the `http-router` rule. Add chi with
+`go get github.com/go-chi/chi/v5`, never by writing a version into `go.mod` by hand: a version
+written from memory is whatever was current when the model was trained. Run `go mod tidy` once the
+code that imports it exists; until then `go.mod` marks it `// indirect`.
+
+A component gets no routes in the skeleton. Its `presentation/routes.go`, its facade's `Routes`,
+and its mount in `main.go` arrive with the component's first handler.
+
+The module's tests use `testing` and `net/http/httptest`, and cover each of these:
+
+- A returned `*httpx.Error` gives its status and detail.
+- The same error wrapped with `%w` gives the same response.
+- Any other error is a 500 whose text is logged and is absent from the body.
+- A `nil` return leaves the handler's own response untouched.
+- `GET /healthz` answers through `NewRouter()`.
+- An unknown path and a panic each get the error body, and the panic's stack is in the log.
+- A wrong method keeps chi's 405 and its `Allow` header.
+- `Decode` gives a 400 for a body that does not parse.
+- `Encode` sends nothing when the value cannot be marshalled.
+
 Verify the boundary rules the way step 6 requires, and note that Go gives you a sharper test than
 most profiles: a deliberate cross-component reach-around should **fail `go build`**, and a deliberate
 outward layer import should fail `golangci-lint run` while still compiling. Check both. A `depguard`
 config that matches no files passes silently and looks identical to one that works.
+
+On a surface that serves HTTP, prove two more things. Run the binary and request `GET /healthz`.
+Then import chi from an `infrastructure/` package: `golangci-lint run` should fail on the
+`http-router` rule while `go build` still passes.

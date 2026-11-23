@@ -21,8 +21,9 @@ the profile's own ADRs.
 
 - `typescript-react` supplies DI (Inversify), frontend state (TanStack Query / Zustand /
   `useState`), and boundary enforcement (`eslint-plugin-boundaries`).
-- `go` supplies DI (`samber/do`), boundary enforcement (`internal/` packages plus `depguard`), and
-  optional values (`samber/mo`'s `Option`).
+- `go` supplies DI (`samber/do`), boundary enforcement (`internal/` packages plus `depguard`),
+  optional values (`samber/mo`'s `Option`), and, for a surface that serves HTTP, HTTP delivery
+  (`chi` with handlers that return their errors).
 - `dart-flutter` supplies DI (`get_it` registered by `injectable`), app state (Riverpod 3 and
   go_router, the one decision a project may override at the interview), and boundary enforcement
   (`import_lint`). It drops ADR-BASE-03: a Flutter app can never be split into services.

@@ -11,7 +11,8 @@ The why lives in the ADRs. This file is the operative rules only — never resta
   [ADR-BASE-03 Extraction readiness](<path>/docs/adrs/ADR-BASE-03-extraction-readiness.md) ·  <delete this link on a surface that can never be split>
   [ADR-GO-01 Dependency Injection](<path>/docs/adrs/ADR-GO-01-dependency-injection.md) ·
   [ADR-GO-02 Boundary enforcement](<path>/docs/adrs/ADR-GO-02-boundary-enforcement.md) ·
-  [ADR-GO-03 Optional values](<path>/docs/adrs/ADR-GO-03-optional-values.md)
+  [ADR-GO-03 Optional values](<path>/docs/adrs/ADR-GO-03-optional-values.md) ·
+  [ADR-GO-04 HTTP delivery](<path>/docs/adrs/ADR-GO-04-http-delivery.md)  <delete this link on a surface that serves no HTTP>
 - <plus any surface-specific ADRs>
 - <plus this project's own ADRs, numbered separately from ADR-001>
 
@@ -66,6 +67,29 @@ The why lives in the ADRs. This file is the operative rules only — never resta
   empty value and is not the same as `mo.None[string]()`.
 - Errors stay `(T, error)` with `%w` wrapping and `errors.Is` / `errors.As`. Do not use `mo.Result`.
 - If a caller needs to know *why* something is missing, it is an error, not a `None`.
+
+## HTTP  <serves no HTTP: delete this section>
+
+- `chi` v5, imported only in a component's `presentation/` and in `internal/shared/httpx/`. A
+  handler reads a path parameter with `r.PathValue`, so no handler imports chi.
+- Every handler is an `httpx.Handler`. It returns its error and never writes an error response
+  itself; `writeError` in `httpx` is the one function that does.
+- **The handler gives a domain error its status**:
+  `errors.Is(err, domain.ErrOrderNotFound)` → `httpx.NewError(http.StatusNotFound, "order not found")`.
+  Any other error is returned as it is and becomes a logged 500. `domain/` and `application/` never
+  return an `*httpx.Error`.
+- Bodies go through `httpx.Decode` and `httpx.Encode`. An error body is RFC 9457 problem details.
+- A component registers its routes in `presentation/routes.go` and exports them from its facade as
+  an `http.Handler`. The composition root mounts them on `httpx.NewRouter()`.
+- Middleware is `func(http.Handler) http.Handler`.
+- A handler's test uses `net/http/httptest` against the component's routes mounted on
+  `httpx.NewRouter()`, with a hand-written fake use case.
+- The `http-router` rule in `.golangci.yml` fails an import of chi from anywhere but
+  `presentation/` and `internal/shared/httpx/`.
+- A wrong method on a known path gets chi's own 405, with an `Allow` header and no body. Every
+  other error response is `writeError`'s.
+- A handler that writes part of a response and then returns an error sends two responses. Return
+  the error before writing; `httpx.Encode` marshals first for this reason.
 
 ## Extraction readiness  <never-splittable: delete this section>
 
