@@ -30,8 +30,10 @@ The why lives in the ADRs. This file is the operative rules only — never resta
 
 - Dependencies point inward only. Interfaces live in `application/` with the use cases that need
   them; `domain/` = entities + value objects + errors.
-- `domain/` imports the standard library and nothing else. `application/` adds only its own
-  component's `domain/`. No `net/http`, `database/sql`, drivers, or CLI framework in either.
+- `domain/` imports the standard library and `samber/mo`, and nothing else. `application/` adds only
+  its own component's `domain/`. No `net/http`, `database/sql`, drivers, or CLI framework in either.
+- `infrastructure/` and `presentation/` do not import each other. Shared modules do not import
+  components.
 - Handlers and commands are thin; use cases never see delivery types.
 
 ## DI
@@ -125,8 +127,10 @@ The why lives in the ADRs. This file is the operative rules only — never resta
 ## Enforcement
 
 - `internal/` facades are enforced by the compiler — a reach-around fails `go build`.
-- Layer direction is enforced by `depguard` strict allow-lists in `.golangci.yml`, which is generated
-  for this project rather than copied from a template.
+- Layer direction is enforced by `depguard` rules in `.golangci.yml`, which is generated for this
+  project rather than copied from a template.
+- **A new component needs four entries there**: one allow entry in `application-layer`, and one deny
+  entry in each of `infrastructure-layer`, `presentation-layer`, and `shared-modules`.
 - Run `go build ./...`, `go vet ./...`, `golangci-lint run`, `go test ./...`.
 - **Verifying the rules takes two checks, because there are two mechanisms.** A cross-component
   reach-around must fail `go build`. An outward layer import must fail `golangci-lint run` *while

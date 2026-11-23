@@ -90,7 +90,7 @@ still holds; only the outer wrapper is gone.
 | Data access | `sqlc` generating for `pgx` v5, `pgxpool` for connections; no ORM | ADR-GO-05 |
 | Migrations | goose, compiled into the app, one set per component | ADR-GO-05 |
 | Facade enforcement | `internal/` packages — the compiler | ADR-GO-02 |
-| Layer-direction enforcement | `depguard` via `golangci-lint`, strict allow-lists | ADR-GO-02 |
+| Layer-direction enforcement | `depguard` via `golangci-lint`: strict allow-lists for the inner rings, deny-lists for the outer rings and shared modules | ADR-GO-02 |
 | Architecture gate (optional) | `go-arch-lint` | ADR-GO-02 |
 | Formatting | `gofmt`, `gofumpt` optional | — |
 | Tests | stdlib `testing`, table-driven, hand-written fakes | ADR-GO-01 |
@@ -134,10 +134,19 @@ The **project files** tier owes: `go.mod`, `.golangci.yml` carrying the `depguar
 (ADR-GO-02), a `Makefile` or `Taskfile` fronting the standard targets, and CI running `go build ./...`,
 `go vet ./...`, `golangci-lint run`, and `go test ./...`.
 
-**`.golangci.yml` is generated, not copied.** The `application/` allow-lists must name each
-component's own `domain` package by its full import path, so the file cannot exist until the module
-path and component names are known. Emit one `domain-layer` rule (which needs only `$gostd`) plus one
-`application-layer` rule per component. ADR-GO-02 has the shape.
+**`.golangci.yml` is generated, not copied.** Its rules name each component by its full import
+path, so the file cannot exist until the module path and component names are known. Emit the five
+rules ADR-GO-02 shows, with its `default: standard` and its `gofmt` formatter:
+
+- `domain-layer` — strict; allows `$gostd` and `github.com/samber/mo`; denies `net/http` and
+  `database/sql`.
+- `application-layer` — the same, plus one allow entry per component for its `domain` package. One
+  rule serves every component.
+- `infrastructure-layer` and `presentation-layer` — one deny entry per component, each for that
+  component's other outer ring.
+- `shared-modules` — one deny entry per component.
+
+A component added later needs its four entries: one allow and three deny.
 
 Go needs no formatter config, no test-runner dependency, and no build tool — `gofmt` and `testing`
 ship with the toolchain. Do not add `testify`, a mock generator, or a task runner reflexively; add
@@ -210,6 +219,9 @@ Verify the boundary rules the way step 6 requires, and note that Go gives you a 
 most profiles: a deliberate cross-component reach-around should **fail `go build`**, and a deliberate
 outward layer import should fail `golangci-lint run` while still compiling. Check both. A `depguard`
 config that matches no files passes silently and looks identical to one that works.
+
+Prove each lint rule with its own violation, the five ADR-GO-02 lists under Consequences, and
+confirm that `samber/mo` in a `domain/` package passes.
 
 On a surface that serves HTTP, prove two more things. Run the binary and request `GET /healthz`.
 Then import chi from an `infrastructure/` package: `golangci-lint run` should fail on the
