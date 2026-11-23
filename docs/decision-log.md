@@ -2419,6 +2419,17 @@ Decided at scaffold, 2026-08-16.
   the references to ADR-BASE-03 and ADR-GO-04 read correctly on a surface that has neither:
   component-owned tables now rest on ADR-BASE-02's facade. The profile says what else changes on
   SQLite. Left open: a CLI on SQLite has not been built or run.
+- **Three rules the Go profile left unsaid, 2026-11-23.** They close the comparison with
+  `typescript-react` that began this work. **Three places resolve from the injector**: the
+  composition root, a registration function's providers, and the functions a facade exports for
+  the root to call. Everything else takes what it needs through its constructor and never holds
+  the injector. ADR-GO-01 had no such rule, and its line preferring the error-returning form
+  "anywhere that runs later" read as leave to resolve later. **Every service lives as long as the
+  process**, and what belongs to one request travels in `context.Context`; a `samber/do` scope is
+  not opened per request. **Every dependency is added with `go get`**, which the profile had said
+  for chi, `pgx`, and goose alone. Not taken from the comparison: guidance on choosing between a
+  service, a worker, and a CLI, because the profile now asks what a surface does and not what kind
+  of program it is.
 
 ## Open
 
