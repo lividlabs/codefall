@@ -177,13 +177,13 @@ is unverifiable, and unverifiable is edited.
 
 ### 4. Compare against the current templates
 
-First fix the **applicable set** — which templates this project should have at all. Profiles and
+First fix the **applicable set** — which templates this project should have. Profiles and
 decisions come from `scaffold.json` when present, from which profile's ADRs are on disk otherwise,
 and from step 2's detection for adoption. A surface under `ownStack` takes only the
 stack-agnostic templates. Apply `codefall-scaffold`'s gates, not your own: a surface that can never
-be split skips ADR-BASE-03, a backend-only project skips ADR-TS-02, a Go surface serving no HTTP
-skips ADR-GO-04. If a gate
-genuinely can't be answered from the project, ask — once, batched with anything else step 5 needs.
+be split skips ADR-BASE-03, a backend-only project skips ADR-TS-02, a Go surface skips ADR-GO-04
+with no HTTP, ADR-GO-05 with no database. If a gate
+can't be answered from the project, ask — once, batched with anything else step 5 needs.
 
 Then classify every difference:
 

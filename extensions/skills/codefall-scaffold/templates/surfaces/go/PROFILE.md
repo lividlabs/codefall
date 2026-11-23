@@ -86,6 +86,9 @@ still holds; only the outer wrapper is gone.
 | Error handling | stdlib `error`, `%w` wrapping, `errors.Is` / `errors.As` | ADR-GO-03 |
 | Web framework | `chi` v5, with an error-returning handler adapter the project owns | ADR-GO-04 |
 | HTTP error responses | RFC 9457 problem details, written by one function; `log/slog` for what is not sent | ADR-GO-04 |
+| Database | PostgreSQL unless the project chooses another | ADR-GO-05 |
+| Data access | `sqlc` generating for `pgx` v5, `pgxpool` for connections; no ORM | ADR-GO-05 |
+| Migrations | goose, compiled into the app, one set per component | ADR-GO-05 |
 | Facade enforcement | `internal/` packages — the compiler | ADR-GO-02 |
 | Layer-direction enforcement | `depguard` via `golangci-lint`, strict allow-lists | ADR-GO-02 |
 | Architecture gate (optional) | `go-arch-lint` | ADR-GO-02 |
@@ -98,12 +101,24 @@ still holds; only the outer wrapper is gone.
 - `adrs/ADR-GO-02-boundary-enforcement.md`
 - `adrs/ADR-GO-03-optional-values.md`
 - `adrs/ADR-GO-04-http-delivery.md` — **surfaces that serve no HTTP skip this one.**
+- `adrs/ADR-GO-05-data-access.md` — **surfaces with no database skip this one.**
 
 A surface serves HTTP when step 1's description says it answers HTTP requests: a JSON API, or the
 backend of a web or mobile client. A CLI, a worker, a daemon with no listener, and a service that
 speaks only gRPC do not. Ask once when the description leaves it open. On a surface that serves
 none, drop the ADR, and delete the HTTP section and the ADR-GO-04 link from the `AGENTS.md`
 written from the skeleton.
+
+A surface has a database when step 1's description says it keeps data of its own. A CLI that works
+on files, and a service that only calls other services, do not. Ask once when the description leaves
+it open. On a surface with none, drop the ADR, and delete the Data section and the ADR-GO-05 link
+from the `AGENTS.md` written from the skeleton.
+
+**The database is the one override this profile offers.** The interview says *this will use
+PostgreSQL unless you want a different database now*, and proposes nothing else. On MySQL or SQLite,
+amend ADR-GO-05 for the project: `sqlc` and goose stay, `sqlc` generates for `database/sql`, and the
+driver is that database's own. On a database `sqlc` does not read, drop ADR-GO-05; the project
+records the decision in an ADR of its own.
 
 Numbering is per profile and starts at 01, so this profile has no gaps and no relationship to any
 other profile's numbers. `ADR-GO-01` and `ADR-TS-01` are different decisions that happen to sit first
@@ -166,6 +181,31 @@ The module's tests use `testing` and `net/http/httptest`, and cover each of thes
 - `Decode` gives a 400 for a body that does not parse.
 - `Encode` sends nothing when the value cannot be marshalled.
 
+**On a surface with a database**, the project files tier also owes, written from ADR-GO-05:
+
+- `compose.yaml` with one PostgreSQL service, a healthcheck that runs `pg_isready`, a named volume,
+  and its port bound to `127.0.0.1`. The local script `start` runs `docker compose up -d --wait`.
+- The `database-driver` rule in `.golangci.yml`.
+- A `migrate` target in the `Makefile` that runs `go run ./cmd/<app> migrate`. The local script
+  `update` runs it after `go mod download`.
+- A PostgreSQL service in CI, with `TEST_DATABASE_URL` set to it, so the repository tests run there.
+
+The skeleton then adds, with no table in it:
+
+- In `cmd/<app>/main.go`: the pool opened from `DATABASE_URL` and provided to the injector, and the
+  `migrate` argument.
+- In each component: `infrastructure/migrations/00001_create_schema.sql`, which creates the
+  component's PostgreSQL schema and nothing else; `infrastructure/migrate.go`; and a `Migrate`
+  function on the facade.
+
+Add `pgx` and goose with `go get github.com/jackc/pgx/v5 github.com/pressly/goose/v3`.
+
+**`sqlc` arrives with a component's first query**, not with the skeleton: `sqlc generate` fails on a
+component that has no query, and on a `sqlc.yaml` that has no entry. The first query adds the
+component's entry to `sqlc.yaml`, its `queries/` and `db/` directories, a `generate` target that runs
+`sqlc generate`, and `sqlc diff` in CI. Pin the tool the first time with `mise use sqlc@latest`,
+which writes the current version.
+
 Verify the boundary rules the way step 6 requires, and note that Go gives you a sharper test than
 most profiles: a deliberate cross-component reach-around should **fail `go build`**, and a deliberate
 outward layer import should fail `golangci-lint run` while still compiling. Check both. A `depguard`
@@ -174,3 +214,8 @@ config that matches no files passes silently and looks identical to one that wor
 On a surface that serves HTTP, prove two more things. Run the binary and request `GET /healthz`.
 Then import chi from an `infrastructure/` package: `golangci-lint run` should fail on the
 `http-router` rule while `go build` still passes.
+
+On a surface with a database, prove three more. Bring the database up with the local `start`
+script. Run `<app> migrate` twice: the second run changes nothing and exits `0`. Then import `pgx`
+from a `presentation/` package: `golangci-lint run` should fail on the `database-driver` rule while
+`go build` still passes.

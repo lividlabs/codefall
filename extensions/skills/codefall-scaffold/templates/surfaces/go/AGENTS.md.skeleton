@@ -12,7 +12,8 @@ The why lives in the ADRs. This file is the operative rules only — never resta
   [ADR-GO-01 Dependency Injection](<path>/docs/adrs/ADR-GO-01-dependency-injection.md) ·
   [ADR-GO-02 Boundary enforcement](<path>/docs/adrs/ADR-GO-02-boundary-enforcement.md) ·
   [ADR-GO-03 Optional values](<path>/docs/adrs/ADR-GO-03-optional-values.md) ·
-  [ADR-GO-04 HTTP delivery](<path>/docs/adrs/ADR-GO-04-http-delivery.md)  <delete this link on a surface that serves no HTTP>
+  [ADR-GO-04 HTTP delivery](<path>/docs/adrs/ADR-GO-04-http-delivery.md) ·  <delete this link on a surface that serves no HTTP>
+  [ADR-GO-05 Data access](<path>/docs/adrs/ADR-GO-05-data-access.md)  <delete this link on a surface with no database>
 - <plus any surface-specific ADRs>
 - <plus this project's own ADRs, numbered separately from ADR-001>
 
@@ -90,6 +91,26 @@ The why lives in the ADRs. This file is the operative rules only — never resta
   other error response is `writeError`'s.
 - A handler that writes part of a response and then returns an error sends two responses. Return
   the error before writing; `httpx.Encode` marshals first for this reason.
+
+## Data  <no database: delete this section>
+
+- `sqlc` writes the Go for every query, for `pgx` v5. There is no ORM. Connections come from the
+  one `pgxpool.Pool` the composition root provides.
+- A component's SQL lives in its own `infrastructure/`: `migrations/` for goose, `queries/` for what
+  `sqlc` reads, `db/` for what `sqlc` writes, which is committed. Its tables live in a PostgreSQL
+  schema named for it. Never query another component's tables; `sqlc generate` fails on it.
+- After a query or a migration changes, run `sqlc generate` and commit `db/`. A component's first
+  query adds its entry to `sqlc.yaml`.
+- **The repository turns a row into an entity**: `mo.PointerToOption` for a nullable column, the id
+  parsed with `uuid.Parse` before the query, and `pgx.ErrNoRows` returned as the domain's not-found
+  error. A repository never returns a `pgx` error for a handler to recognise.
+- Several writes become one through `application.Transactor`. Inside `InTransaction`, pass the
+  context the function received to every repository call; any other context is outside the
+  transaction.
+- A migration is `NNNNN_name.sql`, five digits, with `-- +goose Up` and `-- +goose Down`.
+  `<app> migrate` applies them, and serving never migrates.
+- A repository's test runs against the database in `TEST_DATABASE_URL` and is skipped without it.
+- The `database-driver` rule in `.golangci.yml` fails an import of `pgx` from `presentation/`.
 
 ## Extraction readiness  <never-splittable: delete this section>
 

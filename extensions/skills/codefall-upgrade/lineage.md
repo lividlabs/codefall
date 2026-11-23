@@ -10,6 +10,13 @@ same PR. Without the row, the skill sees a deletion plus an addition and reports
 renames a skill adds its row to the table below and to the Go table in `extensions/renames.go`, which
 is what `codefall upgrade` reads to report the old directory it removes as a rename.
 
+## Contents
+
+- Skill renames
+- Repo layout epochs
+- Release tags
+- Templates
+
 ## Skill renames
 
 | Former identity (0.x-0.9.0) | Current |
@@ -85,6 +92,7 @@ in `docs/adrs/` under the same basename.
 | `surfaces/go/adrs/ADR-GO-02-boundary-enforcement.md` | 0.3.0 | — |
 | `surfaces/go/adrs/ADR-GO-03-optional-values.md` | 0.3.0 | — |
 | `surfaces/go/adrs/ADR-GO-04-http-delivery.md` | 0.42.0 | — |
+| `surfaces/go/adrs/ADR-GO-05-data-access.md` | 0.42.0 | — |
 | `surfaces/dart-flutter/PROFILE.md` | 0.33.0 | — |
 | `surfaces/dart-flutter/AGENTS.md.skeleton` | 0.33.0 | — |
 | `surfaces/dart-flutter/adrs/ADR-DART-01-dependency-injection.md` | 0.33.0 | — |
