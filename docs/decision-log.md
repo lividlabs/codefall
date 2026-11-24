@@ -2436,6 +2436,27 @@ Decided at scaffold, 2026-08-16.
   gets it by an amendment to that ADR, its decisions kept and its code rewritten. The profile now
   says so, and says the stance is what cannot be replaced. The router stays unasked at the
   interview, which the skill keeps to one question.
+- **What a second fresh run found in the Go profile, 2026-11-23.** An agent with none of the
+  conversation scaffolded a Go API with a database from the documents, then added one feature by
+  the project's own `AGENTS.md` and ADRs. Its project passed build, vet, lint, and test, and its
+  requests behaved. Two things were wrong. **`mise use sqlc@latest` writes `latest`, not a
+  version**; the profile now says `--pin`. That command was the one never run here before.
+  **The repository tests emptied the local database**: nothing said what `TEST_DATABASE_URL`
+  names, the agent pointed it at the database the app used, and the three rows it had just
+  created were gone. Each test now makes a database of its own on that server and drops it, so a
+  test cannot touch a database it did not make. Seen and not taken: a separate test database
+  created by compose, which keeps the protection in a sentence. **An unset `DATABASE_URL` stops
+  the app at startup**; passed through empty, the app started and failed at its first query.
+  **Every connection returns `timestamptz` in UTC**, set once on the pool; the API had answered
+  in the server's local zone. **`migrate` logs what each component applied**, which makes "the
+  second run changes nothing" something a run can see. **A repository takes its queries through
+  the transaction helper from its first method**; the agent had left the helper out until a
+  transaction was needed, which would have let a later transaction skip those methods. The rest
+  closed guesses: code the ADRs called and never showed, a use case's interface declared in
+  `presentation/`, the `*sql.DB` example that disagreed with the pool, the compose file's details,
+  and where `DATABASE_URL` gets its local value. Left open: who makes a new row's id and creation
+  time, which the agent gave to the database because the lint rules keep a UUID library out of
+  the inner rings.
 
 ## Open
 
