@@ -2430,6 +2430,12 @@ Decided at scaffold, 2026-08-16.
   for chi, `pgx`, and goose alone. Not taken from the comparison: guidance on choosing between a
   service, a worker, and a CLI, because the profile now asks what a surface does and not what kind
   of program it is.
+- **The Go profile's libraries are defaults a user may replace, 2026-11-23.** The profile named
+  one override, the database, and said nothing of the rest, which read as though chi could not be
+  changed. The skill's own rule is that the stack is the user's: a user who names another library
+  gets it by an amendment to that ADR, its decisions kept and its code rewritten. The profile now
+  says so, and says the stance is what cannot be replaced. The router stays unasked at the
+  interview, which the skill keeps to one question.
 
 ## Open
 
@@ -2439,6 +2445,12 @@ Decided at scaffold, 2026-08-16.
   manifest keeps.
 - **A skill set that does not ship in the binary.** The manifest records one owner for every file
   today, and installing a second set needs it to record which set wrote which.
+- **A CLI ADR for the `go` profile.** The profile decides nothing about a CLI's command library or
+  the shape of its commands. This repository chose its own in ADR-002, which is where a profile
+  ADR would start.
+- **A gRPC ADR for the `go` profile.** Raised on 2026-11-23 and not taken yet. It would decide the
+  library, how `.proto` files are compiled, how a domain error becomes a status code, and whether
+  gRPC shares a port with HTTP.
 
 ## Parking lot
 
