@@ -2457,6 +2457,21 @@ Decided at scaffold, 2026-08-16.
   and where `DATABASE_URL` gets its local value. Left open: who makes a new row's id and creation
   time, which the agent gave to the database because the lint rules keep a UUID library out of
   the inner rings.
+- **A table's key is the project's decision, with a `uuid` from the database where none is made,
+  2026-11-23.** ADR-GO-05 showed reading a row and nothing about creating one. PostgreSQL gives a
+  table no id unless its definition declares one, and the choice of key is the application's: the
+  ADR says so and does not make it. Where nobody has decided, a table gets a `uuid` key the
+  database generates, `uuidv7()` on PostgreSQL 18 and later and `gen_random_uuid()` before, and
+  the insert returns the row. An id made in the application comes through an interface in
+  `application/`, because the lint rules keep an id library out of the inner rings. Scaffold does
+  not ask about keys: a skeleton has no table, the skill excludes schema questions, and the
+  profile's one question is the database. Seen and not taken: no fallback at all, which leaves an
+  agent to pick silently, as the fresh agent did.
+- **Two statements this work had made untrue, 2026-11-23.** The scaffold skill, its depth
+  reference, and the `go` profile each said the local `start` script has nothing to bring up; on a
+  surface with a database the profile gives it one, and all three now allow for that. The equip
+  skill's signals table sent goose migrations to `goose up`; it now also names the app's own
+  command, which a `go` profile project uses.
 
 ## Open
 
