@@ -95,6 +95,16 @@ still holds; only the outer wrapper is gone.
 | Formatting | `gofmt`, `gofumpt` optional | — |
 | Tests | stdlib `testing`, table-driven, hand-written fakes | ADR-GO-01 |
 
+**Every library in this table is a default.** Scaffold raises one of them itself, the database, as
+the override below describes. A user who names a different library for any other gets it: say once
+what the default is and why, then amend that ADR for the project, with its decisions kept and its
+code rewritten for the library chosen, and report the amendment. A project that wants Echo in place
+of chi keeps what ADR-GO-04 decides — a handler returns its error, one function writes an error
+response, the handler gives a domain error its status, each component registers its own routes —
+and writes them with Echo's types. The code in each ADR was run with the default alone, so run the
+amended code before the ADR records it. What a user cannot replace is the stance: the layers,
+package-by-component, and boundary enforcement.
+
 ## ADRs this profile supplies
 
 - `adrs/ADR-GO-01-dependency-injection.md`
