@@ -130,13 +130,17 @@ func (r *PostgresOrderRepository) Find(ctx context.Context, id string) (domain.O
         return domain.Order{}, fmt.Errorf("select order: %w", err)
     }
 
+    return toOrder(row), nil
+}
+
+func toOrder(row db.OrdersOrder) domain.Order {
     return domain.Order{
         ID:        row.ID.String(),
         Total:     int(row.TotalCents),
         Note:      mo.PointerToOption(row.Note),
         CreatedAt: row.CreatedAt,
         ShippedAt: mo.PointerToOption(row.ShippedAt),
-    }, nil
+    }
 }
 ```
 
@@ -148,6 +152,45 @@ func (r *PostgresOrderRepository) Find(ctx context.Context, id string) (domain.O
 - **The repository returns the domain's errors, never `pgx`'s.** `pgx.ErrNoRows` becomes the
   component's not-found error here, which is what the caller in `presentation/` matches with
   `errors.Is`.
+
+### Keys
+
+- **A table's key is the project's decision**: its type, and whether the database or the
+  application generates it. This ADR does not make that decision, and scaffold does not ask.
+- **Where nobody has decided, a table gets a `uuid` key that the database generates**, and the
+  insert returns the row, so the application makes no id:
+
+  ```sql
+  id uuid PRIMARY KEY DEFAULT uuidv7(),
+  ```
+
+  ```sql
+  -- name: InsertOrder :one
+  INSERT INTO orders.orders (total_cents, note)
+  VALUES ($1, $2)
+  RETURNING id, total_cents, note, created_at, shipped_at;
+  ```
+
+  ```go
+  func (r *PostgresOrderRepository) Save(ctx context.Context, order domain.Order) (domain.Order, error) {
+      row, err := r.in(ctx).InsertOrder(ctx, db.InsertOrderParams{
+          TotalCents: int64(order.Total),
+          Note:       order.Note.ToPointer(),
+      })
+      if err != nil {
+          return domain.Order{}, fmt.Errorf("insert order: %w", err)
+      }
+
+      return toOrder(row), nil
+  }
+  ```
+
+- `uuidv7()` is in PostgreSQL 18 and later, and its ids sort by the time they were made. Before 18,
+  the default is `gen_random_uuid()`.
+- **An id made in the application comes through an interface declared in `application/`**, because
+  the strict lists keep an id library out of `domain/` and `application/` (ADR-GO-02).
+- A project that decides on another key records it in an ADR of its own. Whatever the key's type,
+  the repository turns the id it is given into that type before it queries.
 
 ### Transactions
 

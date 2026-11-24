@@ -109,8 +109,10 @@ The why lives in the ADRs. This file is the operative rules only — never resta
 - After a query or a migration changes, run `make generate` and commit `db/`. `sqlc` is pinned in
   `mise.toml`, and CI runs `sqlc diff`. A component's first query adds its entry to `sqlc.yaml`.
 - **The repository turns a row into an entity**: `mo.PointerToOption` for a nullable column, the id
-  parsed with `uuid.Parse` before the query, and `pgx.ErrNoRows` returned as the domain's not-found
-  error. A repository never returns a `pgx` error for a handler to recognise.
+  turned into the column's type before the query, and `pgx.ErrNoRows` returned as the domain's
+  not-found error. A repository never returns a `pgx` error for a handler to recognise.
+- A table's key is this project's decision. Where none has been made, it is a `uuid` the database
+  generates, and the insert returns the row.
 - Every repository method takes its queries through `in(ctx)`, from the first one written. Several
   writes become one through `application.Transactor`. Inside `InTransaction`, pass the context the
   function received to every repository call; any other context is outside the transaction.
