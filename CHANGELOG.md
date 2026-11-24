@@ -6,6 +6,13 @@ below were written by hand, before that was wired up.
 Tags are bare version numbers (`0.1.2`), not `v`-prefixed, so they match the `ref` the marketplace
 pins. A `v0.1.1` tag also exists from before that convention was settled.
 
+## [0.42.0](https://github.com/lividlabs/codefall/compare/v0.41.0...v0.42.0) (2026-11-24)
+
+
+### Features
+
+* **scaffold:** give the Go profile an HTTP layer, data access, and working lint rules ([#271](https://github.com/lividlabs/codefall/issues/271)) ([697b111](https://github.com/lividlabs/codefall/commit/697b11168d3a400df6927251e358b07df219e61d))
+
 ## [0.41.0](https://github.com/lividlabs/codefall/compare/v0.40.0...v0.41.0) (2026-11-20)
 
 
