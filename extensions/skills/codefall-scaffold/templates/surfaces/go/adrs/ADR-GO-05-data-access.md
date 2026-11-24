@@ -58,7 +58,9 @@ sqlc.yaml          at the module root, one entry per component
 ```
 
 - A component's tables live in a PostgreSQL schema of its own, named for the component, and its
-  migrations are tracked in a version table of its own, `goose_<component>`.
+  migrations are tracked in a version table of its own, `goose_<component>`. The version table is
+  in the database's default schema, because goose makes it before it runs the migration that makes
+  the component's schema.
 - **One `sqlc.yaml` entry per component, whose `schema` is that component's migrations alone:**
 
   ```yaml
@@ -97,7 +99,8 @@ sqlc.yaml          at the module root, one entry per component
   `schema "orders" does not exist`.
 - **The settings make a generated row hold standard types**: a nullable column is a pointer, a
   `timestamptz` is a `time.Time`, and a `uuid` is a `uuid.UUID` from `github.com/google/uuid`.
-- **`sqlc` is installed with `mise`**, pinned to a version, and is not a dependency in `go.mod`.
+- **`sqlc` is installed with `mise`**, pinned to a version in `mise.toml`, and is not a dependency
+  in `go.mod`.
   Run `sqlc generate` after a query or a migration changes, and commit what it writes. CI runs
   `sqlc diff`, which fails when the committed code is not what the SQL generates.
 
@@ -195,6 +198,10 @@ func (r *PostgresOrderRepository) in(ctx context.Context) *db.Queries {
 ```
 
 - The transaction commits when `fn` returns `nil` and rolls back when it returns an error.
+- **Every repository method takes its queries through `in(ctx)`, from the component's first
+  query**, whether or not anything opens a transaction yet. `Transactor` and its implementation
+  arrive with the first use case that makes two writes, and by then no method has to change to
+  join it.
 - **A transaction belongs to one component.** Each component that needs one has its own
   `Transactor`, and no transaction covers two components' writes.
 
@@ -223,36 +230,102 @@ func (r *PostgresOrderRepository) in(ctx context.Context) *db.Queries {
           return fmt.Errorf("orders migrations: %w", err)
       }
 
-      if _, err := provider.Up(ctx); err != nil {
+      applied, err := provider.Up(ctx)
+      if err != nil {
           return fmt.Errorf("orders migrations: %w", err)
+      }
+
+      slog.InfoContext(ctx, "migrated", "component", "orders", "applied", len(applied))
+
+      return nil
+  }
+  ```
+
+  The facade exports it for the composition root:
+
+  ```go
+  func Migrate(ctx context.Context, injector do.Injector) error {
+      return infrastructure.Migrate(ctx, do.MustInvoke[*pgxpool.Pool](injector))
+  }
+  ```
+
+- **Migrating is a command of the app: `<app> migrate` applies every component's migrations and
+  exits, and nothing else the app does migrates.** A CLI adds `migrate` beside its other commands. A
+  service checks for the argument before it serves, as below. The command applies the components'
+  migrations in turn, stops at the first that fails, and logs how many each applied, so a second
+  run shows `applied=0`:
+
+  ```go
+  func migrate(ctx context.Context, injector do.Injector) error {
+      for _, apply := range []func(context.Context, do.Injector) error{
+          orders.Migrate,
+      } {
+          if err := apply(ctx, injector); err != nil {
+              return err
+          }
       }
 
       return nil
   }
   ```
 
-- **Migrating is a command of the app: `<app> migrate` applies every component's migrations and
-  exits, and nothing else the app does migrates.** A CLI adds `migrate` beside its other commands. A
-  service checks for the argument before it serves, as below.
-- The composition root opens the pool before it builds the injector and closes it after the injector
-  has shut down, because `pgxpool.Pool` has no method `samber/do` calls on shutdown:
+### The pool
 
-  ```go
-  pool, err := pgxpool.New(ctx, os.Getenv("DATABASE_URL"))
-  if err != nil {
-      return fmt.Errorf("open database: %w", err)
-  }
-  defer pool.Close()
+The composition root opens the pool before it builds the injector and closes it after the injector
+has shut down, because `pgxpool.Pool` has no method `samber/do` calls on shutdown:
 
-  injector := do.New()
-  do.ProvideValue(injector, pool)
+```go
+pool, err := openPool(ctx)
+if err != nil {
+    return err
+}
+defer pool.Close()
 
-  orders.Register(injector)
+injector := do.New()
+do.ProvideValue(injector, pool)
 
-  if len(os.Args) > 1 && os.Args[1] == "migrate" {
-      return orders.Migrate(ctx, injector)
-  }
-  ```
+orders.Register(injector)
+
+if len(os.Args) > 1 && os.Args[1] == "migrate" {
+    return migrate(ctx, injector)
+}
+```
+
+```go
+func openPool(ctx context.Context) (*pgxpool.Pool, error) {
+    url := os.Getenv("DATABASE_URL")
+    if url == "" {
+        return nil, errors.New("DATABASE_URL is not set")
+    }
+
+    config, err := pgxpool.ParseConfig(url)
+    if err != nil {
+        return nil, fmt.Errorf("read DATABASE_URL: %w", err)
+    }
+
+    config.AfterConnect = func(_ context.Context, conn *pgx.Conn) error {
+        conn.TypeMap().RegisterType(&pgtype.Type{
+            Name:  "timestamptz",
+            OID:   pgtype.TimestamptzOID,
+            Codec: &pgtype.TimestamptzCodec{ScanLocation: time.UTC},
+        })
+
+        return nil
+    }
+
+    pool, err := pgxpool.NewWithConfig(ctx, config)
+    if err != nil {
+        return nil, fmt.Errorf("open database: %w", err)
+    }
+
+    return pool, nil
+}
+```
+
+- **An unset `DATABASE_URL` stops the app as it starts.** Passed through empty, it lets the app
+  start and fail at its first query.
+- **Every connection returns a `timestamptz` in UTC.** Left alone, `pgx` returns it in the
+  process's local time zone, and a response carries whatever offset the server happens to have.
 
 ### Enforcement
 
@@ -272,9 +345,58 @@ database-driver:
 ### Tests
 
 - A use case's test passes it a hand-written fake repository (ADR-GO-01) and needs no database.
-- **A repository's test runs against a real PostgreSQL**, named by `TEST_DATABASE_URL`, and is
-  skipped when the variable is not set. It applies the component's migrations, empties the
-  component's tables, and then reads back what it wrote.
+- **A repository's test runs against a real PostgreSQL**, on the server `TEST_DATABASE_URL` names,
+  and is skipped when the variable is not set.
+- **Each test makes a database of its own**, applies the component's migrations to it, and drops it
+  when the test ends. A test never touches a database it did not make, so the variable may name
+  the server the app's own database is on:
+
+  ```go
+  func database(t *testing.T) *pgxpool.Pool {
+      t.Helper()
+
+      url := os.Getenv("TEST_DATABASE_URL")
+      if url == "" {
+          t.Skip("TEST_DATABASE_URL is not set")
+      }
+
+      ctx := context.Background()
+
+      server, err := pgx.Connect(ctx, url)
+      if err != nil {
+          t.Fatalf("connect: %v", err)
+      }
+
+      name := fmt.Sprintf("orders_test_%d", time.Now().UnixNano())
+      quoted := pgx.Identifier{name}.Sanitize()
+
+      if _, err := server.Exec(ctx, "CREATE DATABASE "+quoted); err != nil {
+          t.Fatalf("create database: %v", err)
+      }
+      t.Cleanup(func() {
+          _, _ = server.Exec(ctx, "DROP DATABASE "+quoted+" WITH (FORCE)")
+          _ = server.Close(ctx)
+      })
+
+      config, err := pgxpool.ParseConfig(url)
+      if err != nil {
+          t.Fatalf("read TEST_DATABASE_URL: %v", err)
+      }
+      config.ConnConfig.Database = name
+
+      pool, err := pgxpool.NewWithConfig(ctx, config)
+      if err != nil {
+          t.Fatalf("open the test database: %v", err)
+      }
+      t.Cleanup(pool.Close)
+
+      if err := infrastructure.Migrate(ctx, pool); err != nil {
+          t.Fatalf("migrate: %v", err)
+      }
+
+      return pool
+  }
+  ```
 
 ## Consequences
 
@@ -291,6 +413,10 @@ database-driver:
   override for it.
 - `go test ./...` passes on a machine with no database, because the repository tests are skipped
   there. CI sets `TEST_DATABASE_URL`, or those tests never run.
+- A test that is killed before it ends leaves its database on the server, named
+  `<component>_test_` and a number.
+- The test's pool is opened without the composition root's settings, so a test sees a
+  `timestamptz` in the local zone. Compare instants, not zones.
 - A deliberate `pgx` import in `presentation/` fails `golangci-lint run` **while still compiling**,
   the same proof ADR-GO-02 asks of the layer rules.
 - This ADR decides nothing about caching, a search index, or a message queue. A project that needs

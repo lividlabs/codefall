@@ -214,43 +214,57 @@ The module's tests use `testing` and `net/http/httptest`, and cover each of thes
 
 **On a surface with a database**, the project files tier also owes, written from ADR-GO-05:
 
-- `compose.yaml` with one PostgreSQL service, a healthcheck that runs `pg_isready`, a named volume,
-  and its port bound to `127.0.0.1`. The local script `start` runs `docker compose up -d --wait`.
+- `compose.yaml` with one PostgreSQL service: its user, password, and database named for the app, a
+  named volume, and its port bound to `127.0.0.1`. The healthcheck runs
+  `pg_isready -h 127.0.0.1 -U <user> -d <database>`, over TCP, because the image answers on its
+  socket while it is still setting itself up. Pin the image to the current major version, read from
+  `docker run --rm postgres postgres --version` and not written from memory. The local script
+  `start` runs `docker compose up -d --wait`.
+- A default for `DATABASE_URL` in the `Makefile`, naming the compose database and exported, so
+  that `migrate` and a local run need nothing set. A value already in the environment wins.
 - The `database-driver` rule in `.golangci.yml`.
 - A `migrate` target in the `Makefile` that runs `go run ./cmd/<app> migrate`. The local script
   `update` runs it after `go mod download`.
 - A PostgreSQL service in CI, with `TEST_DATABASE_URL` set to it, so the repository tests run there.
+  Locally the variable may name the compose server: each test makes and drops a database of its own.
 
 The skeleton then adds, with no table in it:
 
-- In `cmd/<app>/main.go`: the pool opened from `DATABASE_URL` and provided to the injector, and the
-  `migrate` command. A service checks for the argument before it serves; a CLI adds `migrate`
-  beside its other commands.
+- In `cmd/<app>/main.go`: the pool opened from `DATABASE_URL` and provided to the injector, with
+  an unset variable stopping the app, and the `migrate` command over every component. A service
+  checks for the argument before it serves; a CLI adds `migrate` beside its other commands.
 - In each component: `infrastructure/migrations/00001_create_schema.sql`, which creates the
-  component's PostgreSQL schema and nothing else; `infrastructure/migrate.go`; and a `Migrate`
-  function on the facade.
+  component's PostgreSQL schema and nothing else, `CREATE SCHEMA <component>;` up and
+  `DROP SCHEMA <component>;` down; `infrastructure/migrate.go`; and on the facade a `Migrate`
+  function beside `Register`, which is empty until the component has something to register.
 
 Add `pgx` and goose with `go get github.com/jackc/pgx/v5 github.com/pressly/goose/v3`.
 
 **`sqlc` arrives with a component's first query**, not with the skeleton: `sqlc generate` fails on a
 component that has no query, and on a `sqlc.yaml` that has no entry. The first query adds the
-component's entry to `sqlc.yaml`, its `queries/` and `db/` directories, a `generate` target that runs
-`sqlc generate`, and `sqlc diff` in CI. Pin the tool the first time with `mise use sqlc@latest`,
-which writes the current version.
+component's entry to `sqlc.yaml`, its `queries/` and `db/` directories, a `generate` target, and
+`sqlc diff` in CI. Pin the tool the first time with `mise use --pin sqlc@latest`, which writes the
+current version into `mise.toml`; without `--pin` it writes `latest`. The `generate` target runs
+`mise exec -- sqlc generate`, which works in a shell where mise is not activated, and CI installs
+the pinned tool through mise before it runs `sqlc diff`. The local script `update` then runs
+`mise install` first. It does not generate: the generated code is committed. Add
+`github.com/google/uuid` with `go get` when the first `uuid` column is generated.
 
 Verify the boundary rules the way step 6 requires, and note that Go gives you a sharper test than
 most profiles: a deliberate cross-component reach-around should **fail `go build`**, and a deliberate
 outward layer import should fail `golangci-lint run` while still compiling. Check both. A `depguard`
 config that matches no files passes silently and looks identical to one that works.
 
-Prove each lint rule with its own violation, the five ADR-GO-02 lists under Consequences, and
-confirm that `samber/mo` in a `domain/` package passes.
+Prove each lint rule with its own violation, the five ADR-GO-02 lists under Consequences. A rule
+that holds one entry per component is proven once per component, because a missing entry passes
+unnoticed. Once the project imports `samber/mo`, confirm that it passes in a `domain/` package.
 
 On a surface that serves HTTP, prove two more things. Run the binary and request `GET /healthz`.
 Then import chi from an `infrastructure/` package: `golangci-lint run` should fail on the
 `http-router` rule while `go build` still passes.
 
-On a surface with a database, prove three more. Bring the database up with the local `start`
-script. Run `<app> migrate` twice: the second run changes nothing and exits `0`. Then import `pgx`
-from a `presentation/` package: `golangci-lint run` should fail on the `database-driver` rule while
-`go build` still passes.
+On a surface with a database, prove four more. Bring the database up with the local `start`
+script. Run `<app> migrate` twice: the second run logs `applied=0` for every component and exits
+`0`. Run the app with `DATABASE_URL` unset: it stops with a message naming the variable. Then
+import `pgx` from a `presentation/` package: `golangci-lint run` should fail on the
+`database-driver` rule while `go build` still passes.

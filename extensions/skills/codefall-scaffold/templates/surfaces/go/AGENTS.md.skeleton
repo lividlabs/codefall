@@ -47,7 +47,7 @@ The why lives in the ADRs. This file is the operative rules only — never resta
 
   ```go
   do.Provide(injector, func(i do.Injector) (application.OrderRepository, error) {
-      return infrastructure.NewPostgresOrderRepository(do.MustInvoke[*sql.DB](i)), nil
+      return infrastructure.NewInMemoryOrderRepository(do.MustInvoke[application.Clock](i)), nil
   })
   ```
 
@@ -106,17 +106,19 @@ The why lives in the ADRs. This file is the operative rules only — never resta
 - A component's SQL lives in its own `infrastructure/`: `migrations/` for goose, `queries/` for what
   `sqlc` reads, `db/` for what `sqlc` writes, which is committed. Its tables live in a PostgreSQL
   schema named for it. Never query another component's tables; `sqlc generate` fails on it.
-- After a query or a migration changes, run `sqlc generate` and commit `db/`. A component's first
-  query adds its entry to `sqlc.yaml`.
+- After a query or a migration changes, run `make generate` and commit `db/`. `sqlc` is pinned in
+  `mise.toml`, and CI runs `sqlc diff`. A component's first query adds its entry to `sqlc.yaml`.
 - **The repository turns a row into an entity**: `mo.PointerToOption` for a nullable column, the id
   parsed with `uuid.Parse` before the query, and `pgx.ErrNoRows` returned as the domain's not-found
   error. A repository never returns a `pgx` error for a handler to recognise.
-- Several writes become one through `application.Transactor`. Inside `InTransaction`, pass the
-  context the function received to every repository call; any other context is outside the
-  transaction.
+- Every repository method takes its queries through `in(ctx)`, from the first one written. Several
+  writes become one through `application.Transactor`. Inside `InTransaction`, pass the context the
+  function received to every repository call; any other context is outside the transaction.
 - A migration is `NNNNN_name.sql`, five digits, with `-- +goose Up` and `-- +goose Down`.
   `<app> migrate` applies them, and nothing else the app does migrates.
-- A repository's test runs against the database in `TEST_DATABASE_URL` and is skipped without it.
+- A repository's test makes a database of its own on the server in `TEST_DATABASE_URL`, drops it
+  when it ends, and is skipped without the variable. It never empties a database it did not make.
+- The app stops at startup when `DATABASE_URL` is unset, and returns every `timestamptz` in UTC.
 - The `database-driver` rule in `.golangci.yml` fails an import of `pgx` from `presentation/`.
 
 ## Extraction readiness  <never-splittable: delete this section>

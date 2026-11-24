@@ -182,9 +182,28 @@ func Routes(handlers *Handlers) http.Handler {
 }
 ```
 
-The component's facade exports them as an `http.Handler`, beside its registration function:
+A handler depends on an interface for the use case it calls, declared in `presentation/`, where it
+is consumed, with the one method the handler needs:
 
 ```go
+type GetOrderUseCase interface {
+    Execute(ctx context.Context, id string) (domain.Order, error)
+}
+```
+
+ADR-GO-01 puts a gateway's interface in `application/` because a use case consumes it there. This
+is the same rule one ring out.
+
+The component's facade registers the use case under that interface and exports the routes as an
+`http.Handler`:
+
+```go
+func Register(injector do.Injector) {
+    do.Provide(injector, func(i do.Injector) (presentation.GetOrderUseCase, error) {
+        return application.NewGetOrder(do.MustInvoke[application.OrderRepository](i)), nil
+    })
+}
+
 func Routes(injector do.Injector) http.Handler {
     return presentation.Routes(
         presentation.NewHandlers(do.MustInvoke[presentation.GetOrderUseCase](injector)))
@@ -209,6 +228,17 @@ do.Provide(injector, func(i do.Injector) (*http.Server, error) {
   with `{"status":"ok"}`.
 - **The server is a service.** `*http.Server` has the `Shutdown(context.Context) error` method
   `samber/do` calls on shutdown, so requests in flight finish before the services under them close.
+- **`address()`** is where the server listens, the port in `PORT` or 8080:
+
+  ```go
+  func address() string {
+      if port := os.Getenv("PORT"); port != "" {
+          return ":" + port
+      }
+
+      return ":8080"
+  }
+  ```
 
 ### Enforcement
 

@@ -29,8 +29,8 @@ Consequences section names how it is contained.
   Concrete implementations are named only in the owning component's registration function — the
   root cannot name them, because `internal/<component>/internal/*` is unimportable from `cmd/`.
   The root assembles components by facade.
-- Components export a registration function that the root calls. A component registers its own
-  services; it never reaches into another component's registrations.
+- Components export a registration function that the root calls, `Register(injector do.Injector)`.
+  A component registers its own services; it never reaches into another component's registrations.
 
 ### Registration — the provider returns the interface
 
@@ -39,7 +39,7 @@ concrete type:
 
 ```go
 do.Provide(injector, func(i do.Injector) (application.OrderRepository, error) {
-    return infrastructure.NewPostgresOrderRepository(do.MustInvoke[*sql.DB](i)), nil
+    return infrastructure.NewInMemoryOrderRepository(do.MustInvoke[application.Clock](i)), nil
 })
 ```
 
@@ -80,7 +80,8 @@ in Consequences.
 ### Injection discipline
 
 - **Inject only interfaces**, never concrete types. Value and config structs passed directly are the
-  practical exception.
+  practical exception. So is the handle a gateway is built on, such as a database pool, which only
+  `infrastructure/` receives.
 - **Interfaces are declared by the consumer**, in `application/`, alongside the use cases that need
   them. Never in `domain/`, and never in the package that implements them.
 
@@ -155,10 +156,10 @@ consumer's interface to make it "match" the thing behind it.
   made compile-time safe — `func As[Alias any, Initial Alias]()` is rejected with `cannot use a type
   parameter as constraint`, so the check must be a runtime error. Discipline plus `do.As` is the
   whole mitigation.
-- Missing registrations surface at startup rather than at build. Resolve every component facade in
-  the composition root so that failure happens on the first line of `main`, not on the first
-  request. Resolution is lazy, so constructing a facade invokes its providers and builds the
-  component's whole graph.
+- Missing registrations surface at startup rather than at build. Call every function a component's
+  facade exports for the root, such as the one that returns its routes or its commands, while the
+  process starts, so that failure happens in `main`, not on the first request. Resolution is lazy,
+  so each call invokes the providers behind it and builds that part of the component's graph.
 - Lazy instantiation, scopes, and ordered shutdown come free, which is the trade being made for the
   point above.
 - Component-scoped interfaces keep the number of interfaces bounded by components times gateway
