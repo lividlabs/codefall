@@ -177,8 +177,9 @@ with the code that uses it: `samber/do` with the composition root, by
 `go get github.com/samber/do/v2`, and `samber/mo` with the first optional value.
 
 The local scripts at this tier: `update` runs `go mod download`, and `mise install` first when the
-project pins a toolchain; `start` exits `0` with nothing to bring up. Where the tier added a
-`Makefile`, they are two targets there rather than a script.
+project pins a toolchain; `start` exits `0` with nothing to bring up, except on a surface with a
+database, which the notes below give a service to start. Where the tier added a `Makefile`, they
+are two targets there rather than a script.
 
 The **runnable skeleton** tier adds `cmd/<app>/main.go` wiring the composition root end to end with
 no features in it, plus each component directory with its facade file and the four nested layer
