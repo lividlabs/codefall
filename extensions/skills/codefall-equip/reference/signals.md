@@ -62,7 +62,7 @@ database URL from there, so on a fresh clone the copy has to happen before `migr
 | `alembic.ini` | Alembic | — | `alembic upgrade head` |
 | `db/migrate/` with a `Rakefile` | Rails | — | `bin/rails db:migrate` |
 | `manage.py` | Django | — | `python manage.py migrate` |
-| `migrations/` with `goose` or `migrate` in `go.mod` or a Makefile | goose / golang-migrate | — | `goose up` / `migrate up` |
+| `migrations/` with `goose` or `migrate` in `go.mod` or a Makefile | goose / golang-migrate | — | `goose up` / `migrate up`, or the app's own command where the app applies its migrations itself, as a `go` profile project does with its `migrate` target |
 
 A signal with no row is still a signal: read the tool's documentation for its idempotent
 install-or-sync form and its migrate-forward form, and use those.

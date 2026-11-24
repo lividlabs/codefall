@@ -3,6 +3,14 @@
 What ships with this skill and which surfaces it can scaffold. Read at step 1, before the stack
 question. Paths are relative to this skill's directory.
 
+## Contents
+
+- Stack-agnostic templates
+- Surface profiles, and the one override a profile may offer
+- Consulting before the stack question
+- ADR identifiers
+- Surface catalog
+
 ## Stack-agnostic templates
 
 Every project gets these:
@@ -21,8 +29,10 @@ the profile's own ADRs.
 
 - `typescript-react` supplies DI (Inversify), frontend state (TanStack Query / Zustand /
   `useState`), and boundary enforcement (`eslint-plugin-boundaries`).
-- `go` supplies DI (`samber/do`), boundary enforcement (`internal/` packages plus `depguard`), and
-  optional values (`samber/mo`'s `Option`).
+- `go` supplies DI (`samber/do`), boundary enforcement (`internal/` packages plus `depguard`),
+  optional values (`samber/mo`'s `Option`), for a surface that serves HTTP, HTTP delivery (`chi`
+  with handlers that return their errors), and, for a surface with a database, data access (`sqlc`
+  on `pgx`, with goose for migrations).
 - `dart-flutter` supplies DI (`get_it` registered by `injectable`), app state (Riverpod 3 and
   go_router, the one decision a project may override at the interview), and boundary enforcement
   (`import_lint`). It drops ADR-BASE-03: a Flutter app can never be split into services.
@@ -30,10 +40,12 @@ the profile's own ADRs.
 ### Profile overrides
 
 A profile may offer **one decision of its own** for the user to override at the interview, and its
-`PROFILE.md` says so. `dart-flutter` offers state management. Say *we will use Riverpod for state
-management unless you want to override that decision now*, and propose nothing else. On an
-override, amend `ADR-DART-02` for the project — Context and Decision rewritten for the tool chosen —
-and report it as an amendment, which provenance records. No other profile offers one.
+`PROFILE.md` says so. `dart-flutter` offers state management: say *we will use Riverpod for state
+management unless you want to override that decision now*. `go` offers the database, on a surface
+that has one: say *this will use PostgreSQL unless you want a different database now*. Propose
+nothing else. On an override, amend the profile's ADR for the project — `ADR-DART-02`, or
+`ADR-GO-05` as its `PROFILE.md` describes — with Context and Decision rewritten for the tool chosen,
+and report it as an amendment, which provenance records. `typescript-react` offers none.
 
 ## Consulting before the stack question
 

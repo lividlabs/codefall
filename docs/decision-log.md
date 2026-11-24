@@ -2332,6 +2332,146 @@ Decided at scaffold, 2026-08-16.
   because codefall is growing an IDE of its own, whose commands and settings will not depend on a
   project. ADR-018 records the reasoning and the alternatives seen and not taken, and
   `docs/plans/PLAN-001-codefall-project.md` the tasks. Left open: the three items under Open below.
+- **The Go profile's HTTP layer is `chi`, 2026-11-23.** The `go` profile named no router and no
+  way for a handler to report an error, so every scaffolded Go service chose its own. Recorded as
+  the template `ADR-GO-04`, which a Go surface that serves no HTTP drops, the way a backend-only
+  project drops `ADR-TS-02`. It is a profile ADR and not a base one, because a base ADR reaches a
+  Flutter app and a CLI. **The router is `chi` v5**, imported only in a component's
+  `presentation/` and in the shared module `internal/shared/httpx/`, and a `depguard` rule holds
+  it there. A handler reads a path parameter with `r.PathValue`, which chi fills in, so no handler
+  imports chi. Seen and not taken: the standard library's `ServeMux`, which has no route groups
+  and no middleware stack; Gin and Echo, whose handlers take a context type of their own; Fiber,
+  which does not run on `net/http`; and `huma` over chi, which also decides how the API contract
+  is written. **A handler returns its error** through an adapter the project owns, and one
+  function, `writeError`, turns an error into a response: an `*httpx.Error` gives its status and
+  detail through any `%w` wrapping, and any other error is a 500 logged with `log/slog` and sent
+  with no text. **The error body is RFC 9457 problem details**; the `typescript-react` profile
+  has no HTTP layer and so no shape to match. **The handler gives a domain error its status**,
+  because `domain/` and `application/` name no transport. A panic and an unknown path go through
+  `writeError`, by a recover middleware of the module's own in place of chi's `Recoverer`. A
+  wrong method keeps chi's 405, because a handler set in its place loses the `Allow` header;
+  this was checked against chi 5.5.0. **Scaffold ships no Go source for it**: the ADR holds the
+  code, and the profile's depth notes list the files and tests the runnable skeleton owes, as
+  they do for the rest of the profile. The ADR's code was copied from a sample project that
+  passed `go build`, `go vet`, `golangci-lint run`, and `go test`, with the lint rule proven
+  against deliberate chi imports. Left open: a gRPC library, a queue client, and a CLI library
+  for the profile; request validation and an OpenAPI document; and the database library.
+- **The Go profile's data access is `sqlc` on `pgx`, with goose, 2026-11-23.** The `go` profile
+  named no database library and no migration tool. Recorded as the template `ADR-GO-05`, which a
+  Go surface with no database drops. **The database is the project's to choose and PostgreSQL is
+  the default**: it is the one override the `go` profile offers at the interview. MySQL and SQLite
+  keep `sqlc` and goose and amend the ADR; a database `sqlc` does not read drops it. Only the
+  PostgreSQL path was run here. **Queries are `sqlc`**, generating for `pgx/v5`, with `pgxpool` for
+  connections. Seen and not taken: GORM and `bun`, which build queries while the program runs;
+  `ent`, whose schema is one graph for the whole app, the shared data model ADR-BASE-03 forbids;
+  and `pgx` alone. Also not taken: `sqlc`'s `database/sql` mode, first recommended here for its
+  standard types and dropped after generating both ways, because in that mode the generated code
+  imports `lib/pq` for arrays beside whichever driver the project uses. **Two `sqlc` settings give
+  the generated rows standard types**: pointers for nullable columns, which `mo.PointerToOption`
+  turns into an `Option`, and overrides for `timestamptz` and `uuid`. A `uuid` is
+  `google/uuid`'s type and the repository parses an id before the query; with `uuid` mapped to
+  `string`, a malformed id reached PostgreSQL and came back to the client as a 500. **Each
+  component owns its SQL**, in its own `infrastructure/`, with a PostgreSQL schema and a goose
+  version table of its own, and one `sqlc.yaml` entry whose schema is its own migrations: a query
+  that joined another component's table failed `sqlc generate`. **A transaction is a `Transactor`
+  interface in `application/`**, implemented with `pgx` and carried in the context. Seen and not
+  taken: one transaction per repository method, which cannot join two writes, and passing
+  transaction-bound repositories to the function, which is more code. **Migrations are goose**,
+  compiled into the app and run by `<app> migrate`, never at startup. Atlas writes a migration
+  from a description of the schema and was not taken because its free edition does not manage
+  views, functions, triggers, or extensions; `golang-migrate` and `tern` were not compared.
+  **Repository tests run against a real PostgreSQL** named by `TEST_DATABASE_URL` and are skipped
+  without it; `testcontainers-go` was not taken for the size of its dependency. **`sqlc` is
+  installed with `mise`** and stays out of `go.mod`, where it added 37 requirement lines as a Go
+  tool. `sqlc generate` fails on a component with no query, so a skeleton has migrations and no
+  `sqlc.yaml`, which arrives with the first query. The ADR's code was copied from a sample project
+  run against PostgreSQL 17. Left open: the `mise` command in the profile was not run; the
+  `go` profile's lint template still rejects `samber/mo` in `domain/`, which this ADR's own
+  example uses.
+- **The Go profile's lint template enforces all five boundary rules, 2026-11-23.** Scaffold
+  requires the boundary config to enforce five rules, and the `go` profile told it to emit two
+  `depguard` rules that enforced part of one. A fresh agent tested the config as specified:
+  `net/http` in `domain/`, `database/sql` in `application/`, and a shared module importing a
+  component each passed lint, and `samber/mo` in `domain/`, which ADR-GO-03 asks for, failed. The
+  agent then wrote four rules of its own. The template ADR-GO-02 now shows five rules. The two
+  strict lists allow `samber/mo` and deny `net/http` and `database/sql`, the two packages rule 5
+  names; this repository's own config denies all of `net`, and `os` in `domain/`, and the template
+  does not copy that. **"Sideways" in rule 2 now has a meaning**: `infrastructure/` and
+  `presentation/` do not import each other, held by a deny rule on each. `shared-modules` holds
+  rule 4. One `application-layer` rule serves every component, with an allow entry for each,
+  because the compiler already keeps one component out of another's; the profile's "one rule per
+  component" had been read as three rules. The sample enables golangci-lint's standard linters,
+  where it had enabled `depguard` alone. A new component is four entries, and the profile and the
+  skeleton say so. Seen and not taken: `go-arch-lint` in place of `depguard`, a second tool for
+  what five rules express. The config was assembled from the YAML in ADR-GO-02, ADR-GO-04, and
+  ADR-GO-05 word for word and proven against nine deliberate imports. This repository's own copy
+  of ADR-GO-02 in `docs/adrs/` is unchanged, and `codefall-upgrade` will offer it the revision.
+- **The Go profile's HTTP and data ADRs follow what a surface does, 2026-11-23.** As first written,
+  the profile decided between them by the kind of program: its examples said a CLI has no
+  database and a worker serves no HTTP. A CLI can hold a database, and a service can have none.
+  ADR-GO-04 is now taken by a surface that answers HTTP requests and ADR-GO-05 by one that reads or
+  writes a relational database, each on its own, so a surface takes both, either, or neither.
+  Whatever else a surface talks to, such as a message broker, a queue, or a cache, is a gateway
+  with no ADR in the profile, and the project records its client in an ADR of its own. Any other
+  way a surface is reached, such as gRPC, a queue it consumes, or a CLI's commands, is delivery
+  with no ADR in the profile either; a gRPC ADR was raised and not taken yet. In
+  ADR-GO-05, `migrate` is a command of the app, which a CLI adds beside its other commands, and
+  the references to ADR-BASE-03 and ADR-GO-04 read correctly on a surface that has neither:
+  component-owned tables now rest on ADR-BASE-02's facade. The profile says what else changes on
+  SQLite. Left open: a CLI on SQLite has not been built or run.
+- **Three rules the Go profile left unsaid, 2026-11-23.** They close the comparison with
+  `typescript-react` that began this work. **Three places resolve from the injector**: the
+  composition root, a registration function's providers, and the functions a facade exports for
+  the root to call. Everything else takes what it needs through its constructor and never holds
+  the injector. ADR-GO-01 had no such rule, and its line preferring the error-returning form
+  "anywhere that runs later" read as leave to resolve later. **Every service lives as long as the
+  process**, and what belongs to one request travels in `context.Context`; a `samber/do` scope is
+  not opened per request. **Every dependency is added with `go get`**, which the profile had said
+  for chi, `pgx`, and goose alone. Not taken from the comparison: guidance on choosing between a
+  service, a worker, and a CLI, because the profile now asks what a surface does and not what kind
+  of program it is.
+- **The Go profile's libraries are defaults a user may replace, 2026-11-23.** The profile named
+  one override, the database, and said nothing of the rest, which read as though chi could not be
+  changed. The skill's own rule is that the stack is the user's: a user who names another library
+  gets it by an amendment to that ADR, its decisions kept and its code rewritten. The profile now
+  says so, and says the stance is what cannot be replaced. The router stays unasked at the
+  interview, which the skill keeps to one question.
+- **What a second fresh run found in the Go profile, 2026-11-23.** An agent with none of the
+  conversation scaffolded a Go API with a database from the documents, then added one feature by
+  the project's own `AGENTS.md` and ADRs. Its project passed build, vet, lint, and test, and its
+  requests behaved. Two things were wrong. **`mise use sqlc@latest` writes `latest`, not a
+  version**; the profile now says `--pin`. That command was the one never run here before.
+  **The repository tests emptied the local database**: nothing said what `TEST_DATABASE_URL`
+  names, the agent pointed it at the database the app used, and the three rows it had just
+  created were gone. Each test now makes a database of its own on that server and drops it, so a
+  test cannot touch a database it did not make. Seen and not taken: a separate test database
+  created by compose, which keeps the protection in a sentence. **An unset `DATABASE_URL` stops
+  the app at startup**; passed through empty, the app started and failed at its first query.
+  **Every connection returns `timestamptz` in UTC**, set once on the pool; the API had answered
+  in the server's local zone. **`migrate` logs what each component applied**, which makes "the
+  second run changes nothing" something a run can see. **A repository takes its queries through
+  the transaction helper from its first method**; the agent had left the helper out until a
+  transaction was needed, which would have let a later transaction skip those methods. The rest
+  closed guesses: code the ADRs called and never showed, a use case's interface declared in
+  `presentation/`, the `*sql.DB` example that disagreed with the pool, the compose file's details,
+  and where `DATABASE_URL` gets its local value. Left open: who makes a new row's id and creation
+  time, which the agent gave to the database because the lint rules keep a UUID library out of
+  the inner rings.
+- **A table's key is the project's decision, with a `uuid` from the database where none is made,
+  2026-11-23.** ADR-GO-05 showed reading a row and nothing about creating one. PostgreSQL gives a
+  table no id unless its definition declares one, and the choice of key is the application's: the
+  ADR says so and does not make it. Where nobody has decided, a table gets a `uuid` key the
+  database generates, `uuidv7()` on PostgreSQL 18 and later and `gen_random_uuid()` before, and
+  the insert returns the row. An id made in the application comes through an interface in
+  `application/`, because the lint rules keep an id library out of the inner rings. Scaffold does
+  not ask about keys: a skeleton has no table, the skill excludes schema questions, and the
+  profile's one question is the database. Seen and not taken: no fallback at all, which leaves an
+  agent to pick silently, as the fresh agent did.
+- **Two statements this work had made untrue, 2026-11-23.** The scaffold skill, its depth
+  reference, and the `go` profile each said the local `start` script has nothing to bring up; on a
+  surface with a database the profile gives it one, and all three now allow for that. The equip
+  skill's signals table sent goose migrations to `goose up`; it now also names the app's own
+  command, which a `go` profile project uses.
 
 ## Open
 
@@ -2341,6 +2481,12 @@ Decided at scaffold, 2026-08-16.
   manifest keeps.
 - **A skill set that does not ship in the binary.** The manifest records one owner for every file
   today, and installing a second set needs it to record which set wrote which.
+- **A CLI ADR for the `go` profile.** The profile decides nothing about a CLI's command library or
+  the shape of its commands. This repository chose its own in ADR-002, which is where a profile
+  ADR would start.
+- **A gRPC ADR for the `go` profile.** Raised on 2026-11-23 and not taken yet. It would decide the
+  library, how `.proto` files are compiled, how a domain error becomes a status code, and whether
+  gRPC shares a port with HTTP.
 
 ## Parking lot
 

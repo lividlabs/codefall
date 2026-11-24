@@ -11,7 +11,9 @@ The why lives in the ADRs. This file is the operative rules only — never resta
   [ADR-BASE-03 Extraction readiness](<path>/docs/adrs/ADR-BASE-03-extraction-readiness.md) ·  <delete this link on a surface that can never be split>
   [ADR-GO-01 Dependency Injection](<path>/docs/adrs/ADR-GO-01-dependency-injection.md) ·
   [ADR-GO-02 Boundary enforcement](<path>/docs/adrs/ADR-GO-02-boundary-enforcement.md) ·
-  [ADR-GO-03 Optional values](<path>/docs/adrs/ADR-GO-03-optional-values.md)
+  [ADR-GO-03 Optional values](<path>/docs/adrs/ADR-GO-03-optional-values.md) ·
+  [ADR-GO-04 HTTP delivery](<path>/docs/adrs/ADR-GO-04-http-delivery.md) ·  <delete this link on a surface that serves no HTTP>
+  [ADR-GO-05 Data access](<path>/docs/adrs/ADR-GO-05-data-access.md)  <delete this link on a surface with no database>
 - <plus any surface-specific ADRs>
 - <plus this project's own ADRs, numbered separately from ADR-001>
 
@@ -28,8 +30,10 @@ The why lives in the ADRs. This file is the operative rules only — never resta
 
 - Dependencies point inward only. Interfaces live in `application/` with the use cases that need
   them; `domain/` = entities + value objects + errors.
-- `domain/` imports the standard library and nothing else. `application/` adds only its own
-  component's `domain/`. No `net/http`, `database/sql`, drivers, or CLI framework in either.
+- `domain/` imports the standard library and `samber/mo`, and nothing else. `application/` adds only
+  its own component's `domain/`. No `net/http`, `database/sql`, drivers, or CLI framework in either.
+- `infrastructure/` and `presentation/` do not import each other. Shared modules do not import
+  components.
 - Handlers and commands are thin; use cases never see delivery types.
 
 ## DI
@@ -43,7 +47,7 @@ The why lives in the ADRs. This file is the operative rules only — never resta
 
   ```go
   do.Provide(injector, func(i do.Injector) (application.OrderRepository, error) {
-      return infrastructure.NewPostgresOrderRepository(do.MustInvoke[*sql.DB](i)), nil
+      return infrastructure.NewInMemoryOrderRepository(do.MustInvoke[application.Clock](i)), nil
   })
   ```
 
@@ -51,6 +55,11 @@ The why lives in the ADRs. This file is the operative rules only — never resta
   when a concrete type must also be reachable by interface. Avoid `do.InvokeAs` — it is a runtime
   scan and goes ambiguous once two services satisfy the same interface.
 - Inject interfaces only, declared by the consumer in `application/`.
+- **Only `main`, a registration function's providers, and the functions a facade exports resolve
+  from the injector.** A handler, a command, a use case, and a repository take what they need
+  through their constructors and never hold a `do.Injector`.
+- A service lives as long as the process and holds nothing that belongs to one request. That
+  travels in `context.Context`, which every use case and gateway method takes first.
 - **One interface per gateway role per component**, not per use case. Split narrower only when a
   different component needs a subset. If two interfaces in the same `application/` package differ by
   fewer than two methods, they are one interface.
@@ -67,6 +76,53 @@ The why lives in the ADRs. This file is the operative rules only — never resta
 - Errors stay `(T, error)` with `%w` wrapping and `errors.Is` / `errors.As`. Do not use `mo.Result`.
 - If a caller needs to know *why* something is missing, it is an error, not a `None`.
 
+## HTTP  <serves no HTTP: delete this section>
+
+- `chi` v5, imported only in a component's `presentation/` and in `internal/shared/httpx/`. A
+  handler reads a path parameter with `r.PathValue`, so no handler imports chi.
+- Every handler is an `httpx.Handler`. It returns its error and never writes an error response
+  itself; `writeError` in `httpx` is the one function that does.
+- **The handler gives a domain error its status**:
+  `errors.Is(err, domain.ErrOrderNotFound)` → `httpx.NewError(http.StatusNotFound, "order not found")`.
+  Any other error is returned as it is and becomes a logged 500. `domain/` and `application/` never
+  return an `*httpx.Error`.
+- Bodies go through `httpx.Decode` and `httpx.Encode`. An error body is RFC 9457 problem details.
+- A component registers its routes in `presentation/routes.go` and exports them from its facade as
+  an `http.Handler`. The composition root mounts them on `httpx.NewRouter()`.
+- Middleware is `func(http.Handler) http.Handler`.
+- A handler's test uses `net/http/httptest` against the component's routes mounted on
+  `httpx.NewRouter()`, with a hand-written fake use case.
+- The `http-router` rule in `.golangci.yml` fails an import of chi from anywhere but
+  `presentation/` and `internal/shared/httpx/`.
+- A wrong method on a known path gets chi's own 405, with an `Allow` header and no body. Every
+  other error response is `writeError`'s.
+- A handler that writes part of a response and then returns an error sends two responses. Return
+  the error before writing; `httpx.Encode` marshals first for this reason.
+
+## Data  <no database: delete this section>
+
+- `sqlc` writes the Go for every query, for `pgx` v5. There is no ORM. Connections come from the
+  one `pgxpool.Pool` the composition root provides.
+- A component's SQL lives in its own `infrastructure/`: `migrations/` for goose, `queries/` for what
+  `sqlc` reads, `db/` for what `sqlc` writes, which is committed. Its tables live in a PostgreSQL
+  schema named for it. Never query another component's tables; `sqlc generate` fails on it.
+- After a query or a migration changes, run `make generate` and commit `db/`. `sqlc` is pinned in
+  `mise.toml`, and CI runs `sqlc diff`. A component's first query adds its entry to `sqlc.yaml`.
+- **The repository turns a row into an entity**: `mo.PointerToOption` for a nullable column, the id
+  turned into the column's type before the query, and `pgx.ErrNoRows` returned as the domain's
+  not-found error. A repository never returns a `pgx` error for a handler to recognise.
+- A table's key is this project's decision. Where none has been made, it is a `uuid` the database
+  generates, and the insert returns the row.
+- Every repository method takes its queries through `in(ctx)`, from the first one written. Several
+  writes become one through `application.Transactor`. Inside `InTransaction`, pass the context the
+  function received to every repository call; any other context is outside the transaction.
+- A migration is `NNNNN_name.sql`, five digits, with `-- +goose Up` and `-- +goose Down`.
+  `<app> migrate` applies them, and nothing else the app does migrates.
+- A repository's test makes a database of its own on the server in `TEST_DATABASE_URL`, drops it
+  when it ends, and is skipped without the variable. It never empties a database it did not make.
+- The app stops at startup when `DATABASE_URL` is unset, and returns every `timestamptz` in UTC.
+- The `database-driver` rule in `.golangci.yml` fails an import of `pgx` from `presentation/`.
+
 ## Extraction readiness  <never-splittable: delete this section>
 
 - Each component owns its data. Reference another component's records **by id**, never by foreign
@@ -80,8 +136,10 @@ The why lives in the ADRs. This file is the operative rules only — never resta
 ## Enforcement
 
 - `internal/` facades are enforced by the compiler — a reach-around fails `go build`.
-- Layer direction is enforced by `depguard` strict allow-lists in `.golangci.yml`, which is generated
-  for this project rather than copied from a template.
+- Layer direction is enforced by `depguard` rules in `.golangci.yml`, which is generated for this
+  project rather than copied from a template.
+- **A new component needs four entries there**: one allow entry in `application-layer`, and one deny
+  entry in each of `infrastructure-layer`, `presentation-layer`, and `shared-modules`.
 - Run `go build ./...`, `go vet ./...`, `golangci-lint run`, `go test ./...`.
 - **Verifying the rules takes two checks, because there are two mechanisms.** A cross-component
   reach-around must fail `go build`. An outward layer import must fail `golangci-lint run` *while

@@ -91,7 +91,7 @@ Scaffold writes two kinds of ADRs into the new project:
 | --- | --- | --- |
 | `ADR-BASE-01` to `ADR-BASE-03` | every project | Clean Architecture, package-by-component, and keeping components cheap to split |
 | `ADR-TS-01` and up | `typescript-react` projects | Inversify for dependency injection; TanStack Query, Zustand, and `useState` for front-end state; `eslint-plugin-boundaries` for boundaries |
-| `ADR-GO-01` and up | `go` projects | dependency injection, boundary enforcement, and optional values |
+| `ADR-GO-01` and up | `go` projects | `samber/do` for dependency injection; `internal/` packages and `depguard` for boundaries; `samber/mo`'s `Option` for optional values; `chi` with handlers that return their errors, for a part that serves HTTP; `sqlc` on `pgx` with goose migrations, for a part with a database, PostgreSQL unless you choose another |
 | `ADR-DART-01` and up | `dart-flutter` projects | `get_it` with `injectable` for dependency injection; Riverpod and go_router for app state; `import_lint` for boundaries |
 
 The base ADRs are in
